@@ -4,7 +4,7 @@
 #include "os/BootEvent.h"
 #include "ui/lvgl/LVGLManager.h"
 #include "ui/lvgl/BootScreen.h"
-#include "devices/Display/XPT2046Touch.h"
+#include "devices/display/XPT2046Touch.h"
 
 // Handle eventi globali
 EventGroupHandle_t EscapeOS::systemEvents = nullptr;

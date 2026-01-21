@@ -1,5 +1,5 @@
 #include <lvgl.h>
-#include "devices/Display/TouchController.h"
+#include "devices/display/TouchController.h"
 
 static TouchController* touch = nullptr;
 
