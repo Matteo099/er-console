@@ -1,7 +1,6 @@
-#include "BootScreen.h"
+#include "BootView.h"
 
-void BootScreen::create() {
-
+void BootView::create() {
     screen = lv_obj_create(NULL);
     lv_scr_load(screen);
 
@@ -20,7 +19,7 @@ void BootScreen::create() {
     lv_bar_set_value(progressBar, 0, LV_ANIM_OFF);
 }
 
-void BootScreen::update(uint8_t progress, const char* label) {
-    lv_label_set_text(statusLabel, label);
-    lv_bar_set_value(progressBar, progress, LV_ANIM_OFF);
+void BootView::update(uint8_t progress, const char* label) {
+    if(statusLabel) lv_label_set_text(statusLabel, label);
+    if(progressBar) lv_bar_set_value(progressBar, progress, LV_ANIM_OFF);
 }

@@ -1,6 +1,9 @@
 #pragma once
-#include "ui/Scene.h"
 #include "devices/display/Display.h"
+#include "BootView.h"
+#include "os/BootEvent.h"
+#include "os/EscapeOS.h"
+#include "ui/Scene.h"
 
 class BootScene : public Scene {
 public:
@@ -11,9 +14,8 @@ public:
     void onExit() override;
 
 private:
-    void render();
-
     Display* display;
+    BootView view;       // interfaccia LVGL
     uint8_t progress = 0;
     const char* label = "Starting";
 };
