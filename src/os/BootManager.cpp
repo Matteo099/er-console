@@ -8,9 +8,8 @@ static const char *TAG = "BOOT";
 
 void BootManager::run()
 {
-
-    setStep(BootStep::CORE_INIT, 5, "Initializing core services");
     Serial.begin(115200);
+    setStep(BootStep::CORE_INIT, 5, "Initializing core services");
     vTaskDelay(pdMS_TO_TICKS(150));
 
     setStep(BootStep::DISPLAY_INIT, 20, "Initializing display");
@@ -47,6 +46,7 @@ void BootManager::setStep(BootStep step, uint8_t p, const char *label)
 
     Log::info(TAG, "%s (%d%%)", label, p);
 }
+
 uint8_t BootManager::getProgress() const
 {
     return progress;

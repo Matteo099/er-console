@@ -1,9 +1,9 @@
 #include "EscapeOS.h"
 #include "os/BootManager.h"
-#include "ui/BootScene.h"
+#include "scenes/boot/BootScene.h"
+#include "scenes/boot/BootView.h"
 #include "os/BootEvent.h"
 #include "ui/lvgl/LVGLManager.h"
-#include "ui/lvgl/BootScreen.h"
 #include "devices/display/XPT2046Touch.h"
 
 // Handle eventi globali
@@ -32,14 +32,14 @@ void EscapeOS::uiTask(void* param) {
     touch.init();
     lvgl_register_touch(&touch);
 
-    BootScreen bootScreen;
-    bootScreen.create();
+    BootView bootView;
+    bootView.create();
 
     while (!(xEventGroupGetBits(systemEvents) & EVT_BOOT_DONE)) {
 
         BootEvent evt;
         while (xQueueReceive(bootQueue, &evt, 0) == pdTRUE) {
-            bootScreen.update(evt.progress, evt.label);
+            bootView.update(evt.progress, evt.label);
         }
 
         lv_timer_handler();
