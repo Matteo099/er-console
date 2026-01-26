@@ -3,6 +3,10 @@
 
 namespace Log {
 
+    constexpr const char* OS_TAG = "OS";
+    constexpr const char* BOOT_TAG = "BOOT";
+    constexpr const char* OTHER_TAG = "OTHER";
+
     enum class Level {
         ERROR,
         WARNING,

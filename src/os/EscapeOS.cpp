@@ -1,113 +1,115 @@
 #include "EscapeOS.h"
-#include "os/BootManager.h"
-#include "scenes/boot/BootScene.h"
-#include "scenes/boot/BootView.h"
-#include "os/BootEvent.h"
-#include "ui/lvgl/LVGLManager.h"
-#include "devices/display/XPT2046Touch.h"
+#include "BootEvent.h"
+#include "../log/Logger.h"
+
 
 // Handle eventi globali
 EventGroupHandle_t EscapeOS::systemEvents = nullptr;
 QueueHandle_t EscapeOS::bootQueue = nullptr;
 
-void EscapeOS::bootTask(void *param)
+void xTaskBoot(void *params)
 {
-
-    BootManager boot;
+    Log::info(Log::OS_TAG, "Starting task 'xTaskBoot'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
+    BootManager *boot = os->getBootManager();
 
     // Run full boot sequence
-    boot.run();
+    boot->run();
 
     // Notify system that boot is completed
-    xEventGroupSetBits(systemEvents, EVT_BOOT_DONE);
+    xEventGroupSetBits(EscapeOS::systemEvents, EscapeOS::EVT_BOOT_DONE);
 
     // Boot task finished, delete itself
     vTaskDelete(nullptr);
 }
 
-void EscapeOS::uiTask(void* param) {
+void xTaskUI(void *params)
+{
+    Log::info(Log::OS_TAG, "Starting task 'xTaskUI'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
+    xEventGroupWaitBits(
+        EscapeOS::systemEvents,
+        EscapeOS::EVT_UI_READY,
+        pdFALSE,
+        pdTRUE,
+        portMAX_DELAY);
 
-    LVGLManager::init();
-    XPT2046Touch touch(TOUCH_CS_PIN);
-    touch.init();
-    lvgl_register_touch(&touch);
+    UIManager *ui = os->getUIManager();
+    ui->init();
+    xEventGroupSetBits(EscapeOS::systemEvents, EscapeOS::EVT_UI_READY);
 
-    BootView bootView;
-    bootView.create();
-
-    while (!(xEventGroupGetBits(systemEvents) & EVT_BOOT_DONE)) {
-
-        BootEvent evt;
-        while (xQueueReceive(bootQueue, &evt, 0) == pdTRUE) {
-            bootView.update(evt.progress, evt.label);
-        }
-
-        lv_timer_handler();
+    while (os->isRunning())
+    {
+        ui->update();
         vTaskDelay(pdMS_TO_TICKS(16));
     }
 
     vTaskDelete(nullptr);
 }
 
-void EscapeOS::inputTask(void *param)
+void xTaskInput(void *params)
 {
-
+    Log::info(Log::OS_TAG, "Starting task 'xTaskInput'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
     xEventGroupWaitBits(
-        systemEvents,
-        EVT_BOOT_DONE,
+        EscapeOS::systemEvents,
+        EscapeOS::EVT_UI_READY,
         pdFALSE,
         pdTRUE,
         portMAX_DELAY);
 
-    Serial.println("[INPUT] Ready");
+    InputManager *input = os->getInputManager();
+    input->init();
 
-    while (true)
+    while (os->isRunning())
     {
-        // scan pulsanti
-        // read touch raw
+        input->update();
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
-void EscapeOS::audioTask(void *param)
+void xTaskAudio(void *params)
 {
-
+    Log::info(Log::OS_TAG, "Starting task 'xTaskAudio'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
     xEventGroupWaitBits(
-        systemEvents,
-        EVT_BOOT_DONE,
+        EscapeOS::systemEvents,
+        EscapeOS::EVT_UI_READY,
         pdFALSE,
         pdTRUE,
         portMAX_DELAY);
 
-    Serial.println("[AUDIO] Ready");
+        
+    AudioManager *audio = os->getAudioManager();
+    audio->init();
 
-    while (true)
+    while (os->isRunning())
     {
-        // wait for audio queue
+        audio->update();
         vTaskDelay(pdMS_TO_TICKS(20));
     }
 }
 
-void EscapeOS::luaTask(void *param)
+void xTaskLua(void *params)
 {
-
+    Log::info(Log::OS_TAG, "Starting task 'xTaskAudio'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
     xEventGroupWaitBits(
-        systemEvents,
-        EVT_BOOT_DONE,
+        EscapeOS::systemEvents,
+        EscapeOS::EVT_UI_READY,
         pdFALSE,
         pdTRUE,
         portMAX_DELAY);
 
     Serial.println("[LUA] Initializing VM");
 
-    // init lua VM
-    // load scripts from SD
+    LuaManager *lua = os->getLuaManager();
+    lua->init();
+    xEventGroupSetBits(EscapeOS::systemEvents, EscapeOS::EVT_LUA_READY);
 
-    xEventGroupSetBits(systemEvents, EVT_LUA_READY);
-
-    while (true)
+    while (os->isRunning())
     {
-        // execute logic
+        lua->update();
         vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
@@ -116,6 +118,8 @@ void EscapeOS::init()
 {
     systemEvents = xEventGroupCreate();
     bootQueue = xQueueCreate(8, sizeof(BootEvent));
+    running = true;
+
     createTasks();
 }
 
@@ -124,7 +128,7 @@ void EscapeOS::createTasks()
 
     // Boot Task (core 0)
     xTaskCreatePinnedToCore(
-        bootTask,
+        xTaskBoot,
         "BootTask",
         4096,
         nullptr,
@@ -134,7 +138,7 @@ void EscapeOS::createTasks()
 
     // UI Task (core 1)
     xTaskCreatePinnedToCore(
-        uiTask,
+        xTaskUI,
         "UITask",
         8192,
         nullptr,
@@ -144,7 +148,7 @@ void EscapeOS::createTasks()
 
     // Input Task
     xTaskCreatePinnedToCore(
-        inputTask,
+        xTaskInput,
         "InputTask",
         4096,
         nullptr,
@@ -154,7 +158,7 @@ void EscapeOS::createTasks()
 
     // Audio Task
     xTaskCreatePinnedToCore(
-        audioTask,
+        xTaskAudio,
         "AudioTask",
         4096,
         nullptr,
@@ -164,7 +168,7 @@ void EscapeOS::createTasks()
 
     // Lua Task
     xTaskCreatePinnedToCore(
-        luaTask,
+        xTaskLua,
         "LuaTask",
         8192,
         nullptr,

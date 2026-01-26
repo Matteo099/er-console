@@ -4,8 +4,6 @@
 #include "os/BootEvent.h"
 #include "os/EscapeOS.h"
 
-static const char *TAG = "BOOT";
-
 void BootManager::run()
 {
     Serial.begin(115200);
@@ -13,7 +11,8 @@ void BootManager::run()
     vTaskDelay(pdMS_TO_TICKS(150));
 
     setStep(BootStep::DISPLAY_INIT, 20, "Initializing display");
-    // Display.init();
+    // UIManager->init();
+    xEventGroupSetBits(EscapeOS::systemEvents, EscapeOS::EVT_UI_READY);
     vTaskDelay(pdMS_TO_TICKS(300));
 
     setStep(BootStep::STORAGE_INIT, 40, "Mounting storage");
@@ -44,7 +43,7 @@ void BootManager::setStep(BootStep step, uint8_t p, const char *label)
 
     xQueueSend(EscapeOS::bootQueue, &evt, portMAX_DELAY);
 
-    Log::info(TAG, "%s (%d%%)", label, p);
+    Log::info(Log::BOOT_TAG, "%s (%d%%)", label, p);
 }
 
 uint8_t BootManager::getProgress() const

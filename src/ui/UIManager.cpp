@@ -1,0 +1,23 @@
+#include "UIManager.h"
+
+void UIManager::init()
+{
+    LVGLManager::init();
+    XPT2046Touch touch(TOUCH_CS_PIN);
+    touch.init();
+    lvgl_register_touch(&touch);
+
+    BootView bootView;
+    bootView.create();
+}
+
+void UIManager::update()
+{
+    BootEvent evt;
+    while (xQueueReceive(bootQueue, &evt, 0) == pdTRUE)
+    {
+        bootView.update(evt.progress, evt.label);
+    }
+
+    lv_timer_handler();
+}
