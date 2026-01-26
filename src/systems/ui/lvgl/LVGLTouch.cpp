@@ -1,9 +1,10 @@
-#include <lvgl.h>
-#include "devices/display/TouchController.h"
+#include "LVGLTouch.h"
+
+#include "drivers/touch/TouchController.h"
 
 static TouchController* touch = nullptr;
 
-static void lvgl_touch_read(lv_indev_drv_t* drv, lv_indev_data_t* data) {
+void LVGLTouch::vgl_touch_read(lv_indev_drv_t* drv, lv_indev_data_t* data) {
 
     TouchPoint p = touch->read();
 
@@ -12,7 +13,7 @@ static void lvgl_touch_read(lv_indev_drv_t* drv, lv_indev_data_t* data) {
     data->point.y = p.y;
 }
 
-void lvgl_register_touch(TouchController* controller) {
+void LVGLTouch::lvgl_register_touch(TouchController* controller) {
 
     touch = controller;
 

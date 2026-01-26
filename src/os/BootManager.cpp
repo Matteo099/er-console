@@ -1,7 +1,7 @@
 #include "BootManager.h"
 
-#include "BootState.h"
-#include "BootEvent.h"
+#include "os/BootState.h"
+#include "os/BootEvent.h"
 #include "core/SystemEventBus.h"
 #include "log/Logger.h"
 
@@ -20,8 +20,7 @@ void BootManager::run()
         EVT_UI_READY,
         pdTRUE,
         pdTRUE,
-        portMAX_DELAY
-    );
+        portMAX_DELAY);
 
     // ---- AUDIO ----
     emitStep(BootStep::AUDIO_INIT, 40, "Initializing audio");
@@ -31,8 +30,7 @@ void BootManager::run()
         EVT_AUDIO_READY,
         pdTRUE,
         pdTRUE,
-        portMAX_DELAY
-    );
+        portMAX_DELAY);
 
     // ---- INPUT ----
     emitStep(BootStep::INPUT_INIT, 60, "Initializing input");
@@ -42,8 +40,7 @@ void BootManager::run()
         EVT_INPUT_READY,
         pdTRUE,
         pdTRUE,
-        portMAX_DELAY
-    );
+        portMAX_DELAY);
 
     // ---- LUA ----
     emitStep(BootStep::LUA_INIT, 80, "Initializing Lua");
@@ -53,8 +50,7 @@ void BootManager::run()
         EVT_LUA_READY,
         pdTRUE,
         pdTRUE,
-        portMAX_DELAY
-    );
+        portMAX_DELAY);
 
     emitStep(BootStep::DONE, 100, "Boot completed");
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_BOOT_DONE);

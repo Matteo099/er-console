@@ -6,7 +6,8 @@
 
 void UIManager::init()
 {
-    LVGLManager::init();
+    lvgl = new LVGLSystem();
+    lvgl->init();
     XPT2046Touch touch(TOUCH_CS_PIN);
     touch.init();
     lvgl_register_touch(&touch);
@@ -18,7 +19,7 @@ void UIManager::init()
 void UIManager::update()
 {
     BootEvent evt;
-    while(xQueueReceive(SystemEventBus::bootQueue, &evt, 0) == pdTRUE)
+    while (xQueueReceive(SystemEventBus::bootQueue, &evt, 0) == pdTRUE)
     {
         bootView.update(evt.progress, evt.label);
     }

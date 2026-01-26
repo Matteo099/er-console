@@ -1,9 +1,12 @@
 #pragma once
-#include "ui/Scene.h"
 
-class SceneManager {
+#include "core/SystemService.h"
+#include "systems/ui/Scene.h"
+
+class SceneManager : public SystemService
+{
 public:
-    void init();
-    void update();
-    void changeScene(Scene* next);
+    void init() override;
+    void update() override;
+    void changeScene(Scene *next);
 };
