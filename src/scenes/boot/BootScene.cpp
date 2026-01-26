@@ -1,25 +1,21 @@
 #include "BootScene.h"
 
-#include "os/SystemEventBus.h"
-
-BootScene::BootScene(DisplayDriver* d) : display(d), view(d) {}
+#include "BootScene.h"
+#include "os/BootEvent.h"
+#include "core/SystemEventBus.h"
 
 void BootScene::onEnter() {
-    display->clear(0x0000);  // pulizia display base
-    view.create();            // crea la UI LVGL
+    view.create();
 }
 
 void BootScene::onUpdate() {
     BootEvent evt;
-    while (xQueueReceive(SystemEventBus::bootQueue, &evt, 0) == pdTRUE) {
-        progress = evt.progress;
-        label = evt.label;
+    while (xQueueReceive(SystemEventBus::bootQueue, &evt, 0)) {
+        view.setProgress(evt.progress, evt.label);
     }
-
-    // aggiorna solo la UI, non ridisegna tutto a mano
-    view.update(progress, label);
+    view.update();
 }
 
 void BootScene::onExit() {
-    // eventuale pulizia se necessaria
+    view.destroy();
 }

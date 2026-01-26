@@ -1,12 +1,14 @@
 #pragma once
 
 #include "core/SystemService.h"
-#include "systems/ui/lvgl/LVGLSystem.h"
+#include "systems/ui/lvgl/LVGLContext.h"
+#include "systems/ui/SceneManager.h"
 
 class UIManager : public SystemService
 {
 private:
-    LVGLSystem *lvgl;
+    LVGLContext lvgl;
+    SceneManager scenes;
 
 public:
     void init() override;

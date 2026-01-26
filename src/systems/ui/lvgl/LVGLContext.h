@@ -4,7 +4,7 @@
 #include <lvgl.h>
 #include "core/SystemService.h"
 
-class LVGLSystem : public SystemService
+class LVGLContext : public SystemService
 {
 public:
     void init() override;
