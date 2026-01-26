@@ -1,47 +1,72 @@
 #include "BootManager.h"
-#include "os/BootState.h"
+
+#include "BootState.h"
+#include "BootEvent.h"
+#include "core/SystemEventBus.h"
 #include "log/Logger.h"
-#include "os/BootEvent.h"
-#include "os/EscapeOS.h"
 
 void BootManager::run()
 {
     Serial.begin(115200);
-    setStep(BootStep::CORE_INIT, 5, "Initializing core services");
-    vTaskDelay(pdMS_TO_TICKS(150));
 
-    setStep(BootStep::DISPLAY_INIT, 20, "Initializing display");
-    // UIManager->init();
-    xEventGroupSetBits(EscapeOS::systemEvents, EscapeOS::EVT_UI_READY);
-    vTaskDelay(pdMS_TO_TICKS(300));
+    emitStep(BootStep::CORE_INIT, 5, "Initializing core services");
+    vTaskDelay(pdMS_TO_TICKS(100));
 
-    setStep(BootStep::STORAGE_INIT, 40, "Mounting storage");
-    // FileSystem.mount();
-    vTaskDelay(pdMS_TO_TICKS(300));
+    // ---- DISPLAY / UI ----
+    emitStep(BootStep::DISPLAY_INIT, 20, "Initializing display");
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_UI_INIT_REQ);
+    xEventGroupWaitBits(
+        SystemEventBus::systemEvents,
+        EVT_UI_READY,
+        pdTRUE,
+        pdTRUE,
+        portMAX_DELAY
+    );
 
-    setStep(BootStep::AUDIO_INIT, 60, "Initializing audio");
-    // AudioManager.init();
-    vTaskDelay(pdMS_TO_TICKS(300));
+    // ---- AUDIO ----
+    emitStep(BootStep::AUDIO_INIT, 40, "Initializing audio");
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_AUDIO_INIT_REQ);
+    xEventGroupWaitBits(
+        SystemEventBus::systemEvents,
+        EVT_AUDIO_READY,
+        pdTRUE,
+        pdTRUE,
+        portMAX_DELAY
+    );
 
-    setStep(BootStep::INPUT_INIT, 75, "Initializing input devices");
-    // InputManager.init();
-    vTaskDelay(pdMS_TO_TICKS(200));
+    // ---- INPUT ----
+    emitStep(BootStep::INPUT_INIT, 60, "Initializing input");
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_INPUT_INIT_REQ);
+    xEventGroupWaitBits(
+        SystemEventBus::systemEvents,
+        EVT_INPUT_READY,
+        pdTRUE,
+        pdTRUE,
+        portMAX_DELAY
+    );
 
-    setStep(BootStep::LUA_INIT, 90, "Preparing Lua runtime");
-    // LuaVM.init();
-    vTaskDelay(pdMS_TO_TICKS(300));
+    // ---- LUA ----
+    emitStep(BootStep::LUA_INIT, 80, "Initializing Lua");
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_LUA_INIT_REQ);
+    xEventGroupWaitBits(
+        SystemEventBus::systemEvents,
+        EVT_LUA_READY,
+        pdTRUE,
+        pdTRUE,
+        portMAX_DELAY
+    );
 
-    setStep(BootStep::DONE, 100, "Boot completed");
-    vTaskDelay(pdMS_TO_TICKS(200));
+    emitStep(BootStep::DONE, 100, "Boot completed");
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_BOOT_DONE);
 }
 
-void BootManager::setStep(BootStep step, uint8_t p, const char *label)
+void BootManager::emitStep(BootStep step, uint8_t p, const char *label)
 {
     BootEvent evt;
     evt.progress = p;
     evt.label = label;
 
-    xQueueSend(EscapeOS::bootQueue, &evt, portMAX_DELAY);
+    xQueueSend(SystemEventBus::bootQueue, &evt, portMAX_DELAY);
 
     Log::info(Log::BOOT_TAG, "%s (%d%%)", label, p);
 }

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../core/Bootable.h"
+#include "core/SystemService.h"
 
-class AudioManager : public Bootable {
+class AudioSystem : public SystemService {
 public:
     void init() override;
     void update() override;

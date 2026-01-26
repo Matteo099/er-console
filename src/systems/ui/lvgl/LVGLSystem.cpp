@@ -1,12 +1,11 @@
-#include "LVGLManager.h"
-#include <Arduino.h>
+#include "LVGLSystem.h"
 
 static const uint32_t LVGL_TICK_PERIOD_MS = 5;
 
-void LVGLManager::init() {
+void LVGLSystem::init() {
     lv_init();
 }
 
-void LVGLManager::tick() {
+void LVGLSystem::update() {
     lv_tick_inc(LVGL_TICK_PERIOD_MS);
 }

@@ -7,14 +7,14 @@
 
 class BootScene : public Scene {
 public:
-    BootScene(Display* display);
+    BootScene(DisplayDriver* display);
 
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
 
 private:
-    Display* display;
+    DisplayDriver* display;
     BootView view;       // interfaccia LVGL
     uint8_t progress = 0;
     const char* label = "Starting";

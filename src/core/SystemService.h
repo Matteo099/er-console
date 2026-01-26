@@ -1,8 +1,8 @@
 #pragma once
 
-class Bootable {
+class SystemService {
 public:
-    virtual ~Bootable() = default;
+    virtual ~SystemService() = default;
 
     virtual void init() = 0;
     virtual void update() = 0;

@@ -1,8 +1,8 @@
 #pragma once
-#include "Display.h"
+#include "DisplayDriver.h"
 #include <TFT_eSPI.h>
 
-class TFTDisplay : public Display {
+class TFTDisplay : public DisplayDriver {
 public:
     TFTDisplay();
 

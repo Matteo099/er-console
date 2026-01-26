@@ -1,9 +1,9 @@
 #pragma once
 #include <stdint.h>
 
-class Display {
+class DisplayDriver {
 public:
-    virtual ~Display() {}
+    virtual ~DisplayDriver() {}
 
     virtual void init() = 0;
     virtual void clear(uint16_t color) = 0;

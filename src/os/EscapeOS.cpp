@@ -1,11 +1,7 @@
 #include "EscapeOS.h"
-#include "BootEvent.h"
-#include "../log/Logger.h"
 
-
-// Handle eventi globali
-EventGroupHandle_t EscapeOS::systemEvents = nullptr;
-QueueHandle_t EscapeOS::bootQueue = nullptr;
+#include "core/SystemEventBus.h"
+#include "log/Logger.h"
 
 void xTaskBoot(void *params)
 {
@@ -16,9 +12,6 @@ void xTaskBoot(void *params)
     // Run full boot sequence
     boot->run();
 
-    // Notify system that boot is completed
-    xEventGroupSetBits(EscapeOS::systemEvents, EscapeOS::EVT_BOOT_DONE);
-
     // Boot task finished, delete itself
     vTaskDelete(nullptr);
 }
@@ -27,16 +20,16 @@ void xTaskUI(void *params)
 {
     Log::info(Log::OS_TAG, "Starting task 'xTaskUI'");
     EscapeOS *os = static_cast<EscapeOS *>(params);
-    xEventGroupWaitBits(
-        EscapeOS::systemEvents,
-        EscapeOS::EVT_UI_READY,
-        pdFALSE,
-        pdTRUE,
-        portMAX_DELAY);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_UI_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
 
     UIManager *ui = os->getUIManager();
     ui->init();
-    xEventGroupSetBits(EscapeOS::systemEvents, EscapeOS::EVT_UI_READY);
+
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_UI_READY);
 
     while (os->isRunning())
     {
@@ -51,15 +44,16 @@ void xTaskInput(void *params)
 {
     Log::info(Log::OS_TAG, "Starting task 'xTaskInput'");
     EscapeOS *os = static_cast<EscapeOS *>(params);
-    xEventGroupWaitBits(
-        EscapeOS::systemEvents,
-        EscapeOS::EVT_UI_READY,
-        pdFALSE,
-        pdTRUE,
-        portMAX_DELAY);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_INPUT_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
 
-    InputManager *input = os->getInputManager();
+    InputSystem *input = os->getInputSystem();
     input->init();
+
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_INPUT_READY);
 
     while (os->isRunning())
     {
@@ -72,16 +66,16 @@ void xTaskAudio(void *params)
 {
     Log::info(Log::OS_TAG, "Starting task 'xTaskAudio'");
     EscapeOS *os = static_cast<EscapeOS *>(params);
-    xEventGroupWaitBits(
-        EscapeOS::systemEvents,
-        EscapeOS::EVT_UI_READY,
-        pdFALSE,
-        pdTRUE,
-        portMAX_DELAY);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_AUDIO_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
 
-        
-    AudioManager *audio = os->getAudioManager();
+    AudioSystem *audio = os->getAudioSystem();
     audio->init();
+
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_AUDIO_READY);
 
     while (os->isRunning())
     {
@@ -94,18 +88,16 @@ void xTaskLua(void *params)
 {
     Log::info(Log::OS_TAG, "Starting task 'xTaskAudio'");
     EscapeOS *os = static_cast<EscapeOS *>(params);
-    xEventGroupWaitBits(
-        EscapeOS::systemEvents,
-        EscapeOS::EVT_UI_READY,
-        pdFALSE,
-        pdTRUE,
-        portMAX_DELAY);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_LUA_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
 
-    Serial.println("[LUA] Initializing VM");
-
-    LuaManager *lua = os->getLuaManager();
+    LuaSystem *lua = os->getLuaSystem();
     lua->init();
-    xEventGroupSetBits(EscapeOS::systemEvents, EscapeOS::EVT_LUA_READY);
+
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_LUA_READY);
 
     while (os->isRunning())
     {
@@ -116,8 +108,7 @@ void xTaskLua(void *params)
 
 void EscapeOS::init()
 {
-    systemEvents = xEventGroupCreate();
-    bootQueue = xQueueCreate(8, sizeof(BootEvent));
+    SystemEventBus::init();
     running = true;
 
     createTasks();
@@ -131,7 +122,7 @@ void EscapeOS::createTasks()
         xTaskBoot,
         "BootTask",
         4096,
-        nullptr,
+        this,
         configMAX_PRIORITIES - 1,
         nullptr,
         0);
@@ -141,7 +132,7 @@ void EscapeOS::createTasks()
         xTaskUI,
         "UITask",
         8192,
-        nullptr,
+        this,
         3,
         nullptr,
         1);
@@ -151,7 +142,7 @@ void EscapeOS::createTasks()
         xTaskInput,
         "InputTask",
         4096,
-        nullptr,
+        this,
         3,
         nullptr,
         1);
@@ -161,7 +152,7 @@ void EscapeOS::createTasks()
         xTaskAudio,
         "AudioTask",
         4096,
-        nullptr,
+        this,
         2,
         nullptr,
         0);
@@ -171,7 +162,7 @@ void EscapeOS::createTasks()
         xTaskLua,
         "LuaTask",
         8192,
-        nullptr,
+        this,
         1,
         nullptr,
         0);

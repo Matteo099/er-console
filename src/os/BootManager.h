@@ -21,7 +21,7 @@ public:
     const char* getCurrentStepName() const;
 
 private:
-    void setStep(BootStep step, uint8_t progress, const char* label);
+    void emitStep(BootStep step, uint8_t progress, const char* label);
 
     BootStep currentStep = BootStep::CORE_INIT;
     uint8_t progress = 0;

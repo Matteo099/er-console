@@ -1,5 +1,9 @@
 #include "UIManager.h"
 
+#include "core/SystemEventBus.h"
+#include "os/BootEvent.h"
+#include "scenes/boot/BootView.h"
+
 void UIManager::init()
 {
     LVGLManager::init();
@@ -14,7 +18,7 @@ void UIManager::init()
 void UIManager::update()
 {
     BootEvent evt;
-    while (xQueueReceive(bootQueue, &evt, 0) == pdTRUE)
+    while(xQueueReceive(SystemEventBus::bootQueue, &evt, 0) == pdTRUE)
     {
         bootView.update(evt.progress, evt.label);
     }

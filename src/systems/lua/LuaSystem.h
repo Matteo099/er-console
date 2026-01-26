@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../core/Bootable.h"
+#include "core/SystemService.h"
 
-class InputManager : public Bootable {
+class LuaSystem : public SystemService {
 public:
     void init() override;
     void update() override;

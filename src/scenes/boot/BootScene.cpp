@@ -1,6 +1,8 @@
 #include "BootScene.h"
 
-BootScene::BootScene(Display* d) : display(d), view(d) {}
+#include "os/SystemEventBus.h"
+
+BootScene::BootScene(DisplayDriver* d) : display(d), view(d) {}
 
 void BootScene::onEnter() {
     display->clear(0x0000);  // pulizia display base
@@ -9,7 +11,7 @@ void BootScene::onEnter() {
 
 void BootScene::onUpdate() {
     BootEvent evt;
-    while (xQueueReceive(EscapeOS::bootQueue, &evt, 0) == pdTRUE) {
+    while (xQueueReceive(SystemEventBus::bootQueue, &evt, 0) == pdTRUE) {
         progress = evt.progress;
         label = evt.label;
     }
