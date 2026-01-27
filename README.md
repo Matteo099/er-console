@@ -119,3 +119,25 @@ Prossimi step:
 2️⃣ Transizione Boot → Loading → Main Menu
 3️⃣ Error handling visuale (boot fail → safe mode)
 4️⃣ Persistenza log su SD (ring buffer)
+
+## compilare
+
+edit platform.ini:
+
+``` ini
+build_flags =
+    -Isrc
+    -Iinclude
+```
+
+run commands:
+
+```
+cp include\lv_conf.h .pio\libdeps\esp32-s3-devkitc-1-n16r8v
+cp include\User_Setup.h .pio\libdeps\esp32-s3-devkitc-1-n16r8v\TFT_eSPI\User_Setup.h
+```
+
+
+## Esempio di utilizzo di LVGL
+
+https://randomnerdtutorials.com/lvgl-cheap-yellow-display-esp32-2432s028r/
