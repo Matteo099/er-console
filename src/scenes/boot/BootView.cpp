@@ -2,22 +2,13 @@
 
 void BootView::create()
 {
-    // Create a new screen
+    // Create screen (DO NOT load it here)
     screen = lv_obj_create(nullptr);
     lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
 
-    // Optional: background style
+    // Background
     lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
-
-    // Load screen with fade-in animation
-    lv_scr_load_anim(
-        screen,
-        LV_SCR_LOAD_ANIM_FADE_ON,
-        300,
-        0,
-        false
-    );
 
     // Title
     titleLabel = lv_label_create(screen);
@@ -45,7 +36,7 @@ void BootView::create()
     lv_obj_set_style_bg_color(progressBar, lv_color_hex(0x00FF88), LV_PART_INDICATOR);
     lv_obj_set_style_radius(progressBar, 8, LV_PART_MAIN | LV_PART_INDICATOR);
 
-    // Reset state
+    // Internal state
     currentProgress = 0;
     currentLabel = nullptr;
 }

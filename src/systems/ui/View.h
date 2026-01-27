@@ -1,5 +1,7 @@
 #pragma once
 
+#include <lvgl.h>
+
 class View {
 public:
     virtual ~View() = default;
@@ -8,5 +10,5 @@ public:
     virtual void update() = 0;
     virtual void destroy() = 0;
 
-    virtual lv_obj_t *getScreen();
+    virtual lv_obj_t* getScreen() = 0;
 };

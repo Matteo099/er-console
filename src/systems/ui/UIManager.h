@@ -13,4 +13,6 @@ private:
 public:
     void init() override;
     void update() override;
+
+    SceneManager &sceneManager() { return scenes; }
 };

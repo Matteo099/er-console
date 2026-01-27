@@ -1,24 +1,29 @@
 #include "UIManager.h"
 
+#include "log/Logger.h"
+#include "scenes/boot/BootScene.h"
+
 void UIManager::init()
 {
-    // lvgl = new LVGLSystem();
-    // lvgl->init();
-    // XPT2046Touch touch(TOUCH_CS_PIN);
-    // touch.init();
-    // lvgl_register_touch(&touch);
+    Log::info(Log::UI_TAG, "Initializing UI Manager");
 
-    // BootView bootView;
-    // bootView.create();
+    // 1. Initialize LVGL core + display + touch
+    lvgl.init();
+
+    // 2. Initialize scene manager
+    scenes.init();
+
+    // 3. Load initial scene (BOOT)
+    scenes.changeScene(new BootScene());
+
+    Log::info(Log::UI_TAG, "UI Manager ready");
 }
 
 void UIManager::update()
 {
-    // BootEvent evt;
-    // while (xQueueReceive(SystemEventBus::bootQueue, &evt, 0) == pdTRUE)
-    // {
-    //     bootView.update(evt.progress, evt.label);
-    // }
+    // Advance scene logic (non-blocking)
+    scenes.update();
 
-    // lv_timer_handler();
+    // Advance LVGL timers & rendering
+    lvgl.update();
 }
