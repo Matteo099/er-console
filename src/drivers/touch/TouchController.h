@@ -1,5 +1,4 @@
 #pragma once
-#include <stdint.h>
 
 struct TouchPoint {
     int x;
@@ -9,7 +8,7 @@ struct TouchPoint {
 
 class TouchController {
 public:
-    virtual ~TouchController() {}
+    virtual ~TouchController() = default;
     virtual void init() = 0;
     virtual TouchPoint read() = 0;
 };

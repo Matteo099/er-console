@@ -2,13 +2,18 @@
 
 #include "log/Logger.h"
 #include "scenes/boot/BootScene.h"
+#include "drivers/display/TFTDisplay.h"
+#include "drivers/touch/XPT2046Touch.h"
+#include "config/BoardConfig.h"
 
 void UIManager::init()
 {
     Log::info(Log::UI_TAG, "Initializing UI Manager");
 
+    static TFTDisplay display;
+    static XPT2046Touch touch(TOUCH_CS_PIN);
     // 1. Initialize LVGL core + display + touch
-    lvgl.init();
+    lvgl.init(&display, &touch);
 
     // 2. Initialize scene manager
     scenes.init();

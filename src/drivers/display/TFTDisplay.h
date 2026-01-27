@@ -2,20 +2,20 @@
 #include "DisplayDriver.h"
 #include <TFT_eSPI.h>
 
-class TFTDisplay : public DisplayDriver {
+class TFTDisplay : public DisplayDriver
+{
 public:
     TFTDisplay();
 
     void init() override;
-    void clear(uint16_t color) override;
 
-    void drawText(int x, int y, const char* text, uint16_t color) override;
+    void flush(
+        int32_t x1, int32_t y1,
+        int32_t x2, int32_t y2,
+        const uint16_t *colorMap) override;
 
-    void drawRect(int x, int y, int w, int h, uint16_t color) override;
-    void fillRect(int x, int y, int w, int h, uint16_t color) override;
-
-    int width() const override;
-    int height() const override;
+    virtual int width() = 0;
+    virtual int height() = 0;
 
 private:
     TFT_eSPI tft;

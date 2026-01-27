@@ -3,12 +3,14 @@
 XPT2046Touch::XPT2046Touch(uint8_t csPin)
     : ts(csPin) {}
 
-void XPT2046Touch::init() {
+void XPT2046Touch::init()
+{
     ts.begin();
     ts.setRotation(1);
 }
 
-TouchPoint XPT2046Touch::read() {
+TouchPoint XPT2046Touch::read()
+{
     TouchPoint p{0, 0, false};
 
     if (ts.touched()) {
