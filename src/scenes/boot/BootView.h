@@ -12,6 +12,8 @@ public:
     void destroy() override;
 
     void setProgress(uint8_t progress, const char *label);
+    void loadImages();
+    void createTextOnly();
 
     lv_obj_t *getScreen() override { return screen; };
 

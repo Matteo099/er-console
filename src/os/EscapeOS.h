@@ -6,6 +6,7 @@
 
 #include "os/BootManager.h"
 #include "systems/ui/UIManager.h"
+#include "systems/storage/StorageSystem.h"
 #include "systems/input/InputSystem.h"
 #include "systems/audio/AudioSystem.h"
 #include "systems/lua/LuaSystem.h"
@@ -18,6 +19,7 @@ public:
 
     BootManager* getBootManager() { return &bootManager; }
     UIManager* getUIManager() { return &uiManager; }
+    StorageSystem* getStorageSystem() { return &storageSystem; }
     InputSystem* getInputSystem() { return &inputSystem; }
     AudioSystem* getAudioSystem() { return &audioSystem; }
     LuaSystem* getLuaSystem() { return &luaSystem; }
@@ -27,6 +29,7 @@ private:
 
     BootManager bootManager;
     UIManager uiManager;
+    StorageSystem storageSystem;
     InputSystem inputSystem;
     AudioSystem audioSystem;
     LuaSystem luaSystem;

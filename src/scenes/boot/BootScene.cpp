@@ -2,15 +2,31 @@
 
 #include "os/BootEvent.h"
 #include "core/SystemEventBus.h"
+#include "systems/ui/lvgl/LVGLImageProvider.h"
+
+BootScene::BootScene()
+    : imagesLoaded(false)
+{
+}
 
 void BootScene::onEnter()
 {
-    // View creation handled by SceneManager before animation
-    // Nothing else needed here for now
+    imagesLoaded = false;
+    view.createTextOnly(); // SD not ready yet
 }
 
 void BootScene::onUpdate()
 {
+    // ---- Late-load images when storage is ready ----
+    if (!imagesLoaded &&
+        (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY))
+    {
+        LVGLImageProvider::init(); // now SD is available
+        view.loadImages();         // attach logo + brand
+        imagesLoaded = true;
+    }
+
+    // ---- Consume boot events ----
     BootEvent evt;
     while (xQueueReceive(SystemEventBus::bootQueue, &evt, 0) == pdTRUE)
     {
@@ -22,5 +38,5 @@ void BootScene::onUpdate()
 
 void BootScene::onExit()
 {
-    // Cleanup is handled by SceneManager (view.destroy())
+    // handled by SceneManager → view.destroy()
 }

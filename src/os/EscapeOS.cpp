@@ -40,6 +40,25 @@ void xTaskUI(void *params)
     vTaskDelete(nullptr);
 }
 
+void xTaskStorage(void *params)
+{
+    Log::info(Log::OS_TAG, "Starting task 'xTaskStorage'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
+
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_STORAGE_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
+
+    StorageSystem *storage = os->getStorageSystem();
+    storage->init();
+
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_STORAGE_READY);
+
+    vTaskDelete(nullptr);
+}
+
 void xTaskInput(void *params)
 {
     Log::info(Log::OS_TAG, "Starting task 'xTaskInput'");
@@ -109,7 +128,7 @@ void xTaskLua(void *params)
 void EscapeOS::init()
 {
     Serial.begin(115200);
-    
+
     SystemEventBus::init();
     running = true;
 
@@ -138,6 +157,16 @@ void EscapeOS::createTasks()
         3,
         nullptr,
         1);
+
+    // Storage Task
+    xTaskCreatePinnedToCore(
+        xTaskStorage,
+        "StorageTask",
+        4096,
+        this,
+        2,
+        nullptr,
+        0);
 
     // Input Task
     xTaskCreatePinnedToCore(

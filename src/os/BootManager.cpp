@@ -9,15 +9,25 @@ void BootManager::run()
     emitStep(BootStep::CORE_INIT, 5, "Initializing core services");
     vTaskDelay(pdMS_TO_TICKS(100));
 
+    // BootManager::run()
+
     // ---- DISPLAY / UI ----
     emitStep(BootStep::DISPLAY_INIT, 20, "Initializing display");
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_UI_INIT_REQ);
-    xEventGroupWaitBits(
-        SystemEventBus::systemEvents,
-        EVT_UI_READY,
-        pdTRUE,
-        pdTRUE,
-        portMAX_DELAY);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_UI_READY,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
+
+    // ---- STORAGE ----
+    emitStep(BootStep::STORAGE_INIT, 35, "Initializing storage");
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_STORAGE_INIT_REQ);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_STORAGE_READY,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
 
     // ---- AUDIO ----
     emitStep(BootStep::AUDIO_INIT, 40, "Initializing audio");

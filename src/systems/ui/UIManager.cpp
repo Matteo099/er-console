@@ -15,13 +15,9 @@ void UIManager::init()
 
     static TFTDisplay display;
     static XPT2046Touch touch(TOUCH_CS_PIN);
-    static ESP32SDCardDriver sd(SD_CS_PIN);
-    static StorageSystem storage(&sd);
 
     display.init();
     touch.init();
-    storage.init();
-    LVGLImageProvider::init();
 
     // 1. Initialize LVGL core + display + touch
     lvgl.init(&display, &touch);

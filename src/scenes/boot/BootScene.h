@@ -17,4 +17,5 @@ public:
 
 private:
     BootView view;
+    bool imagesLoaded;
 };
