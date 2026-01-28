@@ -1,6 +1,6 @@
 #include "LuaSystem.h"
 
-void LuaSystem::init() {
+void LuaSystem::init(void *params) {
     // initialization code
 }
 

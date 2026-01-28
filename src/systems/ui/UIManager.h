@@ -11,7 +11,7 @@ private:
     SceneManager scenes;
 
 public:
-    void init() override;
+    void init(void *params = nullptr) override;
     void update() override;
 
     SceneManager &sceneManager() { return scenes; }

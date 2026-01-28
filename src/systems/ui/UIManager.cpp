@@ -9,7 +9,7 @@
 #include "systems/ui/lvgl/LVGLImageProvider.h"
 #include "config/BoardConfig.h"
 
-void UIManager::init()
+void UIManager::init(void *params)
 {
     Log::info(Log::UI_TAG, "Initializing UI Manager");
 

@@ -18,7 +18,7 @@ static lv_scr_load_anim_t toLvgl(SceneTransition t)
     }
 }
 
-void SceneManager::init()
+void SceneManager::init(void *params)
 {
     current = nullptr;
 }

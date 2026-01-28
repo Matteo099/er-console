@@ -9,7 +9,7 @@ StorageSystem::StorageSystem()
     driver = new ESP32SDCardDriver(SD_CS_PIN);
 }
 
-void StorageSystem::init()
+void StorageSystem::init(void *params)
 {
     Log::info(Log::STORAGE_TAG, "Initializing storage");
 
@@ -27,4 +27,9 @@ void StorageSystem::init()
 bool StorageSystem::isReady() const
 {
     return ready;
+}
+
+IFile* StorageSystem::open(const char* path)
+{
+    return driver->open(path);
 }

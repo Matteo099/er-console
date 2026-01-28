@@ -29,6 +29,7 @@ public:
     // Eventi di sistema
     static EventGroupHandle_t systemEvents;
     static QueueHandle_t bootQueue;
+    static QueueHandle_t audioQueue;
 
     static void init();
 };

@@ -92,7 +92,8 @@ void xTaskAudio(void *params)
                         portMAX_DELAY);
 
     AudioSystem *audio = os->getAudioSystem();
-    audio->init();
+    StorageSystem *storage = os->getStorageSystem();
+    audio->init(storage);
 
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_AUDIO_READY);
 
