@@ -108,6 +108,8 @@ void xTaskLua(void *params)
 
 void EscapeOS::init()
 {
+    Serial.begin(115200);
+    
     SystemEventBus::init();
     running = true;
 

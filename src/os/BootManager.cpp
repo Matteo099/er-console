@@ -1,14 +1,11 @@
 #include "BootManager.h"
 
-#include "os/BootState.h"
 #include "os/BootEvent.h"
 #include "core/SystemEventBus.h"
 #include "log/Logger.h"
 
 void BootManager::run()
 {
-    Serial.begin(115200);
-
     emitStep(BootStep::CORE_INIT, 5, "Initializing core services");
     vTaskDelay(pdMS_TO_TICKS(100));
 
