@@ -2,11 +2,8 @@
 
 #include "os/BootEvent.h"
 #include "core/SystemEventBus.h"
+#include "scenes/menu/MainMenuScene.h"
 #include "systems/ui/lvgl/LVGLImageProvider.h"
-
-BootScene::BootScene() : imagesLoaded(false)
-{
-}
 
 void BootScene::onEnter()
 {
@@ -30,6 +27,9 @@ void BootScene::onUpdate()
     while (xQueueReceive(SystemEventBus::bootQueue, &evt, 0) == pdTRUE)
     {
         view.setProgress(evt.progress, evt.label);
+
+        if (evt.progress >= 100)
+            bootCompleted = true;
     }
 
     view.update();
@@ -38,4 +38,12 @@ void BootScene::onUpdate()
 void BootScene::onExit()
 {
     // handled by SceneManager → view.destroy()
+}
+
+SceneRequest BootScene::getRequest() const
+{
+    if (bootCompleted)
+        return SceneRequest::GoToMainMenu;
+
+    return SceneRequest::None;
 }

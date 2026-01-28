@@ -8,6 +8,11 @@ enum class SceneTransition {
     Fade
 };
 
+enum class SceneRequest {
+    None,
+    GoToMainMenu
+};
+
 class Scene
 {
 public:
@@ -19,4 +24,5 @@ public:
 
     virtual View& getView() = 0;
     virtual SceneTransition getTransition() const { return SceneTransition::SlideLeft; }
+    virtual SceneRequest getRequest() const { return SceneRequest::None; }
 };

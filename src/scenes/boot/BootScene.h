@@ -5,17 +5,17 @@
 
 class BootScene : public Scene
 {
-public:
-    BootScene();
-    
+public:    
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
 
     View& getView() override { return view; }
     SceneTransition getTransition() const override { return SceneTransition::Fade; }
+    SceneRequest getRequest() const override;
 
 private:
     BootView view;
-    bool imagesLoaded;
+    bool imagesLoaded = false;
+    bool bootCompleted = false;
 };

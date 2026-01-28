@@ -1,4 +1,5 @@
 #include "systems/ui/SceneManager.h"
+#include "scenes/menu/MainMenuScene.h"
 #include <lvgl.h>
 
 static lv_scr_load_anim_t toLvgl(SceneTransition t)
@@ -49,9 +50,19 @@ void SceneManager::changeScene(Scene *next)
 
 void SceneManager::update()
 {
-    if (current)
+    if (!current)
+        return;
+
+    current->onUpdate();
+    current->getView().update();
+
+    switch (current->getRequest())
     {
-        current->onUpdate();
-        current->getView().update();
+    case SceneRequest::GoToMainMenu:
+        changeScene(new MainMenuScene());
+        break;
+
+    default:
+        break;
     }
 }
