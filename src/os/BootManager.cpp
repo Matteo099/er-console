@@ -6,31 +6,33 @@
 
 void BootManager::run()
 {
-    emitStep(BootStep::CORE_INIT, 5, "Initializing core services");
+    emitStep(BootStep::CORE_INIT, "Initializing core services");
     vTaskDelay(pdMS_TO_TICKS(100));
 
     // BootManager::run()
 
     // ---- DISPLAY / UI ----
-    emitStep(BootStep::DISPLAY_INIT, 20, "Initializing display");
+    emitStep(BootStep::DISPLAY_INIT, "Initializing display");
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_UI_INIT_REQ);
     xEventGroupWaitBits(SystemEventBus::systemEvents,
                         EVT_UI_READY,
                         pdTRUE,
                         pdTRUE,
                         portMAX_DELAY);
+    vTaskDelay(pdMS_TO_TICKS(100));
 
     // ---- STORAGE ----
-    emitStep(BootStep::STORAGE_INIT, 35, "Initializing storage");
+    emitStep(BootStep::STORAGE_INIT, "Initializing storage");
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_STORAGE_INIT_REQ);
     xEventGroupWaitBits(SystemEventBus::systemEvents,
                         EVT_STORAGE_READY,
                         pdTRUE,
                         pdTRUE,
                         portMAX_DELAY);
+    vTaskDelay(pdMS_TO_TICKS(100));
 
     // ---- AUDIO ----
-    emitStep(BootStep::AUDIO_INIT, 40, "Initializing audio");
+    emitStep(BootStep::AUDIO_INIT, "Initializing audio");
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_AUDIO_INIT_REQ);
     xEventGroupWaitBits(
         SystemEventBus::systemEvents,
@@ -38,9 +40,10 @@ void BootManager::run()
         pdTRUE,
         pdTRUE,
         portMAX_DELAY);
+    vTaskDelay(pdMS_TO_TICKS(100));
 
     // ---- INPUT ----
-    emitStep(BootStep::INPUT_INIT, 60, "Initializing input");
+    emitStep(BootStep::INPUT_INIT, "Initializing input");
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_INPUT_INIT_REQ);
     xEventGroupWaitBits(
         SystemEventBus::systemEvents,
@@ -48,9 +51,10 @@ void BootManager::run()
         pdTRUE,
         pdTRUE,
         portMAX_DELAY);
+    vTaskDelay(pdMS_TO_TICKS(100));
 
     // ---- LUA ----
-    emitStep(BootStep::LUA_INIT, 80, "Initializing Lua");
+    emitStep(BootStep::LUA_INIT, "Initializing Lua");
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_LUA_INIT_REQ);
     xEventGroupWaitBits(
         SystemEventBus::systemEvents,
@@ -58,28 +62,32 @@ void BootManager::run()
         pdTRUE,
         pdTRUE,
         portMAX_DELAY);
+    vTaskDelay(pdMS_TO_TICKS(100));
 
-    emitStep(BootStep::DONE, 100, "Boot completed");
+    emitStep(BootStep::DONE, "Boot completed");
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_BOOT_DONE);
 }
 
-void BootManager::emitStep(BootStep step, uint8_t p, const char *label)
+uint8_t BootManager::bootProgress(BootStep step)
 {
+    const uint8_t count = static_cast<uint8_t>(BootStep::COUNT);
+    const uint8_t index = static_cast<uint8_t>(step);
+
+    if (index >= count)
+        return 100;
+
+    return (index * 100) / count;
+}
+
+void BootManager::emitStep(BootStep step, const char *label)
+{
+    uint8_t progress = bootProgress(step);
+
     BootEvent evt;
-    evt.progress = p;
+    evt.progress = progress;
     evt.label = label;
 
     xQueueSend(SystemEventBus::bootQueue, &evt, portMAX_DELAY);
 
-    Log::info(Log::BOOT_TAG, "%s (%d%%)", label, p);
-}
-
-uint8_t BootManager::getProgress() const
-{
-    return progress;
-}
-
-const char *BootManager::getCurrentStepName() const
-{
-    return stepLabel;
+    Log::info(Log::BOOT_TAG, "%s (%d%%)", label, progress);
 }

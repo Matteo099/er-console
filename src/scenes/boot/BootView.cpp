@@ -131,8 +131,6 @@ void BootView::loadImages()
     lv_anim_start(&logoSpinAnim);
 }
 
-
-
 void BootView::setProgress(uint8_t progress, const char *label)
 {
     currentProgress = progress;
