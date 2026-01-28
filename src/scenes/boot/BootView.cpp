@@ -1,48 +1,63 @@
 #include "BootView.h"
 
-
 void BootView::create()
 {
-    // Create screen (DO NOT load it here)
+    // --- Screen ---
     screen = lv_obj_create(nullptr);
     lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
-
-    // Background
     lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
 
-    // Title
-    titleLabel = lv_label_create(screen);
-    lv_label_set_text(titleLabel, "Escape Room Console");
-    lv_obj_set_style_text_color(titleLabel, lv_color_white(), 0);
-    lv_obj_set_style_text_font(titleLabel, &lv_font_montserrat_16, 0);
-    lv_obj_align(titleLabel, LV_ALIGN_TOP_MID, 0, 20);
+    // --- Brand image (top) ---
+    brandImg = lv_img_create(screen);
+    lv_img_set_src(brandImg, "S:/brand.png");
+    lv_obj_align(brandImg, LV_ALIGN_TOP_MID, 0, 20);
 
-    // Status label
+    // --- Logo image (center) ---
+    logoImg = lv_img_create(screen);
+    lv_img_set_src(logoImg, "S:/logo.png");
+    lv_obj_align(logoImg, LV_ALIGN_CENTER, 0, -10);
+
+    // --- Status label (bottom) ---
     statusLabel = lv_label_create(screen);
     lv_label_set_text(statusLabel, "Starting...");
     lv_obj_set_style_text_color(statusLabel, lv_color_hex(0xCCCCCC), 0);
     lv_obj_set_style_text_font(statusLabel, &lv_font_montserrat_14, 0);
-    lv_obj_align(statusLabel, LV_ALIGN_TOP_MID, 0, 70);
+    lv_obj_align(statusLabel, LV_ALIGN_BOTTOM_MID, 0, -28);
 
-    // Progress bar
+    // --- Progress bar (above status) ---
     progressBar = lv_bar_create(screen);
-    lv_obj_set_size(progressBar, 220, 16);
-    lv_obj_align(progressBar, LV_ALIGN_TOP_MID, 0, 120);
+    lv_obj_set_size(progressBar, 220, 14);
+    lv_obj_align_to(progressBar, statusLabel, LV_ALIGN_OUT_TOP_MID, 0, -10);
 
     lv_bar_set_range(progressBar, 0, 100);
     lv_bar_set_value(progressBar, 0, LV_ANIM_OFF);
 
-    lv_obj_set_style_bg_color(progressBar, lv_color_hex(0x333333), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(progressBar, lv_color_hex(0x2A2A2A), LV_PART_MAIN);
     lv_obj_set_style_bg_color(progressBar, lv_color_hex(0x00FF88), LV_PART_INDICATOR);
-    lv_obj_set_style_radius(progressBar, 8, LV_PART_MAIN | LV_PART_INDICATOR);
+    lv_obj_set_style_radius(progressBar, 7, LV_PART_MAIN | LV_PART_INDICATOR);
 
-    // Internal state
+    // --- Logo spin animation ---
+    lv_anim_init(&logoSpinAnim);
+    lv_anim_set_var(&logoSpinAnim, logoImg);
+    lv_anim_set_exec_cb(&logoSpinAnim, [](void *obj, int32_t angle)
+                        { lv_img_set_angle(static_cast<lv_obj_t *>(obj), angle); });
+
+    lv_anim_set_values(&logoSpinAnim, 0, 3600); // 360° (0.1° units)
+    lv_anim_set_time(&logoSpinAnim, 600);
+    lv_anim_set_delay(&logoSpinAnim, 1000);        // pause before first spin
+    lv_anim_set_repeat_delay(&logoSpinAnim, 1000); // pause between spins
+    lv_anim_set_repeat_count(&logoSpinAnim, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_set_path_cb(&logoSpinAnim, lv_anim_path_ease_in_out);
+
+    lv_anim_start(&logoSpinAnim);
+
+    // --- Internal state ---
     currentProgress = 0;
     currentLabel = nullptr;
 }
 
-void BootView::setProgress(uint8_t progress, const char* label)
+void BootView::setProgress(uint8_t progress, const char *label)
 {
     currentProgress = progress;
     currentLabel = label;
@@ -50,24 +65,37 @@ void BootView::setProgress(uint8_t progress, const char* label)
 
 void BootView::update()
 {
-    if (!screen) return;
+    if (!screen)
+        return;
 
-    if (progressBar) {
+    if (progressBar)
+    {
         lv_bar_set_value(progressBar, currentProgress, LV_ANIM_ON);
     }
 
-    if (statusLabel && currentLabel) {
+    if (statusLabel && currentLabel)
+    {
         lv_label_set_text(statusLabel, currentLabel);
     }
 }
 
 void BootView::destroy()
 {
-    if (screen) {
+    // Stop logo animation (safe even if not running)
+    lv_anim_del(logoImg, nullptr);
+
+    if (screen)
+    {
         lv_obj_del(screen);
-        screen = nullptr;
-        titleLabel = nullptr;
-        statusLabel = nullptr;
-        progressBar = nullptr;
     }
+
+    // Reset all pointers
+    screen = nullptr;
+    brandImg = nullptr;
+    logoImg = nullptr;
+    statusLabel = nullptr;
+    progressBar = nullptr;
+
+    currentLabel = nullptr;
+    currentProgress = 0;
 }

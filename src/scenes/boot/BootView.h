@@ -17,9 +17,12 @@ public:
 
 private:
     lv_obj_t *screen = nullptr;
-    lv_obj_t *titleLabel = nullptr;
+    lv_obj_t *brandImg = nullptr;
+    lv_obj_t *logoImg = nullptr;
     lv_obj_t *statusLabel = nullptr;
     lv_obj_t *progressBar = nullptr;
+
+    lv_anim_t logoSpinAnim;
 
     uint8_t currentProgress = 0;
     const char *currentLabel = nullptr;
