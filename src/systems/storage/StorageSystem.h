@@ -6,7 +6,7 @@
 class StorageSystem : public SystemService
 {
 public:
-    explicit StorageSystem(SDCardDriver* driver);
+    StorageSystem();
 
     void init() override;
     bool isReady() const;

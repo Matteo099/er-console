@@ -6,6 +6,7 @@ namespace Log {
     constexpr const char* OS_TAG = "OS";
     constexpr const char* BOOT_TAG = "BOOT";
     constexpr const char* UI_TAG = "UI";
+    constexpr const char* STORAGE_TAG = "STORAGE";
 
     enum class Level {
         ERROR,

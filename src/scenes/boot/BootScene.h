@@ -6,8 +6,8 @@
 class BootScene : public Scene
 {
 public:
-    BootScene() = default;
-
+    BootScene();
+    
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;

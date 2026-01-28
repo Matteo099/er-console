@@ -4,8 +4,7 @@
 #include "core/SystemEventBus.h"
 #include "systems/ui/lvgl/LVGLImageProvider.h"
 
-BootScene::BootScene()
-    : imagesLoaded(false)
+BootScene::BootScene() : imagesLoaded(false)
 {
 }
 
