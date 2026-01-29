@@ -1,6 +1,7 @@
 #include "LuaSystem.h"
 
 #include "log/Logger.h"
+#include <string>
 
 LuaSystem::LuaSystem() {}
 
@@ -9,11 +10,11 @@ LuaSystem::~LuaSystem()
     destroyVM();
 }
 
-void LuaSystem::init(void* params)
+void LuaSystem::init(void *params)
 {
     Log::info(Log::LUA_TAG, "Initializing LuaSystem");
 
-    storage = static_cast<StorageSystem*>(params);
+    storage = static_cast<StorageSystem *>(params);
     if (!storage)
     {
         Log::error(Log::LUA_TAG, "StorageSystem not provided");
@@ -29,11 +30,11 @@ void LuaSystem::init(void* params)
     registerBaseLibraries();
 
     // Load entry point
-    if (!loadMainScript("/scripts/main.lua"))
-    {
-        Log::error(Log::LUA_TAG, "Failed to load main.lua");
-        return;
-    }
+    // if (!loadMainScript("/scripts/main.lua"))
+    // {
+    //     Log::error(Log::LUA_TAG, "Failed to load main.lua");
+    //     return;
+    // }
 
     ready = true;
     Log::info(Log::LUA_TAG, "LuaSystem ready");
@@ -61,7 +62,6 @@ void LuaSystem::destroyVM()
     scriptLoaded = false;
 }
 
-
 void LuaSystem::update()
 {
     if (!ready || !scriptLoaded)
@@ -70,29 +70,94 @@ void LuaSystem::update()
     tick();
 }
 
+static const char* luaFileReader(lua_State* L, void* data, size_t* size)
+{
+    IFile* file = static_cast<IFile*>(data);
+
+    static uint8_t buffer[512]; // small, safe chunk
+    if (!file->available())
+    {
+        *size = 0;
+        return nullptr;
+    }
+
+    int read = file->read(buffer, sizeof(buffer));
+    if (read <= 0)
+    {
+        *size = 0;
+        return nullptr;
+    }
+
+    *size = static_cast<size_t>(read);
+    return reinterpret_cast<const char*>(buffer);
+}
+
 bool LuaSystem::loadMainScript(const char* path)
 {
     if (!L || !storage)
         return false;
 
-    // std::string script;
-    // if (!storage->readTextFile(path, script))
-    // {
-    //     Log::error(Log::LUA_TAG, "Cannot read script: %s", path);
-    //     return false;
-    // }
+    IFile* file = storage->open(path);
+    if (!file)
+    {
+        Log::error(Log::LUA_TAG, "Cannot open script: %s", path);
+        return false;
+    }
 
-    // if (luaL_loadstring(L, script.c_str()) != LUA_OK)
-    // {
-    //     Log::error(Log::LUA_TAG, "Lua load error: %s", lua_tostring(L, -1));
-    //     return false;
-    // }
+    // Load Lua chunk via streaming reader
+    if (lua_load(L, luaFileReader, file, path, nullptr) != LUA_OK)
+    {
+        Log::error(
+            Log::LUA_TAG,
+            "Lua load error (%s): %s",
+            path,
+            lua_tostring(L, -1));
 
-    // if (lua_pcall(L, 0, 0, 0) != LUA_OK)
-    // {
-    //     Log::error(Log::LUA_TAG, "Lua runtime error: %s", lua_tostring(L, -1));
-    //     return false;
-    // }
+        lua_pop(L, 1);
+        file->close();
+        delete file;
+        return false;
+    }
+
+    // Execute script
+    if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+    {
+        Log::error(
+            Log::LUA_TAG,
+            "Lua runtime error (%s): %s",
+            path,
+            lua_tostring(L, -1));
+
+        lua_pop(L, 1);
+        file->close();
+        delete file;
+        return false;
+    }
+
+    // Optional init()
+    lua_getglobal(L, "init");
+    if (lua_isfunction(L, -1))
+    {
+        if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+        {
+            Log::error(
+                Log::LUA_TAG,
+                "Lua init() error: %s",
+                lua_tostring(L, -1));
+
+            lua_pop(L, 1);
+            file->close();
+            delete file;
+            return false;
+        }
+    }
+    else
+    {
+        lua_pop(L, 1);
+    }
+
+    file->close();
+    delete file;
 
     scriptLoaded = true;
     return true;
@@ -100,17 +165,36 @@ bool LuaSystem::loadMainScript(const char* path)
 
 void LuaSystem::tick()
 {
-    // For now: nothing
-    // Later:
-    // - resume coroutine
-    // - process queued events
-    // - execute timed callbacks
+    if (!L)
+        return;
+
+    lua_getglobal(L, "update");
+    if (!lua_isfunction(L, -1))
+    {
+        lua_pop(L, 1);
+        return;
+    }
+
+    // dt in seconds (for now fixed)
+    lua_pushnumber(L, 0.02); // 20 ms tick
+
+    if (lua_pcall(L, 1, 0, 0) != LUA_OK)
+    {
+        Log::error(Log::LUA_TAG, "Lua update() error: %s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+
+        // optional: disable script on fatal error
+        scriptLoaded = false;
+    }
 }
 
 void LuaSystem::restart()
 {
     destroyVM();
-    createVM();
+
+    if (!createVM())
+        return;
+
     registerBaseLibraries();
     loadMainScript("/scripts/main.lua");
 }

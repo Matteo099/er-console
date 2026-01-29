@@ -33,3 +33,26 @@ IFile* StorageSystem::open(const char* path)
 {
     return driver->open(path);
 }
+
+bool StorageSystem::readTextFile(const char* path, std::string& out)
+{
+    IFile* file = open(path);
+    if (!file)
+        return false;
+
+    out.clear();
+    char buffer[256];
+
+    while (file->available())
+    {
+        int r = file->read(reinterpret_cast<uint8_t*>(buffer), sizeof(buffer));
+        if (r > 0)
+            out.append(buffer, r);
+        else
+            break;
+    }
+
+    file->close();
+    delete file;
+    return true;
+}

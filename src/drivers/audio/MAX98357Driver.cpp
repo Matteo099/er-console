@@ -16,7 +16,7 @@ bool MAX98357Driver::init()
         .sample_rate = SAMPLE_RATE,
         .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
         .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-        .communication_format = I2S_COMM_FORMAT_I2S,
+        .communication_format = I2S_COMM_FORMAT_STAND_I2S,
         .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
         .dma_buf_count = 8,
         .dma_buf_len = 256,
@@ -52,7 +52,7 @@ void MAX98357Driver::playTone(uint16_t freq, uint16_t ms)
     }
 }
 
-void MAX98357Driver::playWav(IFile* file)
+void MAX98357Driver::playWav(IFile *file)
 {
     if (!file)
         return;
@@ -63,11 +63,11 @@ void MAX98357Driver::playWav(IFile* file)
 
     while (file->available())
     {
-        int read = file->read((uint8_t*)buffer, sizeof(buffer));
+        int read = file->read((uint8_t *)buffer, sizeof(buffer));
         if (read <= 0)
             break;
 
-        applyVolume(buffer, read);
+        applyVolume(buffer, read / sizeof(int16_t));
         i2s_write(I2S_PORT, buffer, read, nullptr, portMAX_DELAY);
     }
 
@@ -75,9 +75,10 @@ void MAX98357Driver::playWav(IFile* file)
     delete file;
 }
 
-void MAX98357Driver::applyVolume(int16_t* buffer, size_t samples)
+void MAX98357Driver::applyVolume(int16_t *buffer, size_t samples)
 {
-    if (!buffer || currentVolume == 100) return;  // full volume, no change
+    if (!buffer || currentVolume == 100)
+        return; // full volume, no change
 
     float factor = currentVolume / 100.0f;
 
@@ -87,8 +88,10 @@ void MAX98357Driver::applyVolume(int16_t* buffer, size_t samples)
         int32_t temp = static_cast<int32_t>(buffer[i] * factor);
 
         // clamp to int16_t range
-        if (temp > 32767) temp = 32767;
-        else if (temp < -32768) temp = -32768;
+        if (temp > 32767)
+            temp = 32767;
+        else if (temp < -32768)
+            temp = -32768;
 
         buffer[i] = static_cast<int16_t>(temp);
     }

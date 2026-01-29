@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "core/SystemService.h"
 #include "drivers/storage/SDCardDriver.h"
 #include "drivers/storage/IFile.h"
@@ -15,6 +16,7 @@ public:
 
     const char* root() const { return "/sd"; }
     virtual IFile* open(const char* path);
+    bool readTextFile(const char* path, std::string& out);
 
 private:
     SDCardDriver* driver;

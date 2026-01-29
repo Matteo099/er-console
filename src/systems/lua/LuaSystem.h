@@ -2,7 +2,6 @@
 
 #include "core/SystemService.h"
 #include "systems/storage/StorageSystem.h"
-// #include <lua.hpp>
 
 extern "C" {
 #include "lua.h"
