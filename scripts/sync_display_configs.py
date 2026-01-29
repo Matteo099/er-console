@@ -1,3 +1,26 @@
+"""
+------------------------------------------------------------
+Script: sync_include_files.py
+Part of: PlatformIO ER-Console Project
+
+Description:
+    This script automates the synchronization of versioned configuration
+    files from the project's 'include' directory to the PlatformIO
+    library dependency directories. Specifically, it handles:
+
+        - lv_conf.h       -> placed in the library path for LittlevGL (LVGL)
+        - User_Setup.h    -> placed in the library path for TFT_eSPI
+
+    The script checks if the source files exist, compares them with
+    the destination copies, and only copies them if they differ,
+    avoiding unnecessary overwrites.
+
+Usage:
+    Automatically executed as part of the PlatformIO build process
+    by importing this script into the project's SConstruct environment.
+------------------------------------------------------------
+"""
+
 Import("env")
 import os
 import shutil

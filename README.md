@@ -141,3 +141,7 @@ cp include\User_Setup.h .pio\libdeps\esp32-s3-devkitc-1-n16r8v\TFT_eSPI\User_Set
 ## Esempio di utilizzo di LVGL
 
 https://randomnerdtutorials.com/lvgl-cheap-yellow-display-esp32-2432s028r/
+
+## Lua
+
+https://github.dev/Sasszem/ESP8266-Arduino-Lua

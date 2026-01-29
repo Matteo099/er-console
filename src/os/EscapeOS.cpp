@@ -115,7 +115,8 @@ void xTaskLua(void *params)
                         portMAX_DELAY);
 
     LuaSystem *lua = os->getLuaSystem();
-    lua->init();
+    StorageSystem *storage = os->getStorageSystem();
+    lua->init(storage);
 
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_LUA_READY);
 
