@@ -187,53 +187,53 @@ void EscapeOS::createTasks()
         nullptr,
         0);
 
-    // // UI Task (core 1)
-    // xTaskCreatePinnedToCore(
-    //     xTaskUI,
-    //     "UITask",
-    //     8192,
-    //     this,
-    //     3,
-    //     nullptr,
-    //     1);
+    // UI Task (core 1)
+    xTaskCreatePinnedToCore(
+        xTaskUI,
+        "UITask",
+        8192,
+        this,
+        3,
+        nullptr,
+        1);
 
-    // // Storage Task
-    // xTaskCreatePinnedToCore(
-    //     xTaskStorage,
-    //     "StorageTask",
-    //     4096,
-    //     this,
-    //     2,
-    //     nullptr,
-    //     0);
+    // Storage Task
+    xTaskCreatePinnedToCore(
+        xTaskStorage,
+        "StorageTask",
+        4096,
+        this,
+        2,
+        nullptr,
+        0);
 
-    // // Input Task
-    // xTaskCreatePinnedToCore(
-    //     xTaskInput,
-    //     "InputTask",
-    //     4096,
-    //     this,
-    //     3,
-    //     nullptr,
-    //     1);
+    // Input Task
+    xTaskCreatePinnedToCore(
+        xTaskInput,
+        "InputTask",
+        4096,
+        this,
+        3,
+        nullptr,
+        1);
 
-    // // Audio Task
-    // xTaskCreatePinnedToCore(
-    //     xTaskAudio,
-    //     "AudioTask",
-    //     4096,
-    //     this,
-    //     2,
-    //     nullptr,
-    //     0);
+    // Audio Task
+    xTaskCreatePinnedToCore(
+        xTaskAudio,
+        "AudioTask",
+        4096,
+        this,
+        2,
+        nullptr,
+        0);
 
-    // // Lua Task
-    // xTaskCreatePinnedToCore(
-    //     xTaskLua,
-    //     "LuaTask",
-    //     8192,
-    //     this,
-    //     1,
-    //     nullptr,
-    //     0);
+    // Lua Task
+    xTaskCreatePinnedToCore(
+        xTaskLua,
+        "LuaTask",
+        8192,
+        this,
+        1,
+        nullptr,
+        0);
 }

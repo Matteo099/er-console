@@ -6,8 +6,11 @@
 
 void BootManager::run()
 {
+    int delayMs = 500;
+
+    // ---- CORE INIT ----
     emitStep(BootStep::CORE_INIT, "Initializing core services");
-    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(delayMs));
 
     // ---- RAINBOW LED ----
     emitStep(BootStep::RAINBOW_LED_INIT, "Initializing Rainbow LED");
@@ -17,7 +20,7 @@ void BootManager::run()
                         pdTRUE,
                         pdTRUE,
                         portMAX_DELAY);
-    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(delayMs));
 
     // ---- DISPLAY / UI ----
     emitStep(BootStep::DISPLAY_INIT, "Initializing display");
@@ -27,7 +30,7 @@ void BootManager::run()
                         pdTRUE,
                         pdTRUE,
                         portMAX_DELAY);
-    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(delayMs));
 
     // ---- STORAGE ----
     emitStep(BootStep::STORAGE_INIT, "Initializing storage");
@@ -37,7 +40,7 @@ void BootManager::run()
                         pdTRUE,
                         pdTRUE,
                         portMAX_DELAY);
-    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(delayMs));
 
     // ---- AUDIO ----
     emitStep(BootStep::AUDIO_INIT, "Initializing audio");
@@ -48,7 +51,7 @@ void BootManager::run()
         pdTRUE,
         pdTRUE,
         portMAX_DELAY);
-    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(delayMs));
 
     // ---- INPUT ----
     emitStep(BootStep::INPUT_INIT, "Initializing input");
@@ -59,7 +62,7 @@ void BootManager::run()
         pdTRUE,
         pdTRUE,
         portMAX_DELAY);
-    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(delayMs));
 
     // ---- LUA ----
     emitStep(BootStep::LUA_INIT, "Initializing Lua");
@@ -70,7 +73,7 @@ void BootManager::run()
         pdTRUE,
         pdTRUE,
         portMAX_DELAY);
-    vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(delayMs));
 
     emitStep(BootStep::DONE, "Boot completed");
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_BOOT_DONE);
