@@ -1,24 +1,17 @@
 #include "GameView.h"
-#include "log/Logger.h"
 
-static std::string formatTime(uint32_t sec)
-{
-    uint32_t h = sec / 3600;
-    uint32_t m = (sec % 3600) / 60;
-    uint32_t s = sec % 60;
-
-    char buf[16];
-    snprintf(buf, sizeof(buf), "%02lu:%02lu:%02lu", h, m, s);
-    return buf;
-}
+#include "systems/ui/components/BrandHeader.h"
+#include "systems/ui/components/BackButton.h"
+#include "Arduino.h"
 
 void GameView::create()
 {
-    // --- Screen ---
-    screen = lv_obj_create(nullptr);
-    lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
-    lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
+    /* Root */
+    root = lv_obj_create(nullptr);
+    lv_obj_set_size(root, LV_PCT(100), LV_PCT(100));
+    lv_obj_clear_flag(root, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(root, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(root, LV_OPA_COVER, 0);
 
     // --- Brand ---
     brandImg = BrandHeader::create(screen);
@@ -100,7 +93,7 @@ void GameView::setGameTitle(const std::string& title)
 
 void GameView::setTime(uint32_t seconds)
 {
-    lv_label_set_text(timerLabel, formatTime(seconds).c_str());
+    lv_label_set_text(timerLabel, String(seconds).c_str());
 }
 
 void GameView::setRunning(bool running)

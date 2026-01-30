@@ -1,4 +1,5 @@
 #include "BootScene.h"
+#include "log/Logger.h"
 
 #include "os/BootEvent.h"
 #include "core/SystemEventBus.h"
@@ -7,6 +8,7 @@
 
 void BootScene::onEnter()
 {
+    Log::info(Log::SCENE_TAG, "Entering BootScene");
     imagesLoaded = false;
     view.createTextOnly(); // SD not ready yet
 }
@@ -31,8 +33,6 @@ void BootScene::onUpdate()
         if (evt.progress >= 100)
             bootCompleted = true;
     }
-
-    view.update();
 }
 
 void BootScene::onExit()
