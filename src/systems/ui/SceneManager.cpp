@@ -1,6 +1,9 @@
 #include "systems/ui/SceneManager.h"
+
 #include "scenes/menu/MainMenuScene.h"
-#include <lvgl.h>
+#include "scenes/about/AboutScene.h"
+#include "scenes/gamelist/GameListScene.h"
+#include "scenes/settings/SettingsScene.h"
 
 static lv_scr_load_anim_t toLvgl(SceneTransition t)
 {
