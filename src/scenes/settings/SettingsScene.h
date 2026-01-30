@@ -11,9 +11,13 @@ public:
     void onExit() override;
 
     View& getView() override { return view; }
-    SceneTransition getTransition() const override { return SceneTransition::Fade; }
+    SceneTransition getTransition() const override { return SceneTransition::SlideLeft; }
     SceneRequest getRequest() const override;
 
 private:
     SettingsView view;
+    SceneRequest request = SceneRequest::None;
+
+    // ---- Settings state (logic-owned) ----
+    bool soundEnabled = true;
 };

@@ -2,19 +2,35 @@
 
 void SettingsScene::onEnter()
 {
+    view.create();
+    view.setSoundEnabled(soundEnabled);
 }
 
 void SettingsScene::onUpdate()
 {
-    view.update();
+    switch (view.consumeAction())
+    {
+    case SettingsAction::ToggleSound:
+        soundEnabled = !soundEnabled;
+        view.setSoundEnabled(soundEnabled);
+        // TODO: persist setting here
+        break;
+
+    case SettingsAction::Back:
+        request = SceneRequest::GoToMainMenu;
+        break;
+
+    default:
+        break;
+    }
 }
 
 void SettingsScene::onExit()
 {
-    // handled by SceneManager → view.destroy()
+    view.destroy();
 }
 
 SceneRequest SettingsScene::getRequest() const
 {
-    return SceneRequest::None;
+    return request;
 }
