@@ -1,5 +1,7 @@
 #include "BootView.h"
 
+#include "systems/ui/components/BrandHeader.h"
+
 void BootView::create()
 {
     // --- Screen ---
@@ -7,11 +9,9 @@ void BootView::create()
     lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
-
-    // --- Brand image (top) ---
-    brandImg = lv_img_create(screen);
-    lv_img_set_src(brandImg, "S:/brand.png");
-    lv_obj_align(brandImg, LV_ALIGN_TOP_MID, 0, 20);
+    
+    // ---- Brand image (top) ----
+    brandImg = BrandHeader::create(screen);
 
     // --- Logo image (center) ---
     logoImg = lv_img_create(screen);
@@ -98,9 +98,8 @@ void BootView::loadImages()
         return;
 
     // ---- Brand image (top) ----
-    brandImg = lv_img_create(screen);
-    lv_img_set_src(brandImg, "S:/brand.png");
-    lv_obj_align(brandImg, LV_ALIGN_TOP_MID, 0, 20);
+    brandImg = BrandHeader::create(screen);
+
 
     // ---- Logo image (center) ----
     logoImg = lv_img_create(screen);

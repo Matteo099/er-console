@@ -1,5 +1,8 @@
 #include "SettingsView.h"
 
+#include "systems/ui/components/BrandHeader.h"
+#include "systems/ui/components/BackButton.h"
+
 void SettingsView::create()
 {
     // --- Screen ---
@@ -9,9 +12,7 @@ void SettingsView::create()
     lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
 
     // --- Brand ---
-    brandImg = lv_img_create(screen);
-    lv_img_set_src(brandImg, "S:/brand.png");
-    lv_obj_align(brandImg, LV_ALIGN_TOP_MID, 0, 12);
+    brandImg = BrandHeader::create(screen);
 
     // --- Settings container ---
     container = lv_obj_create(screen);
@@ -39,18 +40,10 @@ void SettingsView::create()
     lv_obj_center(lblSound);
 
     // --- Back button ---
-    btnBack = lv_btn_create(screen);
-    lv_obj_set_size(btnBack, 90, 36);
-    lv_obj_align(btnBack, LV_ALIGN_BOTTOM_MID, 0, -12);
-    lv_obj_add_event_cb(
-        btnBack,
+    btnBack = BackButton::create(
+        screen,
         onBackClicked,
-        LV_EVENT_CLICKED,
         this);
-
-    lv_obj_t* lbl = lv_label_create(btnBack);
-    lv_label_set_text(lbl, "Back");
-    lv_obj_center(lbl);
 }
 
 void SettingsView::update()

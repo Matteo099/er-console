@@ -1,6 +1,8 @@
 #include "MainMenuView.h"
 #include <cstring>
 
+#include "systems/ui/components/BrandHeader.h"
+
 void MainMenuView::create()
 {
     screen = lv_obj_create(nullptr);
@@ -8,10 +10,8 @@ void MainMenuView::create()
     lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
 
-    // --- Brand ---
-    brandImg = lv_img_create(screen);
-    lv_img_set_src(brandImg, "S:/brand.png");
-    lv_obj_align(brandImg, LV_ALIGN_TOP_MID, 0, 12);
+    // ---- Brand image (top) ----
+    brandImg = BrandHeader::create(screen);
 
     // --- Menu container ---
     menuContainer = lv_obj_create(screen);
