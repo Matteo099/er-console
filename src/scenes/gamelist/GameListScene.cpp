@@ -7,19 +7,65 @@
 
 void GameListScene::onEnter()
 {
+    loadGames();
+    view.create();
+    view.setGames(games);
 }
 
 void GameListScene::onUpdate()
 {
     view.update();
+
+    if (view.hasSelectionChanged())
+    {
+        selectedIndex = view.getSelectedIndex();
+    }
+
+    switch (view.consumeAction())
+    {
+    case GameListAction::Back:
+        request = SceneRequest::GoToMainMenu;
+        break;
+
+    case GameListAction::StartGame:
+        // later: pass game ID to game engine
+        // games[selectedIndex].id
+        break;
+
+    default:
+        break;
+    }
 }
 
 void GameListScene::onExit()
 {
-    // handled by SceneManager → view.destroy()
+    view.destroy();
 }
+
 
 SceneRequest GameListScene::getRequest() const
 {
-    return SceneRequest::None;
+    return request;
+}
+
+
+void GameListScene::loadGames()
+{
+    // TODO: replace with SD scan + manifest parsing
+    games = {
+        {
+            "lab01",
+            "The Abandoned Lab",
+            "A mysterious laboratory sealed after a failed experiment.",
+            3,
+            45
+        },
+        {
+            "vault",
+            "The Forgotten Vault",
+            "Crack the security system before the vault locks forever.",
+            4,
+            60
+        }
+    };
 }
