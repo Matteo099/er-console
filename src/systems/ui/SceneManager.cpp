@@ -12,6 +12,9 @@ static lv_scr_load_anim_t toLvgl(SceneTransition t)
     case SceneTransition::SlideLeft:
         return LV_SCR_LOAD_ANIM_MOVE_LEFT;
 
+    case SceneTransition::SlideRight:
+        return LV_SCR_LOAD_ANIM_MOVE_RIGHT;
+
     case SceneTransition::None:
     default:
         return LV_SCR_LOAD_ANIM_NONE;
@@ -60,6 +63,18 @@ void SceneManager::update()
     {
     case SceneRequest::GoToMainMenu:
         changeScene(new MainMenuScene());
+        break;
+
+    case SceneRequest::GoToGameList:
+        changeScene(new GameListScene());
+        break;
+
+    case SceneRequest::GoToSettings:
+        changeScene(new SettingsScene());
+        break;
+
+    case SceneRequest::GoToAbout:
+        changeScene(new AboutScene());
         break;
 
     default:

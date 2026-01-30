@@ -15,7 +15,10 @@ public:
     {
         return SceneTransition::Fade;
     }
+    SceneRequest getRequest() const override;
 
 private:
     MainMenuView view;
-};
+    SceneRequest request = SceneRequest::None;
+};    
+

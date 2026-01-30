@@ -5,12 +5,16 @@
 enum class SceneTransition {
     None,
     SlideLeft,
+    SlideRight,
     Fade
 };
 
 enum class SceneRequest {
     None,
-    GoToMainMenu
+    GoToMainMenu,
+    GoToGameList,
+    GoToSettings,
+    GoToAbout,
 };
 
 class Scene

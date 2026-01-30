@@ -1,7 +1,6 @@
 #include "MainMenuView.h"
 #include <cstring>
 
-
 void MainMenuView::create()
 {
     screen = lv_obj_create(nullptr);
@@ -26,20 +25,30 @@ void MainMenuView::create()
     lv_obj_set_style_bg_opa(menuContainer, LV_OPA_TRANSP, 0);
     lv_obj_clear_flag(menuContainer, LV_OBJ_FLAG_SCROLLABLE);
 
-    auto createButton = [&](const char* text) {
-        lv_obj_t* btn = lv_btn_create(menuContainer);
+    // --- Button factory ---
+    auto createButton = [&](const char *label, const char *action)
+    {
+        lv_obj_t *btn = lv_btn_create(menuContainer);
         lv_obj_set_width(btn, 200);
-        lv_obj_add_event_cb(btn, onButtonClicked, LV_EVENT_CLICKED, (void*)text);
+        lv_obj_set_height(btn, 42);
+        lv_obj_add_event_cb(
+            btn,
+            onButtonClicked,
+            LV_EVENT_CLICKED,
+            (void *)action);
 
-        lv_obj_t* lbl = lv_label_create(btn);
-        lv_label_set_text(lbl, text);
+        lv_obj_t *lbl = lv_label_create(btn);
+        lv_label_set_text(lbl, label);
+        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_16, 0);
         lv_obj_center(lbl);
+
         return btn;
     };
 
-    btnStart    = createButton("Start");
-    btnSettings = createButton("Settings");
-    btnAbout    = createButton("About");
+    // --- Buttons ---
+    btnNewGame = createButton("New Game", "new_game");
+    btnSettings = createButton("Settings", "settings");
+    btnAbout = createButton("About", "about");
 }
 
 void MainMenuView::update()
@@ -55,22 +64,30 @@ void MainMenuView::destroy()
     screen = nullptr;
     brandImg = nullptr;
     menuContainer = nullptr;
-    btnStart = btnSettings = btnAbout = nullptr;
+    btnNewGame = btnSettings = btnAbout = nullptr;
 }
 
-void MainMenuView::onButtonClicked(lv_event_t* e)
+void MainMenuView::onButtonClicked(lv_event_t *e)
 {
-    const char* action = static_cast<const char*>(lv_event_get_user_data(e));
+    auto *view =
+        static_cast<MainMenuView *>(lv_event_get_user_data(e));
+    const char *action =
+        static_cast<const char *>(lv_event_get_user_data(e));
 
-    if (!action) return;
+    if (!view || !action)
+        return;
 
-    if (strcmp(action, "Start") == 0) {
-        // TODO: change to game scene
-    }
-    else if (strcmp(action, "Settings") == 0) {
-        // TODO
-    }
-    else if (strcmp(action, "About") == 0) {
-        // TODO
-    }
+    if (strcmp(action, "new_game") == 0)
+        view->pendingAction = MainMenuAction::NewGame;
+    else if (strcmp(action, "settings") == 0)
+        view->pendingAction = MainMenuAction::Settings;
+    else if (strcmp(action, "about") == 0)
+        view->pendingAction = MainMenuAction::About;
+}
+
+MainMenuAction MainMenuView::consumeAction()
+{
+    MainMenuAction a = pendingAction;
+    pendingAction = MainMenuAction::None;
+    return a;
 }
