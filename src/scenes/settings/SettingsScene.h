@@ -16,7 +16,7 @@ public:
 
 private:
     SettingsView view;
-    SceneRequest request = SceneRequest::None;
+    SceneRequest request = SceneRequest();
 
     // ---- Settings state (logic-owned) ----
     bool soundEnabled = true;

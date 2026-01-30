@@ -17,5 +17,5 @@ public:
 
 private:
     AboutView view;
-    SceneRequest request = SceneRequest::None;
+    SceneRequest request = SceneRequest();
 };

@@ -24,12 +24,12 @@ void GameListScene::onUpdate()
     switch (view.consumeAction())
     {
     case GameListAction::Back:
-        request = SceneRequest::GoToMainMenu;
+        request = SceneRequest(SceneChange::GoToMainMenu);
         break;
 
     case GameListAction::StartGame:
-        // later: pass game ID to game engine
-        // games[selectedIndex].id
+        // TODO: &games[selectedIndex].id - is it correct?
+        request = SceneRequest(SceneChange::GoToGame, &games[selectedIndex].id);
         break;
 
     default:

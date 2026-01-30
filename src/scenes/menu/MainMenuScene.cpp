@@ -13,15 +13,15 @@ void MainMenuScene::onUpdate()
     switch (view.consumeAction())
     {
     case MainMenuAction::NewGame:
-        request = SceneRequest::GoToGameList;
+        request = SceneRequest(SceneChange::GoToGameList);
         break;
 
     case MainMenuAction::Settings:
-        request = SceneRequest::GoToSettings;
+        request = SceneRequest(SceneChange::GoToSettings);
         break;
 
     case MainMenuAction::About:
-        request = SceneRequest::GoToAbout;
+        request = SceneRequest(SceneChange::GoToAbout);
         break;
 
     default:

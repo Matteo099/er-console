@@ -12,7 +12,7 @@ void AboutScene::onUpdate()
     switch (view.consumeAction())
     {
     case AboutAction::Back:
-        request = SceneRequest::GoToMainMenu;
+        request = SceneRequest(SceneChange::GoToMainMenu);
         break;
 
     default:

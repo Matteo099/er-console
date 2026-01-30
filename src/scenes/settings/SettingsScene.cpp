@@ -17,7 +17,7 @@ void SettingsScene::onUpdate()
         break;
 
     case SettingsAction::Back:
-        request = SceneRequest::GoToMainMenu;
+        request = SceneRequest(SceneChange::GoToMainMenu);
         break;
 
     default:

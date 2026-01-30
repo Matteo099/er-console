@@ -42,8 +42,7 @@ void BootScene::onExit()
 
 SceneRequest BootScene::getRequest() const
 {
-    if (bootCompleted)
-        return SceneRequest::GoToMainMenu;
-
-    return SceneRequest::None;
+    return bootCompleted
+               ? SceneRequest(SceneChange::GoToMainMenu)
+               : SceneRequest();
 }

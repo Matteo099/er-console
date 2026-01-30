@@ -62,25 +62,30 @@ void SceneManager::update()
     current->onUpdate();
     current->getView().update();
 
-    switch (current->getRequest())
+    SceneRequest req = current->getRequest();
+
+    if (!req.isNone())
     {
-    case SceneRequest::GoToMainMenu:
-        changeScene(new MainMenuScene());
-        break;
+        switch (req.change)
+        {
+        case SceneChange::GoToMainMenu:
+            changeScene(new MainMenuScene());
+            break;
 
-    case SceneRequest::GoToGameList:
-        changeScene(new GameListScene());
-        break;
+        case SceneChange::GoToGameList:
+            changeScene(new GameListScene());
+            break;
 
-    case SceneRequest::GoToSettings:
-        changeScene(new SettingsScene());
-        break;
+        case SceneChange::GoToSettings:
+            changeScene(new SettingsScene());
+            break;
 
-    case SceneRequest::GoToAbout:
-        changeScene(new AboutScene());
-        break;
+        case SceneChange::GoToAbout:
+            changeScene(new AboutScene());
+            break;
 
-    default:
-        break;
+        default:
+            break;
+        }
     }
 }
