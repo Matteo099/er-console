@@ -9,7 +9,15 @@ void BootManager::run()
     emitStep(BootStep::CORE_INIT, "Initializing core services");
     vTaskDelay(pdMS_TO_TICKS(100));
 
-    // BootManager::run()
+    // ---- RAINBOW LED ----
+    emitStep(BootStep::RAINBOW_LED_INIT, "Initializing Rainbow LED");
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_RAINBOWLED_INIT_REQ);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_RAINBOWLED_READY,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
+    vTaskDelay(pdMS_TO_TICKS(100));
 
     // ---- DISPLAY / UI ----
     emitStep(BootStep::DISPLAY_INIT, "Initializing display");

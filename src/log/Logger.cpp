@@ -1,9 +1,13 @@
 #include "Logger.h"
+
+#include <Arduino.h>
 #include <cstdarg>
 
 static esp_log_level_t currentLevel = ESP_LOG_INFO;
 
 void Log::init(Level level) {
+    Serial.begin(115200);
+    
     switch (level) {
         case Level::ERROR:   currentLevel = ESP_LOG_ERROR; break;
         case Level::WARNING: currentLevel = ESP_LOG_WARN;  break;
@@ -14,9 +18,15 @@ void Log::init(Level level) {
     esp_log_level_set("*", currentLevel);
 }
 
+// static void logInternal(esp_log_level_t level, const char* tag, const char* format, va_list args) {
+//     esp_log_writev(level, tag, format, args);
+// }
 static void logInternal(esp_log_level_t level, const char* tag, const char* format, va_list args) {
-    esp_log_writev(level, tag, format, args);
+    char buffer[256];
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    Serial.printf("[%lu][%s] %s\n", millis(), tag, buffer);
 }
+
 
 void Log::error(const char* tag, const char* format, ...) {
     va_list args;

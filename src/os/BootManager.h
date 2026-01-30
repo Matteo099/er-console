@@ -9,6 +9,7 @@ public:
     enum class BootStep : uint8_t
     {
         CORE_INIT = 0,
+        RAINBOW_LED_INIT,
         DISPLAY_INIT,
         STORAGE_INIT,
         AUDIO_INIT,

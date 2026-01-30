@@ -1,15 +1,16 @@
 #pragma once
 
-
 // display
-#define TFT_CS_PIN      5
-#define TOUCH_CS_PIN    4
-
+#define TFT_CS_PIN 5
+#define TOUCH_CS_PIN 4
 
 // sd
-#define SD_CS_PIN       15
-
+#define SD_CS_PIN 15
 
 // audio
-#define I2S_PORT        I2S_NUM_0
-#define SAMPLE_RATE     44100
+#define I2S_PORT I2S_NUM_0
+#define SAMPLE_RATE 44100
+
+// neo-pixel
+#define PIN 48
+#define NUMPIXELS 1

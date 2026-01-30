@@ -10,6 +10,7 @@
 #include "systems/input/InputSystem.h"
 #include "systems/audio/AudioSystem.h"
 #include "systems/lua/LuaSystem.h"
+#include "systems/rainbowpixel/RainbowPixel.h"
 
 class EscapeOS
 {
@@ -23,11 +24,13 @@ public:
     InputSystem* getInputSystem() { return &inputSystem; }
     AudioSystem* getAudioSystem() { return &audioSystem; }
     LuaSystem* getLuaSystem() { return &luaSystem; }
+    RainbowPixel* getRainbowPixel() { return &rainbowPixel; }
 
 private:
     bool running = false;
 
     BootManager bootManager;
+    RainbowPixel rainbowPixel;
     UIManager uiManager;
     StorageSystem storageSystem;
     InputSystem inputSystem;
