@@ -45,6 +45,7 @@ void AudioSystem::update()
             switch (evt.type)
             {
             case AudioEventType::BEEP:
+                Log::debug(Log::AUDIO_TAG, "Playing beep freq=%d ms=%d", evt.beep.freq, evt.beep.ms);
                 driver->playTone(
                     evt.beep.freq,
                     evt.beep.ms);
@@ -52,16 +53,19 @@ void AudioSystem::update()
 
             case AudioEventType::PLAY_WAV:
             {
+                Log::info(Log::AUDIO_TAG, "Playing wav: %s", evt.wav.path);
                 IFile *f = storage->open(evt.wav.path);
                 driver->playWav(f);
                 break;
             }
 
             case AudioEventType::STOP:
+                Log::debug(Log::AUDIO_TAG, "Stopping audio");
                 driver->stop();
                 break;
 
             case AudioEventType::SET_VOLUME:
+                Log::info(Log::AUDIO_TAG, "Setting volume to %d", evt.volume.volume);
                 volume = evt.volume.volume;
                 driver->setVolume(volume);
                 break;

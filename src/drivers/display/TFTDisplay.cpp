@@ -1,9 +1,11 @@
 #include "TFTDisplay.h"
+#include "log/Logger.h"
 
 TFTDisplay::TFTDisplay() : tft() {}
 
 void TFTDisplay::init()
 {
+    Log::info(Log::DISPLAY_TAG, "Initializing TFTDisplay");
     tft.init();
     tft.setRotation(1);
     tft.fillScreen(TFT_BLACK);

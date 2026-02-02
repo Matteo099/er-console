@@ -1,10 +1,12 @@
 #include "MainMenuView.h"
+#include "log/Logger.h"
 #include <cstring>
 
 #include "systems/ui/components/BrandHeader.h"
 
 void MainMenuView::create()
 {
+    Log::debug(Log::UI_TAG, "Creating MainMenuView");
     screen = lv_obj_create(nullptr);
     lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(screen, lv_color_black(), 0);

@@ -1,59 +1,35 @@
 #include "GameScene.h"
+#include "log/Logger.h"
 
 void GameScene::onEnter()
 {
+<<<<<<< HEAD
     view.create();
     view.setTime(remainingSec);
     view.setRunning(false);
+    view.setTime(remainingSec);
+    view.setRunning(false);
+=======
+    Log::info(Log::SCENE_TAG, "Entering GameScene");
+>>>>>>> 4b9c6e7 (add logging to various drivers and scenes for better debugging and tracking)
 }
 
 void GameScene::onUpdate()
 {
-    view.update();
-
-    /* Handle buttons */
-    if (view.startPressed)
+    switch (view.consumeAction())
     {
-        view.startPressed = false;
-
-        if (state == GameState::Ready || state == GameState::Paused)
-        {
-            state = GameState::Running;
-            lastTickMs = lv_tick_get();
-            view.setRunning(true);
-        }
-        else if (state == GameState::Running)
-        {
-            state = GameState::Paused;
-            view.setRunning(false);
-        }
-    }
-
-    if (view.cancelPressed)
-    {
+    case GameAction::Back:
         request = SceneRequest(SceneChange::GoToMainMenu);
-        return;
-    }
+        break;
 
-    /* Timer */
-    if (state == GameState::Running && remainingSec > 0)
-    {
-        uint32_t now = lv_tick_get();
-        if (now - lastTickMs >= 1000)
-        {
-            lastTickMs += 1000;
-            remainingSec--;
-            view.setTime(remainingSec);
-
-            if (remainingSec == 0)
-                state = GameState::Finished;
-        }
+    default:
+        break;
     }
+    view.update();
 }
 
 void GameScene::onExit()
 {
-    view.destroy();
 }
 
 SceneRequest GameScene::getRequest() const

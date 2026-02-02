@@ -1,10 +1,12 @@
 #include "XPT2046Touch.h"
+#include "log/Logger.h"
 
 XPT2046Touch::XPT2046Touch(uint8_t csPin)
     : ts(csPin) {}
 
 void XPT2046Touch::init()
 {
+    Log::info(Log::DRIVER_TAG, "Initializing Touch XPT2046");
     ts.begin();
     ts.setRotation(1);
 }

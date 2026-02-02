@@ -133,7 +133,7 @@ void xTaskAudio(void *params)
 
 void xTaskLua(void *params)
 {
-    Log::info(Log::OS_TAG, "Starting task 'xTaskAudio'");
+    Log::info(Log::OS_TAG, "Starting task 'xTaskLua'");
     EscapeOS *os = static_cast<EscapeOS *>(params);
     xEventGroupWaitBits(SystemEventBus::systemEvents,
                         EVT_LUA_INIT_REQ,

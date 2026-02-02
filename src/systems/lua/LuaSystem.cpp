@@ -120,6 +120,7 @@ bool LuaSystem::loadMainScript(const char* path)
     }
 
     // Execute script
+    Log::info(Log::LUA_TAG, "Executing Lua script: %s", path);
     if (lua_pcall(L, 0, 0, 0) != LUA_OK)
     {
         Log::error(

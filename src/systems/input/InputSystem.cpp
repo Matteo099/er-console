@@ -1,7 +1,8 @@
 #include "InputSystem.h"
+#include "log/Logger.h"
 
 void InputSystem::init(void *params) {
-    // initialization code
+    Log::info(Log::INPUT_TAG, "Initializing InputSystem");
 }
 
 void InputSystem::update() {

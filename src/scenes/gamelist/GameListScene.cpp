@@ -1,4 +1,5 @@
 #include "GameListScene.h"
+#include "log/Logger.h"
 
 #include "os/BootEvent.h"
 #include "core/SystemEventBus.h"
@@ -7,15 +8,13 @@
 
 void GameListScene::onEnter()
 {
+    Log::info(Log::SCENE_TAG, "Entering GameListScene");
     loadGames();
-    view.create();
     view.setGames(games);
 }
 
 void GameListScene::onUpdate()
 {
-    view.update();
-
     if (view.hasSelectionChanged())
     {
         selectedIndex = view.getSelectedIndex();
@@ -39,7 +38,6 @@ void GameListScene::onUpdate()
 
 void GameListScene::onExit()
 {
-    view.destroy();
 }
 
 

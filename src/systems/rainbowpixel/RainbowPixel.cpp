@@ -1,10 +1,12 @@
 #include "RainbowPixel.h"
+#include "log/Logger.h"
 
 RainbowPixel::RainbowPixel()
     : pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800) {}
 
 void RainbowPixel::init(void *params)
 {
+  Log::info(Log::LED_TAG, "Initializing RainbowPixel (NUM=%d PIN=%d)", NUMPIXELS, PIN);
   pixels.begin();
   pixels.setBrightness(5);
 }

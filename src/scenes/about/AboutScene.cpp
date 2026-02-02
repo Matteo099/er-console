@@ -1,10 +1,11 @@
 #include "AboutScene.h"
+#include "log/Logger.h"
 
 #include "AboutAction.h"
 
 void AboutScene::onEnter()
 {
-    view.create();
+    Log::info(Log::SCENE_TAG, "Entering AboutScene");
 }
 
 void AboutScene::onUpdate()
@@ -18,12 +19,10 @@ void AboutScene::onUpdate()
     default:
         break;
     }
-    view.update();
 }
 
 void AboutScene::onExit()
 {
-    view.destroy();
 }
 
 SceneRequest AboutScene::getRequest() const
