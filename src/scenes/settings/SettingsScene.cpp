@@ -8,6 +8,8 @@ void SettingsScene::onEnter()
 
 void SettingsScene::onUpdate()
 {
+    view.update();
+
     switch (view.consumeAction())
     {
     case SettingsAction::ToggleSound:

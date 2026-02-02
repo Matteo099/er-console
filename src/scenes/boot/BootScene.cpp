@@ -37,7 +37,7 @@ void BootScene::onUpdate()
 
 void BootScene::onExit()
 {
-    // handled by SceneManager → view.destroy()
+    view.destroy();
 }
 
 SceneRequest BootScene::getRequest() const

@@ -1,85 +1,145 @@
 #include "GameView.h"
 
-#include "systems/ui/components/BrandHeader.h"
-#include "systems/ui/components/BackButton.h"
+static std::string formatTime(uint32_t sec)
+{
+    uint32_t h = sec / 3600;
+    uint32_t m = (sec % 3600) / 60;
+    uint32_t s = sec % 60;
+
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%02lu:%02lu:%02lu", h, m, s);
+    return buf;
+}
 
 void GameView::create()
 {
-    // --- Screen ---
-    screen = lv_obj_create(nullptr);
-    lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
-    lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
+    /* Root */
+    root = lv_obj_create(nullptr);
+    lv_obj_set_size(root, LV_PCT(100), LV_PCT(100));
+    lv_obj_clear_flag(root, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(root, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(root, LV_OPA_COVER, 0);
 
-    // --- Brand ---
-    brandImg = BrandHeader::create(screen);
+    /* ================= HEADER ================= */
+    header = lv_obj_create(root);
+    lv_obj_set_size(header, LV_PCT(100), 48);
+    lv_obj_align(header, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_clear_flag(header, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(header, LV_OPA_TRANSP, 0);
 
-    // --- Content container ---
-    container = lv_obj_create(screen);
-    lv_obj_set_size(container, 220, 120);
-    lv_obj_align(container, LV_ALIGN_CENTER, 0, 10);
-    lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
-    lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_flex_flow(container, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(
-        container,
-        LV_FLEX_ALIGN_CENTER,
-        LV_FLEX_ALIGN_CENTER,
-        LV_FLEX_ALIGN_CENTER);
+    /* Game title (left) */
+    titleLabel = lv_label_create(header);
+    lv_label_set_text(titleLabel, "Escape Room");
+    lv_obj_set_style_text_font(titleLabel, &lv_font_montserrat_16, 0);
+    lv_obj_align(titleLabel, LV_ALIGN_LEFT_MID, 12, 0);
 
-    // --- Game text ---
-    textLabel = lv_label_create(container);
-    lv_label_set_text(
-        textLabel,
-        "EscapeOS\n\n"
-        "Open escape-room engine\n"
-        "for ESP32-based consoles.\n\n"
-        "© 2026");
+    /* Info button (right) */
+    infoBtn = lv_btn_create(header);
+    lv_obj_set_size(infoBtn, 36, 36);
+    lv_obj_align(infoBtn, LV_ALIGN_RIGHT_MID, -52, 0);
+    lv_obj_add_event_cb(infoBtn, onInfo, LV_EVENT_CLICKED, this);
 
-    lv_obj_set_style_text_align(textLabel, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_font(textLabel, &lv_font_montserrat_14, 0);
-    lv_obj_set_style_text_color(textLabel, lv_color_hex(0xCCCCCC), 0);
+    auto* infoLbl = lv_label_create(infoBtn);
+    lv_label_set_text(infoLbl, "i");
+    lv_obj_center(infoLbl);
 
-    // --- Back button ---
-    btnBack = BackButton::create(
-        screen,
-        onBackClicked,
-        this);
+    /* Settings button (rightmost) */
+    settingsBtn = lv_btn_create(header);
+    lv_obj_set_size(settingsBtn, 36, 36);
+    lv_obj_align(settingsBtn, LV_ALIGN_RIGHT_MID, -8, 0);
+    lv_obj_add_event_cb(settingsBtn, onSettings, LV_EVENT_CLICKED, this);
+
+    auto* setLbl = lv_label_create(settingsBtn);
+    lv_label_set_text(setLbl, "⚙");
+    lv_obj_center(setLbl);
+
+    /* ================= TIMER ================= */
+    timerLabel = lv_label_create(root);
+    lv_obj_set_style_text_font(timerLabel, &lv_font_montserrat_48, 0);
+    lv_label_set_text(timerLabel, "01:00:00");
+    lv_obj_align(timerLabel, LV_ALIGN_CENTER, 0, -20);
+
+    /* ================= START / PAUSE ================= */
+    startPauseBtn = lv_btn_create(root);
+    lv_obj_set_size(startPauseBtn, 120, 44);
+    lv_obj_align(startPauseBtn, LV_ALIGN_BOTTOM_LEFT, 20, -20);
+    lv_obj_add_event_cb(startPauseBtn, onStartPause, LV_EVENT_CLICKED, this);
+
+    startPauseLabel = lv_label_create(startPauseBtn);
+    lv_label_set_text(startPauseLabel, "Start");
+    lv_obj_center(startPauseLabel);
+
+    /* ================= CANCEL ================= */
+    cancelBtn = lv_btn_create(root);
+    lv_obj_set_size(cancelBtn, 120, 44);
+    lv_obj_align(cancelBtn, LV_ALIGN_BOTTOM_RIGHT, -20, -20);
+    lv_obj_add_event_cb(cancelBtn, onCancel, LV_EVENT_CLICKED, this);
+
+    auto* cancelLbl = lv_label_create(cancelBtn);
+    lv_label_set_text(cancelLbl, "Cancel");
+    lv_obj_center(cancelLbl);
 }
 
 void GameView::update()
 {
-    // Static screen — nothing animated for now
+    /* no periodic UI logic */
 }
 
 void GameView::destroy()
 {
-    if (screen)
-        lv_obj_del(screen);
+    if (root)
+        lv_obj_del(root);
 
-    screen = nullptr;
-    brandImg = nullptr;
-    container = nullptr;
-    textLabel = nullptr;
-    btnBack = nullptr;
-
-    pendingAction = GameAction::None;
+    root = nullptr;
+    header = nullptr;
+    titleLabel = nullptr;
+    timerLabel = nullptr;
+    startPauseBtn = nullptr;
+    startPauseLabel = nullptr;
+    cancelBtn = nullptr;
+    infoBtn = nullptr;
+    settingsBtn = nullptr;
 }
 
-void GameView::onBackClicked(lv_event_t *e)
+/* ================= API ================= */
+
+void GameView::setGameTitle(const std::string& title)
 {
-    auto *view =
-        static_cast<GameView *>(lv_event_get_user_data(e));
-
-    if (!view)
-        return;
-
-    view->pendingAction = GameAction::Back;
+    lv_label_set_text(titleLabel, title.c_str());
 }
 
-GameAction GameView::consumeAction()
+void GameView::setTime(uint32_t seconds)
 {
-    GameAction a = pendingAction;
-    pendingAction = GameAction::None;
-    return a;
+    lv_label_set_text(timerLabel, formatTime(seconds).c_str());
+}
+
+void GameView::setRunning(bool running)
+{
+    lv_label_set_text(startPauseLabel, running ? "Pause" : "Start");
+}
+
+/* ================= EVENTS ================= */
+
+void GameView::onStartPause(lv_event_t* e)
+{
+    auto* view = static_cast<GameView*>(lv_event_get_user_data(e));
+    view->startPressed = true;
+}
+
+void GameView::onCancel(lv_event_t* e)
+{
+    auto* view = static_cast<GameView*>(lv_event_get_user_data(e));
+    view->cancelPressed = true;
+}
+
+void GameView::onInfo(lv_event_t* e)
+{
+    auto* view = static_cast<GameView*>(lv_event_get_user_data(e));
+    view->infoPressed = true;
+}
+
+void GameView::onSettings(lv_event_t* e)
+{
+    auto* view = static_cast<GameView*>(lv_event_get_user_data(e));
+    view->settingsPressed = true;
 }

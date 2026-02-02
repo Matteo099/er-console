@@ -37,13 +37,11 @@ void SceneManager::changeScene(Scene *next)
     if (current)
     {
         current->onExit();
-        current->getView().destroy();
         delete current;
     }
 
     current = next;
 
-    current->getView().create();
     current->onEnter();
 
     lv_scr_load_anim(
@@ -60,7 +58,6 @@ void SceneManager::update()
         return;
 
     current->onUpdate();
-    current->getView().update();
 
     SceneRequest req = current->getRequest();
 
