@@ -1,5 +1,6 @@
 #pragma once
 #include "DisplayDriver.h"
+#include <SPI.h>
 #include <TFT_eSPI.h>
 
 class TFTDisplay : public DisplayDriver
@@ -20,3 +21,4 @@ public:
 private:
     TFT_eSPI tft;
 };
+

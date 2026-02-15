@@ -75,8 +75,8 @@ void BootManager::run()
         portMAX_DELAY);
     vTaskDelay(pdMS_TO_TICKS(delayMs));
 
-    emitStep(BootStep::DONE, "Boot completed");
-    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_BOOT_DONE);
+    // emitStep(BootStep::DONE, "Boot completed");
+    // xEventGroupSetBits(SystemEventBus::systemEvents, EVT_BOOT_DONE);
 }
 
 uint8_t BootManager::bootProgress(BootStep step)

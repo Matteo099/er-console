@@ -14,10 +14,10 @@ void UIManager::init(void *params)
     Log::info(Log::UI_TAG, "Initializing UI Manager");
 
     static TFTDisplay display;
-    static XPT2046Touch touch(TOUCH_CS_PIN);
+    static XPT2046Touch touch;
 
     display.init();
-    touch.init();
+    // touch.init();
 
     // 1. Initialize LVGL core + display + touch
     lvgl.init(&display, &touch);

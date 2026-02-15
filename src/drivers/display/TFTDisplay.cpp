@@ -6,9 +6,13 @@ TFTDisplay::TFTDisplay() : tft() {}
 void TFTDisplay::init()
 {
     Log::info(Log::DISPLAY_TAG, "Initializing TFTDisplay");
+    SPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI); 
     tft.init();
+    Log::info(Log::DISPLAY_TAG, "tft.begin");
     tft.setRotation(1);
+    Log::info(Log::DISPLAY_TAG, "tft.setRotation(1)");
     tft.fillScreen(TFT_BLACK);
+    Log::info(Log::DISPLAY_TAG, "TFT initialized OK");
 }
 
 void TFTDisplay::flush(

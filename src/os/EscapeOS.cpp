@@ -201,11 +201,11 @@ void EscapeOS::createTasks()
     xTaskCreatePinnedToCore(
         xTaskStorage,
         "StorageTask",
-        4096,
+        8192,
         this,
         2,
         nullptr,
-        0);
+        1);
 
     // Input Task
     xTaskCreatePinnedToCore(

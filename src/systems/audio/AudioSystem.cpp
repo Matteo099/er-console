@@ -1,5 +1,6 @@
 #include "AudioSystem.h"
 
+#include "config/BoardConfig.h"
 #include "core/SystemEventBus.h"
 #include "systems/audio/AudioEvent.h"
 #include "drivers/audio/MAX98357Driver.h"
@@ -8,9 +9,9 @@
 AudioSystem::AudioSystem()
 {
     driver = new MAX98357Driver(
-        GPIO_NUM_4, // BCLK
-        GPIO_NUM_5, // LRCK
-        GPIO_NUM_6  // DOUT
+        I2S_BCLK, // BCLK
+        I2S_LRC,  // LRCK
+        I2S_DOUT  // DOUT
     );
 }
 
