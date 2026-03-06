@@ -358,6 +358,36 @@ static int lua_input_analogWrite(lua_State* L)
     return 0;
 }
 
+// RFID read
+static int lua_input_rfidRead(lua_State* L)
+{
+    lua_getfield(L, LUA_REGISTRYINDEX, "inputSystem_ptr");
+    InputSystem* inputSys = (InputSystem*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    if (inputSys) {
+        std::string id = inputSys->rfidRead();
+        lua_pushstring(L, id.c_str());
+        return 1;
+    }
+    return 0;
+}
+
+// OLED print
+static int lua_input_oledPrint(lua_State* L)
+{
+    const char* text = luaL_checkstring(L, 1);
+
+    lua_getfield(L, LUA_REGISTRYINDEX, "inputSystem_ptr");
+    InputSystem* inputSys = (InputSystem*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    if (inputSys)
+        inputSys->oledPrint(text);
+
+    return 0;
+}
+
 // Time binding
 static int lua_time_get(lua_State* L)
 {
@@ -453,6 +483,10 @@ void LuaSystem::registerGameAPI()
     lua_setfield(L, -2, "digitalRead");
     lua_pushcfunction(L, lua_input_analogWrite);
     lua_setfield(L, -2, "analogWrite");
+    lua_pushcfunction(L, lua_input_rfidRead);
+    lua_setfield(L, -2, "rfidRead");
+    lua_pushcfunction(L, lua_input_oledPrint);
+    lua_setfield(L, -2, "oledPrint");
     lua_setglobal(L, "input");
 
     // Create time table

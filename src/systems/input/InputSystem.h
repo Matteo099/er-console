@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/SystemService.h"
+#include <string>
 
 class InputSystem : public SystemService {
 public:
@@ -11,4 +12,7 @@ public:
     void digitalWrite(int pin, int value);  // value: 0=LOW, 1=HIGH
     int digitalRead(int pin);
     void analogWrite(int pin, int value);  // PWM, if supported
+
+    std::string rfidRead();  // Read RFID badge ID
+    void oledPrint(const char* text);  // Print to OLED display
 };
