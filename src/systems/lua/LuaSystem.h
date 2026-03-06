@@ -9,6 +9,9 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+// Forward declaration
+class GameView;
+
 class LuaSystem : public SystemService
 {
 public:
@@ -20,11 +23,20 @@ public:
     void update() override;
 
     // Script control
+    bool loadScript(const char* path);
     bool loadMainScript(const char* path);
+    void unloadScript();
     void restart();
 
     // State
     bool isReady() const { return ready; }
+    bool isScriptLoaded() const { return scriptLoaded; }
+
+    // Lua VM access
+    lua_State* getVM() { return L; }
+
+    // API registration (for dependency injection)
+    void setGameView(GameView* view) { gameView = view; }
 
 private:
     // Lua VM
@@ -32,6 +44,7 @@ private:
 
     // Dependencies
     StorageSystem* storage = nullptr;
+    GameView* gameView = nullptr;
 
     // State flags
     bool ready = false;
@@ -41,6 +54,8 @@ private:
     bool createVM();
     void destroyVM();
     void registerBaseLibraries();
+    void registerGameAPI();
 
     void tick(); // one non-blocking execution step
 };
+

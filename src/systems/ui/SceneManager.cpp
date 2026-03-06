@@ -4,6 +4,8 @@
 #include "scenes/about/AboutScene.h"
 #include "scenes/gamelist/GameListScene.h"
 #include "scenes/settings/SettingsScene.h"
+#include "scenes/game/GameScene.h"
+#include "core/SystemEventBus.h"
 
 static lv_scr_load_anim_t toLvgl(SceneTransition t)
 {
@@ -80,6 +82,27 @@ void SceneManager::update()
         case SceneChange::GoToAbout:
             changeScene(new AboutScene());
             break;
+
+        case SceneChange::GoToGame:
+        {
+            GameScene* gameScene = new GameScene();
+            // Extract game ID from params
+            if (req.params)
+            {
+                std::string* gameIdPtr = static_cast<std::string*>(req.params);
+                gameScene->setGameId(*gameIdPtr);
+
+                // Also set the GameView's LuaSystem reference
+                LuaSystem* luaSystem = static_cast<LuaSystem*>(
+                    SystemEventBus::instance().getService(SystemEventBus::SERVICE_LUA));
+                if (luaSystem)
+                {
+                    luaSystem->setGameView(static_cast<GameView*>(&gameScene->getView()));
+                }
+            }
+            changeScene(gameScene);
+            break;
+        }
 
         default:
             break;
