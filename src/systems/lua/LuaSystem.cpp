@@ -3,6 +3,7 @@
 #include "log/Logger.h"
 #include "scenes/game/GameView.h"
 #include <string>
+#include <Arduino.h>
 
 LuaSystem::LuaSystem() {}
 
@@ -279,6 +280,129 @@ static int lua_display_line(lua_State* L)
     return 0;
 }
 
+// Audio bindings
+static int lua_audio_beep(lua_State* L)
+{
+    uint16_t freq = (uint16_t)luaL_optinteger(L, 1, 1000);
+    uint16_t ms = (uint16_t)luaL_optinteger(L, 2, 100);
+
+    lua_getfield(L, LUA_REGISTRYINDEX, "audioSystem_ptr");
+    AudioSystem* audioSys = (AudioSystem*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    if (audioSys)
+        audioSys->beep(freq, ms);
+
+    return 0;
+}
+
+// Input bindings
+static int lua_input_pinMode(lua_State* L)
+{
+    int pin = luaL_checkinteger(L, 1);
+    int mode = luaL_checkinteger(L, 2);
+
+    lua_getfield(L, LUA_REGISTRYINDEX, "inputSystem_ptr");
+    InputSystem* inputSys = (InputSystem*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    if (inputSys)
+        inputSys->pinMode(pin, mode);
+
+    return 0;
+}
+
+static int lua_input_digitalWrite(lua_State* L)
+{
+    int pin = luaL_checkinteger(L, 1);
+    int value = luaL_checkinteger(L, 2);
+
+    lua_getfield(L, LUA_REGISTRYINDEX, "inputSystem_ptr");
+    InputSystem* inputSys = (InputSystem*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    if (inputSys)
+        inputSys->digitalWrite(pin, value);
+
+    return 0;
+}
+
+static int lua_input_digitalRead(lua_State* L)
+{
+    int pin = luaL_checkinteger(L, 1);
+
+    lua_getfield(L, LUA_REGISTRYINDEX, "inputSystem_ptr");
+    InputSystem* inputSys = (InputSystem*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    if (inputSys) {
+        int value = inputSys->digitalRead(pin);
+        lua_pushinteger(L, value);
+        return 1;
+    }
+    return 0;
+}
+
+static int lua_input_analogWrite(lua_State* L)
+{
+    int pin = luaL_checkinteger(L, 1);
+    int value = luaL_checkinteger(L, 2);
+
+    lua_getfield(L, LUA_REGISTRYINDEX, "inputSystem_ptr");
+    InputSystem* inputSys = (InputSystem*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    if (inputSys)
+        inputSys->analogWrite(pin, value);
+
+    return 0;
+}
+
+// Time binding
+static int lua_time_get(lua_State* L)
+{
+    // Simple time simulation - in real implementation, use ESP32 time functions
+    // For now, return a formatted string based on millis
+    unsigned long ms = millis();
+    int seconds = (ms / 1000) % 60;
+    int minutes = (ms / 60000) % 60;
+    int hours = (ms / 3600000) % 24;
+    
+    char timeStr[9];
+    sprintf(timeStr, "%02d:%02d:%02d", hours, minutes, seconds);
+    lua_pushstring(L, timeStr);
+    return 1;
+}
+
+// Game control bindings
+static int lua_game_quit(lua_State* L)
+{
+    // Signal to quit game - implementation depends on system
+    lua_getfield(L, LUA_REGISTRYINDEX, "gameView_ptr");
+    GameView* gameView = (GameView*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    
+    if (gameView) {
+        // Assuming GameView has a quit method or signal
+        // For now, just log
+        Log::info(Log::LUA_TAG, "Game quit requested");
+    }
+    return 0;
+}
+
+static int lua_game_pause(lua_State* L)
+{
+    // Toggle pause
+    lua_getfield(L, LUA_REGISTRYINDEX, "gameView_ptr");
+    GameView* gameView = (GameView*)lua_touserdata(L, -1);
+    lua_pop(L, 1);
+    
+    if (gameView) {
+        Log::info(Log::LUA_TAG, "Game pause toggled");
+    }
+    return 0;
+}
+
 void LuaSystem::registerGameAPI()
 {
     if (!L)
@@ -287,6 +411,14 @@ void LuaSystem::registerGameAPI()
     // Register gameView pointer in registry (used by Lua functions)
     lua_pushlightuserdata(L, (void*)gameView);
     lua_setfield(L, LUA_REGISTRYINDEX, "gameView_ptr");
+
+    // Register audioSystem pointer in registry
+    lua_pushlightuserdata(L, (void*)audioSystem);
+    lua_setfield(L, LUA_REGISTRYINDEX, "audioSystem_ptr");
+
+    // Register inputSystem pointer in registry
+    lua_pushlightuserdata(L, (void*)inputSystem);
+    lua_setfield(L, LUA_REGISTRYINDEX, "inputSystem_ptr");
 
     // Create display table
     lua_newtable(L);
@@ -305,7 +437,39 @@ void LuaSystem::registerGameAPI()
 
     lua_setglobal(L, "display");
 
-    Log::info(Log::LUA_TAG, "Registered display API");
+    // Create audio table
+    lua_newtable(L);
+    lua_pushcfunction(L, lua_audio_beep);
+    lua_setfield(L, -2, "beep");
+    lua_setglobal(L, "audio");
+
+    // Create input table
+    lua_newtable(L);
+    lua_pushcfunction(L, lua_input_pinMode);
+    lua_setfield(L, -2, "pinMode");
+    lua_pushcfunction(L, lua_input_digitalWrite);
+    lua_setfield(L, -2, "digitalWrite");
+    lua_pushcfunction(L, lua_input_digitalRead);
+    lua_setfield(L, -2, "digitalRead");
+    lua_pushcfunction(L, lua_input_analogWrite);
+    lua_setfield(L, -2, "analogWrite");
+    lua_setglobal(L, "input");
+
+    // Create time table
+    lua_newtable(L);
+    lua_pushcfunction(L, lua_time_get);
+    lua_setfield(L, -2, "get");
+    lua_setglobal(L, "time");
+
+    // Create game table
+    lua_newtable(L);
+    lua_pushcfunction(L, lua_game_quit);
+    lua_setfield(L, -2, "quit");
+    lua_pushcfunction(L, lua_game_pause);
+    lua_setfield(L, -2, "pause");
+    lua_setglobal(L, "game");
+
+    Log::info(Log::LUA_TAG, "Registered display, audio, input, time, and game APIs");
 }
 
 void LuaSystem::registerBaseLibraries()
