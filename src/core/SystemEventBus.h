@@ -3,6 +3,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include <unordered_map>
+#include "SystemService.h"
 
 enum SystemEventBits {
     EVT_RAINBOWLED_INIT_REQ = (1 << 0),
@@ -29,10 +31,28 @@ enum SystemEventBits {
 class SystemEventBus
 {
 public:
-    // Eventi di sistema
+    // Service identifiers
+    static constexpr int SERVICE_LUA = 1;
+    static constexpr int SERVICE_AUDIO = 2;
+    static constexpr int SERVICE_STORAGE = 3;
+    static constexpr int SERVICE_UI = 4;
+    static constexpr int SERVICE_INPUT = 5;
+
+    // Singleton instance
+    static SystemEventBus& instance();
+
+    // Service registration
+    void registerService(int serviceId, SystemService* service);
+    SystemService* getService(int serviceId);
+
+    // Events
     static EventGroupHandle_t systemEvents;
     static QueueHandle_t bootQueue;
     static QueueHandle_t audioQueue;
 
     static void init();
+
+private:
+    SystemEventBus() = default;
+    std::unordered_map<int, SystemService*> services;
 };
