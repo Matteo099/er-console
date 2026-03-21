@@ -9,9 +9,9 @@
 AudioSystem::AudioSystem()
 {
     driver = new MAX98357Driver(
-        I2S_BCLK, // BCLK
-        I2S_LRC,  // LRCK
-        I2S_DOUT  // DOUT
+        I2S_BCLK_PIN, // BCLK
+        I2S_LRCLK_PIN,  // LRCK
+        I2S_DOUT_PIN  // DOUT
     );
 }
 

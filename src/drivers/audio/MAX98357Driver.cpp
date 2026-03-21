@@ -15,7 +15,7 @@ bool MAX98357Driver::init()
     Log::info(Log::DRIVER_TAG, "Initializing MAX98357 (BCLK=%d LRCK=%d DOUT=%d)", pinBCLK, pinLRCK, pinDOUT);
     i2s_config_t cfg = {
         .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
-        .sample_rate = SAMPLE_RATE,
+        .sample_rate = AUDIO_SAMPLE_RATE,
         .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
         .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
         .communication_format = I2S_COMM_FORMAT_STAND_I2S,
@@ -38,14 +38,14 @@ bool MAX98357Driver::init()
 
 void MAX98357Driver::playTone(uint16_t freq, uint16_t ms)
 {
-    const int samples = SAMPLE_RATE * ms / 1000;
+    const int samples = AUDIO_SAMPLE_RATE * ms / 1000;
     int16_t buffer[256];
 
     for (int i = 0; i < samples; i += 256)
     {
         for (int j = 0; j < 256; ++j)
         {
-            float t = (float)(i + j) / SAMPLE_RATE;
+            float t = (float)(i + j) / AUDIO_SAMPLE_RATE;
             buffer[j] = (int16_t)(sinf(2 * M_PI * freq * t) * 20000);
         }
 
