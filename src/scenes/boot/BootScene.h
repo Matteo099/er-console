@@ -18,4 +18,5 @@ private:
     BootView view;
     bool imagesLoaded = false;
     bool bootCompleted = false;
+    short bootCompleteDelayTick = 30;
 };

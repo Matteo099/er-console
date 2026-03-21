@@ -33,6 +33,11 @@ void BootScene::onUpdate()
         if (evt.progress >= 100)
             bootCompleted = true;
     }
+
+    if(bootCompleted && bootCompleteDelayTick > 0)
+        bootCompleteDelayTick--; // assuming ~60 FPS
+
+    view.update();
 }
 
 void BootScene::onExit()
@@ -42,7 +47,7 @@ void BootScene::onExit()
 
 SceneRequest BootScene::getRequest() const
 {
-    return bootCompleted
+    return bootCompleted && bootCompleteDelayTick <= 0
                ? SceneRequest(SceneChange::GoToMainMenu)
                : SceneRequest();
 }

@@ -9,7 +9,7 @@ ESP32SDCardDriver::ESP32SDCardDriver(uint8_t csPin)
 bool ESP32SDCardDriver::init()
 {
     Log::info(Log::DRIVER_TAG, "Initializing SD Card (CS=%d)", cs);
-    // isMounted = SD.begin(cs);
+    isMounted = SD.begin(cs);
     return isMounted;
 }
 
