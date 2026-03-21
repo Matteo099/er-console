@@ -1,10 +1,12 @@
 #include "GameListView.h"
+#include "log/Logger.h"
 
 #include "systems/ui/components/BrandHeader.h"
 #include "systems/ui/components/BackButton.h"
 
 void GameListView::create()
 {
+    Log::debug(Log::UI_TAG, "Creating GameListView");
     screen = lv_obj_create(nullptr);
     lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(screen, lv_color_black(), 0);

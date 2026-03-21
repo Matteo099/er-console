@@ -1,4 +1,5 @@
 #include "LVGLContext.h"
+#include "log/Logger.h"
 
 static const uint32_t LVGL_TICK_PERIOD_MS = 5;
 
@@ -10,6 +11,7 @@ void LVGLContext::init(DisplayDriver* displayDrv, TouchController* touchDrv)
     s_display = displayDrv;
     s_touch   = touchDrv;
 
+    Log::info(Log::DISPLAY_TAG, "Initializing LVGL Context");
     lv_init();
 
     // --- Display ---

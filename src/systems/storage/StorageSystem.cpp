@@ -31,7 +31,10 @@ bool StorageSystem::isReady() const
 
 IFile* StorageSystem::open(const char* path)
 {
-    return driver->open(path);
+    IFile* f = driver->open(path);
+    if (!f) Log::error(Log::STORAGE_TAG, "Failed to open file: %s", path);
+    else Log::debug(Log::STORAGE_TAG, "Opened file: %s", path);
+    return f;
 }
 
 bool StorageSystem::readTextFile(const char* path, std::string& out)

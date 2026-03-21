@@ -1,11 +1,14 @@
 #include "GameScene.h"
+#include "log/Logger.h"
+
+#include "GameAction.h"
 
 #include "core/SystemEventBus.h"
 #include "log/Logger.h"
 
 void GameScene::onEnter()
 {
-    view.create();
+    Log::info(Log::SCENE_TAG, "Entering GameScene");
     view.setTime(remainingSec);
     view.setRunning(false);
     view.showLoadingBar();
@@ -29,30 +32,6 @@ void GameScene::onEnter()
 
 void GameScene::onUpdate()
 {
-    view.update();
-
-    // Handle loading state
-    if (loadState == GameLoadState::Loading)
-    {
-        // Wait for script to load
-        // In future, could show progress
-        return;
-    }
-
-    if (loadState == GameLoadState::LoadFailed)
-    {
-        // Show error and allow user to go back
-        if (view.cancelPressed)
-        {
-            view.cancelPressed = false;
-            request = SceneRequest(SceneChange::GoToGameList);
-        }
-        return;
-    }
-
-    // Normal game update (loadState == LoadComplete)
-    updateLua();
-
     /* Handle buttons */
     if (view.startPressed)
     {
@@ -92,6 +71,7 @@ void GameScene::onUpdate()
                 state = GameState::Finished;
         }
     }
+    view.update();
 }
 
 void GameScene::onExit()

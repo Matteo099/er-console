@@ -1,5 +1,6 @@
 #include "AudioSystem.h"
 
+#include "config/BoardConfig.h"
 #include "core/SystemEventBus.h"
 #include "systems/audio/AudioEvent.h"
 #include "drivers/audio/MAX98357Driver.h"
@@ -8,9 +9,9 @@
 AudioSystem::AudioSystem()
 {
     driver = new MAX98357Driver(
-        GPIO_NUM_4, // BCLK
-        GPIO_NUM_5, // LRCK
-        GPIO_NUM_6  // DOUT
+        I2S_BCLK, // BCLK
+        I2S_LRC,  // LRCK
+        I2S_DOUT  // DOUT
     );
 }
 
@@ -45,6 +46,7 @@ void AudioSystem::update()
             switch (evt.type)
             {
             case AudioEventType::BEEP:
+                Log::debug(Log::AUDIO_TAG, "Playing beep freq=%d ms=%d", evt.beep.freq, evt.beep.ms);
                 driver->playTone(
                     evt.beep.freq,
                     evt.beep.ms);
@@ -52,16 +54,19 @@ void AudioSystem::update()
 
             case AudioEventType::PLAY_WAV:
             {
+                Log::info(Log::AUDIO_TAG, "Playing wav: %s", evt.wav.path);
                 IFile *f = storage->open(evt.wav.path);
                 driver->playWav(f);
                 break;
             }
 
             case AudioEventType::STOP:
+                Log::debug(Log::AUDIO_TAG, "Stopping audio");
                 driver->stop();
                 break;
 
             case AudioEventType::SET_VOLUME:
+                Log::info(Log::AUDIO_TAG, "Setting volume to %d", evt.volume.volume);
                 volume = evt.volume.volume;
                 driver->setVolume(volume);
                 break;

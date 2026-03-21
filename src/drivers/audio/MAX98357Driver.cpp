@@ -1,4 +1,5 @@
 #include "MAX98357Driver.h"
+#include "log/Logger.h"
 #include <cmath>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -11,6 +12,7 @@ MAX98357Driver::MAX98357Driver(int bclk, int lrck, int dout)
 
 bool MAX98357Driver::init()
 {
+    Log::info(Log::DRIVER_TAG, "Initializing MAX98357 (BCLK=%d LRCK=%d DOUT=%d)", pinBCLK, pinLRCK, pinDOUT);
     i2s_config_t cfg = {
         .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
         .sample_rate = SAMPLE_RATE,

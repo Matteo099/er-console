@@ -10,6 +10,11 @@ namespace Log {
     constexpr const char* AUDIO_TAG = "AUDIO";
     constexpr const char* LUA_TAG = "LUA";
     constexpr const char* GAME_TAG = "GAME";
+    constexpr const char* DISPLAY_TAG = "DISPLAY";
+    constexpr const char* INPUT_TAG = "INPUT";
+    constexpr const char* DRIVER_TAG = "DRIVER";
+    constexpr const char* SCENE_TAG = "SCENE";
+    constexpr const char* LED_TAG = "LED";
 
     enum class Level {
         ERROR,

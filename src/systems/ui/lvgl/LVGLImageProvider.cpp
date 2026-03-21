@@ -1,8 +1,10 @@
 #include "LVGLImageProvider.h"
+#include "log/Logger.h"
 #include <SD.h>
 
 static void* fs_open(lv_fs_drv_t*, const char* path, lv_fs_mode_t)
 {
+    Log::debug(Log::DISPLAY_TAG, "LVGL loading image: %s", path);
     return new File(SD.open(path));
 }
 

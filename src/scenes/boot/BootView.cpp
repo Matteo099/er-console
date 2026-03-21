@@ -1,4 +1,5 @@
 #include "BootView.h"
+#include "log/Logger.h"
 
 #include "systems/ui/components/BrandHeader.h"
 

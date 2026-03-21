@@ -1,15 +1,15 @@
 #include "MainMenuScene.h"
+#include "log/Logger.h"
 
 #include "MainMenuAction.h"
 
 void MainMenuScene::onEnter()
 {
-    view.create();
+    Log::info(Log::SCENE_TAG, "Entering MainMenuScene");
 }
 
 void MainMenuScene::onUpdate()
 {
-    view.update();
     switch (view.consumeAction())
     {
     case MainMenuAction::NewGame:
@@ -31,7 +31,6 @@ void MainMenuScene::onUpdate()
 
 void MainMenuScene::onExit()
 {
-    view.destroy();
 }
 
 SceneRequest MainMenuScene::getRequest() const

@@ -1,4 +1,5 @@
 #include "systems/ui/SceneManager.h"
+#include "log/Logger.h"
 
 #include "scenes/menu/MainMenuScene.h"
 #include "scenes/about/AboutScene.h"
@@ -28,6 +29,7 @@ static lv_scr_load_anim_t toLvgl(SceneTransition t)
 
 void SceneManager::init(void *params)
 {
+    Log::info(Log::UI_TAG, "Initializing SceneManager");
     current = nullptr;
 }
 
@@ -42,6 +44,7 @@ void SceneManager::changeScene(Scene *next)
         delete current;
     }
 
+    Log::info(Log::UI_TAG, "Changing scene to new scene.");
     current = next;
 
     current->onEnter();

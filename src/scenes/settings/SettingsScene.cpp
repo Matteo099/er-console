@@ -1,8 +1,9 @@
 #include "SettingsScene.h"
+#include "log/Logger.h"
 
 void SettingsScene::onEnter()
 {
-    view.create();
+    Log::info(Log::SCENE_TAG, "Entering SettingsScene");
     view.setSoundEnabled(soundEnabled);
 }
 
@@ -29,7 +30,6 @@ void SettingsScene::onUpdate()
 
 void SettingsScene::onExit()
 {
-    view.destroy();
 }
 
 SceneRequest SettingsScene::getRequest() const

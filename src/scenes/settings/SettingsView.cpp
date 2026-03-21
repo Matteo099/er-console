@@ -1,10 +1,12 @@
 #include "SettingsView.h"
+#include "log/Logger.h"
 
 #include "systems/ui/components/BrandHeader.h"
 #include "systems/ui/components/BackButton.h"
 
 void SettingsView::create()
 {
+    Log::debug(Log::UI_TAG, "Creating SettingsView");
     // --- Screen ---
     screen = lv_obj_create(nullptr);
     lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
