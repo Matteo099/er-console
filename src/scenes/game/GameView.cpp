@@ -14,25 +14,23 @@ void GameView::create()
     lv_obj_set_style_bg_opa(root, LV_OPA_COVER, 0);
 
     // --- Brand ---
-    brandImg = BrandHeader::create(screen);
+    brandImg = BrandHeader::create(root);
 
     // --- Content container ---
-    container = lv_obj_create(screen);
+    container = lv_obj_create(root);
     lv_obj_set_size(container, 220, 120);
     lv_obj_align(container, LV_ALIGN_CENTER, 0, 10);
     lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
     lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_flex_flow(container, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(
-        container,
+    lv_obj_set_flex_align(container,
         LV_FLEX_ALIGN_CENTER,
         LV_FLEX_ALIGN_CENTER,
         LV_FLEX_ALIGN_CENTER);
 
     // --- Game text ---
     textLabel = lv_label_create(container);
-    lv_label_set_text(
-        textLabel,
+    lv_label_set_text(textLabel,
         "EscapeOS\n\n"
         "Open escape-room engine\n"
         "for ESP32-based consoles.\n\n"
@@ -41,6 +39,12 @@ void GameView::create()
     lv_obj_set_style_text_align(textLabel, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_font(textLabel, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(textLabel, lv_color_hex(0xCCCCCC), 0);
+
+    /* ================= TIMER ================= */
+    timerLabel = lv_label_create(root);
+    lv_obj_set_style_text_font(timerLabel, &lv_font_montserrat_48, 0);
+    lv_label_set_text(timerLabel, "00:00:00");
+    lv_obj_align(timerLabel, LV_ALIGN_CENTER, 0, -40);
 
     /* ================= START / PAUSE ================= */
     startPauseBtn = lv_btn_create(root);

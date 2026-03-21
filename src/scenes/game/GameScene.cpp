@@ -1,4 +1,5 @@
 #include "GameScene.h"
+#include "log/Logger.h"
 
 #include "GameAction.h"
 
@@ -11,16 +12,6 @@ void GameScene::onEnter()
 
 void GameScene::onUpdate()
 {
-    switch (view.consumeAction())
-    {
-    case GameAction::Back:
-        request = SceneRequest(SceneChange::GoToMainMenu);
-        break;
-
-    default:
-        break;
-    view.update();
-
     /* Handle buttons */
     if (view.startPressed)
     {
