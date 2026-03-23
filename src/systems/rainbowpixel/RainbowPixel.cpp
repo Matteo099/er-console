@@ -1,41 +1,56 @@
 #include "RainbowPixel.h"
 #include "log/Logger.h"
 
+namespace {
+    constexpr uint8_t MAX_BRIGHTNESS = 5;
+    constexpr uint8_t COLOR_SEGMENT = 85;
+}
+
 RainbowPixel::RainbowPixel()
-    : pixels(NEOPIXEL_COUNT, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800) {}
+    : pixels(NEOPIXEL_COUNT, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800),
+      offset(0) {}
 
 void RainbowPixel::init(void *params)
 {
-  Log::info(Log::LED_TAG, "Initializing RainbowPixel (NUM=%d NEOPIXEL_PIN=%d)", NEOPIXEL_COUNT, NEOPIXEL_PIN);
-  pixels.begin();
-  pixels.setBrightness(5);
+    Log::info(Log::LED_TAG,
+              "Initializing RainbowPixel (NUM=%d PIN=%d)",
+              NEOPIXEL_COUNT,
+              NEOPIXEL_PIN);
+
+    pixels.begin();
+    pixels.setBrightness(MAX_BRIGHTNESS);
+    pixels.clear();
+    pixels.show();
 }
 
 void RainbowPixel::update()
 {
-    static uint8_t j = 0;
+    const uint16_t count = pixels.numPixels();
 
-    for (int i = 0; i < pixels.numPixels(); i++)
-        pixels.setPixelColor(i, wheel((i + j) & 255));
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        pixels.setPixelColor(i, wheel((i + offset) & 0xFF));
+    }
 
     pixels.show();
-    j++;
+    ++offset;
 }
 
-uint32_t RainbowPixel::wheel(byte WheelPos)
+uint32_t RainbowPixel::wheel(uint8_t pos) const
 {
-  WheelPos = 255 - WheelPos;
+    pos = 255 - pos;
 
-  if (WheelPos < 85)
-  {
-    return pixels.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  }
-  if (WheelPos < 170)
-  {
-    WheelPos -= 85;
-    return pixels.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
+    if (pos < COLOR_SEGMENT)
+    {
+        return pixels.Color(255 - pos * 3, 0, pos * 3);
+    }
 
-  WheelPos -= 170;
-  return pixels.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+    if (pos < 2 * COLOR_SEGMENT)
+    {
+        pos -= COLOR_SEGMENT;
+        return pixels.Color(0, pos * 3, 255 - pos * 3);
+    }
+
+    pos -= 2 * COLOR_SEGMENT;
+    return pixels.Color(pos * 3, 255 - pos * 3, 0);
 }

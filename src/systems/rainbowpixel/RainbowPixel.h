@@ -8,9 +8,9 @@ class RainbowPixel : public SystemService
 {
 private:
     Adafruit_NeoPixel pixels;
-
-    uint32_t wheel(byte WheelPos);
-
+    uint8_t offset;
+    
+    uint32_t wheel(uint8_t pos) const;
 public:
     RainbowPixel();
 
