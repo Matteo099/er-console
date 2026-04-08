@@ -11,6 +11,7 @@ void GameListScene::onEnter()
     Log::info(Log::SCENE_TAG, "Entering GameListScene");
     loadGames();
     view.setGames(games);
+    view.create();
 }
 
 void GameListScene::onUpdate()
@@ -34,10 +35,13 @@ void GameListScene::onUpdate()
     default:
         break;
     }
+    
+    view.update();
 }
 
 void GameListScene::onExit()
 {
+    view.destroy();
 }
 
 

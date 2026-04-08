@@ -12,6 +12,7 @@ void GameScene::onEnter()
     view.setTime(remainingSec);
     view.setRunning(false);
     view.showLoadingBar();
+    view.create();
 
     // Get LuaSystem from SystemEventBus
     luaSystem = static_cast<LuaSystem*>(

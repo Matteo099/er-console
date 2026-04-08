@@ -5,6 +5,7 @@ void SettingsScene::onEnter()
 {
     Log::info(Log::SCENE_TAG, "Entering SettingsScene");
     view.setSoundEnabled(soundEnabled);
+    view.create();
 }
 
 void SettingsScene::onUpdate()
@@ -30,6 +31,7 @@ void SettingsScene::onUpdate()
 
 void SettingsScene::onExit()
 {
+    view.destroy();
 }
 
 SceneRequest SettingsScene::getRequest() const

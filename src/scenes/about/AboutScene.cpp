@@ -6,6 +6,7 @@
 void AboutScene::onEnter()
 {
     Log::info(Log::SCENE_TAG, "Entering AboutScene");
+    view.create();
 }
 
 void AboutScene::onUpdate()
@@ -19,10 +20,12 @@ void AboutScene::onUpdate()
     default:
         break;
     }
+    view.update();
 }
 
 void AboutScene::onExit()
 {
+    view.destroy();
 }
 
 SceneRequest AboutScene::getRequest() const

@@ -53,15 +53,6 @@ void LVGLContext::init(DisplayDriver *displayDrv, TouchController *touchDrv)
     lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
     lv_indev_set_read_cb(indev, touch_read_cb);
 
-    // UI
-    lv_obj_t *btn = lv_btn_create(lv_scr_act());
-    lv_obj_center(btn);
-    lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_CLICKED, NULL);
-
-    lv_obj_t *label = lv_label_create(btn);
-    lv_label_set_text(label, "Play Sound");
-    lv_obj_center(label);
-
     Log::info(Log::DISPLAY_TAG, "LVGL Context initialization complete");
 }
 

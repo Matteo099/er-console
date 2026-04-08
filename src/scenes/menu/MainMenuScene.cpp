@@ -6,6 +6,7 @@
 void MainMenuScene::onEnter()
 {
     Log::info(Log::SCENE_TAG, "Entering MainMenuScene");
+    view.create();
 }
 
 void MainMenuScene::onUpdate()
@@ -27,10 +28,12 @@ void MainMenuScene::onUpdate()
     default:
         break;
     }
+    view.update();
 }
 
 void MainMenuScene::onExit()
 {
+    view.destroy();
 }
 
 SceneRequest MainMenuScene::getRequest() const
