@@ -12,7 +12,7 @@ public:
     virtual void flush(
         int x1, int y1,
         int x2, int y2,
-        const uint16_t *colorData) = 0;
+        uint8_t *colorData) = 0;
 
     virtual int width() = 0;
     virtual int height() = 0;

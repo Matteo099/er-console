@@ -61,7 +61,7 @@ void xTaskUI(void *params)
     while (os->isRunning())
     {
         ui->update();
-        vTaskDelay(pdMS_TO_TICKS(16));
+        vTaskDelay(pdMS_TO_TICKS(5));
     }
 
     vTaskDelete(nullptr);

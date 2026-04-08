@@ -2,6 +2,7 @@
 
 #include "log/Logger.h"
 #include "scenes/boot/BootScene.h"
+#include "scenes/sample/SampleScene.h"
 #include "drivers/display/TFTDisplay.h"
 #include "drivers/storage/ESP32SDCardDriver.h"
 #include "systems/storage/StorageSystem.h"
@@ -14,16 +15,18 @@ void UIManager::init(void *params)
 
     static TFTDisplay display;
 
+    // 1. Initialize display (LovyanGFX)
     display.init();
 
-    // 1. Initialize LVGL core + display + touch
+    // 2. Initialize LVGL core 
     lvgl.init(&display, &display);
 
-    // 2. Initialize scene manager
+    // 3. Initialize scene manager
     scenes.init();
 
-    // 3. Load initial scene (BOOT)
-    scenes.changeScene(new BootScene());
+    // 4. Load initial scene (BOOT)
+    scenes.changeScene(new SampleScene());
+    // scenes.changeScene(new BootScene());
 
     Log::info(Log::UI_TAG, "UI Manager ready");
 }

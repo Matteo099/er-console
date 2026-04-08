@@ -1,10 +1,27 @@
 #include "LVGLContext.h"
 #include "log/Logger.h"
+#include <Arduino.h>
 
 static const uint32_t LVGL_TICK_PERIOD_MS = 5;
 
 DisplayDriver *LVGLContext::s_display = nullptr;
 TouchController *LVGLContext::s_touch = nullptr;
+
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
+
+static lv_color_t buf[SCREEN_WIDTH * 40];
+static lv_draw_buf_t draw_buf;
+
+uint32_t my_tick(void)
+{
+    return millis();
+}
+
+static void btn_event_cb(lv_event_t *e)
+{
+    Serial.println("Button clicked!");
+}
 
 void LVGLContext::init(DisplayDriver *displayDrv, TouchController *touchDrv)
 {
@@ -13,62 +30,44 @@ void LVGLContext::init(DisplayDriver *displayDrv, TouchController *touchDrv)
 
     Log::info(Log::DISPLAY_TAG, "Initializing LVGL Context");
 
-    // --- LVGL core init ---
     lv_init();
-    Log::debug(Log::DISPLAY_TAG, "LVGL core initialized");
+    lv_tick_set_cb(my_tick);
 
-    // --- Display setup ---
-    int disp_width = displayDrv->width();
-    int disp_height = displayDrv->height();
-    Log::debug(Log::DISPLAY_TAG, "DisplayDriver reports width=%d, height=%d", disp_width, disp_height);
+    // Draw buffer
+    lv_draw_buf_init(
+        &draw_buf,
+        SCREEN_WIDTH,
+        40,
+        LV_COLOR_FORMAT_RGB565,
+        SCREEN_WIDTH * sizeof(lv_color_t),
+        buf,
+        sizeof(buf));
 
-    if (disp_width <= 0 || disp_height <= 0)
-    {
-        Log::error(Log::DISPLAY_TAG, "Invalid display size! LVGL will not work correctly.");
-        disp_width = 240;  // fallback
-        disp_height = 320; // fallback
-    }
+    // Display
+    lv_display_t *disp = lv_display_create(SCREEN_WIDTH, SCREEN_HEIGHT);
+    lv_display_set_flush_cb(disp, flush_cb);
+    lv_display_set_draw_buffers(disp, &draw_buf, NULL);
 
-    display = lv_display_create(disp_width, disp_height);
-    Log::debug(Log::DISPLAY_TAG, "LVGL display object created");
+    // Touch
+    lv_indev_t *indev = lv_indev_create();
+    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
+    lv_indev_set_read_cb(indev, touch_read_cb);
 
-    // --- Buffers ---
-    lv_color_t *buf1 = new lv_color_t[disp_width * 40];
-    lv_color_t *buf2 = new lv_color_t[disp_height * 40];
+    // UI
+    lv_obj_t *btn = lv_btn_create(lv_scr_act());
+    lv_obj_center(btn);
+    lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_CLICKED, NULL);
 
-    Log::debug(Log::DISPLAY_TAG, "Setting LVGL display buffers: buf1=%p buf2=%p size=%d bytes",
-               buf1, buf2, sizeof(buf1));
-
-    lv_display_set_buffers(
-        display,
-        buf1,
-        buf2,
-        disp_width * 40 * sizeof(lv_color_t),
-        LV_DISPLAY_RENDER_MODE_PARTIAL);
-
-    Log::debug(Log::DISPLAY_TAG, "LVGL display buffers configured");
-
-    // --- Flush callback ---
-    lv_display_set_flush_cb(display, flush_cb);
-    Log::debug(Log::DISPLAY_TAG, "LVGL flush callback set");
-
-    // --- Touch input ---
-    touchIndev = lv_indev_create();
-    lv_indev_set_type(touchIndev, LV_INDEV_TYPE_POINTER);
-    lv_indev_set_read_cb(touchIndev, touch_read_cb);
-    Log::debug(Log::DISPLAY_TAG, "LVGL touch input device created");
-
-    if (!s_touch)
-    {
-        Log::warn(Log::DISPLAY_TAG, "TouchController is NULL; touch input will not work");
-    }
+    lv_obj_t *label = lv_label_create(btn);
+    lv_label_set_text(label, "Play Sound");
+    lv_obj_center(label);
 
     Log::info(Log::DISPLAY_TAG, "LVGL Context initialization complete");
 }
 
 void LVGLContext::update()
 {
-    lv_tick_inc(LVGL_TICK_PERIOD_MS);
+    // lv_tick_inc(LVGL_TICK_PERIOD_MS);
     lv_timer_handler();
 }
 
@@ -83,7 +82,7 @@ void LVGLContext::flush_cb(
         area->y1,
         area->x2,
         area->y2,
-        reinterpret_cast<uint16_t *>(px_map));
+        px_map);
 
     // Then tell LVGL we are done
     lv_display_flush_ready(disp);

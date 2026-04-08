@@ -89,11 +89,7 @@ void TFTDisplay::init()
 
     // Initialize LovyanGFX
     lgfx.init();
-    lgfx.fillScreen(TFT_BLACK);
-    lgfx.setTextSize(2);
-    lgfx.setTextColor(TFT_WHITE);
-    lgfx.setCursor(20, 20);
-    lgfx.println("EscapeOS");
+    lgfx.setRotation(1);
 
     Log::info(Log::DISPLAY_TAG, "LovyanGFX initialized OK");
 
@@ -127,15 +123,14 @@ void TFTDisplay::init()
 void TFTDisplay::flush(
     int32_t x1, int32_t y1,
     int32_t x2, int32_t y2,
-    const uint16_t *colorMap)
+    uint8_t *colorMap)
 {
     int32_t w = x2 - x1 + 1;
     int32_t h = y2 - y1 + 1;
 
     lgfx.startWrite();
     lgfx.setAddrWindow(x1, y1, w, h);
-    // lgfx.pushPixels((uint16_t *)colorMap, w * h);
-    lgfx.pushPixels(const_cast<uint16_t *>(colorMap), w * h);
+    lgfx.writePixels((lgfx::rgb565_t *)colorMap, w * h);
     lgfx.endWrite();
 }
 
