@@ -3,10 +3,12 @@
 #include "core/SystemService.h"
 #include "systems/ui/lvgl/LVGLContext.h"
 #include "systems/ui/SceneManager.h"
+#include "drivers/display/TFTDisplay.h"
 
 class UIManager : public SystemService
 {
 private:
+    TFTDisplay display;
     LVGLContext lvgl;
     SceneManager scenes;
 

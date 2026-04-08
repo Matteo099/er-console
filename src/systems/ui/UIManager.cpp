@@ -3,7 +3,6 @@
 #include "log/Logger.h"
 #include "scenes/boot/BootScene.h"
 #include "scenes/sample/SampleScene.h"
-#include "drivers/display/TFTDisplay.h"
 #include "drivers/storage/ESP32SDCardDriver.h"
 #include "systems/storage/StorageSystem.h"
 #include "systems/ui/lvgl/LVGLImageProvider.h"
@@ -12,8 +11,6 @@
 void UIManager::init(void *params)
 {
     Log::info(Log::UI_TAG, "Initializing UI Manager");
-
-    static TFTDisplay display;
 
     // 1. Initialize display (LovyanGFX)
     display.init();

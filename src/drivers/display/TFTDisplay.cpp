@@ -57,10 +57,10 @@ public:
         {
             auto cfg = _touch_instance.config();
 
-            cfg.x_min = 0;
-            cfg.x_max = 4095;
-            cfg.y_min = 0;
-            cfg.y_max = 4095;
+            cfg.x_min = 200;
+            cfg.x_max = 3800;
+            cfg.y_min = 3800;
+            cfg.y_max = 200;
 
             cfg.spi_host = SPI2_HOST;
             cfg.freq = 1000000;           // 1 MHz safe for touch

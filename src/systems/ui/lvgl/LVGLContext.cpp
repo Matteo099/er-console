@@ -67,7 +67,6 @@ void LVGLContext::init(DisplayDriver *displayDrv, TouchController *touchDrv)
 
 void LVGLContext::update()
 {
-    // lv_tick_inc(LVGL_TICK_PERIOD_MS);
     lv_timer_handler();
 }
 

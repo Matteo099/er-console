@@ -75,7 +75,7 @@ GPIO       → LEDs, buttons, actuators
 #define TFT_CS_PIN           10   // Chip Select for TFT display
 #define TFT_DC_PIN           9    // Data/Command control
 #define TFT_RST_PIN          8    // Hardware reset line
-#define TFT_BL_PIN           3.3V // Backlight control (could be connected to GPIO for PWM brightness control)
+// #define TFT_BL_PIN           3 // Backlight control (connect to 3.3V or it could be connected to GPIO for PWM brightness control)
 
 /* Touch Controller */
 
