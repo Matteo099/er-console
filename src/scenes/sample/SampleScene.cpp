@@ -5,6 +5,8 @@
 #include "core/SystemEventBus.h"
 #include "scenes/menu/MainMenuScene.h"
 #include "systems/ui/lvgl/LVGLImageProvider.h"
+#include <systems/audio/AudioEvent.h>
+
 
 void SampleScene::onEnter()
 {
@@ -17,7 +19,10 @@ void SampleScene::onUpdate()
     if (view.consumeAction())
     {
         Log::info(Log::SCENE_TAG, "Play sound!!!!!");
-        // playSound();
+        AudioEvent evt;
+        evt.type = AudioEventType::PLAY_WAV;
+        evt.wav.path = "/fireball.wav";
+        xQueueSend(SystemEventBus::audioQueue, &evt, portMAX_DELAY);
     }
     view.update();
 }
