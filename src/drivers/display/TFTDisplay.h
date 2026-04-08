@@ -2,7 +2,7 @@
 #include "DisplayDriver.h"
 #include "TouchController.h"
 #include <LovyanGFX.hpp>
-#include "../../refactor/LGFX.h"
+#include "LGFX.h"
 
 class TFTDisplay : public DisplayDriver, public TouchController
 {
