@@ -2,6 +2,7 @@
 #include "DisplayDriver.h"
 #include "TouchController.h"
 #include <LovyanGFX.hpp>
+#include "../../refactor/LGFX.h"
 
 class TFTDisplay : public DisplayDriver, public TouchController
 {
@@ -21,6 +22,6 @@ public:
     TouchPoint read() override;
 
 private:
-    lgfx::LGFX_Device lgfx;
+    LGFX lgfx;
 };
 

@@ -1,31 +1,14 @@
 #include <Arduino.h>
-#include "log/Logger.h"
-#include <LovyanGFX.hpp>
-#include <lvgl.h>
-#include "refactor/LGFX.h"
-#include "refactor/LVGLManager.h"
+#include "os/EscapeOS.h"
 
-// ---------------------------
-// Create display object
-// ---------------------------
-LGFX display;
+EscapeOS os;
 
 void setup()
 {
-  Serial.begin(115200);
-  Serial.println("Initializing display + touch + SD...");
-
-  // TFT + touch
-  display.init();
-  display.setRotation(1);
-  Serial.println("Display initialized");
-
-  LVGLManager manager(display);
-  manager.init();
+  os.init();
 }
 
 void loop()
 {
-  lv_timer_handler();
-  delay(5);
+  vTaskDelay(portMAX_DELAY);
 }
