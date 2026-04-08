@@ -32,11 +32,11 @@ libdeps = os.path.join(project_dir, ".pio", "libdeps", env_name)
 
 # Source files (versioned)
 lv_src = os.path.join(project_dir, "include", "lv_conf.h")
-tft_src = os.path.join(project_dir, "include", "User_Setup.h")
+# tft_src = os.path.join(project_dir, "include", "User_Setup.h")
 
 # Destination paths (where libraries expect them)
 lv_dst = os.path.join(libdeps, "lv_conf.h")
-tft_dst = os.path.join(libdeps, "TFT_eSPI", "User_Setup.h")
+# tft_dst = os.path.join(libdeps, "TFT_eSPI", "User_Setup.h")
 
 def copy_if_exists(src, dst):
     if not os.path.exists(src):
@@ -56,4 +56,4 @@ def filecmp(src, dst):
         return False
 
 copy_if_exists(lv_src, lv_dst)
-copy_if_exists(tft_src, tft_dst)
+# copy_if_exists(tft_src, tft_dst)

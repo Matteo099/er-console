@@ -1,9 +1,15 @@
 #include "MAX98357Driver.h"
 #include "log/Logger.h"
+#include "config/BoardConfig.h"
+#include <driver/i2s.h>
+#include <Arduino.h>
 #include <cmath>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include "config/BoardConfig.h"
+
+#define BUFFER_SIZE 1024
+uint8_t buffer[BUFFER_SIZE];
 
 MAX98357Driver::MAX98357Driver(int bclk, int lrck, int dout)
     : pinBCLK(bclk), pinLRCK(lrck), pinDOUT(dout)
@@ -12,6 +18,9 @@ MAX98357Driver::MAX98357Driver(int bclk, int lrck, int dout)
 
 bool MAX98357Driver::init()
 {
+    pinMode(I2S_SHUTDOWN_PIN, OUTPUT);
+    digitalWrite(I2S_SHUTDOWN_PIN, LOW);
+
     Log::info(Log::DRIVER_TAG, "Initializing MAX98357 (BCLK=%d LRCK=%d DOUT=%d)", pinBCLK, pinLRCK, pinDOUT);
     i2s_config_t cfg = {
         .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
@@ -21,7 +30,7 @@ bool MAX98357Driver::init()
         .communication_format = I2S_COMM_FORMAT_STAND_I2S,
         .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
         .dma_buf_count = 8,
-        .dma_buf_len = 256,
+        .dma_buf_len = 64,
         .use_apll = false};
 
     i2s_pin_config_t pins = {
@@ -38,6 +47,8 @@ bool MAX98357Driver::init()
 
 void MAX98357Driver::playTone(uint16_t freq, uint16_t ms)
 {
+    digitalWrite(I2S_SHUTDOWN_PIN, HIGH);
+
     const int samples = AUDIO_SAMPLE_RATE * ms / 1000;
     int16_t buffer[256];
 
@@ -52,6 +63,8 @@ void MAX98357Driver::playTone(uint16_t freq, uint16_t ms)
         size_t written;
         i2s_write(I2S_PORT, buffer, sizeof(buffer), &written, portMAX_DELAY);
     }
+
+    digitalWrite(I2S_SHUTDOWN_PIN, LOW);
 }
 
 void MAX98357Driver::playWav(IFile *file)
@@ -61,17 +74,14 @@ void MAX98357Driver::playWav(IFile *file)
 
     file->seek(44); // WAV header
 
-    int16_t buffer[256];
-
+    digitalWrite(I2S_SHUTDOWN_PIN, HIGH);
     while (file->available())
     {
-        int read = file->read((uint8_t *)buffer, sizeof(buffer));
-        if (read <= 0)
-            break;
-
-        applyVolume(buffer, read / sizeof(int16_t));
-        i2s_write(I2S_PORT, buffer, read, nullptr, portMAX_DELAY);
+        size_t bytesRead = file->read(buffer, BUFFER_SIZE);
+        size_t bytesWritten;
+        i2s_write(I2S_PORT, buffer, bytesRead, &bytesWritten, portMAX_DELAY);
     }
+    digitalWrite(I2S_SHUTDOWN_PIN, LOW);
 
     file->close();
     delete file;

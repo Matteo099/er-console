@@ -75,6 +75,7 @@ GPIO       → LEDs, buttons, actuators
 #define TFT_CS_PIN           10   // Chip Select for TFT display
 #define TFT_DC_PIN           9    // Data/Command control
 #define TFT_RST_PIN          8    // Hardware reset line
+#define TFT_BL_PIN           3.3V // Backlight control (could be connected to GPIO for PWM brightness control)
 
 /* Touch Controller */
 
@@ -84,20 +85,11 @@ GPIO       → LEDs, buttons, actuators
 
 
 /* ================================================================
-   SPI BUS 2 — MICRO SD CARD
+   SPI BUS 1 — MICRO SD CARD
    ================================================================
-
-   Dedicated SPI bus to avoid MISO bus contention with TFT modules.
-
-   Many low-cost TFT boards keep the MISO line active, which can
-   interfere with SD communication if sharing the same bus.
 */
 
-#define SPI2_MOSI_PIN        35
-#define SPI2_MISO_PIN        37
-#define SPI2_SCLK_PIN        36
-
-#define SD_CS_PIN            4    // SD card chip select
+#define SD_CS_PIN            5   // SD card chip select
 
 
 
@@ -116,13 +108,19 @@ GPIO       → LEDs, buttons, actuators
 
 #define I2S_PORT             I2S_NUM_0
 
-#define I2S_DOUT_PIN         18   // Serial audio data (DIN on amplifier)
-#define I2S_BCLK_PIN         17   // Bit clock
-#define I2S_LRCLK_PIN        16   // Left/Right channel clock (Word Select)
+#define I2S_DOUT_PIN         16     // Serial audio data (DIN on amplifier)
+#define I2S_BCLK_PIN         18     // Bit clock (BCLK)
+#define I2S_LRCLK_PIN        17     // Left/Right channel clock (LRC - WS)
+#define I2S_SHUTDOWN_PIN      4     // SD card shutdown control (SD)
 
-#define AUDIO_SAMPLE_RATE    44100   // Standard CD quality sample rate
+#define AUDIO_SAMPLE_RATE    22050  // Standard CD quality sample rate
 
-
+/*
+GAIN pin: (do not connect)
+- FLOAT → medium gain (default)
+- GND   → low gain
+- VIN   → high gain
+*/
 
 /* ================================================================
    I2C BUS — SENSORS / SMALL DISPLAYS
@@ -204,4 +202,9 @@ GPIO       → LEDs, buttons, actuators
 
    Recommended power supply:
    5V @ ≥1A
+   
+   Recommended:
+   - 100uF capacitor near TFT
+   - 100uF capacitor near SD
+   - 100uF capacitor near amplifier
 */

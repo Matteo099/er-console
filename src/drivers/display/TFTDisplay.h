@@ -1,9 +1,9 @@
 #pragma once
 #include "DisplayDriver.h"
-#include <SPI.h>
-#include <TFT_eSPI.h>
+#include "TouchController.h"
+#include <LovyanGFX.hpp>
 
-class TFTDisplay : public DisplayDriver
+class TFTDisplay : public DisplayDriver, public TouchController
 {
 public:
     TFTDisplay();
@@ -18,7 +18,9 @@ public:
     int width() override;
     int height() override;
 
+    TouchPoint read() override;
+
 private:
-    TFT_eSPI tft;
+    lgfx::LGFX_Device lgfx;
 };
 

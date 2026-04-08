@@ -33,6 +33,7 @@ void AudioSystem::init(void *params)
     }
 
     Log::info(Log::AUDIO_TAG, "Audio system initialized");
+    driver->playWav(storage->open("/stage.wav"));
 }
 
 void AudioSystem::update()

@@ -2,7 +2,7 @@
 
 #include <lvgl.h>
 #include "drivers/display/DisplayDriver.h"
-#include "drivers/touch/TouchController.h"
+#include "drivers/display/TouchController.h"
 
 class LVGLContext
 {
