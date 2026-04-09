@@ -1,6 +1,7 @@
 #pragma once
 
 #include "systems/ui/View.h"
+#include "systems/ui/UIEventSystem.h"
 
 enum class SceneTransition
 {
@@ -41,7 +42,7 @@ struct SceneRequest
     }
 };
 
-class Scene
+class Scene : public UIEventHandler
 {
 public:
     virtual ~Scene() = default;
@@ -55,5 +56,12 @@ public:
     virtual SceneRequest getRequest() const
     {
         return {}; // default SceneRequest (None, nullptr)
+    }
+
+    // UIEventHandler implementation - scenes can override to handle events
+    bool handleUIEvent(const UIEvent& event) override
+    {
+        // Default implementation does nothing - scenes can override
+        return false;
     }
 };

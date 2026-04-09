@@ -3,6 +3,7 @@
 #include "lvgl.h"
 #include <vector>
 #include <memory>
+#include <algorithm>
 
 /**
  * @brief Manages LVGL object lifecycle and hierarchical cleanup

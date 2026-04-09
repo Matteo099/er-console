@@ -35,12 +35,7 @@ void SampleView::onButtonClicked(lv_event_t *e)
     if (!view)
         return;
 
-    view->playSound = true;
-}
-
-bool SampleView::consumeAction()
-{
-    bool a = playSound;
-    playSound = false;
-    return a;
+    // Emit event instead of setting flag
+    PlaySoundEvent event("/fireball.wav");
+    view->emitEvent(event);
 }

@@ -6,24 +6,22 @@
 #include "scenes/menu/MainMenuScene.h"
 #include "systems/ui/lvgl/LVGLImageProvider.h"
 #include <systems/audio/AudioEvent.h>
+#include "scenes/sample/SampleEvents.h"
 
 
 void SampleScene::onEnter()
 {
     Log::info(Log::SCENE_TAG, "Entering SampleScene");
+
+    // Set up event handling - scene handles events from view
+    view.setEventHandler(this);
+
     view.create();
 }
 
 void SampleScene::onUpdate()
 {
-    if (view.consumeAction())
-    {
-        Log::info(Log::SCENE_TAG, "Play sound!!!!!");
-        AudioEvent evt;
-        evt.type = AudioEventType::PLAY_WAV;
-        evt.wav.path = "/fireball.wav";
-        xQueueSend(SystemEventBus::audioQueue, &evt, portMAX_DELAY);
-    }
+    // No more polling! Events are handled immediately when emitted
     view.update();
 }
 
@@ -35,4 +33,23 @@ void SampleScene::onExit()
 SceneRequest SampleScene::getRequest() const
 {
     return SceneRequest();
+}
+
+// Event handling implementation
+bool SampleScene::handleUIEvent(const UIEvent& event)
+{
+    if (event.getType() == PlaySoundEvent::TYPE)
+    {
+        const PlaySoundEvent& playEvent = static_cast<const PlaySoundEvent&>(event);
+
+        Log::info(Log::SCENE_TAG, "Play sound!!!!!");
+        AudioEvent evt;
+        evt.type = AudioEventType::PLAY_WAV;
+        evt.wav.path = playEvent.soundPath.c_str();
+        xQueueSend(SystemEventBus::audioQueue, &evt, portMAX_DELAY);
+
+        return true;  // Event handled
+    }
+
+    return false;  // Event not handled
 }
