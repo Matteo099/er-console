@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include "systems/ui/View.h"
+#include "systems/ui/UICleanup.h"
 #include "AboutAction.h"
 
 class AboutView : public View

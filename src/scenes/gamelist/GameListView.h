@@ -1,6 +1,7 @@
 #pragma once
 
 #include "systems/ui/View.h"
+#include "systems/ui/UICleanup.h"
 #include "GameListAction.h"
 #include "GameInfo.h"
 
@@ -39,6 +40,7 @@ private:
 
 private:
     lv_obj_t *screen = nullptr;
+    lv_obj_t *header = nullptr;
     lv_obj_t *list = nullptr;
     lv_obj_t *btnBack = nullptr;
 

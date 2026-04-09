@@ -1,51 +1,28 @@
 #include "SettingsView.h"
 #include "log/Logger.h"
 
-#include "systems/ui/components/BrandHeader.h"
+#include "systems/ui/components/Align.h"
 #include "systems/ui/components/BackButton.h"
+#include "systems/ui/components/BrandHeader.h"
+#include "systems/ui/components/Button.h"
+#include "systems/ui/components/Container.h"
+#include "systems/ui/components/Label.h"
+#include "systems/ui/components/Screen.h"
 
 void SettingsView::create()
 {
     Log::debug(Log::UI_TAG, "Creating SettingsView");
-    // --- Screen ---
-    screen = lv_obj_create(nullptr);
-    lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
-    lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
 
-    // --- Brand ---
+    screen = Screen::create();
     brandImg = BrandHeader::create(screen);
 
-    // --- Settings container ---
-    container = lv_obj_create(screen);
-    lv_obj_set_size(container, 220, 120);
-    lv_obj_align(container, LV_ALIGN_CENTER, 0, 10);
-    lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
-    lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_flex_flow(container, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(
-        container,
-        LV_FLEX_ALIGN_CENTER,
-        LV_FLEX_ALIGN_CENTER,
-        LV_FLEX_ALIGN_CENTER);
+    container = Container::create(screen, 220, 120, LV_ALIGN_CENTER, 0, 10);
+    Container::setFlex(container);
 
-    // --- Sound toggle ---
-    btnSound = lv_btn_create(container);
-    lv_obj_set_size(btnSound, 200, 42);
-    lv_obj_add_event_cb(
-        btnSound,
-        onSoundClicked,
-        LV_EVENT_CLICKED,
-        this);
+    btnSound = Button::create(container, "Sound: OFF", onSoundClicked, this, 200, 42);
+    lblSound = lv_obj_get_child(btnSound, 0);
 
-    lblSound = lv_label_create(btnSound);
-    lv_obj_center(lblSound);
-
-    // --- Back button ---
-    btnBack = BackButton::create(
-        screen,
-        onBackClicked,
-        this);
+    btnBack = BackButton::create(screen, onBackClicked, this);
 }
 
 void SettingsView::update()
@@ -55,10 +32,13 @@ void SettingsView::update()
 
 void SettingsView::destroy()
 {
-    if (screen)
-        lv_obj_del(screen);
+    // Clean up tracker (for any dynamic objects)
+    getObjectTracker().cleanup();
 
-    screen = nullptr;
+    // Delete root (cascades to all children)
+    UICleanup::deleteRoot(screen);
+
+    // Nullify remaining pointers
     brandImg = nullptr;
     container = nullptr;
     btnSound = nullptr;
@@ -73,16 +53,12 @@ void SettingsView::setSoundEnabled(bool enabled)
     if (!lblSound)
         return;
 
-    lv_label_set_text(
-        lblSound,
-        enabled ? "Sound: ON" : "Sound: OFF");
+    lv_label_set_text(lblSound, enabled ? "Sound: ON" : "Sound: OFF");
 }
 
 void SettingsView::onSoundClicked(lv_event_t* e)
 {
-    auto* view =
-        static_cast<SettingsView*>(lv_event_get_user_data(e));
-
+    auto* view = static_cast<SettingsView*>(lv_event_get_user_data(e));
     if (!view)
         return;
 
@@ -91,9 +67,7 @@ void SettingsView::onSoundClicked(lv_event_t* e)
 
 void SettingsView::onBackClicked(lv_event_t* e)
 {
-    auto* view =
-        static_cast<SettingsView*>(lv_event_get_user_data(e));
-
+    auto* view = static_cast<SettingsView*>(lv_event_get_user_data(e));
     if (!view)
         return;
 

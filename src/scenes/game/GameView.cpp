@@ -1,99 +1,63 @@
 #include "GameView.h"
 
-#include "systems/ui/components/BrandHeader.h"
+#include "systems/ui/components/Align.h"
 #include "systems/ui/components/BackButton.h"
+#include "systems/ui/components/BrandHeader.h"
+#include "systems/ui/components/Button.h"
+#include "systems/ui/components/Container.h"
+#include "systems/ui/components/Label.h"
+#include "systems/ui/components/ProgressBar.h"
+#include "systems/ui/components/Screen.h"
 #include "Arduino.h"
 
 void GameView::create()
 {
-    /* Root */
-    root = lv_obj_create(nullptr);
+    root = Screen::create();
     lv_obj_set_size(root, LV_PCT(100), LV_PCT(100));
-    lv_obj_clear_flag(root, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(root, lv_color_black(), 0);
-    lv_obj_set_style_bg_opa(root, LV_OPA_COVER, 0);
 
-    // --- Brand ---
     brandImg = BrandHeader::create(root);
 
-    // --- Content container ---
-    container = lv_obj_create(root);
-    lv_obj_set_size(container, 220, 120);
-    lv_obj_align(container, LV_ALIGN_CENTER, 0, 10);
-    lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
-    lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_flex_flow(container, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(container,
-        LV_FLEX_ALIGN_CENTER,
-        LV_FLEX_ALIGN_CENTER,
-        LV_FLEX_ALIGN_CENTER);
+    container = Container::create(root, 220, 120, LV_ALIGN_CENTER, 0, 10);
+    Container::setFlex(container);
 
-    // --- Game text ---
-    textLabel = lv_label_create(container);
-    lv_label_set_text(textLabel,
+    textLabel = Label::create(
+        container,
         "EscapeOS\n\n"
         "Open escape-room engine\n"
         "for ESP32-based consoles.\n\n"
-        "© 2026");
+        "© 2026",
+        &lv_font_montserrat_14,
+        LV_TEXT_ALIGN_CENTER,
+        220);
+    Label::setTextColor(textLabel, lv_color_hex(0xCCCCCC));
 
-    lv_obj_set_style_text_align(textLabel, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_font(textLabel, &lv_font_montserrat_14, 0);
-    lv_obj_set_style_text_color(textLabel, lv_color_hex(0xCCCCCC), 0);
-
-    /* ================= GAME CONTENT AREA ================= */
-    gameContentArea = lv_obj_create(root);
-    lv_obj_set_size(gameContentArea, LV_PCT(100), LV_PCT(100) - 96 - 48);
+    gameContentArea = Container::create(root, LV_PCT(100), LV_PCT(100) - 96 - 48);
     lv_obj_set_pos(gameContentArea, 0, 48);
-    lv_obj_clear_flag(gameContentArea, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(gameContentArea, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(gameContentArea, LV_OPA_COVER, 0);
 
-    /* ================= TIMER ================= */
-    timerLabel = lv_label_create(root);
-    lv_obj_set_style_text_font(timerLabel, &lv_font_montserrat_48, 0);
-    lv_label_set_text(timerLabel, "00:00:00");
-    lv_obj_align(timerLabel, LV_ALIGN_CENTER, 0, -40);
+    timerLabel = Label::create(root, "00:00:00", &lv_font_montserrat_48, LV_TEXT_ALIGN_CENTER);
+    Align::setPosition(timerLabel, LV_ALIGN_CENTER, 0, -40);
 
-    /* ================= LOADING BAR ================= */
-    loadingContainer = lv_obj_create(root);
-    lv_obj_set_size(loadingContainer, 200, 100);
-    lv_obj_align(loadingContainer, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_clear_flag(loadingContainer, LV_OBJ_FLAG_SCROLLABLE);
+    loadingContainer = Container::create(root, 200, 100, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_bg_color(loadingContainer, lv_color_hex(0x333333), 0);
     lv_obj_set_style_bg_opa(loadingContainer, LV_OPA_COVER, 0);
 
-    loadingLabel = lv_label_create(loadingContainer);
-    lv_label_set_text(loadingLabel, "Loading game...");
-    lv_obj_align(loadingLabel, LV_ALIGN_TOP_MID, 0, 10);
+    loadingLabel = Label::create(loadingContainer, "Loading game...", &lv_font_montserrat_14, LV_TEXT_ALIGN_CENTER, 200);
+    Align::setPosition(loadingLabel, LV_ALIGN_TOP_MID, 0, 10);
 
-    loadingBar = lv_bar_create(loadingContainer);
-    lv_obj_set_size(loadingBar, 160, 20);
-    lv_bar_set_value(loadingBar, 50, LV_ANIM_OFF);
-    lv_obj_align(loadingBar, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_align_to(loadingBar, loadingLabel, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
+    loadingBar = ProgressBar::create(loadingContainer, 160, 20);
+    ProgressBar::setValue(loadingBar, 50, LV_ANIM_OFF);
+    Align::alignTo(loadingBar, loadingLabel, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
 
-    // Hide loading initially
     lv_obj_add_flag(loadingContainer, LV_OBJ_FLAG_HIDDEN);
 
-    /* ================= START / PAUSE ================= */
-    startPauseBtn = lv_btn_create(root);
-    lv_obj_set_size(startPauseBtn, 120, 44);
-    lv_obj_align(startPauseBtn, LV_ALIGN_BOTTOM_LEFT, 20, -20);
-    lv_obj_add_event_cb(startPauseBtn, onStartPause, LV_EVENT_CLICKED, this);
+    startPauseBtn = Button::create(root, "Start", onStartPause, this, 120, 44, LV_ALIGN_BOTTOM_LEFT, 20, -20);
+    startPauseLabel = lv_obj_get_child(startPauseBtn, 0);
 
-    startPauseLabel = lv_label_create(startPauseBtn);
-    lv_label_set_text(startPauseLabel, "Start");
-    lv_obj_center(startPauseLabel);
-
-    /* ================= CANCEL ================= */
-    cancelBtn = lv_btn_create(root);
-    lv_obj_set_size(cancelBtn, 120, 44);
-    lv_obj_align(cancelBtn, LV_ALIGN_BOTTOM_RIGHT, -20, -20);
-    lv_obj_add_event_cb(cancelBtn, onCancel, LV_EVENT_CLICKED, this);
-
-    auto* cancelLbl = lv_label_create(cancelBtn);
-    lv_label_set_text(cancelLbl, "Cancel");
-    lv_obj_center(cancelLbl);
+    cancelBtn = Button::create(root, "Cancel", onCancel, this, 120, 44, LV_ALIGN_BOTTOM_RIGHT, -20, -20);
+    infoBtn = nullptr;
+    settingsBtn = nullptr;
 }
 
 void GameView::update()
@@ -103,10 +67,14 @@ void GameView::update()
 
 void GameView::destroy()
 {
-    if (root)
-        lv_obj_del(root);
+    // Clean up any dynamically created Lua objects tracked by the tracker
+    getObjectTracker().cleanup();
 
-    root = nullptr;
+    // Delete root (cascades to all static children per LVGL hierarchy)
+    UICleanup::deleteRoot(root);
+
+    // Nullify all remaining pointers (defensive programming)
+    // These are now safe to access even though objects are deleted
     header = nullptr;
     titleLabel = nullptr;
     timerLabel = nullptr;
@@ -131,12 +99,14 @@ void GameView::setGameTitle(const std::string& title)
 
 void GameView::setTime(uint32_t seconds)
 {
-    lv_label_set_text(timerLabel, String(seconds).c_str());
+    if (timerLabel)
+        lv_label_set_text(timerLabel, String(seconds).c_str());
 }
 
 void GameView::setRunning(bool running)
 {
-    lv_label_set_text(startPauseLabel, running ? "Pause" : "Start");
+    if (startPauseLabel)
+        lv_label_set_text(startPauseLabel, running ? "Pause" : "Start");
 }
 
 void GameView::showLoadingBar()
@@ -157,11 +127,10 @@ void GameView::setErrorMessage(const std::string& message)
 
     if (!errorLabel)
     {
-        errorLabel = lv_label_create(root);
-        lv_obj_set_size(errorLabel, LV_PCT(80), LV_SIZE_CONTENT);
-        lv_obj_align(errorLabel, LV_ALIGN_CENTER, 0, 0);
+        errorLabel = Label::create(root, "", nullptr, LV_TEXT_ALIGN_CENTER, LV_PCT(80));
+        Align::setPosition(errorLabel, LV_ALIGN_CENTER, 0, 0);
         lv_label_set_long_mode(errorLabel, LV_LABEL_LONG_WRAP);
-        lv_obj_set_style_text_color(errorLabel, lv_color_hex(0xFF0000), 0);
+        Label::setTextColor(errorLabel, lv_color_hex(0xFF0000));
     }
 
     lv_label_set_text(errorLabel, message.c_str());
@@ -182,12 +151,9 @@ void GameView::drawText(int x, int y, const char* text, int fontSize, uint32_t c
     if (!gameContentArea || !text)
         return;
 
-    lv_obj_t* label = lv_label_create(gameContentArea);
-    lv_label_set_text(label, text);
-    lv_obj_set_pos(label, x, y);
-    lv_obj_set_style_text_color(label, lv_color_hex(color), 0);
+    lv_obj_t* label = Label::create(gameContentArea, text, nullptr, LV_TEXT_ALIGN_LEFT, LV_SIZE_CONTENT, x, y);
+    Label::setTextColor(label, lv_color_hex(color));
 
-    // Select font based on size
     const lv_font_t* font = &lv_font_montserrat_14;
     if (fontSize >= 24)
         font = &lv_font_montserrat_28;
@@ -196,7 +162,7 @@ void GameView::drawText(int x, int y, const char* text, int fontSize, uint32_t c
     else if (fontSize >= 16)
         font = &lv_font_montserrat_16;
 
-    lv_obj_set_style_text_font(label, font, 0);
+    Label::setFont(label, font);
 }
 
 void GameView::drawRect(int x, int y, int width, int height, uint32_t color, bool fill)
@@ -235,16 +201,8 @@ lv_obj_t* GameView::createButton(int x, int y, int width, int height, const char
     if (!gameContentArea)
         return nullptr;
 
-    lv_obj_t* btn = lv_btn_create(gameContentArea);
-    lv_obj_set_size(btn, width, height);
+    lv_obj_t* btn = Button::create(gameContentArea, text ? text : "", nullptr, nullptr, width, height);
     lv_obj_set_pos(btn, x, y);
-
-    if (text)
-    {
-        lv_obj_t* label = lv_label_create(btn);
-        lv_label_set_text(label, text);
-        lv_obj_center(label);
-    }
 
     return btn;
 }

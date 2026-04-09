@@ -1,9 +1,20 @@
 #pragma once
 
 #include "systems/ui/View.h"
+#include "systems/ui/UICleanup.h"
 #include <string>
 #include <cstdint>
 
+/**
+ * @brief Game scene/view management
+ * 
+ * Object Hierarchy & Cleanup Pattern:
+ * - Follows Pattern 1 (Simple Root-Based Cleanup)
+ * - Root object: `root` (Screen)
+ * - All other objects are owned by root or its children
+ * - Cleanup: On destroy(), delete root cascades to all children
+ * - Dynamic objects (Lua-created): Tracked separately, deleted before root
+ */
 class GameView : public View
 {
 public:

@@ -2,8 +2,18 @@
 
 #include "MainMenuAction.h"
 #include "systems/ui/View.h"
+#include "systems/ui/UICleanup.h"
 #include <lvgl.h>
 
+/**
+ * @brief Main menu view
+ * 
+ * Object Hierarchy & Cleanup Pattern:
+ * - Follows Pattern 1 (Simple Root-Based Cleanup)
+ * - Root object: `screen` (Screen)
+ * - All children owned by screen hierarchy
+ * - Cleanup: Delete screen cascades to all children
+ */
 class MainMenuView : public View
 {
 public:
@@ -16,7 +26,6 @@ public:
 
 private:
     lv_obj_t *screen = nullptr;
-
     lv_obj_t *brandImg = nullptr;
     lv_obj_t *menuContainer = nullptr;
 

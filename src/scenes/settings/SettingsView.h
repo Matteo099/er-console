@@ -2,6 +2,7 @@
 
 #include "SettingsAction.h"
 #include "systems/ui/View.h"
+#include "systems/ui/UICleanup.h"
 
 class SettingsView : public View
 {
