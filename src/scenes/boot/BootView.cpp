@@ -7,6 +7,7 @@
 #include "systems/ui/components/ProgressBar.h"
 #include "systems/ui/components/Screen.h"
 #include "systems/ui/components/Align.h"
+#include "systems/ui/components/Spinner.h"
 
 void BootView::create()
 {
@@ -21,19 +22,8 @@ void BootView::create()
     progressBar = ProgressBar::create(screen);
     Align::alignTo(progressBar, statusLabel, LV_ALIGN_OUT_TOP_MID, 0, -10);
 
-    lv_anim_init(&logoSpinAnim);
-    lv_anim_set_var(&logoSpinAnim, logoImg);
-    lv_anim_set_exec_cb(&logoSpinAnim, [](void *obj, int32_t angle)
-                        { lv_img_set_angle(static_cast<lv_obj_t *>(obj), angle); });
-
-    lv_anim_set_values(&logoSpinAnim, 0, 3600);
-    lv_anim_set_time(&logoSpinAnim, 600);
-    lv_anim_set_delay(&logoSpinAnim, 1000);
-    lv_anim_set_repeat_delay(&logoSpinAnim, 1000);
-    lv_anim_set_repeat_count(&logoSpinAnim, LV_ANIM_REPEAT_INFINITE);
-    lv_anim_set_path_cb(&logoSpinAnim, lv_anim_path_ease_in_out);
-
-    lv_anim_start(&logoSpinAnim);
+    // Start spinning animation on logo
+    Spinner::start(logoImg, 600);  // 600ms per rotation
 
     currentProgress = 0;
     currentLabel = nullptr;
@@ -68,19 +58,8 @@ void BootView::loadImages()
     Align::setPosition(statusLabel, LV_ALIGN_BOTTOM_MID, 0, -28);
     Align::alignTo(progressBar, statusLabel, LV_ALIGN_OUT_TOP_MID, 0, -10);
 
-    lv_anim_init(&logoSpinAnim);
-    lv_anim_set_var(&logoSpinAnim, logoImg);
-    lv_anim_set_exec_cb(&logoSpinAnim, [](void *obj, int32_t angle)
-                        { lv_img_set_angle(static_cast<lv_obj_t *>(obj), angle); });
-
-    lv_anim_set_values(&logoSpinAnim, 0, 3600);
-    lv_anim_set_time(&logoSpinAnim, 600);
-    lv_anim_set_delay(&logoSpinAnim, 1000);
-    lv_anim_set_repeat_delay(&logoSpinAnim, 1000);
-    lv_anim_set_repeat_count(&logoSpinAnim, LV_ANIM_REPEAT_INFINITE);
-    lv_anim_set_path_cb(&logoSpinAnim, lv_anim_path_ease_in_out);
-
-    lv_anim_start(&logoSpinAnim);
+    // Start spinning animation on logo
+    Spinner::start(logoImg, 600);  // 600ms per rotation
 }
 
 void BootView::setProgress(uint8_t progress, const char *label)
@@ -110,8 +89,8 @@ void BootView::destroy()
     // Clean up tracker (for any dynamic objects)
     getObjectTracker().cleanup();
 
-    // Stop logo animation before object deletion
-    lv_anim_del(logoImg, nullptr);
+    // Clean up spinner animation before object deletion
+    Spinner::cleanup(logoImg);
 
     // Delete root (cascades to all children)
     UICleanup::deleteRoot(screen);
