@@ -1,25 +1,16 @@
 #include "AboutScene.h"
 #include "log/Logger.h"
-
-#include "AboutAction.h"
+#include "systems/ui/UIEvents.h"
 
 void AboutScene::onEnter()
 {
     Log::info(Log::SCENE_TAG, "Entering AboutScene");
+    view.setEventHandler(this);
     view.create();
 }
 
 void AboutScene::onUpdate()
 {
-    switch (view.consumeAction())
-    {
-    case AboutAction::Back:
-        request = SceneRequest(SceneChange::GoToMainMenu);
-        break;
-
-    default:
-        break;
-    }
     view.update();
 }
 
@@ -31,4 +22,18 @@ void AboutScene::onExit()
 SceneRequest AboutScene::getRequest() const
 {
     return request;
+}
+
+bool AboutScene::handleUIEvent(const UIEvent& event)
+{
+    if (event.getType() != ButtonClickedEvent::TYPE)
+        return false;
+
+    const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
+    if (clicked.buttonId == "back")
+    {
+        request = SceneRequest(SceneChange::GoToMainMenu);
+        return true;
+    }
+    return false;
 }

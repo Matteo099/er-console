@@ -22,7 +22,6 @@ public:
     void destroy() override;
 
     lv_obj_t *getScreen() override { return screen; }
-    MainMenuAction consumeAction();
 
 private:
     lv_obj_t *screen = nullptr;

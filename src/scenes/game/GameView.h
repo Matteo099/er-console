@@ -44,12 +44,6 @@ public:
     void setButtonCallback(lv_obj_t* btn, const char* callbackName);
     void removeButton(lv_obj_t* btn);
 
-    /* Signals (polled by Scene) */
-    bool startPressed = false;
-    bool cancelPressed = false;
-    bool infoPressed = false;
-    bool settingsPressed = false;
-
     lv_obj_t *getScreen() override { return root; };
 
 private:

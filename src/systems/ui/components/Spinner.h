@@ -75,7 +75,7 @@ public:
      * @param repeatCount Number of times to repeat (LV_ANIM_REPEAT_INFINITE for endless)
      */
     static void start(lv_obj_t* spinner, uint32_t duration = 600, 
-                      uint16_t repeatCount = LV_ANIM_REPEAT_INFINITE)
+                      uint32_t repeatCount = LV_ANIM_REPEAT_INFINITE)
     {
         if (!spinner)
             return;

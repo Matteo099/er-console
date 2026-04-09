@@ -1,6 +1,6 @@
 #include "MainMenuView.h"
 #include "log/Logger.h"
-#include <cstring>
+#include "systems/ui/UIEvents.h"
 
 #include "systems/ui/components/BackButton.h"
 #include "systems/ui/components/BrandHeader.h"
@@ -50,16 +50,9 @@ void MainMenuView::onButtonClicked(lv_event_t *e)
 
     lv_obj_t* target = static_cast<lv_obj_t *>(lv_event_get_target(e));
     if (target == view->btnNewGame)
-        view->pendingAction = MainMenuAction::NewGame;
+        view->emitEvent(ButtonClickedEvent("new_game"));
     else if (target == view->btnSettings)
-        view->pendingAction = MainMenuAction::Settings;
+        view->emitEvent(ButtonClickedEvent("settings"));
     else if (target == view->btnAbout)
-        view->pendingAction = MainMenuAction::About;
-}
-
-MainMenuAction MainMenuView::consumeAction()
-{
-    MainMenuAction a = pendingAction;
-    pendingAction = MainMenuAction::None;
-    return a;
+        view->emitEvent(ButtonClickedEvent("about"));
 }

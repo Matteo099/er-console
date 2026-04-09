@@ -21,8 +21,6 @@ public:
     bool hasSelectionChanged() const { return selectionChanged; }
     int getSelectedIndex() const { return selectedIndex; }
 
-    GameListAction consumeAction();
-
 private:
     struct CardUserData
     {

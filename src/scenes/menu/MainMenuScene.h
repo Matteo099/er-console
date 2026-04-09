@@ -17,8 +17,10 @@ public:
     }
     SceneRequest getRequest() const override;
 
+    bool handleUIEvent(const UIEvent& event) override;
+
 private:
     MainMenuView view;
     SceneRequest request = SceneRequest();
-};    
+};
 

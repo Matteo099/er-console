@@ -1,5 +1,6 @@
 #include "AboutView.h"
 #include "log/Logger.h"
+#include "systems/ui/UIEvents.h"
 
 #include "systems/ui/components/BackButton.h"
 #include "systems/ui/components/BrandHeader.h"
@@ -59,12 +60,5 @@ void AboutView::onBackClicked(lv_event_t *e)
     if (!view)
         return;
 
-    view->pendingAction = AboutAction::Back;
-}
-
-AboutAction AboutView::consumeAction()
-{
-    AboutAction a = pendingAction;
-    pendingAction = AboutAction::None;
-    return a;
+    view->emitEvent(ButtonClickedEvent("back"));
 }

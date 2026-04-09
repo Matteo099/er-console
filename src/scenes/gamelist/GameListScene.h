@@ -16,6 +16,8 @@ public:
     SceneTransition getTransition() const override { return SceneTransition::Fade; }
     SceneRequest getRequest() const override;
 
+    bool handleUIEvent(const UIEvent& event) override;
+
 private:
     GameListView view;
     int selectedIndex = -1;

@@ -1,5 +1,6 @@
 #include "SettingsView.h"
 #include "log/Logger.h"
+#include "systems/ui/UIEvents.h"
 
 #include "systems/ui/components/Align.h"
 #include "systems/ui/components/BackButton.h"
@@ -62,7 +63,7 @@ void SettingsView::onSoundClicked(lv_event_t* e)
     if (!view)
         return;
 
-    view->pendingAction = SettingsAction::ToggleSound;
+    view->emitEvent(ButtonClickedEvent("toggle_sound"));
 }
 
 void SettingsView::onBackClicked(lv_event_t* e)
@@ -71,12 +72,5 @@ void SettingsView::onBackClicked(lv_event_t* e)
     if (!view)
         return;
 
-    view->pendingAction = SettingsAction::Back;
-}
-
-SettingsAction SettingsView::consumeAction()
-{
-    SettingsAction a = pendingAction;
-    pendingAction = SettingsAction::None;
-    return a;
+    view->emitEvent(ButtonClickedEvent("back"));
 }

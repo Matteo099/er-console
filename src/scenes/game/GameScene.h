@@ -26,6 +26,8 @@ public:
     SceneTransition getTransition() const override { return SceneTransition::SlideLeft; }
     SceneRequest getRequest() const override;
 
+    bool handleUIEvent(const UIEvent& event) override;
+
     // Called by SceneManager with game ID
     void setGameId(const std::string& id) { gameId = id; }
 

@@ -13,7 +13,6 @@ public:
 
     lv_obj_t *getScreen() override { return screen; };
     
-    SettingsAction consumeAction();
     void setSoundEnabled(bool enabled);
 
 private:

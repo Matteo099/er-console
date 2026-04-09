@@ -1,33 +1,16 @@
 #include "MainMenuScene.h"
 #include "log/Logger.h"
-
-#include "MainMenuAction.h"
+#include "systems/ui/UIEvents.h"
 
 void MainMenuScene::onEnter()
 {
     Log::info(Log::SCENE_TAG, "Entering MainMenuScene");
+    view.setEventHandler(this);
     view.create();
 }
 
 void MainMenuScene::onUpdate()
 {
-    switch (view.consumeAction())
-    {
-    case MainMenuAction::NewGame:
-        request = SceneRequest(SceneChange::GoToGameList);
-        break;
-
-    case MainMenuAction::Settings:
-        request = SceneRequest(SceneChange::GoToSettings);
-        break;
-
-    case MainMenuAction::About:
-        request = SceneRequest(SceneChange::GoToAbout);
-        break;
-
-    default:
-        break;
-    }
     view.update();
 }
 
@@ -39,4 +22,29 @@ void MainMenuScene::onExit()
 SceneRequest MainMenuScene::getRequest() const
 {
     return request;
+}
+
+bool MainMenuScene::handleUIEvent(const UIEvent& event)
+{
+    if (event.getType() != ButtonClickedEvent::TYPE)
+        return false;
+
+    const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
+    if (clicked.buttonId == "new_game")
+    {
+        request = SceneRequest(SceneChange::GoToGameList);
+        return true;
+    }
+    if (clicked.buttonId == "settings")
+    {
+        request = SceneRequest(SceneChange::GoToSettings);
+        return true;
+    }
+    if (clicked.buttonId == "about")
+    {
+        request = SceneRequest(SceneChange::GoToAbout);
+        return true;
+    }
+
+    return false;
 }

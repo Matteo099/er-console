@@ -1,5 +1,6 @@
 #include "GameListScene.h"
 #include "log/Logger.h"
+#include "systems/ui/UIEvents.h"
 
 #include "os/BootEvent.h"
 #include "core/SystemEventBus.h"
@@ -9,6 +10,7 @@
 void GameListScene::onEnter()
 {
     Log::info(Log::SCENE_TAG, "Entering GameListScene");
+    view.setEventHandler(this);
     loadGames();
     view.setGames(games);
     view.create();
@@ -20,22 +22,6 @@ void GameListScene::onUpdate()
     {
         selectedIndex = view.getSelectedIndex();
     }
-
-    switch (view.consumeAction())
-    {
-    case GameListAction::Back:
-        request = SceneRequest(SceneChange::GoToMainMenu);
-        break;
-
-    case GameListAction::StartGame:
-        // TODO: &games[selectedIndex].id - is it correct?
-        request = SceneRequest(SceneChange::GoToGame, &games[selectedIndex].id);
-        break;
-
-    default:
-        break;
-    }
-    
     view.update();
 }
 
@@ -48,6 +34,31 @@ void GameListScene::onExit()
 SceneRequest GameListScene::getRequest() const
 {
     return request;
+}
+
+
+bool GameListScene::handleUIEvent(const UIEvent& event)
+{
+    if (event.getType() != ButtonClickedEvent::TYPE)
+        return false;
+
+    const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
+    if (clicked.buttonId == "back")
+    {
+        request = SceneRequest(SceneChange::GoToMainMenu);
+        return true;
+    }
+
+    if (clicked.buttonId == "start_game")
+    {
+        if (selectedIndex >= 0 && selectedIndex < static_cast<int>(games.size()))
+        {
+            request = SceneRequest(SceneChange::GoToGame, &games[selectedIndex].id);
+        }
+        return true;
+    }
+
+    return false;
 }
 
 

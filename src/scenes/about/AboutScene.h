@@ -15,6 +15,8 @@ public:
     SceneTransition getTransition() const override { return SceneTransition::SlideLeft; }
     SceneRequest getRequest() const override;
 
+    bool handleUIEvent(const UIEvent& event) override;
+
 private:
     AboutView view;
     SceneRequest request = SceneRequest();

@@ -1,9 +1,13 @@
 #pragma once
 
 #include "systems/ui/UIEventSystem.h"
+#include <string>
 
 /**
- * @brief Event emitted when the play sound button is clicked
+ * @brief Sample-scene-specific event: Play sound on button press
+ * 
+ * This demonstrates how to create domain-specific events by inheriting
+ * from UIEventType<T>. Note: Generic ButtonClickedEvent is in UIEvents.h
  */
 class PlaySoundEvent : public UIEventType<PlaySoundEvent>
 {
@@ -14,18 +18,4 @@ public:
     PlaySoundEvent(const std::string& soundPath) : soundPath(soundPath) {}
 
     std::string soundPath = "/fireball.wav";  // Default sound
-};
-
-/**
- * @brief Event emitted when a generic button is clicked
- */
-class ButtonClickedEvent : public UIEventType<ButtonClickedEvent>
-{
-public:
-    static constexpr const char* TYPE = "button_clicked";
-
-    ButtonClickedEvent() = default;
-    ButtonClickedEvent(const std::string& buttonId) : buttonId(buttonId) {}
-
-    std::string buttonId;
 };

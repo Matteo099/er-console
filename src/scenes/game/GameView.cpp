@@ -1,4 +1,5 @@
 #include "GameView.h"
+#include "systems/ui/UIEvents.h"
 
 #include "systems/ui/components/Align.h"
 #include "systems/ui/components/BackButton.h"
@@ -224,23 +225,35 @@ void GameView::removeButton(lv_obj_t* btn)
 void GameView::onStartPause(lv_event_t* e)
 {
     auto* view = static_cast<GameView*>(lv_event_get_user_data(e));
-    view->startPressed = true;
+    if (!view)
+        return;
+
+    view->emitEvent(ButtonClickedEvent("start_pause"));
 }
 
 void GameView::onCancel(lv_event_t* e)
 {
     auto* view = static_cast<GameView*>(lv_event_get_user_data(e));
-    view->cancelPressed = true;
+    if (!view)
+        return;
+
+    view->emitEvent(ButtonClickedEvent("cancel"));
 }
 
 void GameView::onInfo(lv_event_t* e)
 {
     auto* view = static_cast<GameView*>(lv_event_get_user_data(e));
-    view->infoPressed = true;
+    if (!view)
+        return;
+
+    view->emitEvent(ButtonClickedEvent("info"));
 }
 
 void GameView::onSettings(lv_event_t* e)
 {
     auto* view = static_cast<GameView*>(lv_event_get_user_data(e));
-    view->settingsPressed = true;
+    if (!view)
+        return;
+
+    view->emitEvent(ButtonClickedEvent("settings"));
 }

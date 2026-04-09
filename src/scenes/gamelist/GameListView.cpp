@@ -1,5 +1,6 @@
 #include "GameListView.h"
 #include "log/Logger.h"
+#include "systems/ui/UIEvents.h"
 
 #include "systems/ui/components/Align.h"
 #include "systems/ui/components/BackButton.h"
@@ -112,7 +113,7 @@ void GameListView::onStartClicked(lv_event_t* e)
     if (!view)
         return;
 
-    view->pendingAction = GameListAction::StartGame;
+    view->emitEvent(ButtonClickedEvent("start_game"));
 }
 
 void GameListView::onBackClicked(lv_event_t* e)
@@ -121,14 +122,7 @@ void GameListView::onBackClicked(lv_event_t* e)
     if (!view)
         return;
 
-    view->pendingAction = GameListAction::Back;
-}
-
-GameListAction GameListView::consumeAction()
-{
-    GameListAction a = pendingAction;
-    pendingAction = GameListAction::None;
-    return a;
+    view->emitEvent(ButtonClickedEvent("back"));
 }
 
 void GameListView::destroy()
