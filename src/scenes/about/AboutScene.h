@@ -1,7 +1,7 @@
 #pragma once
 
 #include "systems/ui/Scene.h"
-#include "scenes/About/AboutView.h"
+#include "scenes/about/AboutView.h"
 #include "AboutView.h"
 
 class AboutScene : public Scene
