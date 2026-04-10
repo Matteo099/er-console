@@ -50,10 +50,15 @@ jobs:
       - name: Build firmware (dev)
         run: pio run
 
+      - name: Set safe artifact name
+        run: |
+          SAFE_NAME=$(echo "${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}" | tr '/' '-' )
+          echo "ARTIFACT_NAME=$SAFE_NAME" >> $GITHUB_ENV
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: firmware-${{ github.ref_name }}
+          name: firmware-${{ env.ARTIFACT_NAME }}
           path: .pio/build/*/firmware.bin
 
   release:
