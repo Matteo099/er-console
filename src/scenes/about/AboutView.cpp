@@ -39,7 +39,14 @@ void AboutView::create()
         &lv_font_montserrat_14,
         LV_TEXT_ALIGN_CENTER,
         240);
-    Label::setTextColor(textLabel, lv_color_hex(0xCCCCCC));
+    if (FW_DEV_MODE == 1)
+    {
+        Label::setTextColor(textLabel, lv_color_hex(0xFF5555));
+    }
+    else
+    {
+        Label::setTextColor(textLabel, lv_color_hex(0xCCCCCC));
+    }
 
     btnBack = BackButton::create(screen, onBackClicked, this);
 }

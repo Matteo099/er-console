@@ -41,10 +41,20 @@ jobs:
       # 5. Extract version (fallback if none)
       - name: Set version env
         run: |
-          if [ -z "${{ steps.semantic.outputs.new_release_version }}" ]; then
-            echo "APP_VERSION=dev" >> $GITHUB_ENV
+          if git describe --tags --abbrev=0 >/dev/null 2>&1; then
+            VERSION=$(git describe --tags --abbrev=0)
           else
-            echo "APP_VERSION=${{ steps.semantic.outputs.new_release_version }}" >> $GITHUB_ENV
+            VERSION="dev"
+          fi
+
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "GIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "GIT_BRANCH=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+
+          if [ "$GITHUB_REF_NAME" = "main" ]; then
+            echo "DEV_MODE=0" >> $GITHUB_ENV
+          else
+            echo "DEV_MODE=1" >> $GITHUB_ENV
           fi
 
       # 6. Install PlatformIO
@@ -54,7 +64,12 @@ jobs:
       # 7. Build firmware with injected version
       - name: Build firmware
         run: |
-          pio run --project-option="build_flags=-D APP_VERSION=\\\"$APP_VERSION\\\""
+          pio run \
+            --project-option="build_flags=
+              -D APP_VERSION=\\\"$APP_VERSION\\\"
+              -D GIT_HASH=\\\"$GIT_HASH\\\"
+              -D GIT_BRANCH=\\\"$GIT_BRANCH\\\"
+              -D DEV_MODE=$DEV_MODE"
 
       # 8. Rename firmware with version
       - name: Rename firmware
