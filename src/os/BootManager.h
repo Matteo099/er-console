@@ -12,6 +12,7 @@ public:
         RAINBOW_LED_INIT,
         DISPLAY_INIT,
         STORAGE_INIT,
+        NETWORK_INIT,
         AUDIO_INIT,
         INPUT_INIT,
         LUA_INIT,

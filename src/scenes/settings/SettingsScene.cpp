@@ -1,6 +1,8 @@
 #include "SettingsScene.h"
 #include "log/Logger.h"
 #include "systems/ui/UIEvents.h"
+#include "core/SystemEventBus.h"
+#include "systems/network/NetworkSystem.h"
 
 void SettingsScene::onEnter()
 {
@@ -8,10 +10,21 @@ void SettingsScene::onEnter()
     view.setEventHandler(this);
     view.setSoundEnabled(soundEnabled);
     view.create();
+
+    network = static_cast<NetworkSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
+    if (network)
+    {
+        const auto& status = network->getStatus();
+        view.setWiFiStatus(status.message);
+    }
 }
 
 void SettingsScene::onUpdate()
 {
+    if (network)
+    {
+        view.setWiFiStatus(network->getStatus().message);
+    }
     view.update();
 }
 
@@ -35,6 +48,12 @@ bool SettingsScene::handleUIEvent(const UIEvent& event)
     {
         soundEnabled = !soundEnabled;
         view.setSoundEnabled(soundEnabled);
+        return true;
+    }
+
+    if (clicked.buttonId == "wifi_settings")
+    {
+        request = SceneRequest(SceneChange::GoToNetwork);
         return true;
     }
 

@@ -22,4 +22,5 @@ private:
 
     // ---- Settings state (logic-owned) ----
     bool soundEnabled = true;
+    class NetworkSystem* network = nullptr;
 };

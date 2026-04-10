@@ -13,6 +13,7 @@ namespace Log {
     constexpr const char* DISPLAY_TAG = "DISPLAY";
     constexpr const char* INPUT_TAG = "INPUT";
     constexpr const char* DRIVER_TAG = "DRIVER";
+    constexpr const char* NETWORK_TAG = "NETWORK";
     constexpr const char* SCENE_TAG = "SCENE";
     constexpr const char* LED_TAG = "LED";
 

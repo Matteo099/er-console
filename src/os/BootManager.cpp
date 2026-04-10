@@ -41,6 +41,16 @@ void BootManager::run()
                         pdTRUE,
                         portMAX_DELAY);
     vTaskDelay(pdMS_TO_TICKS(delayMs));
+    
+    // ---- NETWORK ----
+    emitStep(BootStep::NETWORK_INIT, "Initializing network");
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_NETWORK_INIT_REQ);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_NETWORK_READY,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
+    vTaskDelay(pdMS_TO_TICKS(delayMs));
 
     // ---- AUDIO ----
     emitStep(BootStep::AUDIO_INIT, "Initializing audio");

@@ -11,6 +11,7 @@
 #include "systems/audio/AudioSystem.h"
 #include "systems/lua/LuaSystem.h"
 #include "systems/rainbowpixel/RainbowPixel.h"
+#include "systems/network/NetworkSystem.h"
 
 class EscapeOS
 {
@@ -25,6 +26,7 @@ public:
     AudioSystem* getAudioSystem() { return &audioSystem; }
     LuaSystem* getLuaSystem() { return &luaSystem; }
     RainbowPixel* getRainbowPixel() { return &rainbowPixel; }
+    NetworkSystem* getNetworkSystem() { return &networkSystem; }
 
 private:
     bool running = false;
@@ -36,6 +38,7 @@ private:
     InputSystem inputSystem;
     AudioSystem audioSystem;
     LuaSystem luaSystem;
+    NetworkSystem networkSystem;
 
     void createTasks();
 };

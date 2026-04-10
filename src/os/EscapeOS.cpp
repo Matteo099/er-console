@@ -86,6 +86,31 @@ void xTaskStorage(void *params)
     vTaskDelete(nullptr);
 }
 
+void xTaskNetwork(void *params)
+{
+    Log::info(Log::OS_TAG, "Starting task 'xTaskNetwork'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
+
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_NETWORK_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
+
+    NetworkSystem *network = os->getNetworkSystem();
+    network->init(os->getStorageSystem());
+
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_NETWORK_READY);
+
+    while (os->isRunning())
+    {
+        network->update();
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+
+    vTaskDelete(nullptr);
+}
+
 void xTaskInput(void *params)
 {
     Log::info(Log::OS_TAG, "Starting task 'xTaskInput'");
@@ -160,6 +185,7 @@ void EscapeOS::init()
     Log::info(Log::OS_TAG, "EscapeOS initializing...");
 
     SystemEventBus::init();
+    SystemEventBus::instance().registerService(SystemEventBus::SERVICE_NETWORK, &networkSystem);
     running = true;
 
     createTasks();
@@ -206,6 +232,16 @@ void EscapeOS::createTasks()
         2,
         nullptr,
         1);
+
+    // Network Task
+    xTaskCreatePinnedToCore(
+        xTaskNetwork,
+        "NetworkTask",
+        6144,
+        this,
+        2,
+        nullptr,
+        0);
 
     // Input Task
     xTaskCreatePinnedToCore(

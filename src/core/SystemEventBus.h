@@ -15,17 +15,20 @@ enum SystemEventBits {
    
     EVT_STORAGE_INIT_REQ    = (1 << 4),
     EVT_STORAGE_READY       = (1 << 5),
+
+    EVT_NETWORK_INIT_REQ    = (1 << 6),
+    EVT_NETWORK_READY       = (1 << 7),
    
-    EVT_AUDIO_INIT_REQ      = (1 << 6),
-    EVT_AUDIO_READY         = (1 << 7),
+    EVT_AUDIO_INIT_REQ      = (1 << 8),
+    EVT_AUDIO_READY         = (1 << 9),
    
-    EVT_INPUT_INIT_REQ      = (1 << 8),
-    EVT_INPUT_READY         = (1 << 9),
+    EVT_INPUT_INIT_REQ      = (1 << 10),
+    EVT_INPUT_READY         = (1 << 11),
    
-    EVT_LUA_INIT_REQ        = (1 << 10),
-    EVT_LUA_READY           = (1 << 11),
+    EVT_LUA_INIT_REQ        = (1 << 12),
+    EVT_LUA_READY           = (1 << 13),
    
-    EVT_BOOT_DONE           = (1 << 12),
+    EVT_BOOT_DONE           = (1 << 14),
 };
 
 class SystemEventBus
@@ -37,6 +40,7 @@ public:
     static constexpr int SERVICE_STORAGE = 3;
     static constexpr int SERVICE_UI = 4;
     static constexpr int SERVICE_INPUT = 5;
+    static constexpr int SERVICE_NETWORK = 6;
 
     // Singleton instance
     static SystemEventBus& instance();
