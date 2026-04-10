@@ -1,11 +1,13 @@
-name: Build & Release Firmware
+name: Build Firmware CI + Release
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: ["**"]   # 👈 ALL feature branches + PRs
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -13,41 +15,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # REQUIRED
+          fetch-depth: 0
 
-      # 2. Setup Node (for semantic-release)
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      # 2. Install PlatformIO
+      - name: Install PlatformIO
+        run: pip install platformio
 
-      # 3. Install semantic-release
-      - name: Install semantic-release
+      # 3. Set build metadata (always safe for CI)
+      - name: Set metadata
         run: |
-          npm install -g semantic-release \
-            @semantic-release/changelog \
-            @semantic-release/git \
-            @semantic-release/github \
-            @semantic-release/commit-analyzer \
-            @semantic-release/release-notes-generator
-
-      # 4. Run semantic-release (calculate version)
-      - name: Run semantic-release
-        id: semantic
-        run: npx semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # 5. Extract version (fallback if none)
-      - name: Set version env
-        run: |
-          if git describe --tags --abbrev=0 >/dev/null 2>&1; then
-            VERSION=$(git describe --tags --abbrev=0)
-          else
-            VERSION="dev"
-          fi
-
-          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
           echo "GIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
           echo "GIT_BRANCH=${GITHUB_REF_NAME}" >> $GITHUB_ENV
 
@@ -57,31 +33,80 @@ jobs:
             echo "DEV_MODE=1" >> $GITHUB_ENV
           fi
 
-      # 6. Install PlatformIO
-      - name: Install PlatformIO
-        run: pip install platformio
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            echo "CI_MODE=PR" >> $GITHUB_ENV
+          else
+            echo "CI_MODE=CI" >> $GITHUB_ENV
+          fi
 
-      # 7. Build firmware with injected version
+      # 4. Build firmware ONLY (no release logic here)
       - name: Build firmware
         run: |
           pio run \
             --project-option="build_flags=
-              -D APP_VERSION=\\\"$APP_VERSION\\\"
               -D GIT_HASH=\\\"$GIT_HASH\\\"
               -D GIT_BRANCH=\\\"$GIT_BRANCH\\\"
-              -D DEV_MODE=$DEV_MODE"
+              -D DEV_MODE=$DEV_MODE
+              -D CI_MODE=\\\"$CI_MODE\\\""
 
-      # 8. Rename firmware with version
+      # 5. Rename firmware
       - name: Rename firmware
         run: |
-          mkdir output
-          cp .pio/build/*/firmware.bin output/firmware_${APP_VERSION}.bin
+          mkdir -p output
+          cp .pio/build/*/firmware.bin output/firmware_${GIT_BRANCH}_${GIT_HASH}.bin
 
-      # 9. Upload artifact to GitHub Release
-      - name: Upload firmware to release
-        if: steps.semantic.outputs.new_release_version != ''
+      # 6. Upload artifact (useful for PR testing)
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ env.GIT_BRANCH }}
+          path: output/*.bin
+
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install semantic-release
+        run: |
+          npm install -g semantic-release \
+            @semantic-release/github \
+            @semantic-release/commit-analyzer \
+            @semantic-release/release-notes-generator
+
+      - name: Run semantic-release
+        id: semantic
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set version env
+        run: |
+          VERSION=$(git describe --tags --abbrev=0 || echo "dev")
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Build release firmware
+        run: |
+          pio run \
+            --project-option="build_flags=-D APP_VERSION=\\\"$APP_VERSION\\\""
+
+      - name: Upload release firmware
         uses: softprops/action-gh-release@v2
         with:
-          files: output/*.bin
+          files: .pio/build/*/firmware.bin
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
