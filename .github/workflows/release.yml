@@ -1,0 +1,72 @@
+name: Build & Release Firmware
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # REQUIRED
+
+      # 2. Setup Node (for semantic-release)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 3. Install semantic-release
+      - name: Install semantic-release
+        run: |
+          npm install -g semantic-release \
+            @semantic-release/changelog \
+            @semantic-release/git \
+            @semantic-release/github \
+            @semantic-release/commit-analyzer \
+            @semantic-release/release-notes-generator
+
+      # 4. Run semantic-release (calculate version)
+      - name: Run semantic-release
+        id: semantic
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 5. Extract version (fallback if none)
+      - name: Set version env
+        run: |
+          if [ -z "${{ steps.semantic.outputs.new_release_version }}" ]; then
+            echo "APP_VERSION=dev" >> $GITHUB_ENV
+          else
+            echo "APP_VERSION=${{ steps.semantic.outputs.new_release_version }}" >> $GITHUB_ENV
+          fi
+
+      # 6. Install PlatformIO
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      # 7. Build firmware with injected version
+      - name: Build firmware
+        run: |
+          pio run --project-option="build_flags=-D APP_VERSION=\\\"$APP_VERSION\\\""
+
+      # 8. Rename firmware with version
+      - name: Rename firmware
+        run: |
+          mkdir output
+          cp .pio/build/*/firmware.bin output/firmware_${APP_VERSION}.bin
+
+      # 9. Upload artifact to GitHub Release
+      - name: Upload firmware to release
+        if: steps.semantic.outputs.new_release_version != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          files: output/*.bin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
