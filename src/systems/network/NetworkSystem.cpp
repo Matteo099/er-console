@@ -1,5 +1,4 @@
 #include "NetworkSystem.h"
-#include "systems/storage/StorageSystem.h"
 #include "log/Logger.h"
 #include <WiFi.h>
 #include <sstream>
@@ -83,7 +82,7 @@ void NetworkSystem::loadCredentials(StorageSystem* storage)
     }
 
     std::string contents;
-    if (!storage->readTextFile("/sd/wifi.cfg", contents))
+    if (!storage->readTextFile("/wifi.cfg", contents))
     {
         Log::warn(Log::NETWORK_TAG, "Wi-Fi credentials file not found");
         return;

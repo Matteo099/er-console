@@ -1,9 +1,8 @@
 #pragma once
 
+#include "systems/storage/StorageSystem.h"
 #include "core/SystemService.h"
 #include <string>
-
-class StorageSystem;
 
 class NetworkSystem : public SystemService
 {

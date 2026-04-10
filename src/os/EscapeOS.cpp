@@ -20,7 +20,7 @@ void xTaskRainbowLed(void *params)
 {
     Log::info(Log::OS_TAG, "Starting task 'xTaskRainbowLed'");
     EscapeOS *os = static_cast<EscapeOS *>(params);
-    
+
     xEventGroupWaitBits(SystemEventBus::systemEvents,
                         EVT_RAINBOWLED_INIT_REQ,
                         pdTRUE,
@@ -98,7 +98,8 @@ void xTaskNetwork(void *params)
                         portMAX_DELAY);
 
     NetworkSystem *network = os->getNetworkSystem();
-    network->init(os->getStorageSystem());
+    StorageSystem *storage = os->getStorageSystem();
+    network->init(storage);
 
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_NETWORK_READY);
 
@@ -192,7 +193,7 @@ void EscapeOS::init()
 }
 
 void EscapeOS::createTasks()
-{    
+{
     // RainbowLed Task (core 0)
     xTaskCreatePinnedToCore(
         xTaskRainbowLed,
