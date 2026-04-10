@@ -34,7 +34,7 @@ private:
     static void onBackClicked(lv_event_t *e);
 
     void rebuildCards();
-    void rebuildCardContent(size_t index);
+    void updateCardSelectionState(size_t index);
 
 private:
     lv_obj_t *screen = nullptr;

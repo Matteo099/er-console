@@ -6,6 +6,7 @@
 #include "systems/ui/components/BackButton.h"
 #include "systems/ui/components/BrandHeader.h"
 #include "systems/ui/components/Button.h"
+#include "systems/ui/components/GameCard.h"
 #include "systems/ui/components/Label.h"
 #include "systems/ui/components/Screen.h"
 #include "systems/ui/components/ScrollList.h"
@@ -43,44 +44,46 @@ void GameListView::rebuildCards()
     {
         const auto& game = games[i];
 
-        lv_obj_t* card = lv_btn_create(list);
-        lv_obj_set_width(card, 200);
-        lv_obj_set_style_radius(card, 8, 0);
-        lv_obj_set_style_pad_all(card, 8, 0);
+        GameCard::GameData cardData{
+            game.title,
+            game.description,
+            game.difficulty,
+            game.durationMin
+        };
 
         cardUserData.push_back({ this, static_cast<int>(i) });
-        lv_obj_add_event_cb(card, onCardClicked, LV_EVENT_CLICKED, &cardUserData.back());
-
-        lv_obj_t* title = Label::create(card, game.title.c_str(), &lv_font_montserrat_16, LV_TEXT_ALIGN_LEFT, 200);
-        Align::setPosition(title, LV_ALIGN_TOP_LEFT, 0, 0);
+        lv_obj_t* card = GameCard::create(
+            list,
+            cardData,
+            onCardClicked,
+            &cardUserData.back());
 
         cards.push_back(card);
     }
 }
 
-void GameListView::rebuildCardContent(size_t index)
+void GameListView::updateCardSelectionState(size_t index)
 {
+    if (index >= cards.size() || index >= games.size())
+        return;
+
     lv_obj_t* card = cards[index];
     const auto& game = games[index];
 
-    lv_obj_clean(card);
-
-    lv_obj_t* title = Label::create(card, game.title.c_str(), &lv_font_montserrat_16, LV_TEXT_ALIGN_LEFT, 200);
-    Align::setPosition(title, LV_ALIGN_TOP_LEFT, 0, 0);
+    GameCard::GameData cardData{
+        game.title,
+        game.description,
+        game.difficulty,
+        game.durationMin
+    };
 
     if (static_cast<int>(index) == selectedIndex)
     {
-        lv_obj_t* desc = Label::create(card, "", &lv_font_montserrat_14, LV_TEXT_ALIGN_LEFT, 184);
-        lv_label_set_text_fmt(
-            desc,
-            "%s\n\nDifficulty: %d/5\nDuration: %d min",
-            game.description.c_str(),
-            game.difficulty,
-            game.durationMin);
-        Align::setPosition(desc, LV_ALIGN_TOP_LEFT, 0, 28);
-
-        lv_obj_t* btnStart = Button::create(card, "Start", onStartClicked, this, 80, 32, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
-        (void)btnStart;
+        GameCard::setExpanded(card, cardData, onStartClicked, this);
+    }
+    else
+    {
+        GameCard::setCollapsed(card, cardData);
     }
 }
 
@@ -90,7 +93,7 @@ void GameListView::update()
         return;
 
     for (size_t i = 0; i < cards.size(); ++i)
-        rebuildCardContent(i);
+        updateCardSelectionState(i);
 
     selectionChanged = false;
 }
