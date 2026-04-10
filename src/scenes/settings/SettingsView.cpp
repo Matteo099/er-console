@@ -20,7 +20,7 @@ void SettingsView::create()
     container = Container::create(screen, 220, 120, LV_ALIGN_CENTER, 0, 10);
     Container::setFlex(container);
 
-    btnSound = Button::create(container, "Sound: OFF", onSoundClicked, this, 200, 42);
+    btnSound = Button::create(container, "Sound: OFF", onSoundClicked, this, 200, 42, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_MUTE);
     lblSound = lv_obj_get_child(btnSound, 0);
 
     btnBack = BackButton::create(screen, onBackClicked, this);

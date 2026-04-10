@@ -11,6 +11,6 @@ public:
         lv_event_cb_t callback,
         void* userData)
     {
-        return Button::create(parent, "Back", callback, userData, 90, 36, LV_ALIGN_BOTTOM_MID, 0, -12);
+        return Button::create(parent, "Back", callback, userData, 90, 36, LV_ALIGN_BOTTOM_MID, 0, -12, LV_SYMBOL_LEFT);
     }
 };

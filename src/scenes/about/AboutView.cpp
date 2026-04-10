@@ -1,7 +1,8 @@
 #include "AboutView.h"
 #include "log/Logger.h"
-#include "systems/ui/UIEvents.h"
+#include "config/Environment.h"
 
+#include "systems/ui/UIEvents.h"
 #include "systems/ui/components/BackButton.h"
 #include "systems/ui/components/BrandHeader.h"
 #include "systems/ui/components/Container.h"
@@ -15,18 +16,29 @@ void AboutView::create()
     screen = Screen::create();
     brandImg = BrandHeader::create(screen);
 
-    container = Container::create(screen, 220, 120, LV_ALIGN_CENTER, 0, 10);
+    container = Container::create(screen, 240, 140, LV_ALIGN_CENTER, 0, 10);
     Container::setFlex(container);
+
+    // Info icon
+    lv_obj_t *iconLabel = Label::create(
+        container,
+        LV_SYMBOL_FILE,
+        nullptr,
+        LV_TEXT_ALIGN_CENTER,
+        240);
+    lv_obj_set_style_text_font(iconLabel, &lv_font_montserrat_30, 0);
+    Label::setTextColor(iconLabel, lv_color_hex(0x64B5F6));
 
     textLabel = Label::create(
         container,
         "EscapeOS\n\n"
-        "Open escape-room engine\n"
-        "for ESP32-based consoles.\n\n"
-        "© 2026",
+        "Portable escape-room platform\n\n"
+        "Version " FW_VERSION "\n"
+        "Build: " FW_BUILD_DATE "\n"
+        "Commit: " FW_GIT_HASH "\n\n",
         &lv_font_montserrat_14,
         LV_TEXT_ALIGN_CENTER,
-        220);
+        240);
     Label::setTextColor(textLabel, lv_color_hex(0xCCCCCC));
 
     btnBack = BackButton::create(screen, onBackClicked, this);

@@ -18,9 +18,9 @@ void MainMenuView::create()
     menuContainer = Container::create(screen, 220, 140, LV_ALIGN_CENTER, 0, 10);
     Container::setFlex(menuContainer);
 
-    btnNewGame = Button::create(menuContainer, "New Game", onButtonClicked, this);
-    btnSettings = Button::create(menuContainer, "Settings", onButtonClicked, this);
-    btnAbout = Button::create(menuContainer, "About", onButtonClicked, this);
+    btnNewGame = Button::create(menuContainer, "New Game", onButtonClicked, this, 200, 42, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);
+    btnSettings = Button::create(menuContainer, "Settings", onButtonClicked, this, 200, 42, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_SETTINGS);
+    btnAbout = Button::create(menuContainer, "About", onButtonClicked, this, 200, 42, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_FILE);
 }
 
 void MainMenuView::update()
