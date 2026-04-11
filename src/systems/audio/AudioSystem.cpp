@@ -6,6 +6,8 @@
 #include "drivers/audio/MAX98357Driver.h"
 #include "log/Logger.h"
 
+#include "config/Assets.h"
+
 AudioSystem::AudioSystem()
 {
     driver = new MAX98357Driver(
@@ -33,7 +35,7 @@ void AudioSystem::init(void *params)
     }
 
     Log::info(Log::AUDIO_TAG, "Audio system initialized");
-    driver->playWav(storage->open("/stage.wav"));
+    driver->playWav(storage->open(AUDIO_STARTUP_FILE));
 }
 
 void AudioSystem::update()

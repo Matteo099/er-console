@@ -1,5 +1,6 @@
 #include "SampleView.h"
 #include "log/Logger.h"
+#include "config/Assets.h"
 
 #include "systems/ui/components/Button.h"
 #include "systems/ui/components/Screen.h"
@@ -36,6 +37,6 @@ void SampleView::onButtonClicked(lv_event_t *e)
         return;
 
     // Emit event instead of setting flag
-    PlaySoundEvent event("/fireball.wav");
+    PlaySoundEvent event(AUDIO_CLICK_FILE);
     view->emitEvent(event);
 }

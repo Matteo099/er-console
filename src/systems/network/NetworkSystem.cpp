@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <sstream>
 #include <algorithm>
+#include "config/Assets.h"
 
 NetworkSystem::NetworkSystem()
 {
@@ -10,14 +11,14 @@ NetworkSystem::NetworkSystem()
     status.message = "Wi-Fi idle";
 }
 
-void NetworkSystem::init(void* params)
+void NetworkSystem::init(void *params)
 {
     Log::info(Log::NETWORK_TAG, "Initializing network system");
 
     WiFi.mode(WIFI_STA);
     WiFi.disconnect(true, true);
 
-    StorageSystem* storage = static_cast<StorageSystem*>(params);
+    StorageSystem *storage = static_cast<StorageSystem *>(params);
     loadCredentials(storage);
 
     if (ssid.empty())
@@ -73,7 +74,7 @@ void NetworkSystem::disconnect()
     setState(State::Disconnected, "Disconnected");
 }
 
-void NetworkSystem::loadCredentials(StorageSystem* storage)
+void NetworkSystem::loadCredentials(StorageSystem *storage)
 {
     if (!storage || !storage->isReady())
     {
@@ -82,7 +83,7 @@ void NetworkSystem::loadCredentials(StorageSystem* storage)
     }
 
     std::string contents;
-    if (!storage->readTextFile("/wifi.cfg", contents))
+    if (!storage->readTextFile(WIFI_CFG_FILE, contents))
     {
         Log::warn(Log::NETWORK_TAG, "Wi-Fi credentials file not found");
         return;
@@ -99,7 +100,8 @@ void NetworkSystem::loadCredentials(StorageSystem* storage)
         std::string key = line.substr(0, sep);
         std::string value = line.substr(sep + 1);
 
-        auto trim = [](std::string& s) {
+        auto trim = [](std::string &s)
+        {
             size_t right = s.find_last_not_of(" \t\r");
             if (right == std::string::npos)
                 s.clear();
@@ -125,6 +127,10 @@ void NetworkSystem::loadCredentials(StorageSystem* storage)
     if (!ssid.empty())
     {
         Log::info(Log::NETWORK_TAG, "Wi-Fi credential loaded: %s", ssid.c_str());
+    }
+    else
+    {
+        Log::warn(Log::NETWORK_TAG, "Wi-Fi credentials are empty in file '%s'", WIFI_CFG_FILE);
     }
 }
 
@@ -158,7 +164,7 @@ void NetworkSystem::refreshStatus()
     }
 }
 
-void NetworkSystem::setState(State newState, const std::string& message)
+void NetworkSystem::setState(State newState, const std::string &message)
 {
     status.state = newState;
     status.message = message;
