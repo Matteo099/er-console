@@ -1,8 +1,14 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-model="drawer" permanent>
+    <v-navigation-drawer v-model="drawer" :rail="rail" permanent>
       <v-list nav>
-        <v-list-subheader>ER Console</v-list-subheader>
+        <v-list-item>
+          <template #prepend>
+            <v-img :src="logoImage" width="28" height="28" />
+          </template>
+          <v-img v-if="!rail" :src="brandImage" width="120" height="24" />
+        </v-list-item>
+        <v-divider class="my-2" />
         <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" to="/" />
       </v-list>
 
@@ -17,14 +23,33 @@
             prepend-icon="mdi-clock-outline"
             :title="portalStore.lastRefresh ? `Last refresh: ${lastRefreshText}` : 'Last refresh: n/a'"
           />
+          <v-list-item v-if="!rail">
+            <template #prepend>
+              <v-img :src="logoImage" width="20" height="20" />
+            </template>
+            <template #title>
+              <v-img :src="brandFooterImage" width="100" height="20" />
+            </template>
+            <template #append>
+              <v-chip size="x-small" variant="tonal">v{{ appVersion }}</v-chip>
+            </template>
+          </v-list-item>
         </v-list>
       </template>
     </v-navigation-drawer>
 
     <v-app-bar>
-      <v-app-bar-nav-icon @click="drawer = !drawer" />
-      <v-app-bar-title>ER Console Dashboard</v-app-bar-title>
+      <v-app-bar-nav-icon @click="toggleNav" />
+      <v-app-bar-title />
       <v-spacer />
+      <v-btn
+        :prepend-icon="isDarkTheme ? 'mdi-weather-sunny' : 'mdi-weather-night'"
+        variant="tonal"
+        class="mr-2"
+        @click="toggleTheme"
+      >
+        {{ isDarkTheme ? 'Light mode' : 'Dark mode' }}
+      </v-btn>
       <v-btn
         prepend-icon="mdi-refresh"
         variant="tonal"
@@ -57,18 +82,53 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useTheme } from 'vuetify'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { usePortalStore } from '@/stores/portalStore'
 
 const drawer = ref(true)
+const rail = ref(false)
 const refreshing = ref(false)
+const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
+const logoImage = new URL('@/assets/images/logo.png', import.meta.url).href
+const brandPositiveImage = new URL('@/assets/images/brand.png', import.meta.url).href
+const brandNegativeImage = new URL('@/assets/images/brand_negative.png', import.meta.url).href
+const theme = useTheme()
 
 const portalStore = usePortalStore()
 const notificationStore = useNotificationStore()
 
+const isDarkTheme = computed(() => theme.global.current.value.dark)
+
+const brandImage = computed(() =>
+  isDarkTheme.value ? brandNegativeImage : brandPositiveImage
+)
+
+const brandFooterImage = computed(() =>
+  isDarkTheme.value ? brandNegativeImage : brandPositiveImage
+)
+
 const lastRefreshText = computed(() => {
   return portalStore.lastRefresh?.toLocaleString() ?? 'n/a'
 })
+
+const toggleNav = () => {
+  if (drawer.value && !rail.value) {
+    rail.value = true
+    return
+  }
+
+  if (drawer.value && rail.value) {
+    rail.value = false
+    return
+  }
+
+  drawer.value = true
+}
+
+const toggleTheme = () => {
+  theme.global.name.value = isDarkTheme.value ? 'portalLightTheme' : 'portalDarkTheme'
+}
 
 const refreshStatus = async () => {
   refreshing.value = true

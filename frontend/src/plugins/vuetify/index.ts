@@ -50,6 +50,41 @@ const portalDarkTheme = {
   },
 }
 
+const portalLightTheme = {
+  dark: false,
+  colors: {
+    primary: '#0c4a6e',
+    'primary-light': '#e0f2fe',
+    'primary-dark': '#0a364f',
+
+    secondary: '#0f766e',
+    'secondary-light': '#99f6e4',
+    'secondary-dark': '#115e59',
+
+    accent: '#d97706',
+    'accent-light': '#fef3c7',
+    'accent-dark': '#92400e',
+
+    error: '#be123c',
+    warning: '#b45309',
+    success: '#047857',
+    info: '#1d4ed8',
+
+    background: '#f5f8fc',
+    surface: '#ffffff',
+    'surface-bright': '#ffffff',
+    'surface-soft': '#eef4fb',
+
+    border: '#d7e3f1',
+    outline: '#b7cadf',
+    'on-background': '#0f172a',
+    'on-surface': '#0f172a',
+    'on-primary': '#ffffff',
+    'on-secondary': '#ffffff',
+    'on-error': '#ffffff',
+  },
+}
+
 const vuetify = createVuetify({
   components: {
     ...components,
@@ -60,6 +95,7 @@ const vuetify = createVuetify({
     defaultTheme: 'portalDarkTheme',
     themes: {
       portalDarkTheme,
+      portalLightTheme,
     },
   },
 })
