@@ -33,7 +33,7 @@ export const useFilesStore = defineStore('files', () => {
 
     try {
       const response: FileResponse = await filesService.listFiles(currentPath.value)
-      entries.value = response.entries
+      entries.value = response.entries ?? response.items ?? []
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to load files'
       console.error('Error loading files:', err)

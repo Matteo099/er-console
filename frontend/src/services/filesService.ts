@@ -31,6 +31,19 @@ export const filesService = {
   },
 
   /**
+   * Move or rename a file/directory
+   */
+  moveFile(sourcePath: string, destinationPath: string): Promise<void> {
+    return requestJson('/api/files/move', {
+      method: 'POST',
+      body: JSON.stringify({
+        sourcePath,
+        destinationPath,
+      }),
+    })
+  },
+
+  /**
    * Download a file (opens in browser or downloads)
    */
   downloadFile(path: string): void {

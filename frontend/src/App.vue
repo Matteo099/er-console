@@ -9,7 +9,13 @@
           <v-img v-if="!rail" :src="brandImage" width="120" height="24" />
         </v-list-item>
         <v-divider class="my-2" />
-        <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" to="/" />
+        <v-list-item
+          v-for="item in menuItems"
+          :key="item.to"
+          :prepend-icon="item.icon"
+          :title="item.title"
+          :to="item.to"
+        />
       </v-list>
 
       <template #append>
@@ -94,6 +100,14 @@ const logoImage = new URL('@/assets/images/logo.png', import.meta.url).href
 const brandPositiveImage = new URL('@/assets/images/brand.png', import.meta.url).href
 const brandNegativeImage = new URL('@/assets/images/brand_negative.png', import.meta.url).href
 const theme = useTheme()
+
+const menuItems = [
+  { title: 'Dashboard', to: '/', icon: 'mdi-view-dashboard' },
+  { title: 'ESP32 Config', to: '/config', icon: 'mdi-cog-outline' },
+  { title: 'File Browser', to: '/files', icon: 'mdi-folder-open-outline' },
+  { title: 'Logs & Audit', to: '/logs-audit', icon: 'mdi-text-box-search-outline' },
+  { title: 'About', to: '/about', icon: 'mdi-information-outline' },
+]
 
 const portalStore = usePortalStore()
 const notificationStore = useNotificationStore()

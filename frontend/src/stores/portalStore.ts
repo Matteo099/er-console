@@ -16,10 +16,10 @@ export const usePortalStore = defineStore('portal', () => {
   const lastRefresh = ref<Date | null>(null)
 
   // Computed
-  const isWifiConnected = computed(() => status.value?.wifi.state === 'connected')
+  const isWifiConnected = computed(() => status.value?.wifi?.state === 'connected')
   const storagePercentage = computed(() => {
-    if (!status.value?.storage) return 0
-    const { usedBytes, totalBytes } = status.value.storage
+    const usedBytes = status.value?.storage?.usedBytes ?? 0
+    const totalBytes = status.value?.storage?.totalBytes ?? 0
     return totalBytes > 0 ? Math.round((usedBytes / totalBytes) * 100) : 0
   })
 

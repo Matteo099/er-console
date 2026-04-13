@@ -8,6 +8,56 @@ import { ref, computed } from 'vue'
 import { configService } from '@/services'
 import type { DeviceConfig } from '@/models'
 
+const defaultConfig = (): DeviceConfig => ({
+  deviceName: 'ESP32 Device',
+  wifi: {
+    enabled: true,
+    ssid: '',
+    password: '',
+    autoConnect: true,
+  },
+  locale: {
+    language: 'en',
+    timezone: 'UTC',
+    dateFormat: 'YYYY-MM-DD',
+    latitude: 0,
+    longitude: 0,
+  },
+  portal: {
+    enabled: true,
+    apSsid: '',
+    apPassword: '',
+  },
+  ui: {
+    theme: 'dark',
+    compactMode: false,
+  },
+})
+
+const normalizeConfig = (value?: Partial<DeviceConfig> | null): DeviceConfig => {
+  const defaults = defaultConfig()
+  return {
+    ...defaults,
+    ...value,
+    wifi: {
+      ...defaults.wifi,
+      ...value?.wifi,
+    },
+    locale: {
+      ...defaults.locale,
+      ...value?.locale,
+    },
+    portal: {
+      ...defaults.portal,
+      ...value?.portal,
+    },
+    ui: {
+      ...defaults.ui,
+      ...value?.ui,
+    },
+  }
+}
+
 export const useConfigStore = defineStore('config', () => {
   // State
   const config = ref<DeviceConfig | null>(null)
@@ -25,7 +75,7 @@ export const useConfigStore = defineStore('config', () => {
     error.value = null
 
     try {
-      config.value = await configService.getConfig()
+      config.value = normalizeConfig(await configService.getConfig())
       originalConfig.value = JSON.parse(JSON.stringify(config.value))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch config'
@@ -42,7 +92,7 @@ export const useConfigStore = defineStore('config', () => {
     error.value = null
 
     try {
-      const saved = await configService.saveConfig(config.value)
+      const saved = normalizeConfig(await configService.saveConfig(config.value))
       originalConfig.value = JSON.parse(JSON.stringify(saved))
       config.value = saved
     } catch (err) {

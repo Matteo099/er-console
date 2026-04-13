@@ -25,6 +25,7 @@ export interface LocaleConfig {
 export interface PortalConfig {
   enabled: boolean
   apSsid: string
+  apPassword?: string
 }
 
 export interface UIConfig {
@@ -66,14 +67,27 @@ export interface BatteryStatus {
 export interface PortalStatus {
   url: string
   qrPayload: string
+  ssid?: string
+  ip?: string
+}
+
+export interface StatusConfigSummary {
+  deviceName?: string
+  language?: string
+  timezone?: string
+  dateFormat?: string
 }
 
 export interface HardwareInfo {
-  board: string
-  cpuFreq: number
-  freeRam: number
-  totalRam: number
-  uptime: number
+  board?: string
+  cpuFreq?: number
+  freeRam?: number
+  totalRam?: number
+  uptime?: number
+  cpuFrequencyMhz?: number
+  freeHeap?: number
+  psramFree?: number
+  uptimeMs?: number
 }
 
 export interface DeviceStatus {
@@ -82,6 +96,7 @@ export interface DeviceStatus {
   battery: BatteryStatus
   portal: PortalStatus
   hardware: HardwareInfo
+  config?: StatusConfigSummary
 }
 
 // ============================================================================
@@ -97,7 +112,8 @@ export interface FileEntry {
 }
 
 export interface FileResponse {
-  entries: FileEntry[]
+  entries?: FileEntry[]
+  items?: FileEntry[]
   path: string
 }
 
