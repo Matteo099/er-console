@@ -21,4 +21,5 @@ private:
     NetworkView view;
     SceneRequest request = SceneRequest();
     class NetworkSystem* network = nullptr;
+    class PortalSystem* portal = nullptr;
 };

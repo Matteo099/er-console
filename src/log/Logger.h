@@ -16,6 +16,7 @@ namespace Log {
     constexpr const char* NETWORK_TAG = "NETWORK";
     constexpr const char* SCENE_TAG = "SCENE";
     constexpr const char* LED_TAG = "LED";
+    constexpr const char* PORTAL_TAG = "PORTAL";
 
     enum class Level {
         ERROR,

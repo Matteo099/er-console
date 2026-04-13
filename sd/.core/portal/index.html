@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ER Console Portal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@3/dist/vuetify.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" />
+    <style>
+      :root { color-scheme: dark; font-family: Inter, 'Segoe UI', system-ui, sans-serif; }
+      html, body, #app { min-height: 100%; margin: 0; }
+      body {
+        background:
+          radial-gradient(circle at top left, rgba(125, 211, 252, 0.15), transparent 28%),
+          radial-gradient(circle at top right, rgba(52, 211, 153, 0.12), transparent 22%),
+          linear-gradient(180deg, #07111b 0%, #04070c 100%);
+        color: #e2e8f0;
+      }
+      .portal-shell { max-width: 1280px; margin: 0 auto; padding: 16px; }
+      .hero-panel, .surface-panel, .metric-card, .info-panel {
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        background: rgba(7, 16, 28, 0.74) !important;
+        backdrop-filter: blur(18px);
+      }
+      .hero-panel { display:flex; justify-content:space-between; gap:1rem; padding:1.25rem; margin-bottom:1rem; border-radius:24px; }
+      .hero-copy h1 { margin:0; font-size: clamp(1.8rem, 4vw, 3.2rem); line-height: 1.05; }
+      .hero-copy p { margin:0.65rem 0 0; max-width:60ch; color:rgba(226,232,240,0.78); }
+      .hero-actions { display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; }
+      .metric-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:.75rem; margin-bottom:1rem; }
+      .metric-card { padding:1rem; border-radius:20px; }
+      .metric-label, .section-title { font-size:.78rem; text-transform:uppercase; letter-spacing:.12em; color:rgba(148,163,184,.82); }
+      .metric-value { font-size:1.5rem; font-weight:700; margin-top:.35rem; }
+      .metric-hint, .muted { color:rgba(226,232,240,.66); }
+      .surface-panel { border-radius:28px; overflow:hidden; }
+      .content-stack { display:grid; gap:1rem; }
+      .info-panel { border-radius:20px; padding:1rem; }
+      .status-line, .portal-url { margin-top:.35rem; }
+      .portal-url { font-size:1.05rem; font-weight:600; color:#7dd3fc; word-break:break-word; }
+      .file-table { border-radius:16px; overflow:hidden; }
+      .file-link { color:#7dd3fc; background:transparent; border:0; padding:0; text-align:left; cursor:pointer; font:inherit; }
+      .small { font-size:.8rem; }
+      @media (max-width: 900px) { .hero-panel { flex-direction:column; } .hero-actions { width:100%; } }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import { createApp, reactive, ref, computed, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js';
+      import { createVuetify } from 'https://cdn.jsdelivr.net/npm/vuetify@3/dist/vuetify.esm.js';
+
+      const vuetify = createVuetify({
+        theme: {
+          defaultTheme: 'portalDark',
+          themes: {
+            portalDark: {
+              dark: true,
+              colors: {
+                background: '#06111b',
+                surface: '#0d1722',
+                primary: '#7dd3fc',
+                secondary: '#34d399',
+                accent: '#fbbf24',
+                error: '#fb7185',
+                info: '#60a5fa',
+                success: '#34d399',
+                warning: '#f59e0b',
+              },
+            },
+          },
+        },
+      });
+
+      const api = {
+        getStatus: () => fetch('/api/status').then((r) => r.json()),
+        getConfig: () => fetch('/api/config').then((r) => r.json()),
+        saveConfig: (config) => fetch('/api/config', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(config) }),
+        getFiles: (path) => fetch(`/api/files?path=${encodeURIComponent(path)}`).then((r) => r.json()),
+        deleteFile: (path) => fetch(`/api/files?path=${encodeURIComponent(path)}`, { method: 'DELETE' }),
+        uploadFile: (path, file) => { const body = new FormData(); body.append('file', file, file.name); return fetch(`/api/files/upload?path=${encodeURIComponent(path)}`, { method: 'POST', body }); },
+        reboot: () => fetch('/api/system/reboot', { method: 'POST' }),
+      };
+
+      createApp({
+        setup() {
+          const tab = ref('overview');
+          const loading = ref(false);
+          const saving = ref(false);
+          const rebooting = ref(false);
+          const filesLoading = ref(false);
+          const errorMessage = ref('');
+          const currentPath = ref('/.core');
+          const fileEntries = ref([]);
+          const uploadFileModel = ref([]);
+          const snackbar = reactive({ show: false, text: '', color: 'primary' });
+          const portalUrlFallback = 'http://192.168.4.1/';
+
+          const status = reactive({ wifi: { connected: false, state: '', ssid: '', ip: '' }, portal: { active: false, url: portalUrlFallback, ssid: '', ip: '' }, hardware: { freeHeap: 0, psramFree: 0, cpuFrequencyMhz: 0, uptimeMs: 0 }, storage: { totalBytes: 0, usedBytes: 0, freeBytes: 0 } });
+          const config = reactive({ deviceName: 'EscapeRoom Console', wifi: { ssid: '', password: '', enabled: true, autoConnect: true }, locale: { language: 'it-IT', timezone: 'Europe/Rome', dateFormat: 'DD/MM/YYYY', latitude: 0, longitude: 0 }, portal: { apSsid: 'ER-Console-Setup', apPassword: '', enabled: true }, ui: { theme: 'dark', brightness: 100 }, audio: { volume: 70, enabled: true } });
+
+          const metrics = computed(() => [
+            { label: 'Wi-Fi', value: status.wifi.connected ? 'Online' : 'Offline', hint: status.wifi.ssid || 'No SSID' },
+            { label: 'Heap', value: formatBytes(status.hardware.freeHeap), hint: 'Free RAM' },
+            { label: 'PSRAM', value: formatBytes(status.hardware.psramFree), hint: 'External memory' },
+            { label: 'SD free', value: formatBytes(status.storage.freeBytes), hint: 'Filesystem space' },
+          ]);
+
+          function notify(text, color = 'primary') { snackbar.text = text; snackbar.color = color; snackbar.show = true; }
+          function formatBytes(bytes) { if (!bytes) return '0 B'; const units = ['B', 'KB', 'MB', 'GB']; let index = 0; let value = bytes; while (value >= 1024 && index < units.length - 1) { value /= 1024; index += 1; } return `${value.toFixed(value >= 10 || index === 0 ? 0 : 1)} ${units[index]}`; }
+          async function refreshStatus() { const latest = await api.getStatus(); Object.assign(status.wifi, latest.wifi || {}); Object.assign(status.portal, latest.portal || {}); Object.assign(status.hardware, latest.hardware || {}); Object.assign(status.storage, latest.storage || {}); }
+          async function refreshConfig() { Object.assign(config, await api.getConfig()); }
+          async function loadFiles() { filesLoading.value = true; try { const data = await api.getFiles(currentPath.value); fileEntries.value = data.items || []; } finally { filesLoading.value = false; } }
+          async function refreshAll() { loading.value = true; errorMessage.value = ''; try { await Promise.all([refreshStatus(), refreshConfig(), loadFiles()]); notify('Portal data refreshed'); } catch (error) { errorMessage.value = error.message; notify(error.message, 'error'); } finally { loading.value = false; } }
+          async function saveAll() { saving.value = true; errorMessage.value = ''; try { await api.saveConfig(config); await refreshStatus(); notify('Configuration saved'); } catch (error) { errorMessage.value = error.message; notify(error.message, 'error'); } finally { saving.value = false; } }
+          async function rebootDevice() { rebooting.value = true; try { await api.reboot(); notify('Reboot requested'); } catch (error) { notify(error.message, 'error'); } finally { rebooting.value = false; } }
+          function openEntry(entry) { if (entry.directory) { currentPath.value = entry.path; loadFiles(); } }
+          async function removeEntry(path) { await api.deleteFile(path); notify('File deleted'); loadFiles(); }
+          async function uploadSelectedFile() { const file = uploadFileModel.value?.[0]; if (!file) return; const path = `${currentPath.value.replace(/\/$/, '')}/${file.name}`; await api.uploadFile(path, file); uploadFileModel.value = []; notify('File uploaded'); loadFiles(); }
+          onMounted(refreshAll);
+
+          return { tab, loading, saving, rebooting, filesLoading, errorMessage, currentPath, fileEntries, uploadFileModel, snackbar, status, config, metrics, portalUrlFallback, formatBytes, refreshAll, saveAll, rebootDevice, loadFiles, openEntry, removeEntry, uploadSelectedFile };
+        },
+        template: `
+          <v-app>
+            <v-main>
+              <v-container fluid class="portal-shell">
+                <section class="hero-panel">
+                  <div class="hero-copy">
+                    <v-chip color="secondary" variant="flat" size="small" class="mb-3">ESP32 captive portal</v-chip>
+                    <h1>ER Console control plane</h1>
+                    <p>Monitor the board, edit network and locale settings, and manage the SD card from a mobile-first portal.</p>
+                  </div>
+                  <div class="hero-actions">
+                    <v-btn color="primary" variant="flat" prepend-icon="mdi-refresh" :loading="loading" @click="refreshAll">Refresh</v-btn>
+                    <v-btn color="secondary" variant="tonal" prepend-icon="mdi-content-save" :loading="saving" @click="saveAll">Save</v-btn>
+                    <v-btn color="error" variant="tonal" prepend-icon="mdi-restart" :loading="rebooting" @click="rebootDevice">Reboot</v-btn>
+                  </div>
+                </section>
+                <v-alert v-if="errorMessage" type="error" class="mb-4" variant="tonal">{{ errorMessage }}</v-alert>
+                <section class="metric-grid mb-6">
+                  <v-card v-for="metric in metrics" :key="metric.label" class="metric-card" elevation="0">
+                    <div class="metric-label">{{ metric.label }}</div><div class="metric-value">{{ metric.value }}</div><div class="metric-hint">{{ metric.hint }}</div>
+                  </v-card>
+                </section>
+                <v-card class="surface-panel mb-6" elevation="0">
+                  <v-tabs v-model="tab" color="primary" align-tabs="start" class="px-4 pt-2"><v-tab value="overview">Overview</v-tab><v-tab value="wifi">Wi-Fi</v-tab><v-tab value="locale">Locale</v-tab><v-tab value="storage">Storage</v-tab><v-tab value="other">Other</v-tab></v-tabs>
+                  <v-divider />
+                  <v-window v-model="tab">
+                    <v-window-item value="overview"><v-card-text class="content-stack"><v-row dense><v-col cols="12" md="6"><v-card class="info-panel" elevation="0"><div class="section-title">Live status</div><div class="status-line">Wi-Fi: {{ status.wifi.state || 'unknown' }}</div><div class="status-line">SSID: {{ status.wifi.ssid || '—' }}</div><div class="status-line">IP: {{ status.wifi.ip || '—' }}</div><div class="status-line">Portal: {{ status.portal.url || portalUrlFallback }}</div></v-card></v-col><v-col cols="12" md="6"><v-card class="info-panel" elevation="0"><div class="section-title">Battery</div><div class="status-line">Currently not available on this board.</div><div class="status-line muted">Percent, voltage, and current request will appear here once wired.</div></v-card></v-col></v-row><v-card class="info-panel" elevation="0"><div class="section-title">Portal access</div><div class="portal-url">{{ status.portal.url || portalUrlFallback }}</div><div class="status-line muted">Use the QR on the device screen to connect to the setup AP.</div></v-card></v-card-text></v-window-item>
+                    <v-window-item value="wifi"><v-card-text class="content-stack"><v-row dense><v-col cols="12" md="6"><v-text-field v-model="config.deviceName" label="Device name" variant="outlined" density="comfortable" /><v-text-field v-model="config.wifi.ssid" label="Wi-Fi SSID" variant="outlined" density="comfortable" /><v-text-field v-model="config.wifi.password" label="Wi-Fi password" type="password" variant="outlined" density="comfortable" /></v-col><v-col cols="12" md="6"><v-switch v-model="config.wifi.enabled" color="primary" label="Enable Wi-Fi" /><v-switch v-model="config.wifi.autoConnect" color="primary" label="Reconnect automatically" /><v-text-field v-model="config.portal.apSsid" label="Setup AP SSID" variant="outlined" density="comfortable" /><v-switch v-model="config.portal.enabled" color="primary" label="Enable captive portal" /></v-col></v-row></v-card-text></v-window-item>
+                    <v-window-item value="locale"><v-card-text class="content-stack"><v-row dense><v-col cols="12" md="4"><v-text-field v-model="config.locale.language" label="Language" variant="outlined" density="comfortable" /></v-col><v-col cols="12" md="4"><v-text-field v-model="config.locale.timezone" label="Timezone" variant="outlined" density="comfortable" /></v-col><v-col cols="12" md="4"><v-text-field v-model="config.locale.dateFormat" label="Date format" variant="outlined" density="comfortable" /></v-col><v-col cols="12" md="6"><v-text-field v-model.number="config.locale.latitude" type="number" label="Latitude" variant="outlined" density="comfortable" /></v-col><v-col cols="12" md="6"><v-text-field v-model.number="config.locale.longitude" type="number" label="Longitude" variant="outlined" density="comfortable" /></v-col></v-row></v-card-text></v-window-item>
+                    <v-window-item value="storage"><v-card-text class="content-stack"><v-row dense><v-col cols="12" md="4"><v-card class="info-panel" elevation="0"><div class="section-title">Storage usage</div><div class="status-line">Used: {{ formatBytes(status.storage.usedBytes) }}</div><div class="status-line">Free: {{ formatBytes(status.storage.freeBytes) }}</div><div class="status-line">Total: {{ formatBytes(status.storage.totalBytes) }}</div></v-card></v-col><v-col cols="12" md="8"><v-file-input v-model="uploadFileModel" multiple label="Upload file" variant="outlined" density="comfortable" prepend-icon="mdi-upload" /><v-text-field v-model="currentPath" label="Folder path" variant="outlined" density="comfortable" /><div class="d-flex flex-wrap ga-2 mb-4"><v-btn color="primary" variant="flat" prepend-icon="mdi-upload" :disabled="!uploadFileModel?.length" @click="uploadSelectedFile">Upload</v-btn><v-btn color="secondary" variant="tonal" prepend-icon="mdi-folder-refresh" :loading="filesLoading" @click="loadFiles">Reload list</v-btn></div><v-table density="compact" class="file-table"><thead><tr><th>Name</th><th>Type</th><th class="text-right">Size</th><th class="text-right">Actions</th></tr></thead><tbody><tr v-for="entry in fileEntries" :key="entry.path"><td><button class="file-link" @click="openEntry(entry)">{{ entry.name }}</button><div class="muted small">{{ entry.path }}</div></td><td>{{ entry.directory ? 'folder' : 'file' }}</td><td class="text-right">{{ entry.directory ? '—' : formatBytes(entry.size) }}</td><td class="text-right"><v-btn v-if="!entry.directory" size="small" color="error" variant="text" @click="removeEntry(entry.path)">Delete</v-btn></td></tr></tbody></v-table></v-col></v-row></v-card-text></v-window-item>
+                    <v-window-item value="other"><v-card-text class="content-stack"><v-row dense><v-col cols="12" md="6"><v-text-field v-model="config.ui.theme" label="Theme" variant="outlined" density="comfortable" /><v-slider v-model="config.ui.brightness" label="Brightness" :min="10" :max="100" thumb-label /></v-col><v-col cols="12" md="6"><v-text-field v-model.number="config.audio.volume" type="number" label="Audio volume" variant="outlined" density="comfortable" /><v-switch v-model="config.audio.enabled" color="primary" label="Audio enabled" /><v-switch v-model="config.portal.enabled" color="primary" label="Captive portal enabled" /></v-col></v-row></v-card-text></v-window-item>
+                  </v-window>
+                </v-card>
+              </v-container>
+            </v-main>
+            <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="2800">{{ snackbar.text }}</v-snackbar>
+          </v-app>
+        `,
+      }).use(vuetify).mount('#app');
+    </script>
+  </body>
+</html>

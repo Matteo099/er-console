@@ -3,6 +3,16 @@
 #include "drivers/storage/ESP32SDCardDriver.h"
 #include "config/BoardConfig.h"
 #include "log/Logger.h"
+#include <SD.h>
+
+namespace
+{
+    static void trimTrailingSlash(std::string& value)
+    {
+        while (!value.empty() && value.back() == '/')
+            value.pop_back();
+    }
+}
 
 StorageSystem::StorageSystem()
 {
@@ -58,4 +68,164 @@ bool StorageSystem::readTextFile(const char* path, std::string& out)
     file->close();
     delete file;
     return true;
+}
+
+bool StorageSystem::writeTextFile(const char* path, const std::string& contents, bool overwrite)
+{
+    if (!ready)
+        return false;
+
+    if (!ensureParents(path))
+        return false;
+
+    if (overwrite && SD.exists(path))
+        SD.remove(path);
+
+    File file = SD.open(path, FILE_WRITE);
+    if (!file)
+    {
+        Log::error(Log::STORAGE_TAG, "Failed to open file for write: %s", path);
+        return false;
+    }
+
+    size_t written = file.print(contents.c_str());
+    file.flush();
+    file.close();
+    return written == contents.size();
+}
+
+File StorageSystem::openNative(const char* path, bool write)
+{
+    if (!ready)
+        return File();
+
+    if (write && !ensureParents(path))
+        return File();
+
+    if (write && SD.exists(path))
+        SD.remove(path);
+
+    return SD.open(path, write ? FILE_WRITE : FILE_READ);
+}
+
+bool StorageSystem::removePath(const char* path)
+{
+    if (!ready)
+        return false;
+
+    return SD.remove(path);
+}
+
+bool StorageSystem::createDirectory(const char* path)
+{
+    if (!ready || !path || !*path)
+        return false;
+
+    if (SD.exists(path))
+        return true;
+
+    if (!ensureParents(path))
+        return false;
+
+    return SD.mkdir(path);
+}
+
+bool StorageSystem::exists(const char* path) const
+{
+    return ready && path && SD.exists(path);
+}
+
+bool StorageSystem::listDirectory(const char* path, std::vector<StorageEntry>& out, bool recursive) const
+{
+    if (!ready)
+        return false;
+
+    File directory = SD.open(path);
+    if (!directory || !directory.isDirectory())
+        return false;
+
+    while (true)
+    {
+        File entry = directory.openNextFile();
+        if (!entry)
+            break;
+
+        StorageEntry info;
+        info.path = std::string(path);
+        trimTrailingSlash(info.path);
+        info.path += "/";
+        info.path += entry.name();
+        info.name = entry.name();
+        info.isDirectory = entry.isDirectory();
+        info.size = entry.size();
+        out.push_back(info);
+
+        if (recursive && entry.isDirectory())
+        {
+            listDirectory(info.path.c_str(), out, true);
+        }
+
+        entry.close();
+    }
+
+    directory.close();
+    return true;
+}
+
+uint64_t StorageSystem::totalBytes() const
+{
+    return ready ? SD.totalBytes() : 0;
+}
+
+uint64_t StorageSystem::usedBytes() const
+{
+    return ready ? SD.usedBytes() : 0;
+}
+
+uint64_t StorageSystem::freeBytes() const
+{
+    uint64_t total = totalBytes();
+    uint64_t used = usedBytes();
+    return total > used ? total - used : 0;
+}
+
+bool StorageSystem::ensureParents(const char* path)
+{
+    std::string parent = parentPath(path);
+    if (parent.empty() || parent == "/")
+        return true;
+
+    if (SD.exists(parent.c_str()))
+        return true;
+
+    if (!ensureParents(parent.c_str()))
+        return false;
+
+    return SD.mkdir(parent.c_str());
+}
+
+std::string StorageSystem::parentPath(const char* path)
+{
+    if (!path)
+        return {};
+
+    std::string value(path);
+    auto pos = value.find_last_of('/');
+    if (pos == std::string::npos || pos == 0)
+        return "/";
+
+    return value.substr(0, pos);
+}
+
+std::string StorageSystem::fileName(const char* path)
+{
+    if (!path)
+        return {};
+
+    std::string value(path);
+    auto pos = value.find_last_of('/');
+    if (pos == std::string::npos)
+        return value;
+
+    return value.substr(pos + 1);
 }

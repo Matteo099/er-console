@@ -1,0 +1,347 @@
+{
+    "button": {
+        "save": "Salva",
+        "new": "Crea",
+        "updateOwner": "Aggiorna assegnatario",
+        "edit": "Modifica",
+        "update": "Aggiorna",
+        "copy": "Copia",
+        "delete": "Elimina",
+        "cancel": "Annulla",
+        "quit": "Esci senza salvare",
+        "clear": "Azzera",
+        "close": "Chiudi",
+        "confirm": "Conferma",
+        "select": "Seleziona",
+        "event": "Eventi",
+        "export": {
+            "export": "Esporta",
+            "csv": "csv",
+            "json": "json"
+        },
+        "download": "Scarica",
+        "upload": "Carica",
+        "chooseFiles": "Scegli i File",
+        "sendNotification": "Invia sollecito",
+        "add": "Aggiungi",
+        "reportPdf": "Report PDF",
+        "open": "Apri",
+        "associateUsers": "Associa Utenti",
+        "searchApp": "Cerca App",
+        "accountSettings": "Impostazioni Account"
+    },
+    "menu": {
+        "logout": "Disconnetti",
+        "home": "Home",
+        "vault": "Cassaforte",
+        "generator": "Generatore di Password",
+        "manageAccess": "Gestisci Accessi",
+        "policies": "Politiche",
+        "auditAndLogs": "Audit e Log"
+    },
+    "tooltip": {
+        "it": "Italiano",
+        "en": "English",
+        "changeLanguage": "Cambia lingua",
+        "list": "Modalità Lista",
+        "carousel": "Modalità Carosello",
+        "timeline": "Modalità Linea del Tempo",
+        "openInNewTab": "Apri in una nuova scheda",
+        "clearFilters": "Ripristina filtri",
+        "showCertificate": "Visualizza certificato",
+        "showCertificates": "Visualizza certificati",
+        "showEndpoints": "Visualizza associazioni",
+        "noNotifications": "Nessuna notifica"
+    },
+    "alert": {
+        "textCopiedToClipboard": "Testo Copiato.",
+        "createdSuccessfully": "{0} creato con successo.",
+        "deletedSuccessfully": "{0} eliminato con successo.",
+        "updatedSuccessfully": "{0} aggiornato con successo.",
+        "confirmDelete": "Sei sicuro di voler eliminare '{0}'?",
+        "noRepresentationAssociated": "Nessun attributo associato",
+        "notFound404": "404 - Pagina non trovata",
+        "notFoundError": "L'url richiesta non è presente sul server.",
+        "forbidden403": "403 - Accesso Negato",
+        "forbiddenError": "Non hai i permessi necessari per accedere a questa risorsa."
+    },
+    "table": {
+        "itemsPerPage": "Elementi per pagina:",
+        "loading": "Caricamento in corso...",
+        "noData": "Nessun dato disponibile",
+        "all": "Tutte",
+        "name": "Nome",
+        "createdBy": "Creato da",
+        "version": "Versione",
+        "lastUpdate": "Ultimo aggiornamento"
+    },
+    "rules": {
+        "required": "Il campo non può essere vuoto",
+        "version": "Il campo non rispetta il pattern della versione (X.X.X)"
+    },
+    "release": {
+        "version": "Versione",
+        "title": "Titolo",
+        "notes": "Note",
+        "status": "Stato"
+    },
+    "status": {
+        "completed": "Completato",
+        "inprogress": "In progresso",
+        "stopped": "Stoppato"
+    },
+    "customer": {
+        "self": "Customer",
+        "name": "Name",
+        "actions": "Actions"
+    },
+    "model": {
+        "self": "Model",
+        "name": "Name",
+        "actions": "Actions"
+    },
+    "phase": {
+        "self": "Fase",
+        "name": "Nome",
+        "description": "Descrizione",
+        "actions": "Azioni"
+    },
+    "stage": {
+        "self": "Passo",
+        "name": "Nome",
+        "description": "Descrizione",
+        "actions": "Azioni"
+    },
+    "profile": {
+        "self": "Profilo",
+        "name": "Nome",
+        "description": "Descrizione",
+        "actions": "Azioni"
+    },
+    "certis": {
+        "name": "Nome",
+        "subjectDN": "Soggetto",
+        "validFrom": "Valido da",
+        "validTo": "Valido a",
+        "validity": "Validità",
+        "createdDate": "Creato il",
+        "endpoints": "Associazioni",
+        "certificate": "Certificato",
+        "type": "Tipo",
+        "WEBSITE": "Endpoint soggetto a verifiche periodiche; l'endpoint sarà utilizzanto durante la ronda notturna per verificare che il relativo certificato sia aggiornato",
+        "CERTIFICATE": "Endpoint utilizzato da certificati generici",
+        "VIRTUAL_MACHINE": "Endpoint utilizzato da macchine virtuali"
+    },
+    "views": {
+        "home": {
+            "title": "Panoramica Cassaforte",
+            "subtitle": "I tuoi segreti più rilevanti in un colpo d'occhio",
+            "pinnedSecrets": "Segreti Preferiti",
+            "pinnedEmpty": "Nessun segreto preferito. Puoi aggiungerne uno dalla pagina dei dettagli.",
+            "recentlyViewed": "Visti di recente",
+            "recentlySubtitle": "Gli ultimi segreti visualizzati — accesso rapido ai contenuti su cui hai lavorato.",
+            "recentlyEmpty": "Nessun segreto visualizzato di recente.",
+            "viewHistory": "Cronologia Visualizzazioni"
+        },
+        "about": {
+            "title": "Questa è una pagina informativa"
+        },
+        "access": {
+            "title": "Gestione Accesso",
+            "subtitle": "Gestisci entità e gruppi di accesso",
+            "entities": "Entità",
+            "groups": "Gruppi",
+            "selectEntity": "Seleziona un'entità",
+            "selectGroup": "Seleziona un Gruppo",
+            "entityEmpty": "Scegli un'entità per visualizzarne i dettagli.",
+            "groupEmpty": "Scegli un Gruppo per visualizzarne i dettagli.",
+            "statusActive": "Attivo",
+            "statusDisabled": "Disabilitato",
+            "enable": "Abilita",
+            "disable": "Disabilita",
+            "metadataTitle": "Metadati",
+            "metadataEmpty": "Nessun metadato disponibile",
+            "policiesCardTitle": "Policy",
+            "policiesCardAssignPolicies": "Assegna policy",
+            "policiesCardEmpty": "Nessuna policy assegnata",
+            "policiesListCardTitle": "Policy",
+            "policiesListCardEmpty": "Nessuna policy assegnata",
+            "slotChipsCardTitle": "Slot",
+            "slotChipsCardEmpty": "Nessun elemento disponibile"
+        },
+        "capabilityWrapper": {
+            "missingPermissions": "Permessi mancanti:"
+        },
+        "errorNotification": {
+            "noNotification": "Nessuna notifica",
+            "errors": "Errori",
+            "clearAll": "Pulisci tutto",
+            "requestFailed": "Richiesta non riuscita",
+            "copy": "Copia",
+            "copied": "Copiato!",
+            "showDetails": "Mostra dettagli",
+            "hideDetails": "Nascondi dettagli",
+            "operation": "Operazione",
+            "path": "Percorso",
+            "status": "Stato"
+        },
+        "policy": {
+            "title": "Policy della Cassaforte",
+            "subtitle": "Gestisci policy di accesso e permessi",
+            "search": "Cerca policy",
+            "emptyTitle": "Nessuna policy trovata",
+            "emptyText": "Crea la tua prima policy per la Cassaforte per controllare l'accesso.",
+            "newPolicy": "Nuova Policy",
+            "createPolicy": "Crea Policy",
+            "noResults": "Nessuna policy trovata",
+            "deleteFailed": "Impossibile eliminare la policy: {0}",
+            "deleteTitle": "Elimina Policy"
+        },
+        "advancedSearch": {
+            "label": "Ricerca",
+            "errorUnexpectedClose": "Parentesi chiusa inaspettata.",
+            "errorMissingClose": "Manca ')'."
+        },
+        "generator": {
+            "title": "Generatore Password",
+            "subtitle": "Personalizza e visualizza anteprima di password sicure",
+            "uppercase": "Maiuscole (A-Z)",
+            "lowercase": "Minuscole (a-z)",
+            "numbers": "Numeri (0-9)",
+            "symbols": "Simboli",
+            "symbolsSet": "Insieme simboli",
+            "passwordLength": "Lunghezza password",
+            "resetDefaults": "Ripristina impostazioni",
+            "generate": "Genera",
+            "use": "Usa"
+        },
+        "passwordMeter": {
+            "empty": "Vuoto",
+            "veryWeak": "Molto Debole",
+            "weak": "Debole",
+            "reasonable": "Accettabile",
+            "strong": "Forte",
+            "veryStrong": "Molto Forte"
+        },
+        "common": {
+            "notAvailable": "-",
+            "yes": "Sì",
+            "no": "No"
+        },
+        "createSecret": {
+            "title": "Crea Gruppo o Segreto",
+            "stepGroup": "Gruppo",
+            "stepGroupConfig": "Configurazione Gruppo",
+            "stepSecret": "Segreto",
+            "stepReview": "Revisione",
+            "existingGroup": "Usa gruppo esistente",
+            "newGroup": "Crea nuovo gruppo",
+            "groupLabel": "Gruppo",
+            "groupName": "Nome Gruppo",
+            "engineType": "Tipo di motore",
+            "maxVersions": "Versioni massime",
+            "description": "Descrizione",
+            "createSecretInsideGroup": "Crea un segreto all'interno di questo gruppo",
+            "secretPathLabel": "Percorso segreto: group-name / path / to / secret-name",
+            "flow": "Flusso",
+            "secretPath": "Percorso Segreto",
+            "secretName": "Nome Segreto",
+            "fullPath": "Percorso completo",
+            "createGroupSecret": "Crea gruppo e segreto",
+            "createGroupOnly": "Crea solo gruppo",
+            "createSecretInGroup": "Crea segreto in gruppo esistente",
+            "engineCreationFailed": "Creazione motore non riuscita",
+            "secretCreationFailed": "Creazione segreto non riuscita"
+        },
+        "deleteDialog": {
+            "confirmDelete": "Sei sicuro di voler eliminare",
+            "resourceRecoveryWarning": "Dopo l'eliminazione non sarà possibile ripristinare la risorsa!",
+            "confirmInput": "Digita il nome della risorsa per confermare l'eliminazione",
+            "propagationPolicy": "Seleziona la policy di propagazione per l'eliminazione della risorsa",
+            "singleResource": "Risorsa singola",
+            "cascade": "Cascata"
+        },
+        "pathField": {
+            "label": "Percorso",
+            "invalidPath": "Formato percorso non valido"
+        },
+        "accessObjectLayout": {
+            "id": "ID",
+            "created": "Creato",
+            "updated": "Aggiornato"
+        },
+        "aliasesCard": {
+            "title": "Alias",
+            "aliasId": "ID Alias",
+            "canonicalId": "ID Canonico",
+            "mountPath": "Percorso Mount",
+            "mountType": "Tipo Mount",
+            "mountAccessor": "Accessor Mount",
+            "local": "Locale",
+            "role": "Ruolo",
+            "created": "Creato",
+            "updated": "Aggiornato"
+        },
+        "policyEditorDialog": {
+            "editPolicy": "Modifica Policy",
+            "createPolicy": "Crea Policy",
+            "policyName": "Nome Policy",
+            "cancel": "Annulla",
+            "save": "Salva",
+            "unableToLoadPolicy": "Impossibile caricare la policy",
+            "failedToLoadPolicy": "Caricamento policy fallito",
+            "unableToSavePolicy": "Impossibile salvare la policy"
+        },
+        "vaultTree": {
+            "newSecret": "Nuovo segreto",
+            "clone": "Clona",
+            "deleteGroup": "Elimina gruppo",
+            "delete": "Elimina"
+        },
+        "resourceList": {
+            "noResults": "Nessun risultato trovato",
+            "results": "{0} risultati"
+        },
+        "secretCard": {
+            "version": "Versione",
+            "updated": "Aggiornato",
+            "entries": "Voci",
+            "attachments": "Allegati"
+        },
+        "secretKeyValue": {
+            "key": "Chiave",
+            "copied": "Copiato!",
+            "copyPassword": "Copia password"
+        },
+        "secretMetadata": {
+            "created": "Creato",
+            "updated": "Aggiornato",
+            "customMetadata": "Metadati personalizzati"
+        },
+        "keyValueEditor": {
+            "key": "Chiave",
+            "value": "Valore",
+            "noData": "Nessun dato disponibile"
+        },
+        "secretDetails": {
+            "edit": "Modifica",
+            "delete": "Elimina",
+            "deleteSecretTitle": "Elimina segreto",
+            "tabSecrets": "Segreti",
+            "tabMetadata": "Metadati",
+            "tabAttachments": "Allegati",
+            "customMetadata": "Metadati personalizzati",
+            "buttonReset": "Reimposta",
+            "buttonSave": "Salva",
+            "buttonClose": "Chiudi",
+            "toastDeleted": "Segreto eliminato!",
+            "latestSuffix": " (ultimo)"
+        },
+        "secretAttachments": {
+            "noAttachments": "Nessun allegato",
+            "fileNotPreviewed": "Questo tipo di file non può essere visualizzato in anteprima. Scarica il file per visualizzarlo.",
+            "downloadFailed": "Download non riuscito: allegato non trovato",
+            "fileExceeded": "Il file supera 1MB, anteprima non disponibile, scaricalo!"
+        }
+    }
+}

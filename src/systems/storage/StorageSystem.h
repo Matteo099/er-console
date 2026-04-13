@@ -1,9 +1,19 @@
 #pragma once
 
+#include <SD.h>
+#include <vector>
 #include <string>
 #include "core/SystemService.h"
 #include "drivers/storage/SDCardDriver.h"
 #include "drivers/storage/IFile.h"
+
+struct StorageEntry
+{
+    std::string path;
+    std::string name;
+    bool isDirectory = false;
+    uint64_t size = 0;
+};
 
 class StorageSystem : public SystemService
 {
@@ -17,8 +27,21 @@ public:
     const char* root() const { return "/sd"; }
     virtual IFile* open(const char* path);
     bool readTextFile(const char* path, std::string& out);
+    bool writeTextFile(const char* path, const std::string& contents, bool overwrite = true);
+    File openNative(const char* path, bool write = false);
+    bool removePath(const char* path);
+    bool createDirectory(const char* path);
+    bool exists(const char* path) const;
+    bool listDirectory(const char* path, std::vector<StorageEntry>& out, bool recursive = false) const;
+    uint64_t totalBytes() const;
+    uint64_t usedBytes() const;
+    uint64_t freeBytes() const;
 
 private:
+    bool ensureParents(const char* path);
+    static std::string parentPath(const char* path);
+    static std::string fileName(const char* path);
+
     SDCardDriver* driver;
     bool ready = false;
 };

@@ -3,6 +3,7 @@
 #include "systems/ui/UIEvents.h"
 #include "core/SystemEventBus.h"
 #include "systems/network/NetworkSystem.h"
+#include "systems/portal/PortalSystem.h"
 
 void NetworkScene::onEnter()
 {
@@ -11,6 +12,7 @@ void NetworkScene::onEnter()
     view.create();
 
     network = static_cast<NetworkSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
+    portal = static_cast<PortalSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_PORTAL));
     refreshNetworkStatus();
 }
 
@@ -38,18 +40,9 @@ bool NetworkScene::handleUIEvent(const UIEvent& event)
         return false;
 
     const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
-    if (clicked.buttonId == "wifi_connect")
+    if (clicked.buttonId == "portal_qr")
     {
-        if (network)
-            network->connect();
-        refreshNetworkStatus();
-        return true;
-    }
-
-    if (clicked.buttonId == "wifi_disconnect")
-    {
-        if (network)
-            network->disconnect();
+        view.toggleQrOverlay();
         refreshNetworkStatus();
         return true;
     }
@@ -95,5 +88,9 @@ void NetworkScene::refreshNetworkStatus()
     if (!status.message.empty())
         label += " - " + status.message;
 
+    std::string portalUrl = portal ? portal->portalUrl() : std::string("http://192.168.4.1/");
+    std::string qrData = portal ? portal->wifiQrPayload() : std::string("WIFI:S:ER-Console-Setup;T:nopass;P:;H:false;;");
+
     view.setStatus(label, status.ssid, status.ip);
+    view.setPortalInfo(portalUrl, qrData);
 }

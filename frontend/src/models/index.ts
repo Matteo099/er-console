@@ -1,0 +1,118 @@
+/**
+ * Data Models and Interfaces
+ * Central location for all TypeScript types and interfaces
+ */
+
+// ============================================================================
+// Configuration Models
+// ============================================================================
+
+export interface WiFiConfig {
+  enabled: boolean
+  ssid: string
+  password: string
+  autoConnect: boolean
+}
+
+export interface LocaleConfig {
+  language: string
+  timezone: string
+  dateFormat: string
+  latitude: number
+  longitude: number
+}
+
+export interface PortalConfig {
+  enabled: boolean
+  apSsid: string
+}
+
+export interface UIConfig {
+  theme: 'light' | 'dark'
+  compactMode: boolean
+}
+
+export interface DeviceConfig {
+  deviceName: string
+  wifi: WiFiConfig
+  locale: LocaleConfig
+  portal: PortalConfig
+  ui: UIConfig
+}
+
+// ============================================================================
+// Status Models
+// ============================================================================
+
+export interface WiFiStatus {
+  state: string
+  ssid: string
+  ip: string
+  signal: number
+}
+
+export interface StorageInfo {
+  usedBytes: number
+  freeBytes: number
+  totalBytes: number
+}
+
+export interface BatteryStatus {
+  percent: number
+  voltage: number
+  current: number
+}
+
+export interface PortalStatus {
+  url: string
+  qrPayload: string
+}
+
+export interface HardwareInfo {
+  board: string
+  cpuFreq: number
+  freeRam: number
+  totalRam: number
+  uptime: number
+}
+
+export interface DeviceStatus {
+  wifi: WiFiStatus
+  storage: StorageInfo
+  battery: BatteryStatus
+  portal: PortalStatus
+  hardware: HardwareInfo
+}
+
+// ============================================================================
+// File Management Models
+// ============================================================================
+
+export interface FileEntry {
+  name: string
+  path: string
+  directory: boolean
+  size: number
+  modified?: number
+}
+
+export interface FileResponse {
+  entries: FileEntry[]
+  path: string
+}
+
+// ============================================================================
+// API Response Models
+// ============================================================================
+
+export interface ApiResponse<T> {
+  success: boolean
+  data?: T
+  error?: string
+}
+
+export interface UploadProgress {
+  loaded: number
+  total: number
+  percent: number
+}

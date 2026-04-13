@@ -5,6 +5,26 @@
 #include <algorithm>
 #include "config/Assets.h"
 
+namespace
+{
+    static void trimString(std::string& value)
+    {
+        size_t right = value.find_last_not_of(" \t\r");
+        if (right == std::string::npos)
+        {
+            value.clear();
+            return;
+        }
+
+        value.erase(right + 1);
+        size_t left = value.find_first_not_of(" \t");
+        if (left == std::string::npos)
+            value.clear();
+        else
+            value.erase(0, left);
+    }
+}
+
 NetworkSystem::NetworkSystem()
 {
     status.state = State::Idle;
@@ -15,20 +35,12 @@ void NetworkSystem::init(void *params)
 {
     Log::info(Log::NETWORK_TAG, "Initializing network system");
 
-    WiFi.mode(WIFI_STA);
+    WiFi.mode(WIFI_AP_STA);
     WiFi.disconnect(true, true);
 
     StorageSystem *storage = static_cast<StorageSystem *>(params);
-    loadCredentials(storage);
 
-    if (ssid.empty())
-    {
-        setState(State::Idle, "No Wi-Fi credentials found");
-    }
-    else
-    {
-        setState(State::Disconnected, "Ready to connect");
-    }
+    reloadFromStorage(storage);
 
     initialized = true;
 }
@@ -63,6 +75,41 @@ bool NetworkSystem::connect()
     return true;
 }
 
+bool NetworkSystem::reloadFromStorage(StorageSystem* storage)
+{
+    DeviceConfig config = configRepository.defaultConfig();
+    bool loaded = storage && storage->isReady() && configRepository.load(storage, config);
+
+    if (loaded)
+    {
+        setCredentials(config.wifi.ssid, config.wifi.password);
+        if (!ssid.empty())
+            Log::info(Log::NETWORK_TAG, "Wi-Fi credential loaded from config.json: %s", ssid.c_str());
+    }
+    else if (loadLegacyCredentials(storage))
+    {
+        config.wifi.ssid = ssid;
+        config.wifi.password = password;
+        if (storage && storage->isReady())
+            configRepository.save(storage, config);
+    }
+
+    if (ssid.empty())
+        setState(State::Idle, "No Wi-Fi credentials found");
+    else if (WiFi.status() == WL_CONNECTED)
+        setState(State::Connected, "Connected");
+    else
+        setState(State::Disconnected, "Ready to connect");
+
+    return !ssid.empty();
+}
+
+void NetworkSystem::setCredentials(const std::string& newSsid, const std::string& newPassword)
+{
+    ssid = newSsid;
+    password = newPassword;
+}
+
 void NetworkSystem::disconnect()
 {
     if (WiFi.status() == WL_CONNECTED)
@@ -74,19 +121,19 @@ void NetworkSystem::disconnect()
     setState(State::Disconnected, "Disconnected");
 }
 
-void NetworkSystem::loadCredentials(StorageSystem *storage)
+bool NetworkSystem::loadLegacyCredentials(StorageSystem *storage)
 {
     if (!storage || !storage->isReady())
     {
         Log::warn(Log::NETWORK_TAG, "Storage unavailable, skipping Wi-Fi credentials load");
-        return;
+        return false;
     }
 
     std::string contents;
     if (!storage->readTextFile(WIFI_CFG_FILE, contents))
     {
         Log::warn(Log::NETWORK_TAG, "Wi-Fi credentials file not found");
-        return;
+        return false;
     }
 
     std::istringstream stream(contents);
@@ -100,23 +147,8 @@ void NetworkSystem::loadCredentials(StorageSystem *storage)
         std::string key = line.substr(0, sep);
         std::string value = line.substr(sep + 1);
 
-        auto trim = [](std::string &s)
-        {
-            size_t right = s.find_last_not_of(" \t\r");
-            if (right == std::string::npos)
-                s.clear();
-            else
-                s.erase(right + 1);
-
-            size_t left = s.find_first_not_of(" \t");
-            if (left == std::string::npos)
-                s.clear();
-            else
-                s.erase(0, left);
-        };
-
-        trim(key);
-        trim(value);
+        trimString(key);
+        trimString(value);
 
         if (key == "ssid")
             ssid = value;
@@ -132,6 +164,8 @@ void NetworkSystem::loadCredentials(StorageSystem *storage)
     {
         Log::warn(Log::NETWORK_TAG, "Wi-Fi credentials are empty in file '%s'", WIFI_CFG_FILE);
     }
+
+    return !ssid.empty();
 }
 
 void NetworkSystem::refreshStatus()

@@ -12,6 +12,7 @@
 #include "systems/lua/LuaSystem.h"
 #include "systems/rainbowpixel/RainbowPixel.h"
 #include "systems/network/NetworkSystem.h"
+#include "systems/portal/PortalSystem.h"
 
 class EscapeOS
 {
@@ -27,6 +28,7 @@ public:
     LuaSystem* getLuaSystem() { return &luaSystem; }
     RainbowPixel* getRainbowPixel() { return &rainbowPixel; }
     NetworkSystem* getNetworkSystem() { return &networkSystem; }
+    PortalSystem* getPortalSystem() { return &portalSystem; }
 
 private:
     bool running = false;
@@ -39,6 +41,7 @@ private:
     AudioSystem audioSystem;
     LuaSystem luaSystem;
     NetworkSystem networkSystem;
+    PortalSystem portalSystem;
 
     void createTasks();
 };

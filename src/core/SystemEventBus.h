@@ -41,6 +41,7 @@ public:
     static constexpr int SERVICE_UI = 4;
     static constexpr int SERVICE_INPUT = 5;
     static constexpr int SERVICE_NETWORK = 6;
+    static constexpr int SERVICE_PORTAL = 7;
 
     // Singleton instance
     static SystemEventBus& instance();

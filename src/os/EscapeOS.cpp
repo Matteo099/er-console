@@ -3,6 +3,29 @@
 #include "core/SystemEventBus.h"
 #include "log/Logger.h"
 
+void xTaskPortal(void *params)
+{
+    Log::info(Log::OS_TAG, "Starting task 'xTaskPortal'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
+
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_STORAGE_READY | EVT_NETWORK_READY,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
+
+    PortalSystem *portal = os->getPortalSystem();
+    portal->init();
+
+    while (os->isRunning())
+    {
+        portal->update();
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+
+    vTaskDelete(nullptr);
+}
+
 void xTaskBoot(void *params)
 {
     Log::info(Log::OS_TAG, "Starting task 'xTaskBoot'");
@@ -186,7 +209,9 @@ void EscapeOS::init()
     Log::info(Log::OS_TAG, "EscapeOS initializing...");
 
     SystemEventBus::init();
+    SystemEventBus::instance().registerService(SystemEventBus::SERVICE_STORAGE, &storageSystem);
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_NETWORK, &networkSystem);
+    SystemEventBus::instance().registerService(SystemEventBus::SERVICE_PORTAL, &portalSystem);
     running = true;
 
     createTasks();
@@ -243,6 +268,16 @@ void EscapeOS::createTasks()
         2,
         nullptr,
         0);
+
+    // Portal Task
+    xTaskCreatePinnedToCore(
+        xTaskPortal,
+        "PortalTask",
+        8192,
+        this,
+        2,
+        nullptr,
+        1);
 
     // Input Task
     xTaskCreatePinnedToCore(

@@ -145,3 +145,19 @@ https://randomnerdtutorials.com/lvgl-cheap-yellow-display-esp32-2432s028r/
 ## Lua
 
 https://github.dev/Sasszem/ESP8266-Arduino-Lua
+
+## Captive portal
+
+The network screen now focuses on connection status and QR onboarding for the ESP32 access point.
+All device configuration is stored in `/.core/config.json` on the SD card, and the portal is served from `sd/.core/portal`.
+
+Frontend source lives under `frontend/` as a Vue 3 + Vuetify SPA.
+Build it with:
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+The portal API exposes status, configuration, file browsing, upload, delete, and reboot endpoints over REST.
