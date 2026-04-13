@@ -71,7 +71,7 @@ jobs:
       - name: Build frontend
         run: |
           cd frontend
-          npm ci
+          npm i
           jq --arg v "$APP_VERSION" '.version = $v' package.json > tmp.json
           mv tmp.json package.json
           npm run build
@@ -202,7 +202,7 @@ jobs:
       - name: Build frontend
         run: |
           cd frontend
-          npm ci
+          npm i
           npm run build
 
       - name: Package frontend
