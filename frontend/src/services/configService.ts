@@ -6,6 +6,13 @@
 import requestJson from './api'
 import type { DeviceConfig } from '@/models'
 
+export interface WifiScanEntry {
+  ssid: string
+  signal?: number
+  secure?: boolean
+  authMode?: string
+}
+
 export const configService = {
   /**
    * Get current device configuration
@@ -43,6 +50,13 @@ export const configService = {
     return requestJson('/api/config', {
       method: 'POST',
     })
+  },
+
+  /**
+   * Scan nearby WiFi networks
+   */
+  scanWifiNetworks(): Promise<WifiScanEntry[] | { networks?: WifiScanEntry[]; data?: WifiScanEntry[] }> {
+    return requestJson('/api/wifi/scan')
   },
 }
 

@@ -104,6 +104,23 @@ export const useConfigStore = defineStore('config', () => {
     }
   }
 
+  const resetToDefaults = async () => {
+    saving.value = true
+    error.value = null
+
+    try {
+      const reset = normalizeConfig(await configService.resetConfig())
+      config.value = reset
+      originalConfig.value = JSON.parse(JSON.stringify(reset))
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to reset configuration'
+      console.error('Error resetting config:', err)
+      throw err
+    } finally {
+      saving.value = false
+    }
+  }
+
   const resetChanges = () => {
     if (originalConfig.value) {
       config.value = JSON.parse(JSON.stringify(originalConfig.value))
@@ -128,6 +145,7 @@ export const useConfigStore = defineStore('config', () => {
     // Methods
     fetchConfig,
     saveConfig,
+    resetToDefaults,
     resetChanges,
     clearError,
   }
