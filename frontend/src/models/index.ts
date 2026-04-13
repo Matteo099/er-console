@@ -8,24 +8,14 @@
 // ============================================================================
 
 export interface WiFiConfig {
-  enabled: boolean
   ssid: string
   password: string
-  autoConnect: boolean
 }
 
 export interface LocaleConfig {
   language: string
   timezone: string
   dateFormat: string
-  latitude: number
-  longitude: number
-}
-
-export interface PortalConfig {
-  enabled: boolean
-  apSsid: string
-  apPassword?: string
 }
 
 export interface UIConfig {
@@ -37,7 +27,6 @@ export interface DeviceConfig {
   deviceName: string
   wifi: WiFiConfig
   locale: LocaleConfig
-  portal: PortalConfig
   ui: UIConfig
 }
 

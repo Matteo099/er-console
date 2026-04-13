@@ -11,6 +11,11 @@ public:
 
 private:
     void sendStatus(WebServer& server);
+    void scanWifi(WebServer& server);
+    void getLogs(WebServer& server);
+    void clearLogs(WebServer& server);
+    void rebootSystem(WebServer& server);
+    void shutdownSystem(WebServer& server);
 
 private:
     PortalService& service;

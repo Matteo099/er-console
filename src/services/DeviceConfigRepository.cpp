@@ -40,20 +40,11 @@ std::string DeviceConfigRepository::toJson(const DeviceConfig& config) const
     JsonObject wifi = doc["wifi"].to<JsonObject>();
     wifi["ssid"] = config.wifi.ssid;
     wifi["password"] = config.wifi.password;
-    wifi["enabled"] = config.wifi.enabled;
-    wifi["autoConnect"] = config.wifi.autoConnect;
 
     JsonObject locale = doc["locale"].to<JsonObject>();
     locale["language"] = config.locale.language;
     locale["timezone"] = config.locale.timezone;
     locale["dateFormat"] = config.locale.dateFormat;
-    locale["latitude"] = config.locale.latitude;
-    locale["longitude"] = config.locale.longitude;
-
-    JsonObject portal = doc["portal"].to<JsonObject>();
-    portal["apSsid"] = config.portal.apSsid;
-    portal["apPassword"] = config.portal.apPassword;
-    portal["enabled"] = config.portal.enabled;
 
     JsonObject ui = doc["ui"].to<JsonObject>();
     ui["theme"] = config.ui.theme;
@@ -85,8 +76,6 @@ bool DeviceConfigRepository::parseJson(const std::string& json, DeviceConfig& co
     {
         config.wifi.ssid = wifi["ssid"].as<std::string>();
         config.wifi.password = wifi["password"].as<std::string>();
-        config.wifi.enabled = wifi["enabled"] | true;
-        config.wifi.autoConnect = wifi["autoConnect"] | true;
     }
 
     JsonObject locale = doc["locale"];
@@ -95,16 +84,6 @@ bool DeviceConfigRepository::parseJson(const std::string& json, DeviceConfig& co
         config.locale.language = locale["language"].as<std::string>();
         config.locale.timezone = locale["timezone"].as<std::string>();
         config.locale.dateFormat = locale["dateFormat"].as<std::string>();
-        config.locale.latitude = locale["latitude"] | 0.0;
-        config.locale.longitude = locale["longitude"] | 0.0;
-    }
-
-    JsonObject portal = doc["portal"];
-    if (!portal.isNull())
-    {
-        config.portal.apSsid = portal["apSsid"].as<std::string>();
-        config.portal.apPassword = portal["apPassword"].as<std::string>();
-        config.portal.enabled = portal["enabled"] | true;
     }
 
     JsonObject ui = doc["ui"];
@@ -123,9 +102,6 @@ bool DeviceConfigRepository::parseJson(const std::string& json, DeviceConfig& co
 
     if (config.deviceName.empty())
         config.deviceName = defaultConfig().deviceName;
-
-    if (config.portal.apSsid.empty())
-        config.portal.apSsid = defaultConfig().portal.apSsid;
 
     return true;
 }

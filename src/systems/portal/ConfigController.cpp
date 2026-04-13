@@ -11,35 +11,26 @@ void ConfigController::registerRoutes(WebServer& server)
 {
     server.on("/api/config", HTTP_GET, [&server, this]() { sendConfig(server); });
     server.on("/api/config", HTTP_PUT, [&server, this]() { updateConfig(server); });
-    server.on("/api/config", HTTP_POST, [&server, this]() { updateConfig(server); });
+    server.on("/api/config", HTTP_POST, [&server, this]() { resetConfig(server); });
 }
 
-void ConfigController::sendConfig(WebServer& server)
+void ConfigController::sendConfigPayload(WebServer& server, const DeviceConfig& config)
 {
-    const DeviceConfig config = service.getConfig();
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
     doc["deviceName"] = config.deviceName;
 
     JsonObject wifi = doc["wifi"].to<JsonObject>();
     wifi["ssid"] = config.wifi.ssid;
     wifi["password"] = config.wifi.password;
-    wifi["enabled"] = config.wifi.enabled;
-    wifi["autoConnect"] = config.wifi.autoConnect;
 
     JsonObject locale = doc["locale"].to<JsonObject>();
     locale["language"] = config.locale.language;
     locale["timezone"] = config.locale.timezone;
     locale["dateFormat"] = config.locale.dateFormat;
-    locale["latitude"] = config.locale.latitude;
-    locale["longitude"] = config.locale.longitude;
-
-    JsonObject portal = doc["portal"].to<JsonObject>();
-    portal["apSsid"] = config.portal.apSsid;
-    portal["apPassword"] = config.portal.apPassword;
-    portal["enabled"] = config.portal.enabled;
 
     JsonObject ui = doc["ui"].to<JsonObject>();
     ui["theme"] = config.ui.theme;
+    ui["compactMode"] = false;
     ui["brightness"] = config.ui.brightness;
 
     JsonObject audio = doc["audio"].to<JsonObject>();
@@ -51,9 +42,14 @@ void ConfigController::sendConfig(WebServer& server)
     server.send(200, "application/json", body.c_str());
 }
 
+void ConfigController::sendConfig(WebServer& server)
+{
+    sendConfigPayload(server, service.getConfig());
+}
+
 void ConfigController::updateConfig(WebServer& server)
 {
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
     const DeserializationError error = deserializeJson(doc, server.arg("plain"));
     if (error)
     {
@@ -69,8 +65,6 @@ void ConfigController::updateConfig(WebServer& server)
     {
         config.wifi.ssid = wifi["ssid"].as<std::string>();
         config.wifi.password = wifi["password"].as<std::string>();
-        config.wifi.enabled = wifi["enabled"] | true;
-        config.wifi.autoConnect = wifi["autoConnect"] | true;
     }
 
     JsonObject locale = doc["locale"];
@@ -79,16 +73,6 @@ void ConfigController::updateConfig(WebServer& server)
         config.locale.language = locale["language"].as<std::string>();
         config.locale.timezone = locale["timezone"].as<std::string>();
         config.locale.dateFormat = locale["dateFormat"].as<std::string>();
-        config.locale.latitude = locale["latitude"] | 0.0;
-        config.locale.longitude = locale["longitude"] | 0.0;
-    }
-
-    JsonObject portal = doc["portal"];
-    if (!portal.isNull())
-    {
-        config.portal.apSsid = portal["apSsid"].as<std::string>();
-        config.portal.apPassword = portal["apPassword"].as<std::string>();
-        config.portal.enabled = portal["enabled"] | true;
     }
 
     JsonObject ui = doc["ui"];
@@ -114,5 +98,22 @@ void ConfigController::updateConfig(WebServer& server)
     if (service.network())
         service.network()->reloadFromStorage(service.storage());
 
-    server.send(200, "application/json", "{\"ok\":true}");
+    sendConfigPayload(server, config);
+}
+
+void ConfigController::resetConfig(WebServer& server)
+{
+    DeviceConfigRepository repository;
+    DeviceConfig config = repository.defaultConfig();
+
+    if (!service.saveConfig(config))
+    {
+        server.send(500, "application/json", "{\"error\":\"save_failed\"}");
+        return;
+    }
+
+    if (service.network())
+        service.network()->reloadFromStorage(service.storage());
+
+    sendConfigPayload(server, config);
 }

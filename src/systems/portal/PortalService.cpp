@@ -3,6 +3,39 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
+namespace
+{
+    static std::string trimCopy(std::string value)
+    {
+        auto left = value.find_first_not_of(" \t\r\n");
+        if (left == std::string::npos)
+            return {};
+
+        auto right = value.find_last_not_of(" \t\r\n");
+        return value.substr(left, right - left + 1);
+    }
+
+    static std::string wifiAuthModeToString(wifi_auth_mode_t mode)
+    {
+        switch (mode)
+        {
+            case WIFI_AUTH_OPEN: return "open";
+            case WIFI_AUTH_WEP: return "wep";
+            case WIFI_AUTH_WPA_PSK: return "wpa";
+            case WIFI_AUTH_WPA2_PSK: return "wpa2";
+            case WIFI_AUTH_WPA_WPA2_PSK: return "wpa_wpa2";
+            case WIFI_AUTH_WPA2_ENTERPRISE: return "wpa2_enterprise";
+#ifdef WIFI_AUTH_WPA3_PSK
+            case WIFI_AUTH_WPA3_PSK: return "wpa3";
+#endif
+#ifdef WIFI_AUTH_WPA2_WPA3_PSK
+            case WIFI_AUTH_WPA2_WPA3_PSK: return "wpa2_wpa3";
+#endif
+            default: return "unknown";
+        }
+    }
+}
+
 PortalService::PortalService(StorageSystem* storage, NetworkSystem* network)
     : storageSystem(storage), networkSystem(network)
 {
@@ -64,7 +97,7 @@ PortalStatusData PortalService::getStatus() const
     {
         status.portalActive = true;
         status.apIp = WiFi.softAPIP().toString().c_str();
-        status.apSsid = status.config.portal.apSsid;
+        status.apSsid = portalSsid();
     }
 
     return status;
@@ -83,6 +116,13 @@ bool PortalService::deletePath(const std::string& path) const
     return storageSystem && storageSystem->isReady() && storageSystem->removePath(path.c_str());
 }
 
+bool PortalService::movePath(const std::string& sourcePath, const std::string& destinationPath) const
+{
+    return storageSystem
+        && storageSystem->isReady()
+        && storageSystem->movePath(sourcePath.c_str(), destinationPath.c_str(), true);
+}
+
 File PortalService::openUploadTarget(const std::string& path, bool overwrite) const
 {
     if (!storageSystem || !storageSystem->isReady())
@@ -96,6 +136,34 @@ bool PortalService::ensureDirectory(const std::string& path) const
     return storageSystem && storageSystem->isReady() && storageSystem->createDirectory(path.c_str());
 }
 
+std::vector<WifiScanEntry> PortalService::scanWifiNetworks() const
+{
+    std::vector<WifiScanEntry> results;
+
+    int networksFound = WiFi.scanNetworks(false, true);
+    if (networksFound <= 0)
+    {
+        WiFi.scanDelete();
+        return results;
+    }
+
+    results.reserve(static_cast<std::size_t>(networksFound));
+
+    for (int i = 0; i < networksFound; ++i)
+    {
+        WifiScanEntry entry;
+        entry.ssid = WiFi.SSID(i).c_str();
+        entry.signal = WiFi.RSSI(i);
+        entry.secure = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
+        entry.authMode = wifiAuthModeToString(WiFi.encryptionType(i));
+        if (!entry.ssid.empty())
+            results.push_back(entry);
+    }
+
+    WiFi.scanDelete();
+    return results;
+}
+
 std::string PortalService::portalUrl() const
 {
     if (WiFi.getMode() & WIFI_MODE_AP)
@@ -104,10 +172,18 @@ std::string PortalService::portalUrl() const
     return "http://192.168.4.1/";
 }
 
+std::string PortalService::portalSsid() const
+{
+    DeviceConfig config = getConfig();
+    std::string deviceName = trimCopy(config.deviceName);
+    if (deviceName.empty())
+        deviceName = DeviceConfigRepository().defaultConfig().deviceName;
+
+    return deviceName + " ER-WiFi";
+}
+
 std::string PortalService::wifiQrPayload() const
 {
-    const DeviceConfig config = getConfig();
-    std::string ssid = config.portal.apSsid.empty() ? "ER-Console-Setup" : config.portal.apSsid;
-    std::string payload = "WIFI:S:" + ssid + ";T:nopass;P:;H:false;;";
+    std::string payload = "WIFI:S:" + portalSsid() + ";T:nopass;P:;H:false;;";
     return payload;
 }

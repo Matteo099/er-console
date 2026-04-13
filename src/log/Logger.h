@@ -1,5 +1,7 @@
 #pragma once
 #include "esp_log.h"
+#include <cstddef>
+#include <string>
 
 namespace Log {
 
@@ -31,5 +33,8 @@ namespace Log {
     void warn(const char* tag, const char* format, ...);
     void info(const char* tag, const char* format, ...);
     void debug(const char* tag, const char* format, ...);
+
+    std::string getRecentLogs(std::size_t maxLines = 200);
+    void clearRecentLogs();
 
 }

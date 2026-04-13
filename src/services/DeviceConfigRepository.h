@@ -8,8 +8,6 @@ struct DeviceWifiConfig
 {
     std::string ssid;
     std::string password;
-    bool enabled = true;
-    bool autoConnect = true;
 };
 
 struct DeviceLocaleConfig
@@ -17,15 +15,6 @@ struct DeviceLocaleConfig
     std::string language = "it-IT";
     std::string timezone = "Europe/Rome";
     std::string dateFormat = "DD/MM/YYYY";
-    double latitude = 0.0;
-    double longitude = 0.0;
-};
-
-struct DevicePortalConfig
-{
-    std::string apSsid = "ER-Console-Setup";
-    std::string apPassword;
-    bool enabled = true;
 };
 
 struct DeviceUiConfig
@@ -45,7 +34,6 @@ struct DeviceConfig
     std::string deviceName = "EscapeRoom Console";
     DeviceWifiConfig wifi;
     DeviceLocaleConfig locale;
-    DevicePortalConfig portal;
     DeviceUiConfig ui;
     DeviceAudioConfig audio;
 };

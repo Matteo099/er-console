@@ -29,12 +29,6 @@ void PortalSystem::init(void* params)
         return;
     }
 
-    DeviceConfig config = service.getConfig();
-    if (config.portal.apSsid.empty())
-        config.portal.apSsid = service.getConfig().portal.apSsid;
-
-    service.saveConfig(config);
-
     startPortal();
     running = started;
 }
@@ -53,8 +47,7 @@ void PortalSystem::startPortal()
     if (started)
         return;
 
-    const DeviceConfig config = service.getConfig();
-    const std::string apSsid = config.portal.apSsid.empty() ? "ER-Console-Setup" : config.portal.apSsid;
+    const std::string apSsid = service.portalSsid();
 
     WiFi.mode(WIFI_AP_STA);
     bool apStarted = WiFi.softAP(apSsid.c_str());

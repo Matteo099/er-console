@@ -11,22 +11,13 @@ import type { DeviceConfig } from '@/models'
 const defaultConfig = (): DeviceConfig => ({
   deviceName: 'ESP32 Device',
   wifi: {
-    enabled: true,
     ssid: '',
     password: '',
-    autoConnect: true,
   },
   locale: {
     language: 'en',
     timezone: 'UTC',
     dateFormat: 'YYYY-MM-DD',
-    latitude: 0,
-    longitude: 0,
-  },
-  portal: {
-    enabled: true,
-    apSsid: '',
-    apPassword: '',
   },
   ui: {
     theme: 'dark',
@@ -46,10 +37,6 @@ const normalizeConfig = (value?: Partial<DeviceConfig> | null): DeviceConfig => 
     locale: {
       ...defaults.locale,
       ...value?.locale,
-    },
-    portal: {
-      ...defaults.portal,
-      ...value?.portal,
     },
     ui: {
       ...defaults.ui,

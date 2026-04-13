@@ -116,6 +116,23 @@ bool StorageSystem::removePath(const char* path)
     return SD.remove(path);
 }
 
+bool StorageSystem::movePath(const char* sourcePath, const char* destinationPath, bool overwrite)
+{
+    if (!ready || !sourcePath || !destinationPath || !*sourcePath || !*destinationPath)
+        return false;
+
+    if (!SD.exists(sourcePath))
+        return false;
+
+    if (!ensureParents(destinationPath))
+        return false;
+
+    if (overwrite && SD.exists(destinationPath) && !SD.remove(destinationPath))
+        return false;
+
+    return SD.rename(sourcePath, destinationPath);
+}
+
 bool StorageSystem::createDirectory(const char* path)
 {
     if (!ready || !path || !*path)

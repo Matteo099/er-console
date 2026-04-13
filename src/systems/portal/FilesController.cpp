@@ -11,6 +11,7 @@ void FilesController::registerRoutes(WebServer& server)
 {
     server.on("/api/files", HTTP_GET, [&server, this]() { listFiles(server); });
     server.on("/api/files", HTTP_DELETE, [&server, this]() { deleteFile(server); });
+    server.on("/api/files/move", HTTP_POST, [&server, this]() { moveFile(server); });
     server.on("/api/files/upload", HTTP_POST,
               [&server, this]() { server.send(200, "application/json", "{\"ok\":true}"); },
               [&server, this]() { uploadFile(server); });
@@ -21,7 +22,7 @@ void FilesController::listFiles(WebServer& server)
     const String path = server.hasArg("path") ? server.arg("path") : String("/.core");
     const std::vector<StorageEntry> entries = service.listFiles(path.c_str());
 
-    DynamicJsonDocument doc(2048);
+    JsonDocument doc;
     JsonArray items = doc["items"].to<JsonArray>();
     for (const StorageEntry& entry : entries)
     {
@@ -55,6 +56,33 @@ void FilesController::deleteFile(WebServer& server)
     }
 
     server.send(200, "application/json", "{\"ok\":true}");
+}
+
+void FilesController::moveFile(WebServer& server)
+{
+    JsonDocument doc;
+    const DeserializationError error = deserializeJson(doc, server.arg("plain"));
+    if (error)
+    {
+        server.send(400, "application/json", "{\"error\":\"invalid_json\"}");
+        return;
+    }
+
+    const String sourcePath = doc["sourcePath"].as<String>();
+    const String destinationPath = doc["destinationPath"].as<String>();
+    if (sourcePath.isEmpty() || destinationPath.isEmpty())
+    {
+        server.send(400, "application/json", "{\"error\":\"missing_paths\"}");
+        return;
+    }
+
+    if (!service.movePath(sourcePath.c_str(), destinationPath.c_str()))
+    {
+        server.send(500, "application/json", "{\"error\":\"move_failed\"}");
+        return;
+    }
+
+    server.send(200, "application/json", "{\"success\":true,\"message\":\"Path moved\"}");
 }
 
 void FilesController::uploadFile(WebServer& server)

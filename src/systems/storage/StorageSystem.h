@@ -30,6 +30,7 @@ public:
     bool writeTextFile(const char* path, const std::string& contents, bool overwrite = true);
     File openNative(const char* path, bool write = false);
     bool removePath(const char* path);
+    bool movePath(const char* sourcePath, const char* destinationPath, bool overwrite = true);
     bool createDirectory(const char* path);
     bool exists(const char* path) const;
     bool listDirectory(const char* path, std::vector<StorageEntry>& out, bool recursive = false) const;

@@ -31,6 +31,14 @@ struct PortalStatusData
     std::string batteryCurrent = "N/A";
 };
 
+struct WifiScanEntry
+{
+    std::string ssid;
+    int signal = 0;
+    bool secure = false;
+    std::string authMode;
+};
+
 class PortalService
 {
 public:
@@ -42,10 +50,13 @@ public:
     PortalStatusData getStatus() const;
     std::vector<StorageEntry> listFiles(const std::string& path) const;
     bool deletePath(const std::string& path) const;
+    bool movePath(const std::string& sourcePath, const std::string& destinationPath) const;
     File openUploadTarget(const std::string& path, bool overwrite = true) const;
     bool ensureDirectory(const std::string& path) const;
+    std::vector<WifiScanEntry> scanWifiNetworks() const;
 
     std::string portalUrl() const;
+    std::string portalSsid() const;
     std::string wifiQrPayload() const;
 
     StorageSystem* storage() const { return storageSystem; }

@@ -12,6 +12,7 @@ public:
 private:
     void listFiles(WebServer& server);
     void deleteFile(WebServer& server);
+    void moveFile(WebServer& server);
     void uploadFile(WebServer& server);
     static String guessMimeType(const String& path);
     static String normalizePath(const String& rawPath);
