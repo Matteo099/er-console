@@ -4,6 +4,7 @@
  */
 
 import requestJson, { uploadFile } from './api'
+import { isLocalServerEnabled, mockDownloadFile } from './mockServer'
 import type { FileEntry, FileResponse } from '@/models'
 
 export const filesService = {
@@ -47,6 +48,11 @@ export const filesService = {
    * Download a file (opens in browser or downloads)
    */
   downloadFile(path: string): void {
+    if (isLocalServerEnabled()) {
+      mockDownloadFile(path)
+      return
+    }
+
     const link = document.createElement('a')
     link.href = `/api/files/download?path=${encodeURIComponent(path)}`
     link.download = path.split('/').pop() || 'download'

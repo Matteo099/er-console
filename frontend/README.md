@@ -35,6 +35,16 @@ npm install
 npm run dev
 ```
 
+### Run Without Backend (Local Mock Server)
+
+Create a `.env.local` file in this folder with:
+
+```sh
+VITE_LOCAL_SERVER=true
+```
+
+When enabled, frontend REST calls are served by in-memory mocks (status/config/files/system), so the UI can run even if the ESP32 server is unavailable.
+
 ### Type-Check, Compile and Minify for Production
 
 ```sh

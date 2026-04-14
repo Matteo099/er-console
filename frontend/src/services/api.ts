@@ -3,6 +3,8 @@
  * Core HTTP client with error handling and common utilities
  */
 
+import { isLocalServerEnabled, mockRequestJson, mockUploadFile } from './mockServer'
+
 export interface RequestOptions {
   headers?: Record<string, string>
   body?: any
@@ -28,6 +30,10 @@ const jsonHeaders = {
  * Make a JSON request and handle response
  */
 async function requestJson<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  if (isLocalServerEnabled()) {
+    return mockRequestJson<T>(path, options)
+  }
+
   const response = await fetch(path, {
     ...options,
     headers: {
@@ -57,6 +63,10 @@ export async function uploadFile(
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<string> {
+  if (isLocalServerEnabled()) {
+    return mockUploadFile(path, file, onProgress)
+  }
+
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
     const formData = new FormData()
