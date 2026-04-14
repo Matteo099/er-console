@@ -80,6 +80,9 @@ void PortalSystem::registerRoutes()
         server.send(200, "application/json", payload.c_str());
     });
 
+    const char* headerKeys[] = {"Accept-Encoding"};
+    server.collectHeaders(headerKeys, 1);
+
     server.onNotFound([this]() { serveStaticOrFallback(); });
 
     server.begin();
@@ -90,7 +93,7 @@ void PortalSystem::serveStaticOrFallback()
     const String uri = server.uri();
     if (uri == "/" || uri == "/index.html")
     {
-        serveFile(PORTAL_INDEX_FILE);
+        serveFile(PORTAL_INDEX_FILE, true);
         return;
     }
 
@@ -104,10 +107,10 @@ void PortalSystem::serveStaticOrFallback()
         return;
     }
 
-    serveFile(PORTAL_INDEX_FILE);
+    serveFile(PORTAL_INDEX_FILE, true);
 }
 
-void PortalSystem::serveFile(const String& path)
+void PortalSystem::serveFile(const String& path, bool fallbackToIndex)
 {
     if (!service.storage())
     {
@@ -115,25 +118,72 @@ void PortalSystem::serveFile(const String& path)
         return;
     }
 
-    File file = service.storage()->openNative(path.c_str(), false);
+    const bool requestGzip = clientAcceptsGzip();
+    String selectedPath = path;
+    bool usingGzip = false;
+
+    if (requestGzip)
+    {
+        const String gzipPath = path + ".gz";
+        if (service.storage()->exists(gzipPath.c_str()))
+        {
+            selectedPath = gzipPath;
+            usingGzip = true;
+        }
+    }
+
+    File file = service.storage()->openNative(selectedPath.c_str(), false);
+
+    if (!file && usingGzip)
+    {
+        usingGzip = false;
+        selectedPath = path;
+        file = service.storage()->openNative(selectedPath.c_str(), false);
+    }
+
     if (!file)
     {
+        if (fallbackToIndex && path != PORTAL_INDEX_FILE)
+        {
+            serveFile(PORTAL_INDEX_FILE, false);
+            return;
+        }
         server.send(404, "text/plain", "Not found");
         return;
     }
 
-    server.streamFile(file, mimeTypeForPath(path));
+    if (usingGzip)
+    {
+        server.sendHeader("Content-Encoding", "gzip");
+        server.sendHeader("Vary", "Accept-Encoding");
+    }
+
+    server.streamFile(file, mimeTypeForPath(selectedPath));
     file.close();
+}
+
+bool PortalSystem::clientAcceptsGzip()
+{
+    if (!server.hasHeader("Accept-Encoding"))
+        return false;
+
+    String acceptEncoding = server.header("Accept-Encoding");
+    acceptEncoding.toLowerCase();
+    return acceptEncoding.indexOf("gzip") >= 0;
 }
 
 String PortalSystem::mimeTypeForPath(const String& path)
 {
-    if (path.endsWith(".html")) return "text/html";
-    if (path.endsWith(".css")) return "text/css";
-    if (path.endsWith(".js")) return "application/javascript";
-    if (path.endsWith(".json")) return "application/json";
-    if (path.endsWith(".svg")) return "image/svg+xml";
-    if (path.endsWith(".png")) return "image/png";
-    if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
+    String normalizedPath = path;
+    if (normalizedPath.endsWith(".gz"))
+        normalizedPath.remove(normalizedPath.length() - 3);
+
+    if (normalizedPath.endsWith(".html")) return "text/html";
+    if (normalizedPath.endsWith(".css")) return "text/css";
+    if (normalizedPath.endsWith(".js")) return "application/javascript";
+    if (normalizedPath.endsWith(".json")) return "application/json";
+    if (normalizedPath.endsWith(".svg")) return "image/svg+xml";
+    if (normalizedPath.endsWith(".png")) return "image/png";
+    if (normalizedPath.endsWith(".jpg") || normalizedPath.endsWith(".jpeg")) return "image/jpeg";
     return "application/octet-stream";
 }

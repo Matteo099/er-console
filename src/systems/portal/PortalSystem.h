@@ -26,7 +26,8 @@ private:
     void startPortal();
     void registerRoutes();
     void serveStaticOrFallback();
-    void serveFile(const String& path);
+    void serveFile(const String& path, bool fallbackToIndex = false);
+    bool clientAcceptsGzip();
     static String mimeTypeForPath(const String& path);
 
 private:
