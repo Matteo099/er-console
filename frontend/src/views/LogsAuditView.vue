@@ -2,17 +2,17 @@
   <v-container fluid class="py-6">
     <v-row class="mb-2" align="center" justify="space-between">
       <v-col cols="12" md="8">
-        <div class="text-h4">Logs & Audit</div>
+        <div class="text-h4">{{ t('erConsole.logs.title') }}</div>
         <div class="text-subtitle-1 text-medium-emphasis">
-          Inspect system logs and local audit events
+          {{ t('erConsole.logs.subtitle') }}
         </div>
       </v-col>
       <v-col cols="12" md="4" class="d-flex justify-md-end ga-2">
         <v-btn prepend-icon="mdi-refresh" variant="tonal" :loading="logsLoading" @click="loadLogs">
-          Refresh logs
+          {{ t('erConsole.logs.actions.refreshLogs') }}
         </v-btn>
         <v-btn prepend-icon="mdi-delete-sweep" variant="tonal" color="warning" @click="clearLogs">
-          Clear logs
+          {{ t('erConsole.logs.actions.clearLogs') }}
         </v-btn>
       </v-col>
     </v-row>
@@ -22,7 +22,7 @@
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-text-box-search-outline" />
-            System Logs
+            {{ t('erConsole.logs.sections.systemLogs') }}
           </v-card-title>
           <v-card-text>
             <v-row>
@@ -30,7 +30,7 @@
                 <v-select
                   v-model="logLines"
                   :items="[50, 100, 200, 500]"
-                  label="Log lines"
+                  :label="t('erConsole.logs.labels.logLines')"
                   variant="outlined"
                 />
               </v-col>
@@ -41,7 +41,7 @@
               variant="outlined"
               readonly
               auto-grow
-              placeholder="No log data yet"
+              :placeholder="t('erConsole.logs.noLogDataYet')"
             />
           </v-card-text>
         </v-card>
@@ -51,7 +51,7 @@
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-history" />
-            Audit Trail (UI)
+            {{ t('erConsole.logs.sections.auditTrail') }}
           </v-card-title>
           <v-card-text>
             <v-list lines="two">
@@ -62,7 +62,7 @@
             </v-list>
           </v-card-text>
           <v-card-actions>
-            <v-btn variant="text" prepend-icon="mdi-delete" @click="clearAudit">Clear audit</v-btn>
+            <v-btn variant="text" prepend-icon="mdi-delete" @click="clearAudit">{{ t('erConsole.logs.actions.clearAudit') }}</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
@@ -72,6 +72,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { systemService } from '@/services'
 import { useNotificationStore } from '@/stores/notificationStore'
 
@@ -82,6 +83,7 @@ interface AuditEvent {
 }
 
 const notificationStore = useNotificationStore()
+const { locale, t } = useI18n()
 
 const logsLoading = ref(false)
 const logLines = ref(100)
@@ -92,7 +94,7 @@ const pushAudit = (action: string) => {
   auditEvents.value.unshift({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     action,
-    time: new Date().toLocaleString(),
+    time: new Date().toLocaleString(locale.value),
   })
   auditEvents.value = auditEvents.value.slice(0, 100)
   localStorage.setItem('er-console-audit', JSON.stringify(auditEvents.value))
@@ -118,9 +120,9 @@ const loadLogs = async () => {
   logsLoading.value = true
   try {
     logText.value = await systemService.getLogs(logLines.value)
-    pushAudit(`Loaded ${logLines.value} lines from system logs`)
+    pushAudit(t('erConsole.logs.audit.loadedLines', { count: logLines.value }))
   } catch (error) {
-    notificationStore.error(error instanceof Error ? error.message : 'Unable to load logs')
+    notificationStore.error(error instanceof Error ? error.message : t('erConsole.logs.errors.unableToLoadLogs'))
   } finally {
     logsLoading.value = false
   }
@@ -130,10 +132,10 @@ const clearLogs = async () => {
   try {
     await systemService.clearLogs()
     logText.value = ''
-    pushAudit('Cleared system logs')
-    notificationStore.success('Logs cleared')
+    pushAudit(t('erConsole.logs.audit.clearedSystemLogs'))
+    notificationStore.success(t('erConsole.logs.notifications.logsCleared'))
   } catch (error) {
-    notificationStore.error(error instanceof Error ? error.message : 'Unable to clear logs')
+    notificationStore.error(error instanceof Error ? error.message : t('erConsole.logs.errors.unableToClearLogs'))
   }
 }
 

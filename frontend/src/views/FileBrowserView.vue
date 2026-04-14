@@ -2,17 +2,17 @@
   <v-container fluid class="py-6">
     <v-row class="mb-2" align="center" justify="space-between">
       <v-col cols="12" md="8">
-        <div class="text-h4">File Browser</div>
+        <div class="text-h4">{{ t('erConsole.files.title') }}</div>
         <div class="text-subtitle-1 text-medium-emphasis">
-          Navigate, upload, delete, and move files in the ESP32 filesystem
+          {{ t('erConsole.files.subtitle') }}
         </div>
       </v-col>
       <v-col cols="12" md="4" class="d-flex justify-md-end ga-2">
         <v-btn prepend-icon="mdi-arrow-up" variant="tonal" :disabled="!filesStore.canGoUp" @click="goUp">
-          Up
+          {{ t('erConsole.files.actions.up') }}
         </v-btn>
         <v-btn prepend-icon="mdi-refresh" variant="tonal" :loading="filesStore.loading" @click="reload">
-          Reload
+          {{ t('erConsole.common.reload') }}
         </v-btn>
       </v-col>
     </v-row>
@@ -21,12 +21,12 @@
       <v-card-text>
         <v-row align="center" class="ga-2">
           <v-col cols="12" md="6">
-            <v-text-field v-model="filesStore.currentPath" label="Current path" variant="outlined" readonly />
+            <v-text-field v-model="filesStore.currentPath" :label="t('erConsole.files.labels.currentPath')" variant="outlined" readonly />
           </v-col>
           <v-col cols="12" md="6">
             <v-file-input
               v-model="uploadSelection"
-              label="Upload file"
+              :label="t('erConsole.files.labels.uploadFile')"
               variant="outlined"
               prepend-icon="mdi-upload"
               :disabled="filesStore.uploading"
@@ -42,7 +42,7 @@
           :disabled="!selectedUploadFile"
           @click="upload"
         >
-          Upload
+          {{ t('erConsole.common.upload') }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -50,7 +50,7 @@
     <v-card>
       <v-card-title class="d-flex align-center ga-2">
         <v-icon icon="mdi-folder-open-outline" />
-        Files
+        {{ t('erConsole.files.sections.files') }}
       </v-card-title>
       <v-card-text>
         <v-data-table :headers="headers" :items="filesStore.sortedEntries" :loading="filesStore.loading">
@@ -94,18 +94,18 @@
 
     <v-dialog v-model="moveDialog" max-width="560">
       <v-card>
-        <v-card-title>Move / Rename Entry</v-card-title>
+        <v-card-title>{{ t('erConsole.files.moveRenameEntry') }}</v-card-title>
         <v-card-text>
-          <v-text-field v-model="moveSource" label="Source path" variant="outlined" readonly />
-          <v-text-field v-model="moveDestination" label="Destination path" variant="outlined" />
+          <v-text-field v-model="moveSource" :label="t('erConsole.files.labels.sourcePath')" variant="outlined" readonly />
+          <v-text-field v-model="moveDestination" :label="t('erConsole.files.labels.destinationPath')" variant="outlined" />
           <div class="text-body-2 text-medium-emphasis">
-            This action requires backend support for /api/files/move.
+            {{ t('erConsole.files.moveRequiresBackend') }}
           </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="moveDialog = false">Cancel</v-btn>
-          <v-btn color="primary" :loading="moving" @click="moveEntry">Move</v-btn>
+          <v-btn variant="text" @click="moveDialog = false">{{ t('erConsole.common.cancel') }}</v-btn>
+          <v-btn color="primary" :loading="moving" @click="moveEntry">{{ t('erConsole.files.actions.move') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -118,6 +118,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { filesService, statusService } from '@/services'
 import { useFilesStore } from '@/stores/filesStore'
 import { useNotificationStore } from '@/stores/notificationStore'
@@ -125,6 +126,7 @@ import type { FileEntry } from '@/models'
 
 const filesStore = useFilesStore()
 const notificationStore = useNotificationStore()
+const { t } = useI18n()
 
 const uploadSelection = ref<File[] | File | null>(null)
 const moveDialog = ref(false)
@@ -137,13 +139,13 @@ const selectedUploadFile = computed(() => {
   return Array.isArray(uploadSelection.value) ? uploadSelection.value[0] : uploadSelection.value
 })
 
-const headers = [
+const headers = computed(() => [
   { title: '', key: 'directory', sortable: false },
-  { title: 'Name', key: 'name' },
-  { title: 'Path', key: 'path' },
-  { title: 'Size', key: 'size' },
-  { title: 'Actions', key: 'actions', sortable: false },
-]
+  { title: t('erConsole.files.table.name'), key: 'name' },
+  { title: t('erConsole.files.table.path'), key: 'path' },
+  { title: t('erConsole.files.table.size'), key: 'size' },
+  { title: t('erConsole.files.table.actions'), key: 'actions', sortable: false },
+])
 
 const reload = async () => {
   await filesStore.loadFiles(filesStore.currentPath)
@@ -166,18 +168,18 @@ const upload = async () => {
   try {
     await filesStore.uploadFile(file)
     uploadSelection.value = null
-    notificationStore.success('File uploaded')
+    notificationStore.success(t('erConsole.files.notifications.fileUploaded'))
   } catch {
-    notificationStore.error(filesStore.error ?? 'Upload failed')
+    notificationStore.error(filesStore.error ?? t('erConsole.files.errors.uploadFailed'))
   }
 }
 
 const remove = async (path: string) => {
   try {
     await filesStore.deleteFile(path)
-    notificationStore.success('Entry deleted')
+    notificationStore.success(t('erConsole.files.notifications.entryDeleted'))
   } catch {
-    notificationStore.error(filesStore.error ?? 'Delete failed')
+    notificationStore.error(filesStore.error ?? t('erConsole.files.errors.deleteFailed'))
   }
 }
 
@@ -191,11 +193,11 @@ const moveEntry = async () => {
   moving.value = true
   try {
     await filesService.moveFile(moveSource.value, moveDestination.value)
-    notificationStore.success('Entry moved')
+    notificationStore.success(t('erConsole.files.notifications.entryMoved'))
     moveDialog.value = false
     await reload()
   } catch (error) {
-    notificationStore.error(error instanceof Error ? error.message : 'Move is not available on backend')
+    notificationStore.error(error instanceof Error ? error.message : t('erConsole.files.errors.moveUnavailable'))
   } finally {
     moving.value = false
   }

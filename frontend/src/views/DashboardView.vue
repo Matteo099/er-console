@@ -2,13 +2,13 @@
   <v-container fluid class="py-6">
     <v-row class="mb-2" align="center" justify="space-between">
       <v-col cols="12" md="8">
-        <div class="text-h4">Device Dashboard</div>
+        <div class="text-h4">{{ t('erConsole.dashboard.title') }}</div>
         <div class="text-subtitle-1 text-medium-emphasis">
-          Live status and charts overview
+          {{ t('erConsole.dashboard.subtitle') }}
         </div>
       </v-col>
       <v-col cols="12" md="4" class="d-flex justify-md-end">
-        <v-btn prepend-icon="mdi-refresh" :loading="refreshing" @click="refreshStatus">Refresh status</v-btn>
+        <v-btn prepend-icon="mdi-refresh" :loading="refreshing" @click="refreshStatus">{{ t('erConsole.app.actions.refreshStatus') }}</v-btn>
       </v-col>
     </v-row>
 
@@ -21,10 +21,10 @@
           </v-card-title>
           <v-card-text>
             <v-list density="compact" lines="one">
-              <v-list-item :title="status?.wifi?.state ?? 'n/a'" subtitle="State" />
-              <v-list-item :title="status?.wifi?.ssid || 'n/a'" subtitle="SSID" />
-              <v-list-item :title="status?.wifi?.ip || 'n/a'" subtitle="IP" />
-              <v-list-item :title="`${signalStrength}%`" subtitle="Signal" />
+              <v-list-item :title="status?.wifi?.state ?? t('erConsole.common.na')" :subtitle="t('erConsole.dashboard.labels.state')" />
+              <v-list-item :title="status?.wifi?.ssid || t('erConsole.common.na')" :subtitle="t('erConsole.dashboard.labels.ssid')" />
+              <v-list-item :title="status?.wifi?.ip || t('erConsole.common.na')" :subtitle="t('erConsole.dashboard.labels.ip')" />
+              <v-list-item :title="`${signalStrength}%`" :subtitle="t('erConsole.dashboard.labels.signal')" />
             </v-list>
             <v-progress-linear :model-value="signalStrength" class="mt-2" color="primary" />
           </v-card-text>
@@ -35,13 +35,13 @@
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-sd" />
-            Storage
+            {{ t('erConsole.dashboard.sections.storage') }}
           </v-card-title>
           <v-card-text>
             <v-list density="compact" lines="one">
-              <v-list-item :title="formatBytes(status?.storage?.usedBytes ?? 0)" subtitle="Used" />
-              <v-list-item :title="formatBytes(status?.storage?.freeBytes ?? 0)" subtitle="Free" />
-              <v-list-item :title="formatBytes(status?.storage?.totalBytes ?? 0)" subtitle="Total" />
+              <v-list-item :title="formatBytes(status?.storage?.usedBytes ?? 0)" :subtitle="t('erConsole.dashboard.labels.used')" />
+              <v-list-item :title="formatBytes(status?.storage?.freeBytes ?? 0)" :subtitle="t('erConsole.dashboard.labels.free')" />
+              <v-list-item :title="formatBytes(status?.storage?.totalBytes ?? 0)" :subtitle="t('erConsole.dashboard.labels.total')" />
             </v-list>
             <v-progress-linear :model-value="portalStore.storagePercentage" color="primary" class="mt-2" />
           </v-card-text>
@@ -52,14 +52,14 @@
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-memory" />
-            Memory
+            {{ t('erConsole.dashboard.sections.memory') }}
           </v-card-title>
           <v-card-text class="d-flex flex-column align-center ga-3">
             <v-progress-circular :model-value="memoryUsagePercentage" :size="120" :width="12" color="secondary">
               {{ memoryUsagePercentage }}%
             </v-progress-circular>
             <div class="text-body-2 text-medium-emphasis">
-              Heap in use
+              {{ t('erConsole.dashboard.labels.heapInUse') }}
             </div>
           </v-card-text>
         </v-card>
@@ -69,14 +69,14 @@
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-chip" />
-            CPU / Uptime
+            {{ t('erConsole.dashboard.sections.cpuUptime') }}
           </v-card-title>
           <v-card-text>
             <v-list density="compact" lines="one">
-              <v-list-item :title="`${cpuMhz} MHz`" subtitle="CPU" />
-              <v-list-item :title="formatBytes(freeHeap)" subtitle="Free Heap" />
-              <v-list-item :title="formatBytes(psramFree)" subtitle="Free PSRAM" />
-              <v-list-item :title="formatUptime(uptimeSeconds)" subtitle="Uptime" />
+              <v-list-item :title="`${cpuMhz} MHz`" :subtitle="t('erConsole.dashboard.labels.cpu')" />
+              <v-list-item :title="formatBytes(freeHeap)" :subtitle="t('erConsole.dashboard.labels.freeHeap')" />
+              <v-list-item :title="formatBytes(psramFree)" :subtitle="t('erConsole.dashboard.labels.freePsram')" />
+              <v-list-item :title="formatUptime(uptimeSeconds)" :subtitle="t('erConsole.dashboard.labels.uptime')" />
             </v-list>
           </v-card-text>
         </v-card>
@@ -88,13 +88,13 @@
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-web" />
-            Portal
+            {{ t('erConsole.dashboard.sections.portal') }}
           </v-card-title>
           <v-card-text>
             <v-list density="compact" lines="one">
-              <v-list-item :title="status?.portal?.url || 'n/a'" subtitle="Portal URL" />
-              <v-list-item :title="status?.portal?.ssid || 'n/a'" subtitle="Portal SSID" />
-              <v-list-item :title="status?.portal?.ip || 'n/a'" subtitle="Portal IP" />
+              <v-list-item :title="status?.portal?.url || t('erConsole.common.na')" :subtitle="t('erConsole.dashboard.labels.portalUrl')" />
+              <v-list-item :title="status?.portal?.ssid || t('erConsole.common.na')" :subtitle="t('erConsole.dashboard.labels.portalSsid')" />
+              <v-list-item :title="status?.portal?.ip || t('erConsole.common.na')" :subtitle="t('erConsole.dashboard.labels.portalIp')" />
             </v-list>
           </v-card-text>
         </v-card>
@@ -104,14 +104,14 @@
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-power" />
-            Device Controls
+            {{ t('erConsole.dashboard.sections.deviceControls') }}
           </v-card-title>
           <v-card-text class="text-medium-emphasis">
-            Reboot or shutdown the ESP32 from this dashboard.
+            {{ t('erConsole.dashboard.deviceControlsDescription') }}
           </v-card-text>
           <v-card-actions>
             <v-btn prepend-icon="mdi-restart" color="warning" variant="tonal" :loading="rebooting" @click="rebootDevice">
-              Reboot
+              {{ t('erConsole.dashboard.actions.reboot') }}
             </v-btn>
             <v-btn
               prepend-icon="mdi-power"
@@ -120,7 +120,7 @@
               :loading="shuttingDown"
               @click="shutdownDevice"
             >
-              Shutdown
+              {{ t('erConsole.dashboard.actions.shutdown') }}
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -141,12 +141,14 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { usePortalStore } from '@/stores/portalStore'
 import { statusService, systemService } from '@/services'
 
 const portalStore = usePortalStore()
 const notificationStore = useNotificationStore()
+const { t } = useI18n()
 
 const refreshing = ref(false)
 const rebooting = ref(false)
@@ -205,7 +207,7 @@ const refreshStatus = async () => {
   if (portalStore.error) {
     notificationStore.error(portalStore.error)
   } else {
-    notificationStore.success('Dashboard status refreshed')
+    notificationStore.success(t('erConsole.dashboard.notifications.statusRefreshed'))
   }
 
   refreshing.value = false
@@ -215,9 +217,9 @@ const rebootDevice = async () => {
   rebooting.value = true
   try {
     const response = await systemService.reboot()
-    notificationStore.success(response.message || 'Reboot command sent')
+    notificationStore.success(response.message || t('erConsole.dashboard.notifications.rebootSent'))
   } catch (error) {
-    notificationStore.error(error instanceof Error ? error.message : 'Failed to reboot device')
+    notificationStore.error(error instanceof Error ? error.message : t('erConsole.dashboard.errors.rebootFailed'))
   } finally {
     rebooting.value = false
   }
@@ -227,9 +229,9 @@ const shutdownDevice = async () => {
   shuttingDown.value = true
   try {
     const response = await systemService.shutdown()
-    notificationStore.warning(response.message || 'Shutdown command sent')
+    notificationStore.warning(response.message || t('erConsole.dashboard.notifications.shutdownSent'))
   } catch (error) {
-    notificationStore.error(error instanceof Error ? error.message : 'Failed to shutdown device')
+    notificationStore.error(error instanceof Error ? error.message : t('erConsole.dashboard.errors.shutdownFailed'))
   } finally {
     shuttingDown.value = false
   }

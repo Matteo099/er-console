@@ -1,346 +1,199 @@
 {
-    "button": {
-        "save": "Save",
-        "new": "New",
-        "updateOwner": "Update Owner",
-        "edit": "Edit",
-        "update": "Update",
-        "delete": "Delete",
-        "cancel": "Cancel",
-        "copy": "Copy",
-        "quit": "Quit",
-        "clear": "Clear",
-        "close": "Close",
-        "confirm": "Confirm",
-        "select": "Select",
-        "event": "Events",
-        "export": {
-            "export": "Export",
-            "csv": "csv",
-            "json": "json"
+    "erConsole": {
+        "common": {
+            "na": "n/a",
+            "unknown": "Unknown",
+            "save": "Save",
+            "reload": "Reload",
+            "select": "Select",
+            "upload": "Upload",
+            "cancel": "Cancel",
+            "apply": "Apply"
         },
-        "download": "Download",
-        "upload": "Upload",
-        "chooseFiles": "Choose Files",
-        "sendNotification": "Send Notification",
-        "add": "Add",
-        "reportPdf": "Report PDF",
-        "open": "Open",
-        "associateUsers": "Associate Users",
-        "searchApp": "Search App",
-        "accountSettings": "Account Settings"
-    },
-    "menu": {
-        "logout": "Logout",
-        "home": "Home",
-        "vault": "Vault",
-        "generator": "Password Generator",
-        "manageAccess": "Manage Access",
-        "policies": "Policies",
-        "auditAndLogs": "Aufit and Log"
-    },
-    "tooltip": {
-        "it": "Italiano",
-        "en": "English",
-        "changeLanguage": "Change language",
-        "list": "List Mode",
-        "carousel": "Carousel Mode",
-        "timeline": "Timeline Mode",
-        "openInNewTab": "Open in new tab",
-        "clearFilters": "Clear filters",
-        "showCertificate": "Show certificate",
-        "showCertificates": "Show certificates",
-        "showEndpoints": "Show endpoints",
-        "noNotifications": "No notifications"
-    },
-    "alert": {
-        "textCopiedToClipboard": "Text copied to clipboard.",
-        "createdSuccessfully": "{0} created successfully.",
-        "deletedSuccessfully": "{0} deleted successfully.",
-        "updatedSuccessfully": "{0} updated successfully.",
-        "confirmDelete": "Are you sure you want to delete '{0}'?",
-        "noRepresentationAssociated": "No Representation Associated",
-        "notFound404": "404 - Not Found",
-        "notFoundError": "The requested URL was not found on this server.",
-        "forbidden403": "403 - Forbidden",
-        "forbiddenError": "You don't have permission to access this resource"
-    },
-    "table": {
-        "itemsPerPage": "Items per page:",
-        "loading": "Loading...",
-        "noData": "No data available",
-        "all": "All",
-        "name": "Name",
-        "createdBy": "Created by",
-        "version": "Version",
-        "lastUpdate": "Last Update"
-    },
-    "rules": {
-        "required": "Field is required",
-        "version": "Field does not match version pattern (X.X.X)"
-    },
-    "release": {
-        "version": "Version",
-        "title": "Title",
-        "notes": "Notes",
-        "status": "Status"
-    },
-    "status": {
-        "completed": "Completed",
-        "inprogress": "In Progress",
-        "stopped": "Stopped"
-    },
-    "customer": {
-        "self": "Customer",
-        "name": "Name",
-        "actions": "Actions"
-    },
-    "model": {
-        "self": "Model",
-        "name": "Name",
-        "actions": "Actions"
-    },
-    "phase": {
-        "self": "Phase",
-        "name": "Name",
-        "description": "Description",
-        "actions": "Actions"
-    },
-    "stage": {
-        "self": "Stage",
-        "name": "Name",
-        "description": "Description",
-        "actions": "Actions"
-    },
-    "profile": {
-        "self": "Profile",
-        "name": "Name",
-        "actions": "Actions"
-    },
-    "certis": {
-        "name": "Name",
-        "subjectDN": "Subject",
-        "validFrom": "Valid From",
-        "validTo": "Valid To",
-        "validity": "Validity",
-        "createdDate": "Created",
-        "endpoints": "Endpoints",
-        "certificate": "Certificate",
-        "type": "Type",
-        "WEBSITE": "Endpoint subject to periodic checks; the endpoint will be used during the night patrol to verify that the related certificate is up to date",
-        "CERTIFICATE": "Endpoint used by generic certificates",
-        "VIRTUAL_MACHINE": "Endpoint used by virtual machines"
-    },
-    "views": {
-        "home": {
-            "title": "Vault Overview",
-            "subtitle": "Your most relevant secrets at a glance",
-            "pinnedSecrets": "Pinned Secrets",
-            "pinnedEmpty": "No pinned secrets. You can pin a secret from its detail page.",
-            "recentlyViewed": "Recently Viewed",
-            "recentlySubtitle": "Your last viewed secrets — quick access to what you recently worked on.",
-            "recentlyEmpty": "No recently viewed secrets yet.",
-            "viewHistory": "View History"
+        "app": {
+            "language": "Language",
+            "menu": {
+                "dashboard": "Dashboard",
+                "config": "ESP32 Config",
+                "files": "File Browser",
+                "logsAudit": "Logs & Audit",
+                "about": "About"
+            },
+            "status": {
+                "wifiConnected": "WiFi connected",
+                "wifiDisconnected": "WiFi disconnected",
+                "lastRefresh": "Last refresh: {value}"
+            },
+            "actions": {
+                "lightMode": "Light mode",
+                "darkMode": "Dark mode",
+                "refreshStatus": "Refresh status"
+            },
+            "notifications": {
+                "deviceStatusRefreshed": "Device status refreshed"
+            }
+        },
+        "dashboard": {
+            "title": "Device Dashboard",
+            "subtitle": "Live status and charts overview",
+            "sections": {
+                "storage": "Storage",
+                "memory": "Memory",
+                "cpuUptime": "CPU / Uptime",
+                "portal": "Portal",
+                "deviceControls": "Device Controls"
+            },
+            "labels": {
+                "state": "State",
+                "ssid": "SSID",
+                "ip": "IP",
+                "signal": "Signal",
+                "used": "Used",
+                "free": "Free",
+                "total": "Total",
+                "heapInUse": "Heap in use",
+                "cpu": "CPU",
+                "freeHeap": "Free Heap",
+                "freePsram": "Free PSRAM",
+                "uptime": "Uptime",
+                "portalUrl": "Portal URL",
+                "portalSsid": "Portal SSID",
+                "portalIp": "Portal IP"
+            },
+            "deviceControlsDescription": "Reboot or shutdown the ESP32 from this dashboard.",
+            "actions": {
+                "reboot": "Reboot",
+                "shutdown": "Shutdown"
+            },
+            "notifications": {
+                "statusRefreshed": "Dashboard status refreshed",
+                "rebootSent": "Reboot command sent",
+                "shutdownSent": "Shutdown command sent"
+            },
+            "errors": {
+                "rebootFailed": "Failed to reboot device",
+                "shutdownFailed": "Failed to shutdown device"
+            }
+        },
+        "config": {
+            "title": "ESP32 Configuration",
+            "subtitle": "Configure language, theme, and WiFi settings",
+            "sections": {
+                "device": "Device",
+                "wifiConnection": "WiFi Connection",
+                "locale": "Locale",
+                "maintenance": "Maintenance"
+            },
+            "labels": {
+                "deviceName": "Device Name",
+                "uiTheme": "UI Theme",
+                "ssid": "SSID",
+                "password": "Password",
+                "language": "Language",
+                "timezone": "Timezone",
+                "dateFormat": "Date Format",
+                "wifiPassword": "WiFi Password"
+            },
+            "table": {
+                "ssid": "SSID",
+                "signal": "Signal",
+                "security": "Security",
+                "auth": "Auth"
+            },
+            "actions": {
+                "scanWifi": "Scan WiFi",
+                "resetChanges": "Reset changes",
+                "factoryReset": "Factory reset",
+                "confirmReset": "Confirm reset"
+            },
+            "noWifiConfigured": "No WiFi configured. Select a network from the list below.",
+            "connectToWifi": "Connect to {ssid}",
+            "maintenanceDescription": "Restore device configuration to factory defaults.",
+            "confirmFactoryResetTitle": "Confirm Factory Reset",
+            "confirmFactoryResetText": "This will restore configuration to factory defaults. Continue?",
+            "notifications": {
+                "saved": "Configuration saved successfully",
+                "localChangesReverted": "Local changes reverted",
+                "factoryResetDone": "Configuration reset to factory defaults"
+            },
+            "errors": {
+                "saveFailed": "Failed to save configuration",
+                "wifiScanUnavailable": "WiFi scan unavailable from backend",
+                "factoryResetFailed": "Factory reset failed"
+            }
+        },
+        "files": {
+            "title": "File Browser",
+            "subtitle": "Navigate, upload, delete, and move files in the ESP32 filesystem",
+            "sections": {
+                "files": "Files"
+            },
+            "labels": {
+                "currentPath": "Current path",
+                "uploadFile": "Upload file",
+                "sourcePath": "Source path",
+                "destinationPath": "Destination path"
+            },
+            "table": {
+                "name": "Name",
+                "path": "Path",
+                "size": "Size",
+                "actions": "Actions"
+            },
+            "actions": {
+                "up": "Up",
+                "move": "Move"
+            },
+            "moveRenameEntry": "Move / Rename Entry",
+            "moveRequiresBackend": "This action requires backend support for /api/files/move.",
+            "notifications": {
+                "fileUploaded": "File uploaded",
+                "entryDeleted": "Entry deleted",
+                "entryMoved": "Entry moved"
+            },
+            "errors": {
+                "uploadFailed": "Upload failed",
+                "deleteFailed": "Delete failed",
+                "moveUnavailable": "Move is not available on backend"
+            }
+        },
+        "logs": {
+            "title": "Logs & Audit",
+            "subtitle": "Inspect system logs and local audit events",
+            "sections": {
+                "systemLogs": "System Logs",
+                "auditTrail": "Audit Trail (UI)"
+            },
+            "labels": {
+                "logLines": "Log lines"
+            },
+            "actions": {
+                "refreshLogs": "Refresh logs",
+                "clearLogs": "Clear logs",
+                "clearAudit": "Clear audit"
+            },
+            "noLogDataYet": "No log data yet",
+            "audit": {
+                "loadedLines": "Loaded {count} lines from system logs",
+                "clearedSystemLogs": "Cleared system logs"
+            },
+            "notifications": {
+                "logsCleared": "Logs cleared"
+            },
+            "errors": {
+                "unableToLoadLogs": "Unable to load logs",
+                "unableToClearLogs": "Unable to clear logs"
+            }
         },
         "about": {
-            "title": "This is an about page"
-        },
-        "access": {
-            "title": "Access Management",
-            "subtitle": "Manage access entities and groups",
-            "entities": "Entities",
-            "groups": "Groups",
-            "selectEntity": "Select an Entity",
-            "selectGroup": "Select a Group",
-            "entityEmpty": "Choose an entity to view its details.",
-            "groupEmpty": "Choose a group to view its details.",
-            "statusActive": "Active",
-            "statusDisabled": "Disabled",
-            "enable": "Enable",
-            "disable": "Disable",
-            "metadataTitle": "Metadata",
-            "metadataEmpty": "No metadata available",
-            "policiesCardTitle": "Policies",
-            "policiesCardAssignPolicies": "Assign policies",
-            "policiesCardEmpty": "No policies assigned",
-            "policiesListCardTitle": "Policies",
-            "policiesListCardEmpty": "No policies assigned",
-            "slotChipsCardTitle": "Slots",
-            "slotChipsCardEmpty": "No items available"
-        },
-        "capabilityWrapper": {
-            "missingPermissions": "Missing permissions:"
-        },
-        "errorNotification": {
-            "noNotification": "No notifications",
-            "errors": "Errors",
-            "clearAll": "Clear all",
-            "requestFailed": "Request failed",
-            "copy": "Copy",
-            "copied": "Copied!",
-            "showDetails": "Show details",
-            "hideDetails": "Hide details",
-            "operation": "Operation",
-            "path": "Path",
-            "status": "Status"
-        },
-        "policy": {
-            "title": "Vault Policies",
-            "subtitle": "Manage access policies and permissions",
-            "search": "Search policies",
-            "emptyTitle": "No policies found",
-            "emptyText": "Create your first Vault policy to control access.",
-            "newPolicy": "New Policy",
-            "createPolicy": "Create Policy",
-            "noResults": "No policies found",
-            "deleteFailed": "Unable to delete policy: {0}",
-            "deleteTitle": "Delete Policy"
-        },
-        "advancedSearch": {
-            "label": "Search query",
-            "errorUnexpectedClose": "Unexpected ')'.",
-            "errorMissingClose": "Missing ')'."
-        },
-        "generator": {
-            "title": "Password generator",
-            "subtitle": "Customize and preview secure passwords",
-            "uppercase": "Uppercase (A-Z)",
-            "lowercase": "Lowercase (a-z)",
-            "numbers": "Numbers (0-9)",
-            "symbols": "Symbols",
-            "symbolsSet": "Symbols set",
-            "passwordLength": "Password length",
-            "resetDefaults": "Reset to defaults",
-            "generate": "Generate",
-            "use": "Use"
-        },
-        "passwordMeter": {
-            "empty": "Empty",
-            "veryWeak": "Very Weak",
-            "weak": "Weak",
-            "reasonable": "Reasonable",
-            "strong": "Strong",
-            "veryStrong": "Very Strong"
-        },
-        "common": {
-            "notAvailable": "-",
-            "yes": "Yes",
-            "no": "No"
-        },
-        "createSecret": {
-            "title": "Create Group or Secret",
-            "stepGroup": "Group",
-            "stepGroupConfig": "Group Configuration",
-            "stepSecret": "Secret",
-            "stepReview": "Review",
-            "existingGroup": "Use existing group",
-            "newGroup": "Create new group",
-            "groupLabel": "Group",
-            "groupName": "Group Name",
-            "engineType": "Engine Type",
-            "maxVersions": "Max Versions",
-            "description": "Description",
-            "createSecretInsideGroup": "Create a secret inside this group",
-            "secretPathLabel": "Secret path: group-name / path / to / secret-name",
-            "flow": "Flow",
-            "secretPath": "Secret Path",
-            "secretName": "Secret Name",
-            "fullPath": "Full Path",
-            "createGroupSecret": "Create group and secret",
-            "createGroupOnly": "Create group only",
-            "createSecretInGroup": "Create secret in existing group",
-            "engineCreationFailed": "Engine creation failed",
-            "secretCreationFailed": "Secret creation failed"
-        },
-        "deleteDialog": {
-            "confirmDelete": "Are you sure you want to delete",
-            "resourceRecoveryWarning": "After deleting it is NOT possible to recover the resource!",
-            "confirmInput": "Please type the resource name to confirm the deletion of the resource",
-            "propagationPolicy": "Select the propagation policy for resource deletion",
-            "singleResource": "Single resource",
-            "cascade": "Cascade"
-        },
-        "pathField": {
-            "label": "Path",
-            "invalidPath": "Invalid path format"
-        },
-        "accessObjectLayout": {
-            "id": "ID",
-            "created": "Created",
-            "updated": "Updated"
-        },
-        "aliasesCard": {
-            "title": "Aliases",
-            "aliasId": "Alias ID",
-            "canonicalId": "Canonical ID",
-            "mountPath": "Mount Path",
-            "mountType": "Mount Type",
-            "mountAccessor": "Mount Accessor",
-            "local": "Local",
-            "role": "Role",
-            "created": "Created",
-            "updated": "Updated"
-        },
-        "policyEditorDialog": {
-            "editPolicy": "Edit Policy",
-            "createPolicy": "Create Policy",
-            "policyName": "Policy Name",
-            "cancel": "Cancel",
-            "save": "Save",
-            "unableToLoadPolicy": "Unable to load policy",
-            "failedToLoadPolicy": "Failed to load policy",
-            "unableToSavePolicy": "Unable to save policy"
-        },
-        "vaultTree": {
-            "newSecret": "New secret",
-            "clone": "Clone",
-            "deleteGroup": "Delete Group",
-            "delete": "Delete"
-        },
-        "resourceList": {
-            "noResults": "No results found",
-            "results": "{0} results"
-        },
-        "secretCard": {
-            "version": "Version",
-            "updated": "Updated",
-            "entries": "Entries",
-            "attachments": "Attachments"
-        },
-        "secretKeyValue": {
-            "key": "Key",
-            "copied": "Copied!",
-            "copyPassword": "Copy password"
-        },
-        "secretMetadata": {
-            "created": "Created",
-            "updated": "Updated",
-            "customMetadata": "Custom Metadata"
-        },
-        "keyValueEditor": {
-            "key": "Key",
-            "value": "Value",
-            "noData": "No data available"
-        },
-        "secretDetails": {
-            "edit": "Edit",
-            "delete": "Delete",
-            "deleteSecretTitle": "Delete secret",
-            "tabSecrets": "Secrets",
-            "tabMetadata": "Metadata",
-            "tabAttachments": "Attachments",
-            "customMetadata": "Custom Metadata",
-            "buttonReset": "Reset",
-            "buttonSave": "Save",
-            "buttonClose": "Close",
-            "toastDeleted": "Secret deleted!",
-            "latestSuffix": " (latest)"
-        },
-        "secretAttachments": {
-            "noAttachments": "No attachments",
-            "fileNotPreviewed": "This file type cannot be previewed. Please download to view it.",
-            "downloadFailed": "Download failed: attachment not found",
-            "fileExceeded": "File exceed 1MB, preview is not available, download it!"
+            "title": "About Device",
+            "application": "Application",
+            "version": "Version {value}",
+            "frontendBuildVersion": "Frontend build version",
+            "device": "Device",
+            "portalUrl": "Portal URL",
+            "language": "Language",
+            "timezone": "Timezone"
         }
     }
 }

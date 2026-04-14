@@ -3,16 +3,16 @@
     <v-card>
       <v-card-title class="d-flex align-center ga-2">
         <v-icon icon="mdi-information-outline" />
-        About Device
+        {{ t('erConsole.about.title') }}
       </v-card-title>
       <v-card-text>
         <v-list density="comfortable">
-          <v-list-item title="Application" subtitle="ER Console Web UI" />
-          <v-list-item :title="`Version ${appVersion}`" subtitle="Frontend build version" />
-          <v-list-item title="Device" :subtitle="status?.config?.deviceName || 'Unknown'" />
-          <v-list-item title="Portal URL" :subtitle="status?.portal?.url || 'n/a'" />
-          <v-list-item title="Language" :subtitle="status?.config?.language || 'n/a'" />
-          <v-list-item title="Timezone" :subtitle="status?.config?.timezone || 'n/a'" />
+          <v-list-item :title="t('erConsole.about.application')" subtitle="ER Console Web UI" />
+          <v-list-item :title="t('erConsole.about.version', { value: appVersion })" :subtitle="t('erConsole.about.frontendBuildVersion')" />
+          <v-list-item :title="t('erConsole.about.device')" :subtitle="status?.config?.deviceName || t('erConsole.common.unknown')" />
+          <v-list-item :title="t('erConsole.about.portalUrl')" :subtitle="status?.portal?.url || t('erConsole.common.na')" />
+          <v-list-item :title="t('erConsole.about.language')" :subtitle="status?.config?.language || t('erConsole.common.na')" />
+          <v-list-item :title="t('erConsole.about.timezone')" :subtitle="status?.config?.timezone || t('erConsole.common.na')" />
         </v-list>
       </v-card-text>
     </v-card>
@@ -21,10 +21,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePortalStore } from '@/stores/portalStore'
 
 const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
 const portalStore = usePortalStore()
+const { t } = useI18n()
 
 const status = computed(() => portalStore.status)
 

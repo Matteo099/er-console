@@ -2,14 +2,14 @@
   <v-container fluid class="py-6">
     <v-row class="mb-2" align="center" justify="space-between">
       <v-col cols="12" md="8">
-        <div class="text-h4">ESP32 Configuration</div>
+        <div class="text-h4">{{ t('erConsole.config.title') }}</div>
         <div class="text-subtitle-1 text-medium-emphasis">
-          Configure language, theme, and WiFi settings
+          {{ t('erConsole.config.subtitle') }}
         </div>
       </v-col>
       <v-col cols="12" md="4" class="d-flex justify-md-end ga-2">
         <v-btn prepend-icon="mdi-refresh" variant="tonal" :loading="configStore.loading" @click="loadConfig">
-          Reload
+          {{ t('erConsole.common.reload') }}
         </v-btn>
         <v-btn
           prepend-icon="mdi-content-save"
@@ -18,7 +18,7 @@
           :disabled="!configStore.hasChanges"
           @click="saveConfig"
         >
-          Save
+          {{ t('erConsole.common.save') }}
         </v-btn>
       </v-col>
     </v-row>
@@ -28,12 +28,12 @@
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-chip" />
-            Device
+            {{ t('erConsole.config.sections.device') }}
           </v-card-title>
           <v-card-text>
             <v-text-field
               v-model="config.deviceName"
-              label="Device Name"
+              :label="t('erConsole.config.labels.deviceName')"
               name="device-name"
               autocomplete="organization"
               variant="outlined"
@@ -41,7 +41,7 @@
             <v-select
               v-model="config.ui.theme"
               :items="['dark', 'light']"
-              label="UI Theme"
+              :label="t('erConsole.config.labels.uiTheme')"
               name="ui-theme"
               autocomplete="off"
               variant="outlined"
@@ -54,20 +54,20 @@
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-wifi" />
-            WiFi Connection
+            {{ t('erConsole.config.sections.wifiConnection') }}
           </v-card-title>
           <v-card-text>
             <v-form @submit.prevent>
               <v-text-field
                 v-model="config.wifi.ssid"
-                label="SSID"
+                :label="t('erConsole.config.labels.ssid')"
                 name="wifi-ssid"
                 autocomplete="username"
                 variant="outlined"
               />
               <v-text-field
                 v-model="config.wifi.password"
-                label="Password"
+                :label="t('erConsole.config.labels.password')"
                 type="password"
                 name="wifi-password"
                 autocomplete="current-password"
@@ -75,11 +75,11 @@
               />
             </v-form>
             <v-alert v-if="!config.wifi.ssid" type="info" variant="tonal" class="mt-2">
-              No WiFi configured. Select a network from the list below.
+              {{ t('erConsole.config.noWifiConfigured') }}
             </v-alert>
             <div class="d-flex justify-end mt-3">
               <v-btn prepend-icon="mdi-wifi-refresh" variant="tonal" :loading="scanningWifi" @click="scanWifi">
-                Scan WiFi
+                {{ t('erConsole.config.actions.scanWifi') }}
               </v-btn>
             </div>
             <v-data-table
@@ -99,7 +99,7 @@
               </template>
               <template #item.actions="{ item }">
                 <v-btn size="small" variant="text" prepend-icon="mdi-check" @click="selectWifi(item)">
-                  Select
+                  {{ t('erConsole.common.select') }}
                 </v-btn>
               </template>
             </v-data-table>
@@ -111,27 +111,27 @@
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-map-marker" />
-            Locale
+            {{ t('erConsole.config.sections.locale') }}
           </v-card-title>
           <v-card-text>
             <v-select
               v-model="config.locale.language"
               :items="languageOptions"
-              label="Language"
+              :label="t('erConsole.config.labels.language')"
               name="locale-language"
               autocomplete="language"
               variant="outlined"
             />
             <v-text-field
               v-model="config.locale.timezone"
-              label="Timezone"
+              :label="t('erConsole.config.labels.timezone')"
               name="locale-timezone"
               readonly
               variant="outlined"
             />
             <v-text-field
               v-model="config.locale.dateFormat"
-              label="Date Format"
+              :label="t('erConsole.config.labels.dateFormat')"
               name="locale-date-format"
               readonly
               variant="outlined"
@@ -144,20 +144,20 @@
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-restore-alert" />
-            Maintenance
+            {{ t('erConsole.config.sections.maintenance') }}
           </v-card-title>
           <v-card-text>
             <div class="text-body-2 text-medium-emphasis">
-              Restore device configuration to factory defaults.
+              {{ t('erConsole.config.maintenanceDescription') }}
             </div>
           </v-card-text>
           <v-card-actions>
             <v-btn variant="text" prepend-icon="mdi-restore" :disabled="!configStore.hasChanges" @click="resetChanges">
-              Reset changes
+              {{ t('erConsole.config.actions.resetChanges') }}
             </v-btn>
             <v-spacer />
             <v-btn color="error" variant="tonal" prepend-icon="mdi-factory" @click="factoryDialog = true">
-              Factory reset
+              {{ t('erConsole.config.actions.factoryReset') }}
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -166,11 +166,11 @@
 
     <v-dialog v-model="wifiPasswordDialog" max-width="440">
       <v-card>
-        <v-card-title>Connect to {{ selectedWifi?.ssid }}</v-card-title>
+        <v-card-title>{{ t('erConsole.config.connectToWifi', { ssid: selectedWifi?.ssid ?? '' }) }}</v-card-title>
         <v-card-text>
           <v-text-field
             v-model="selectedWifiPassword"
-            label="WiFi Password"
+            :label="t('erConsole.config.labels.wifiPassword')"
             type="password"
             name="selected-wifi-password"
             autocomplete="current-password"
@@ -179,22 +179,22 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="wifiPasswordDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="confirmWifiSelection">Apply</v-btn>
+          <v-btn variant="text" @click="wifiPasswordDialog = false">{{ t('erConsole.common.cancel') }}</v-btn>
+          <v-btn color="primary" @click="confirmWifiSelection">{{ t('erConsole.common.apply') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <v-dialog v-model="factoryDialog" max-width="460">
       <v-card>
-        <v-card-title>Confirm Factory Reset</v-card-title>
+        <v-card-title>{{ t('erConsole.config.confirmFactoryResetTitle') }}</v-card-title>
         <v-card-text>
-          This will restore configuration to factory defaults. Continue?
+          {{ t('erConsole.config.confirmFactoryResetText') }}
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="factoryDialog = false">Cancel</v-btn>
-          <v-btn color="error" :loading="configStore.saving" @click="factoryReset">Confirm reset</v-btn>
+          <v-btn variant="text" @click="factoryDialog = false">{{ t('erConsole.common.cancel') }}</v-btn>
+          <v-btn color="error" :loading="configStore.saving" @click="factoryReset">{{ t('erConsole.config.actions.confirmReset') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -207,12 +207,14 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { configService, type WifiScanEntry } from '@/services'
 import { useConfigStore } from '@/stores/configStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 
 const configStore = useConfigStore()
 const notificationStore = useNotificationStore()
+const { t } = useI18n()
 
 const config = computed(() => configStore.config)
 const scanningWifi = ref(false)
@@ -224,13 +226,13 @@ const factoryDialog = ref(false)
 
 const languageOptions = ['it', 'en', 'es', 'fr', 'de']
 
-const wifiHeaders = [
-  { title: 'SSID', key: 'ssid' },
-  { title: 'Signal', key: 'signal' },
-  { title: 'Security', key: 'secure' },
-  { title: 'Auth', key: 'authMode' },
+const wifiHeaders = computed(() => [
+  { title: t('erConsole.config.table.ssid'), key: 'ssid' },
+  { title: t('erConsole.config.table.signal'), key: 'signal' },
+  { title: t('erConsole.config.table.security'), key: 'secure' },
+  { title: t('erConsole.config.table.auth'), key: 'authMode' },
   { title: '', key: 'actions', sortable: false },
-]
+])
 
 const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
 const browserDateFormat = new Intl.DateTimeFormat().format(new Date())
@@ -257,9 +259,9 @@ const loadConfig = async () => {
 const saveConfig = async () => {
   try {
     await configStore.saveConfig()
-    notificationStore.success('Configuration saved successfully')
+    notificationStore.success(t('erConsole.config.notifications.saved'))
   } catch {
-    notificationStore.error(configStore.error ?? 'Failed to save configuration')
+    notificationStore.error(configStore.error ?? t('erConsole.config.errors.saveFailed'))
   }
 }
 
@@ -269,7 +271,7 @@ const resetChanges = () => {
     configStore.config.locale.timezone = browserTimezone
     configStore.config.locale.dateFormat = browserDateFormat
   }
-  notificationStore.info('Local changes reverted')
+  notificationStore.info(t('erConsole.config.notifications.localChangesReverted'))
 }
 
 const scanWifi = async () => {
@@ -283,7 +285,7 @@ const scanWifi = async () => {
     }
   } catch {
     wifiNetworks.value = []
-    notificationStore.warning('WiFi scan unavailable from backend')
+    notificationStore.warning(t('erConsole.config.errors.wifiScanUnavailable'))
   } finally {
     scanningWifi.value = false
   }
@@ -318,11 +320,11 @@ const factoryReset = async () => {
       configStore.config.locale.timezone = browserTimezone
       configStore.config.locale.dateFormat = browserDateFormat
     }
-    notificationStore.success('Configuration reset to factory defaults')
+    notificationStore.success(t('erConsole.config.notifications.factoryResetDone'))
     factoryDialog.value = false
     await scanWifi()
   } catch {
-    notificationStore.error(configStore.error ?? 'Factory reset failed')
+    notificationStore.error(configStore.error ?? t('erConsole.config.errors.factoryResetFailed'))
   }
 }
 
