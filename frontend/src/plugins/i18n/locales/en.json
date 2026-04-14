@@ -102,22 +102,36 @@
             },
             "actions": {
                 "scanWifi": "Scan WiFi",
+                "connect": "Connect",
                 "resetChanges": "Reset changes",
                 "factoryReset": "Factory reset",
                 "confirmReset": "Confirm reset"
             },
+            "currentWifiConfigured": "Configured WiFi: {ssid}",
             "noWifiConfigured": "No WiFi configured. Select a network from the list below.",
             "connectToWifi": "Connect to {ssid}",
+            "wifiDialog": {
+                "title": "Connect to {ssid}",
+                "authMode": "Authentication",
+                "secured": "Secured",
+                "open": "Open",
+                "passwordHint": "For WPA/WPA2/WPA3 networks, use at least 8 characters.",
+                "openNetworkInfo": "This network does not require a password.",
+                "disconnectFirstNotice": "Current network '{ssid}' will be disconnected before connecting to the new one."
+            },
             "maintenanceDescription": "Restore device configuration to factory defaults.",
             "confirmFactoryResetTitle": "Confirm Factory Reset",
             "confirmFactoryResetText": "This will restore configuration to factory defaults. Continue?",
             "notifications": {
                 "saved": "Configuration saved successfully",
                 "localChangesReverted": "Local changes reverted",
+                "disconnectedCurrentNetwork": "Disconnected from '{ssid}'",
+                "connectedToNetwork": "Connected to '{ssid}'",
                 "factoryResetDone": "Configuration reset to factory defaults"
             },
             "errors": {
                 "saveFailed": "Failed to save configuration",
+                "connectFailed": "Failed to connect to WiFi network",
                 "wifiScanUnavailable": "WiFi scan unavailable from backend",
                 "factoryResetFailed": "Factory reset failed"
             }

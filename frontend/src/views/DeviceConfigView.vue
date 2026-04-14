@@ -57,24 +57,10 @@
             {{ t('erConsole.config.sections.wifiConnection') }}
           </v-card-title>
           <v-card-text>
-            <v-form @submit.prevent>
-              <v-text-field
-                v-model="config.wifi.ssid"
-                :label="t('erConsole.config.labels.ssid')"
-                name="wifi-ssid"
-                autocomplete="username"
-                variant="outlined"
-              />
-              <v-text-field
-                v-model="config.wifi.password"
-                :label="t('erConsole.config.labels.password')"
-                type="password"
-                name="wifi-password"
-                autocomplete="current-password"
-                variant="outlined"
-              />
-            </v-form>
-            <v-alert v-if="!config.wifi.ssid" type="info" variant="tonal" class="mt-2">
+            <v-alert v-if="config.wifi.ssid" type="success" variant="tonal" class="mb-3">
+              {{ t('erConsole.config.currentWifiConfigured', { ssid: config.wifi.ssid }) }}
+            </v-alert>
+            <v-alert v-else type="info" variant="tonal" class="mb-3">
               {{ t('erConsole.config.noWifiConfigured') }}
             </v-alert>
             <div class="d-flex justify-end mt-3">
@@ -99,7 +85,7 @@
               </template>
               <template #item.actions="{ item }">
                 <v-btn size="small" variant="text" prepend-icon="mdi-check" @click="selectWifi(item)">
-                  {{ t('erConsole.common.select') }}
+                  {{ t('erConsole.config.actions.connect') }}
                 </v-btn>
               </template>
             </v-data-table>
@@ -164,26 +150,13 @@
       </v-col>
     </v-row>
 
-    <v-dialog v-model="wifiPasswordDialog" max-width="440">
-      <v-card>
-        <v-card-title>{{ t('erConsole.config.connectToWifi', { ssid: selectedWifi?.ssid ?? '' }) }}</v-card-title>
-        <v-card-text>
-          <v-text-field
-            v-model="selectedWifiPassword"
-            :label="t('erConsole.config.labels.wifiPassword')"
-            type="password"
-            name="selected-wifi-password"
-            autocomplete="current-password"
-            variant="outlined"
-          />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn variant="text" @click="wifiPasswordDialog = false">{{ t('erConsole.common.cancel') }}</v-btn>
-          <v-btn color="primary" @click="confirmWifiSelection">{{ t('erConsole.common.apply') }}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <WifiConnectDialog
+      v-model="wifiConnectDialog"
+      :network="selectedWifi"
+      :current-ssid="config?.wifi?.ssid"
+      :loading="connectingWifi"
+      @connect="connectToWifi"
+    />
 
     <v-dialog v-model="factoryDialog" max-width="460">
       <v-card>
@@ -208,9 +181,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import WifiConnectDialog from '@/components/WifiConnectDialog.vue'
 import { configService, type WifiScanEntry } from '@/services'
 import { useConfigStore } from '@/stores/configStore'
 import { useNotificationStore } from '@/stores/notificationStore'
+
+interface WifiConnectPayload {
+  ssid: string
+  password: string
+  authMode?: string
+  requiresPassword: boolean
+}
 
 const configStore = useConfigStore()
 const notificationStore = useNotificationStore()
@@ -219,9 +200,9 @@ const { t } = useI18n()
 const config = computed(() => configStore.config)
 const scanningWifi = ref(false)
 const wifiNetworks = ref<WifiScanEntry[]>([])
-const wifiPasswordDialog = ref(false)
+const wifiConnectDialog = ref(false)
 const selectedWifi = ref<WifiScanEntry | null>(null)
-const selectedWifiPassword = ref('')
+const connectingWifi = ref(false)
 const factoryDialog = ref(false)
 
 const languageOptions = ['it', 'en', 'es', 'fr', 'de']
@@ -292,25 +273,37 @@ const scanWifi = async () => {
 }
 
 const selectWifi = (network: WifiScanEntry) => {
-  if (!configStore.config) return
   selectedWifi.value = network
-
-  if (network.secure) {
-    selectedWifiPassword.value = ''
-    wifiPasswordDialog.value = true
-    return
-  }
-
-  configStore.config.wifi.ssid = network.ssid
-  configStore.config.wifi.password = ''
+  wifiConnectDialog.value = true
 }
 
-const confirmWifiSelection = () => {
-  if (!configStore.config || !selectedWifi.value) return
+const connectToWifi = async (payload: WifiConnectPayload) => {
+  if (!configStore.config) return
 
-  configStore.config.wifi.ssid = selectedWifi.value.ssid
-  configStore.config.wifi.password = selectedWifiPassword.value
-  wifiPasswordDialog.value = false
+  connectingWifi.value = true
+  const targetSsid = payload.ssid.trim()
+  const currentSsid = (configStore.config.wifi.ssid ?? '').trim()
+
+  try {
+    if (currentSsid && currentSsid !== targetSsid) {
+      configStore.config.wifi.ssid = ''
+      configStore.config.wifi.password = ''
+      await configStore.saveConfig()
+      notificationStore.info(t('erConsole.config.notifications.disconnectedCurrentNetwork', { ssid: currentSsid }))
+    }
+
+    configStore.config.wifi.ssid = targetSsid
+    configStore.config.wifi.password = payload.requiresPassword ? payload.password : ''
+
+    await configStore.saveConfig()
+    notificationStore.success(t('erConsole.config.notifications.connectedToNetwork', { ssid: targetSsid }))
+    wifiConnectDialog.value = false
+    selectedWifi.value = null
+  } catch {
+    notificationStore.error(configStore.error ?? t('erConsole.config.errors.connectFailed'))
+  } finally {
+    connectingWifi.value = false
+  }
 }
 
 const factoryReset = async () => {

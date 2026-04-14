@@ -102,22 +102,36 @@
             },
             "actions": {
                 "scanWifi": "Scansiona WiFi",
+                "connect": "Connetti",
                 "resetChanges": "Reimposta modifiche",
                 "factoryReset": "Ripristino di fabbrica",
                 "confirmReset": "Conferma ripristino"
             },
+            "currentWifiConfigured": "WiFi configurato: {ssid}",
             "noWifiConfigured": "Nessun WiFi configurato. Seleziona una rete dall'elenco qui sotto.",
             "connectToWifi": "Connetti a {ssid}",
+            "wifiDialog": {
+                "title": "Connetti a {ssid}",
+                "authMode": "Autenticazione",
+                "secured": "Protetta",
+                "open": "Aperta",
+                "passwordHint": "Per reti WPA/WPA2/WPA3 usa almeno 8 caratteri.",
+                "openNetworkInfo": "Questa rete non richiede password.",
+                "disconnectFirstNotice": "La rete corrente '{ssid}' verra disconnessa prima della nuova connessione."
+            },
             "maintenanceDescription": "Ripristina la configurazione del dispositivo ai valori di fabbrica.",
             "confirmFactoryResetTitle": "Conferma ripristino di fabbrica",
             "confirmFactoryResetText": "Questa operazione ripristinerà la configurazione ai valori di fabbrica. Continuare?",
             "notifications": {
                 "saved": "Configurazione salvata con successo",
                 "localChangesReverted": "Modifiche locali annullate",
+                "disconnectedCurrentNetwork": "Disconnesso da '{ssid}'",
+                "connectedToNetwork": "Connesso a '{ssid}'",
                 "factoryResetDone": "Configurazione ripristinata ai valori di fabbrica"
             },
             "errors": {
                 "saveFailed": "Salvataggio configurazione non riuscito",
+                "connectFailed": "Connessione alla rete WiFi non riuscita",
                 "wifiScanUnavailable": "Scansione WiFi non disponibile dal backend",
                 "factoryResetFailed": "Ripristino di fabbrica non riuscito"
             }
