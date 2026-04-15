@@ -15,6 +15,7 @@
             "menu": {
                 "dashboard": "Dashboard",
                 "config": "ESP32 Konfig",
+                "esp32s3r8n16": "ESP32 Verdrahtung",
                 "files": "Dateibrowser",
                 "logsAudit": "Logs und Audit",
                 "about": "Info"
@@ -80,12 +81,14 @@
             "subtitle": "Sprache, Design und WiFi konfigurieren",
             "sections": {
                 "device": "Gerat",
+                "developer": "Entwicklung",
                 "wifiConnection": "WiFi-Verbindung",
                 "locale": "Region",
                 "maintenance": "Wartung"
             },
             "labels": {
                 "deviceName": "Geratename",
+                "developerMode": "Entwicklungsmodus aktivieren",
                 "uiTheme": "UI-Design",
                 "ssid": "SSID",
                 "password": "Passwort",
@@ -109,6 +112,7 @@
             "noWifiConfigured": "Kein WiFi konfiguriert. Wahlen Sie unten ein Netzwerk aus.",
             "connectToWifi": "Verbinden mit {ssid}",
             "maintenanceDescription": "Geraetekonfiguration auf Werkseinstellungen zurucksetzen.",
+            "developerDescription": "Aktiviert erweiterte Seiten (ESP32 Verdrahtung, Dateibrowser und Logs und Audit) fur Diagnose und Entwicklung.",
             "confirmFactoryResetTitle": "Werkseinstellungen bestatigen",
             "confirmFactoryResetText": "Dadurch wird die Konfiguration auf Werkseinstellungen zuruckgesetzt. Fortfahren?",
             "notifications": {
@@ -194,6 +198,20 @@
             "portalUrl": "Portal-URL",
             "language": "Sprache",
             "timezone": "Zeitzone"
+        },
+        "hardware": {
+            "title": "ESP32-S3 N16R8 Verdrahtungsplan",
+            "subtitle": "Schreibgeschutzte Ansicht zum schnellen Nachbau interner Verbindungen.",
+            "readOnly": "Schreibgeschutzte Referenz",
+            "mapTitle": "Board- und Peripherie-Verbindungen",
+            "legendTitle": "Bus-Legende",
+            "legendDescription": "Diese Ansicht als visuelle Checkliste nutzen, um Jumper im Gehause neu zu stecken.",
+            "connectionTableTitle": "Pin-Verbindungstabelle",
+            "columns": {
+                "device": "Gerat",
+                "signal": "Signal",
+                "gpio": "GPIO"
+            }
         }
     }
 }

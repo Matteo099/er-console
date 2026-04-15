@@ -53,6 +53,27 @@
       <v-col cols="12" lg="6">
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
+            <v-icon icon="mdi-flask-outline" />
+            {{ t('erConsole.config.sections.developer') }}
+          </v-card-title>
+          <v-card-text>
+            <div class="text-body-2 text-medium-emphasis mb-3">
+              {{ t('erConsole.config.developerDescription') }}
+            </div>
+            <v-switch
+              v-model="developerMode"
+              color="warning"
+              inset
+              :label="t('erConsole.config.labels.developerMode')"
+              hide-details
+            />
+          </v-card-text>
+        </v-card>
+      </v-col>
+
+      <v-col cols="12" lg="6">
+        <v-card>
+          <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-wifi" />
             {{ t('erConsole.config.sections.wifiConnection') }}
           </v-card-title>
@@ -185,6 +206,7 @@ import WifiConnectDialog from '@/components/WifiConnectDialog.vue'
 import { configService, type WifiScanEntry } from '@/services'
 import { useConfigStore } from '@/stores/configStore'
 import { useNotificationStore } from '@/stores/notificationStore'
+import { usePortalStore } from '@/stores/portalStore'
 
 interface WifiConnectPayload {
   ssid: string
@@ -195,6 +217,7 @@ interface WifiConnectPayload {
 
 const configStore = useConfigStore()
 const notificationStore = useNotificationStore()
+const portalStore = usePortalStore()
 const { t } = useI18n()
 
 const config = computed(() => configStore.config)
@@ -204,6 +227,11 @@ const wifiConnectDialog = ref(false)
 const selectedWifi = ref<WifiScanEntry | null>(null)
 const connectingWifi = ref(false)
 const factoryDialog = ref(false)
+
+const developerMode = computed({
+  get: () => portalStore.developerMode,
+  set: (value: boolean) => portalStore.setDeveloperMode(value),
+})
 
 const languageOptions = ['it', 'en', 'es', 'fr', 'de']
 

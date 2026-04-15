@@ -69,7 +69,7 @@
       <v-menu open-on-hover>
         <template #activator="{ props }">
           <v-btn size="small" icon v-bind="props" :variant="isDarkTheme ? 'tonal' : 'flat'" class="mr-3"
-            :color="isDarkTheme ? 'grey-darken-3' : '#F5F6FA'">
+            color="#F5F6FA">
             <v-icon size="24">{{ isDarkTheme ? 'mdi-white-balance-sunny' : 'mdi-weather-night' }}</v-icon>
           </v-btn>
         </template>
@@ -149,16 +149,21 @@ watch(locale, (value) => {
   localStorage.setItem('er-console-locale', value)
 })
 
+const portalStore = usePortalStore()
+const notificationStore = useNotificationStore()
+
 const menuItems = computed(() => [
   { title: t('erConsole.app.menu.dashboard'), to: '/', icon: 'mdi-view-dashboard' },
   { title: t('erConsole.app.menu.config'), to: '/config', icon: 'mdi-cog-outline' },
-  { title: t('erConsole.app.menu.files'), to: '/files', icon: 'mdi-folder-open-outline' },
-  { title: t('erConsole.app.menu.logsAudit'), to: '/logs-audit', icon: 'mdi-text-box-search-outline' },
+  ...(portalStore.developerMode
+  ? [
+    { title: t('erConsole.app.menu.files'), to: '/files', icon: 'mdi-folder-open-outline' },
+    { title: t('erConsole.app.menu.logsAudit'), to: '/logs-audit', icon: 'mdi-text-box-search-outline' },
+    { title: t('erConsole.app.menu.esp32s3r8n16'), to: '/esp32s3r8n16', icon: 'mdi-memory' },
+    ]
+    : []),
   { title: t('erConsole.app.menu.about'), to: '/about', icon: 'mdi-information-outline' },
 ])
-
-const portalStore = usePortalStore()
-const notificationStore = useNotificationStore()
 
 const isDarkTheme = computed(() => theme.global.current.value.dark)
 

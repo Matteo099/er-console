@@ -15,6 +15,7 @@
             "menu": {
                 "dashboard": "Panel",
                 "config": "Config ESP32",
+                "esp32s3r8n16": "Esquema ESP32",
                 "files": "Explorador de Archivos",
                 "logsAudit": "Registros y Auditoria",
                 "about": "Acerca de"
@@ -80,12 +81,14 @@
             "subtitle": "Configura idioma, tema y WiFi",
             "sections": {
                 "device": "Dispositivo",
+                "developer": "Desarrollo",
                 "wifiConnection": "Conexion WiFi",
                 "locale": "Regional",
                 "maintenance": "Mantenimiento"
             },
             "labels": {
                 "deviceName": "Nombre del dispositivo",
+                "developerMode": "Activar modo desarrollo",
                 "uiTheme": "Tema de la UI",
                 "ssid": "SSID",
                 "password": "Contrasena",
@@ -109,6 +112,7 @@
             "noWifiConfigured": "No hay WiFi configurado. Selecciona una red de la lista de abajo.",
             "connectToWifi": "Conectar a {ssid}",
             "maintenanceDescription": "Restaura la configuracion del dispositivo a valores de fabrica.",
+            "developerDescription": "Activa paginas avanzadas (Esquema ESP32, Explorador de Archivos y Registros y Auditoria) para diagnostico y desarrollo.",
             "confirmFactoryResetTitle": "Confirmar restablecimiento de fabrica",
             "confirmFactoryResetText": "Esto restaurara la configuracion a valores de fabrica. Continuar?",
             "notifications": {
@@ -194,6 +198,20 @@
             "portalUrl": "URL del Portal",
             "language": "Idioma",
             "timezone": "Zona horaria"
+        },
+        "hardware": {
+            "title": "Mapa de Cableado ESP32-S3 N16R8",
+            "subtitle": "Vista de solo lectura para recrear rapidamente el cableado interno.",
+            "readOnly": "Referencia de solo lectura",
+            "mapTitle": "Conexiones de Placa y Perifericos",
+            "legendTitle": "Leyenda de Buses",
+            "legendDescription": "Usa esta vista como checklist visual al reconstruir puentes dentro de la caja.",
+            "connectionTableTitle": "Tabla de Conexiones de Pines",
+            "columns": {
+                "device": "Dispositivo",
+                "signal": "Senal",
+                "gpio": "GPIO"
+            }
         }
     }
 }

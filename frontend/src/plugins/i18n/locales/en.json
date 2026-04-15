@@ -15,6 +15,7 @@
             "menu": {
                 "dashboard": "Dashboard",
                 "config": "ESP32 Config",
+                "esp32s3r8n16": "ESP32 Wiring",
                 "files": "File Browser",
                 "logsAudit": "Logs & Audit",
                 "about": "About"
@@ -80,12 +81,14 @@
             "subtitle": "Configure language, theme, and WiFi settings",
             "sections": {
                 "device": "Device",
+                "developer": "Developer",
                 "wifiConnection": "WiFi Connection",
                 "locale": "Locale",
                 "maintenance": "Maintenance"
             },
             "labels": {
                 "deviceName": "Device Name",
+                "developerMode": "Enable developer mode",
                 "uiTheme": "UI Theme",
                 "ssid": "SSID",
                 "password": "Password",
@@ -120,6 +123,7 @@
                 "disconnectFirstNotice": "Current network '{ssid}' will be disconnected before connecting to the new one."
             },
             "maintenanceDescription": "Restore device configuration to factory defaults.",
+            "developerDescription": "Enable advanced pages (ESP32 Wiring, File Browser, and Logs & Audit) intended for diagnostics and development workflows.",
             "confirmFactoryResetTitle": "Confirm Factory Reset",
             "confirmFactoryResetText": "This will restore configuration to factory defaults. Continue?",
             "notifications": {
@@ -208,6 +212,20 @@
             "portalUrl": "Portal URL",
             "language": "Language",
             "timezone": "Timezone"
+        },
+        "hardware": {
+            "title": "ESP32-S3 N16R8 Wiring Map",
+            "subtitle": "Read-only board layout to quickly rebuild internal wiring connections.",
+            "readOnly": "Read-only reference",
+            "mapTitle": "Board + Peripheral Connections",
+            "legendTitle": "Bus Legend",
+            "legendDescription": "Use this view as a visual checklist while recreating jumper wiring inside the enclosure.",
+            "connectionTableTitle": "Pin Connection Table",
+            "columns": {
+                "device": "Device",
+                "signal": "Signal",
+                "gpio": "GPIO"
+            }
         }
     }
 }

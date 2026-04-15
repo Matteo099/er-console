@@ -15,6 +15,7 @@
             "menu": {
                 "dashboard": "Dashboard",
                 "config": "Config ESP32",
+                "esp32s3r8n16": "Schema ESP32",
                 "files": "File Browser",
                 "logsAudit": "Log e Audit",
                 "about": "Informazioni"
@@ -80,12 +81,14 @@
             "subtitle": "Configura lingua, tema e WiFi",
             "sections": {
                 "device": "Dispositivo",
+                "developer": "Sviluppatore",
                 "wifiConnection": "Connessione WiFi",
                 "locale": "Localizzazione",
                 "maintenance": "Manutenzione"
             },
             "labels": {
                 "deviceName": "Nome dispositivo",
+                "developerMode": "Abilita modalita sviluppo",
                 "uiTheme": "Tema UI",
                 "ssid": "SSID",
                 "password": "Password",
@@ -120,6 +123,7 @@
                 "disconnectFirstNotice": "La rete corrente '{ssid}' verra disconnessa prima della nuova connessione."
             },
             "maintenanceDescription": "Ripristina la configurazione del dispositivo ai valori di fabbrica.",
+            "developerDescription": "Abilita pagine avanzate (Schema ESP32, File Browser e Log e Audit) pensate per diagnostica e sviluppo.",
             "confirmFactoryResetTitle": "Conferma ripristino di fabbrica",
             "confirmFactoryResetText": "Questa operazione ripristinerà la configurazione ai valori di fabbrica. Continuare?",
             "notifications": {
@@ -208,6 +212,20 @@
             "portalUrl": "URL Portale",
             "language": "Lingua",
             "timezone": "Fuso orario"
+        },
+        "hardware": {
+            "title": "Mappa Cablaggio ESP32-S3 N16R8",
+            "subtitle": "Layout readonly della scheda per ricreare rapidamente i collegamenti interni.",
+            "readOnly": "Riferimento readonly",
+            "mapTitle": "Connessioni Scheda + Periferiche",
+            "legendTitle": "Legenda Bus",
+            "legendDescription": "Usa questa vista come checklist visiva mentre ricrei i jumper nel box.",
+            "connectionTableTitle": "Tabella Connessioni Pin",
+            "columns": {
+                "device": "Dispositivo",
+                "signal": "Segnale",
+                "gpio": "GPIO"
+            }
         }
     }
 }

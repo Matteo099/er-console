@@ -9,11 +9,14 @@ import { statusService } from '@/services'
 import type { DeviceStatus } from '@/models'
 
 export const usePortalStore = defineStore('portal', () => {
+  const DEV_MODE_STORAGE_KEY = 'er-console-dev-mode'
+
   // State
   const status = ref<DeviceStatus | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
   const lastRefresh = ref<Date | null>(null)
+  const developerMode = ref(localStorage.getItem(DEV_MODE_STORAGE_KEY) === '1')
 
   // Computed
   const isWifiConnected = computed(() => status.value?.wifi?.state === 'connected')
@@ -43,12 +46,18 @@ export const usePortalStore = defineStore('portal', () => {
     error.value = null
   }
 
+  const setDeveloperMode = (value: boolean) => {
+    developerMode.value = value
+    localStorage.setItem(DEV_MODE_STORAGE_KEY, value ? '1' : '0')
+  }
+
   return {
     // State
     status,
     loading,
     error,
     lastRefresh,
+    developerMode,
 
     // Computed
     isWifiConnected,
@@ -57,5 +66,6 @@ export const usePortalStore = defineStore('portal', () => {
     // Methods
     fetchStatus,
     clearError,
+    setDeveloperMode,
   }
 })
