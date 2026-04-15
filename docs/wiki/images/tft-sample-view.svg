@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="760" viewBox="0 0 480 760" role="img" aria-label="Sample scene mockup">
+  <rect width="480" height="760" fill="#111827"/>
+  <rect x="80" y="40" width="320" height="680" rx="26" fill="#0f172a" stroke="#334155" stroke-width="4"/>
+
+  <text x="240" y="210" fill="#cbd5e1" text-anchor="middle" font-size="15" font-family="Segoe UI, Arial">Sample Scene (Development)</text>
+
+  <rect x="140" y="300" width="200" height="54" rx="10" fill="#1d4ed8"/>
+  <text x="240" y="333" fill="#eff6ff" text-anchor="middle" font-size="19" font-family="Segoe UI, Arial">Play Sound</text>
+
+  <rect x="114" y="402" width="252" height="80" rx="10" fill="#1f2937" stroke="#374151"/>
+  <text x="240" y="434" fill="#d1d5db" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Emits PlaySoundEvent</text>
+  <text x="240" y="456" fill="#9ca3af" text-anchor="middle" font-size="12" font-family="Segoe UI, Arial">Used for UI/audio integration tests</text>
+
+  <text x="240" y="700" fill="#94a3b8" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Expected Sample Scene</text>
+</svg>
