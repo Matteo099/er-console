@@ -105,7 +105,7 @@ interface BoardPin {
   value: string
   x: number
   y: number
-  row: 'top' | 'bottom'
+  side: 'left' | 'right'
   color: string
   note: string
 }
@@ -159,27 +159,29 @@ const pinUsageNotes: Record<string, string> = {
 }
 
 const boardRect = {
-  x: 680,
+  x: 690,
   y: 120,
-  width: 440,
-  height: 880,
+  width: 420,
+  height: 860,
 }
 
 const leftPinX = boardRect.x - 10
 const rightPinX = boardRect.x + boardRect.width + 10
-const leftLabelX = boardRect.x - 110
-const rightLabelX = boardRect.x + boardRect.width + 38
-const rowStartY = 200
-const rowSpacing = 30
+const leftLabelX = boardRect.x - 96
+const rightLabelX = boardRect.x + boardRect.width + 36
+const rowStartY = 190
+const rowSpacing = 29
 
 const colorForPin = (value: string) => {
-  if (value === 'GND') return '#64748b'
-  if (value === '5Vi') return '#f97316'
-  if (value === '3V3') return '#38bdf8'
-  if (['11', '12', '13'].includes(value)) return '#4f46e5'
-  if (['10', '9', '8'].includes(value)) return '#2563eb'
-  if (['7', '6'].includes(value)) return '#6366f1'
-  if (value === '5') return '#0f766e'
+  if (value === 'GND') return '#000000'
+  if (value === '5Vi') return '#ef4444'
+  if (value === '3V3') return '#3b82f6'
+  if (['11', '12', '13'].includes(value)) return '#f59e0b'
+  if (value === '10') return '#8b5cf6'
+  if (['9', '8'].includes(value)) return '#22c55e'
+  if (value === '7') return '#ec4899'
+  if (value === '6') return '#16a34a'
+  if (value === '5') return '#14b8a6'
   if (['16', '17', '18', '4'].includes(value)) return '#d97706'
   if (value === '48') return '#c026d3'
   return '#cbd5e1'
@@ -193,7 +195,7 @@ const buildPins = (): BoardPin[] => {
       value,
       x: leftPinX,
       y: rowStartY + idx * rowSpacing,
-      row: 'bottom',
+      side: 'left',
       color: colorForPin(value),
       note: pinUsageNotes[value] ?? 'Board pin (not used in this wiring)',
     })
@@ -205,7 +207,7 @@ const buildPins = (): BoardPin[] => {
       value,
       x: rightPinX,
       y: rowStartY + idx * rowSpacing,
-      row: 'top',
+      side: 'right',
       color: colorForPin(value),
       note: pinUsageNotes[value] ?? 'Board pin (not used in this wiring)',
     })
@@ -216,8 +218,8 @@ const buildPins = (): BoardPin[] => {
 
 const pins = buildPins()
 
-const getPin = (value: string, row: 'top' | 'bottom' = 'bottom') => {
-  return pins.find((pin) => pin.value === value && pin.row === row)
+const getPin = (value: string, side: 'left' | 'right' = 'left') => {
+  return pins.find((pin) => pin.value === value && pin.side === side)
 }
 
 const p11 = getPin('11')!
@@ -234,151 +236,158 @@ const p18 = getPin('18')!
 const p17 = getPin('17')!
 const p4 = getPin('4')!
 const p3v3 = getPin('3V3')!
-const p48 = getPin('48', 'top')!
-const pGndLeft = getPin('GND', 'bottom')!
-const pGndRight = getPin('GND', 'top')!
+const p48 = getPin('48', 'right')!
+const pGndLeft = getPin('GND', 'left')!
+const pGndRight = getPin('GND', 'right')!
 
 const wires: InteractiveWire[] = [
   {
     id: 'tft-mosi',
     title: 'TFT MOSI',
     description: 'SPI1 MOSI from GPIO 11 to TFT display',
-    color: '#4f46e5',
-    points: [{ x: 430, y: 400 }, { x: 620, y: 400 }, { x: 620, y: p11.y }, { x: p11.x, y: p11.y }],
+    color: '#f59e0b',
+    points: [{ x: 520, y: 390 }, { x: 610, y: 390 }, { x: 610, y: p11.y }, { x: p11.x, y: p11.y }],
   },
   {
     id: 'tft-miso',
     title: 'TFT MISO',
     description: 'SPI1 MISO from GPIO 13 to TFT display',
-    color: '#4f46e5',
-    points: [{ x: 430, y: 430 }, { x: 620, y: 430 }, { x: 620, y: p13.y }, { x: p13.x, y: p13.y }],
+    color: '#f59e0b',
+    points: [{ x: 520, y: 420 }, { x: 610, y: 420 }, { x: 610, y: p13.y }, { x: p13.x, y: p13.y }],
   },
   {
     id: 'tft-sclk',
     title: 'TFT SCLK',
     description: 'SPI1 clock from GPIO 12 to TFT display',
-    color: '#4f46e5',
-    points: [{ x: 430, y: 460 }, { x: 620, y: 460 }, { x: 620, y: p12.y }, { x: p12.x, y: p12.y }],
+    color: '#f59e0b',
+    points: [{ x: 520, y: 450 }, { x: 610, y: 450 }, { x: 610, y: p12.y }, { x: p12.x, y: p12.y }],
   },
   {
     id: 'tft-cs',
     title: 'TFT CS',
     description: 'Chip Select from GPIO 10 to ILI9341',
-    color: '#2563eb',
-    points: [{ x: 430, y: 490 }, { x: 620, y: 490 }, { x: 620, y: p10.y }, { x: p10.x, y: p10.y }],
+    color: '#8b5cf6',
+    points: [{ x: 520, y: 480 }, { x: 610, y: 480 }, { x: 610, y: p10.y }, { x: p10.x, y: p10.y }],
   },
   {
     id: 'tft-dc',
     title: 'TFT DC',
     description: 'Data/Command line from GPIO 9 to ILI9341',
-    color: '#2563eb',
-    points: [{ x: 430, y: 520 }, { x: 620, y: 520 }, { x: 620, y: p9.y }, { x: p9.x, y: p9.y }],
+    color: '#22c55e',
+    points: [{ x: 520, y: 510 }, { x: 610, y: 510 }, { x: 610, y: p9.y }, { x: p9.x, y: p9.y }],
   },
   {
     id: 'tft-rst',
     title: 'TFT RST',
     description: 'Reset line from GPIO 8 to ILI9341',
-    color: '#2563eb',
-    points: [{ x: 430, y: 550 }, { x: 620, y: 550 }, { x: 620, y: p8.y }, { x: p8.x, y: p8.y }],
+    color: '#22c55e',
+    points: [{ x: 520, y: 540 }, { x: 610, y: 540 }, { x: 610, y: p8.y }, { x: p8.x, y: p8.y }],
   },
   {
     id: 'touch-cs',
     title: 'Touch CS',
     description: 'Touch controller chip select from GPIO 7',
-    color: '#6366f1',
-    points: [{ x: 430, y: 580 }, { x: 620, y: 580 }, { x: 620, y: p7.y }, { x: p7.x, y: p7.y }],
+    color: '#ec4899',
+    points: [{ x: 520, y: 570 }, { x: 610, y: 570 }, { x: 610, y: p7.y }, { x: p7.x, y: p7.y }],
   },
   {
     id: 'touch-irq',
     title: 'Touch IRQ',
     description: 'Touch interrupt from GPIO 6',
-    color: '#6366f1',
-    points: [{ x: 430, y: 610 }, { x: 620, y: 610 }, { x: 620, y: p6.y }, { x: p6.x, y: p6.y }],
+    color: '#16a34a',
+    points: [{ x: 520, y: 600 }, { x: 610, y: 600 }, { x: 610, y: p6.y }, { x: p6.x, y: p6.y }],
   },
   {
     id: 'sd-mosi',
     title: 'MicroSD MOSI',
     description: 'Shared SPI1 MOSI from GPIO 11',
-    color: '#4f46e5',
-    points: [{ x: 430, y: 760 }, { x: 620, y: 760 }, { x: 620, y: p11.y }, { x: p11.x, y: p11.y }],
+    color: '#f59e0b',
+    points: [{ x: 520, y: 760 }, { x: 610, y: 760 }, { x: 610, y: p11.y }, { x: p11.x, y: p11.y }],
   },
   {
     id: 'sd-miso',
     title: 'MicroSD MISO',
     description: 'Shared SPI1 MISO from GPIO 13',
-    color: '#4f46e5',
-    points: [{ x: 430, y: 790 }, { x: 620, y: 790 }, { x: 620, y: p13.y }, { x: p13.x, y: p13.y }],
+    color: '#f59e0b',
+    points: [{ x: 520, y: 790 }, { x: 610, y: 790 }, { x: 610, y: p13.y }, { x: p13.x, y: p13.y }],
   },
   {
     id: 'sd-sclk',
     title: 'MicroSD SCLK',
     description: 'Shared SPI1 clock from GPIO 12',
-    color: '#4f46e5',
-    points: [{ x: 430, y: 820 }, { x: 620, y: 820 }, { x: 620, y: p12.y }, { x: p12.x, y: p12.y }],
+    color: '#f59e0b',
+    points: [{ x: 520, y: 820 }, { x: 610, y: 820 }, { x: 610, y: p12.y }, { x: p12.x, y: p12.y }],
   },
   {
     id: 'sd-cs',
     title: 'MicroSD CS',
     description: 'Chip Select from GPIO 5 to MicroSD',
-    color: '#0f766e',
-    points: [{ x: 430, y: 850 }, { x: 620, y: 850 }, { x: 620, y: p5.y }, { x: p5.x, y: p5.y }],
+    color: '#14b8a6',
+    points: [{ x: 520, y: 850 }, { x: 610, y: 850 }, { x: 610, y: p5.y }, { x: p5.x, y: p5.y }],
   },
   {
     id: 'amp-dout',
     title: 'MAX98357A DOUT',
     description: 'I2S serial audio data from GPIO 16',
     color: '#d97706',
-    points: [{ x: 1290, y: 370 }, { x: 1180, y: 370 }, { x: 1180, y: p16.y }, { x: p16.x, y: p16.y }],
+    points: [{ x: 1290, y: 350 }, { x: 1170, y: 350 }, { x: 1170, y: p16.y }, { x: p16.x, y: p16.y }],
   },
   {
     id: 'amp-bclk',
     title: 'MAX98357A BCLK',
     description: 'I2S bit clock from GPIO 18',
     color: '#d97706',
-    points: [{ x: 1290, y: 400 }, { x: 1180, y: 400 }, { x: 1180, y: p18.y }, { x: p18.x, y: p18.y }],
+    points: [{ x: 1290, y: 382 }, { x: 1170, y: 382 }, { x: 1170, y: p18.y }, { x: p18.x, y: p18.y }],
   },
   {
     id: 'amp-lrclk',
     title: 'MAX98357A LRCLK',
     description: 'I2S LRCLK from GPIO 17',
     color: '#d97706',
-    points: [{ x: 1290, y: 430 }, { x: 1180, y: 430 }, { x: 1180, y: p17.y }, { x: p17.x, y: p17.y }],
+    points: [{ x: 1290, y: 414 }, { x: 1170, y: 414 }, { x: 1170, y: p17.y }, { x: p17.x, y: p17.y }],
   },
   {
     id: 'amp-shutdown',
     title: 'MAX98357A SHUTDOWN',
     description: 'Amplifier shutdown control from GPIO 4',
     color: '#d97706',
-    points: [{ x: 1290, y: 460 }, { x: 1180, y: 460 }, { x: 1180, y: p4.y }, { x: p4.x, y: p4.y }],
+    points: [{ x: 1290, y: 446 }, { x: 1170, y: 446 }, { x: 1170, y: p4.y }, { x: p4.x, y: p4.y }],
   },
   {
     id: 'power-5v-tft',
     title: '5V External -> TFT',
     description: 'External 5V powers TFT display',
-    color: '#f97316',
-    points: [{ x: 360, y: 110 }, { x: 620, y: 110 }, { x: 620, y: p10.y - 60 }, { x: p10.x, y: p10.y - 60 }],
+    color: '#ef4444',
+    points: [{ x: 300, y: 100 }, { x: 600, y: 100 }, { x: 600, y: p10.y - 60 }, { x: p10.x, y: p10.y - 60 }],
   },
   {
     id: 'power-5v-amp',
     title: '5V External -> MAX98357A',
     description: 'External 5V powers audio amplifier',
-    color: '#f97316',
-    points: [{ x: 360, y: 130 }, { x: 1180, y: 130 }, { x: 1180, y: p16.y - 50 }, { x: p16.x, y: p16.y - 50 }],
+    color: '#ef4444',
+    points: [{ x: 300, y: 132 }, { x: 1170, y: 132 }, { x: 1170, y: p16.y - 50 }, { x: p16.x, y: p16.y - 50 }],
   },
   {
     id: 'power-33v-sd',
     title: 'ESP32 3.3V -> MicroSD',
     description: 'MicroSD is powered from the ESP32 3.3V rail',
-    color: '#38bdf8',
-    points: [{ x: p3v3.x, y: p3v3.y }, { x: p3v3.x, y: 920 }, { x: 540, y: 920 }, { x: 540, y: 780 }],
+    color: '#3b82f6',
+    points: [{ x: p3v3.x, y: p3v3.y }, { x: p3v3.x, y: 960 }, { x: 540, y: 960 }, { x: 540, y: 780 }],
   },
   {
     id: 'common-ground',
     title: 'Common Ground',
     description: 'Ground reference shared by ESP32, TFT, MicroSD, and MAX98357A',
-    color: '#64748b',
-    points: [{ x: 260, y: 980 }, { x: 1540, y: 980 }, { x: 1540, y: 560 }, { x: 1290, y: 560 }],
+    color: '#000000',
+    points: [{ x: 220, y: 1030 }, { x: 1560, y: 1030 }, { x: 1560, y: 560 }, { x: 1290, y: 560 }],
   },
+//   {
+//     id: 'neopixel-data',
+//     title: 'NeoPixel Data',
+//     description: 'GPIO 48 drives the internal NeoPixel and RGB indicators',
+//     color: '#c026d3',
+//     points: [{ x: p48.x, y: p48.y }, { x: boardRect.x + 360, y: 585 }, { x: boardRect.x + 320, y: 585 }],
+//   },
 ]
 
 const buses = [
@@ -464,7 +473,7 @@ const drawWire = (ctx: CanvasRenderingContext2D, wire: InteractiveWire) => {
 
   ctx.strokeStyle = wire.color
   ctx.lineWidth = wire.id === 'common-ground' ? 3 : 4
-  if (wire.id === 'common-ground') {
+  if (wire.id === 'common-ground' || wire.id === 'neopixel-data') {
     ctx.setLineDash([10, 10])
   } else {
     ctx.setLineDash([])
@@ -482,53 +491,62 @@ const drawBoard = (ctx: CanvasRenderingContext2D) => {
   const gradient = ctx.createLinearGradient(boardRect.x, boardRect.y, boardRect.x + boardRect.width, boardRect.y + boardRect.height)
   gradient.addColorStop(0, '#111827')
   gradient.addColorStop(1, '#0f172a')
-  drawRoundedRect(ctx, boardRect.x, boardRect.y, boardRect.width, boardRect.height, 30, gradient, '#334155')
+  drawRoundedRect(ctx, boardRect.x, boardRect.y, boardRect.width, boardRect.height, 28, gradient, '#334155')
 
-  drawRoundedRect(ctx, boardRect.x + 130, boardRect.y + 60, 180, 80, 14, '#374151', '#6b7280')
-  drawText(ctx, 'ESP32-S3', boardRect.x + 170, boardRect.y + 112, 22, '#e5e7eb', '800')
-  drawText(ctx, 'DevKitC-1', boardRect.x + 160, boardRect.y + 136, 16, '#cbd5e1', '700')
+  drawRoundedRect(ctx, boardRect.x + 110, boardRect.y + 54, 200, 84, 14, '#374151', '#6b7280')
+  drawText(ctx, 'ESP32-S3', boardRect.x + 150, boardRect.y + 104, 22, '#e5e7eb', '800')
+  drawText(ctx, 'DevKitC-1 N16R8V', boardRect.x + 126, boardRect.y + 129, 16, '#cbd5e1', '700')
 
-  drawRoundedRect(ctx, boardRect.x + 154, boardRect.y + 210, 132, 170, 10, '#d1d5db', '#9ca3af')
-  drawText(ctx, 'ESP32-S3', boardRect.x + 165, boardRect.y + 248, 13, '#6b7280', '700')
-  drawText(ctx, 'WROOM', boardRect.x + 172, boardRect.y + 270, 13, '#6b7280', '700')
+  drawRoundedRect(ctx, boardRect.x + 148, boardRect.y + 190, 124, 190, 10, '#d1d5db', '#9ca3af')
+  drawText(ctx, 'ESP32-S3', boardRect.x + 156, boardRect.y + 228, 13, '#6b7280', '700')
+  drawText(ctx, 'MODULE', boardRect.x + 167, boardRect.y + 250, 13, '#6b7280', '700')
 
-  drawRoundedRect(ctx, boardRect.x + 114, boardRect.y + 410, 68, 38, 8, '#111827', '#475569')
-  drawRoundedRect(ctx, boardRect.x + 258, boardRect.y + 410, 68, 38, 8, '#111827', '#475569')
-  drawText(ctx, 'BOOT', boardRect.x + 127, boardRect.y + 404, 10, '#e2e8f0', '700')
-  drawText(ctx, 'RESET', boardRect.x + 272, boardRect.y + 404, 10, '#e2e8f0', '700')
+  drawRoundedRect(ctx, boardRect.x + 112, boardRect.y + 402, 70, 40, 8, '#111827', '#475569')
+  drawRoundedRect(ctx, boardRect.x + 238, boardRect.y + 402, 70, 40, 8, '#111827', '#475569')
+  drawText(ctx, 'BOOT', boardRect.x + 125, boardRect.y + 396, 10, '#e2e8f0', '700')
+  drawText(ctx, 'RESET', boardRect.x + 254, boardRect.y + 396, 10, '#e2e8f0', '700')
 
-  drawRoundedRect(ctx, boardRect.x + 110, boardRect.y + 700, 92, 54, 10, '#f3f4f6', '#9ca3af')
-  drawRoundedRect(ctx, boardRect.x + 238, boardRect.y + 700, 92, 54, 10, '#f3f4f6', '#9ca3af')
-  drawText(ctx, 'UART', boardRect.x + 134, boardRect.y + 730, 13, '#6b7280', '700')
-  drawText(ctx, 'USB', boardRect.x + 267, boardRect.y + 730, 13, '#6b7280', '700')
+  drawRoundedRect(ctx, boardRect.x + 104, boardRect.y + 684, 94, 58, 10, '#f3f4f6', '#9ca3af')
+  drawRoundedRect(ctx, boardRect.x + 222, boardRect.y + 684, 94, 58, 10, '#f3f4f6', '#9ca3af')
+  drawText(ctx, 'UART', boardRect.x + 130, boardRect.y + 717, 13, '#6b7280', '700')
+  drawText(ctx, 'USB', boardRect.x + 247, boardRect.y + 717, 13, '#6b7280', '700')
 
   ctx.beginPath()
-  ctx.arc(boardRect.x + 322, boardRect.y + 560, 24, 0, Math.PI * 2)
+  ctx.arc(boardRect.x + 282, boardRect.y + 564, 46, 0, Math.PI * 2)
   ctx.fillStyle = '#701a75'
   ctx.fill()
+  ctx.lineWidth = 3
+  ctx.strokeStyle = '#f0abfc'
+  ctx.stroke()
+
+  const leds = [
+    { x: boardRect.x + 115, y: boardRect.y + 564, color: '#ef4444', label: 'R' },
+    { x: boardRect.x + 142, y: boardRect.y + 564, color: '#22c55e', label: 'G' },
+    { x: boardRect.x + 169, y: boardRect.y + 564, color: '#3b82f6', label: 'B' },
+  ]
+
+  leds.forEach((led) => {
+    ctx.beginPath()
+    ctx.arc(led.x, led.y, 11, 0, Math.PI * 2)
+    ctx.fillStyle = led.color
+    ctx.fill()
+    drawText(ctx, led.label, led.x - 4, led.y + 4, 12, '#e2e8f0', '800')
+  })
+
   ctx.beginPath()
-  ctx.arc(boardRect.x + 322, boardRect.y + 560, 10, 0, Math.PI * 2)
+  ctx.arc(boardRect.x + 282, boardRect.y + 564, 15, 0, Math.PI * 2)
   ctx.fillStyle = '#fde047'
   ctx.fill()
-  ctx.beginPath()
-  ctx.arc(boardRect.x + 378, boardRect.y + 526, 8, 0, Math.PI * 2)
-  ctx.fillStyle = '#ef4444'
-  ctx.fill()
-  ctx.beginPath()
-  ctx.arc(boardRect.x + 406, boardRect.y + 560, 8, 0, Math.PI * 2)
-  ctx.fillStyle = '#22c55e'
-  ctx.fill()
-  ctx.beginPath()
-  ctx.arc(boardRect.x + 378, boardRect.y + 594, 8, 0, Math.PI * 2)
-  ctx.fillStyle = '#3b82f6'
-  ctx.fill()
-  drawText(ctx, 'GPIO 48', boardRect.x + 272, boardRect.y + 628, 14, '#e5e7eb', '700')
+  ctx.strokeStyle = '#fbbf24'
+  ctx.lineWidth = 2
+  ctx.stroke()
+  drawText(ctx, 'NeoPixel', boardRect.x + 255, boardRect.y + 594, 12, '#e5e7eb', '700')
 }
 
 const drawPins = (ctx: CanvasRenderingContext2D) => {
   pins.forEach((pin) => {
-    const labelX = pin.x < boardRect.x ? leftLabelX : rightLabelX
-    const textAlign = pin.x < boardRect.x ? 'right' : 'left'
+    const labelX = pin.side === 'left' ? leftLabelX : rightLabelX
+    const textAlign = pin.side === 'left' ? 'right' : 'left'
     ctx.textAlign = textAlign as CanvasTextAlign
     drawText(ctx, pin.value, labelX, pin.y + 5, 11, '#111827', '700')
     ctx.beginPath()
@@ -548,15 +566,15 @@ const drawHardwareBoxes = (ctx: CanvasRenderingContext2D) => {
   drawText(ctx, 'Battery / PSU', 68, 128, 16, '#7f1d1d')
   drawText(ctx, '5V+ power rail', 68, 152, 16, '#7f1d1d')
 
-  drawRoundedRect(ctx, 40, 250, 480, 360, 22, '#dbeafe', '#2563eb')
+  drawRoundedRect(ctx, 40, 250, 500, 360, 22, '#dbeafe', '#2563eb')
   drawText(ctx, 'TFT Display', 70, 296, 30, '#0f172a', '800')
   drawText(ctx, 'ILI9341 + XPT2046', 70, 326, 16, '#1e293b')
-  drawText(ctx, 'SPI1: MOSI 11  MISO 13  SCLK 12', 70, 368, 18, '#1e293b')
-  drawText(ctx, 'CS 10  DC 9  RST 8', 70, 398, 18, '#1e293b')
-  drawText(ctx, 'Touch CS 7  IRQ 6', 70, 428, 18, '#1e293b')
-  drawText(ctx, 'Power: 5V external + GND common', 70, 462, 18, '#1e293b')
+  drawText(ctx, 'SPI1: MOSI 11  MISO 13  SCLK 12', 70, 366, 18, '#1e293b')
+  drawText(ctx, 'CS 10  DC 9  RST 8', 70, 396, 18, '#1e293b')
+  drawText(ctx, 'Touch CS 7  IRQ 6', 70, 426, 18, '#1e293b')
+  drawText(ctx, 'Power: 5V external + GND common', 70, 460, 18, '#1e293b')
 
-  drawRoundedRect(ctx, 40, 650, 480, 210, 22, '#ccfbf1', '#0f766e')
+  drawRoundedRect(ctx, 40, 650, 500, 210, 22, '#ccfbf1', '#0f766e')
   drawText(ctx, 'MicroSD', 70, 696, 30, '#0f172a', '800')
   drawText(ctx, 'SPI1: MOSI 11  MISO 13  SCLK 12', 70, 736, 18, '#1e293b')
   drawText(ctx, 'CS 5  |  Power: 3.3V ESP32 + GND common', 70, 768, 18, '#1e293b')
@@ -566,45 +584,12 @@ const drawHardwareBoxes = (ctx: CanvasRenderingContext2D) => {
   drawText(ctx, 'I2S DOUT 16  BCLK 18  LRCLK 17', 1320, 336, 18, '#1e293b')
   drawText(ctx, 'SD 4  |  Power: 5V external', 1320, 368, 18, '#1e293b')
   drawText(ctx, 'GND common', 1320, 398, 18, '#1e293b')
-
-  drawRoundedRect(ctx, 1290, 580, 470, 150, 22, '#ede9fe', '#7c3aed')
-  drawText(ctx, 'Internal LEDs', 1320, 626, 28, '#0f172a', '800')
-  drawText(ctx, 'NeoPixel GPIO 48 + 3 RGB indicators', 1320, 662, 18, '#1e293b')
-}
-
-const drawInternalLeds = (ctx: CanvasRenderingContext2D) => {
-  ctx.beginPath()
-  ctx.arc(boardRect.x + 280, boardRect.y + 585, 48, 0, Math.PI * 2)
-  ctx.fillStyle = '#701a75'
-  ctx.fill()
-  ctx.lineWidth = 3
-  ctx.strokeStyle = '#f0abfc'
-  ctx.stroke()
-
-  ctx.beginPath()
-  ctx.arc(boardRect.x + 280, boardRect.y + 585, 18, 0, Math.PI * 2)
-  ctx.fillStyle = '#fde047'
-  ctx.fill()
-
-  const leds = [
-    { x: boardRect.x + 352, y: boardRect.y + 548, color: '#ef4444', label: 'R' },
-    { x: boardRect.x + 378, y: boardRect.y + 585, color: '#22c55e', label: 'G' },
-    { x: boardRect.x + 352, y: boardRect.y + 622, color: '#3b82f6', label: 'B' },
-  ]
-
-  leds.forEach((led) => {
-    ctx.beginPath()
-    ctx.arc(led.x, led.y, 12, 0, Math.PI * 2)
-    ctx.fillStyle = led.color
-    ctx.fill()
-    drawText(ctx, led.label, led.x + 18, led.y + 4, 12, led.color, '800')
-  })
 }
 
 const drawLegend = (ctx: CanvasRenderingContext2D) => {
-  drawRoundedRect(ctx, 40, 1020, 1720, 90, 14, '#ffffff', '#e2e8f0')
-  drawText(ctx, 'Hover pins or wires for details. The wiring is data-driven, so changing a connection only requires updating the arrays in this component.', 68, 1060, 15, '#334155', '600')
-  drawText(ctx, 'Pins are labeled on both sides of the DevKit-style board; used nets are color coded by device/power rail.', 68, 1090, 15, '#334155', '600')
+  drawRoundedRect(ctx, 40, 1065, 1720, 92, 14, '#ffffff', '#e2e8f0')
+  drawText(ctx, 'Hover pins or wires for details. The wiring is data-driven, so changing a connection only requires updating the arrays in this component.', 68, 1105, 15, '#334155', '600')
+  drawText(ctx, 'Pins are labeled on both sides of the DevKit-style board; used nets are color coded by device/power rail.', 68, 1135, 15, '#334155', '600')
 }
 
 const renderCanvas = () => {
@@ -624,7 +609,6 @@ const renderCanvas = () => {
   drawHardwareBoxes(ctx)
   drawBoard(ctx)
   wires.forEach((wire) => drawWire(ctx, wire))
-  drawInternalLeds(ctx)
   drawPins(ctx)
   drawLegend(ctx)
 }
@@ -634,7 +618,7 @@ const resizeCanvas = () => {
 
   const canvas = boardCanvas.value
   const hostWidth = canvasHost.value.clientWidth
-  const cssWidth = Math.max(900, hostWidth)
+  const cssWidth = Math.max(980, hostWidth)
   const cssHeight = Math.round((cssWidth * LOGICAL_HEIGHT) / LOGICAL_WIDTH)
   const dpr = window.devicePixelRatio || 1
 
