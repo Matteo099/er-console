@@ -70,9 +70,20 @@ void StatusController::sendStatus(WebServer& server)
 
     JsonObject battery = doc["battery"].to<JsonObject>();
     battery["supported"] = status.batterySupported;
+    battery["available"] = status.batteryAvailable;
+    battery["overflow"] = status.batteryOverflow;
+    battery["sampleTimeMs"] = status.batterySampleTimeMs;
+    battery["voltageV"] = status.batteryVoltageV;
+    battery["currentMa"] = status.batteryCurrentMa;
+    battery["powerMw"] = status.batteryPowerMw;
+    battery["loadVoltageV"] = status.batteryLoadVoltageV;
+    battery["shuntVoltageMv"] = status.batteryShuntVoltageMv;
     battery["percent"] = status.batteryPercent;
     battery["voltage"] = status.batteryVoltage;
     battery["current"] = status.batteryCurrent;
+    battery["power"] = status.batteryPower;
+    battery["loadVoltage"] = status.batteryLoadVoltage;
+    battery["shuntVoltage"] = status.batteryShuntVoltage;
 
     JsonObject config = doc["config"].to<JsonObject>();
     config["deviceName"] = status.config.deviceName;

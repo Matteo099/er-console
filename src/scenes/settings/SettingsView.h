@@ -23,6 +23,7 @@ private:
     lv_obj_t* brandImg = nullptr;
     lv_obj_t* container = nullptr;
     lv_obj_t* btnWifi = nullptr;
+    lv_obj_t* btnMonitor = nullptr;
     lv_obj_t* btnSound = nullptr;
     lv_obj_t* lblWifi = nullptr;
     lv_obj_t* lblSound = nullptr;
@@ -31,6 +32,7 @@ private:
     SettingsAction pendingAction = SettingsAction::None;
 
     static void onWifiClicked(lv_event_t* e);
+    static void onMonitorClicked(lv_event_t* e);
     static void onSoundClicked(lv_event_t* e);
     static void onBackClicked(lv_event_t* e);
 };

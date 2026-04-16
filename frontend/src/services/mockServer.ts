@@ -163,6 +163,17 @@ const movePath = (source: string, destination: string): boolean => {
 
 const statusFromConfig = (): DeviceStatus => {
   const connected = Boolean(state.config.wifi.ssid)
+  const uptimeSeconds = 18_420
+  const uptimeMs = uptimeSeconds * 1000
+  const sampleAgeMs = 4_500
+  const sampleTimeMs = uptimeMs - sampleAgeMs
+
+  const voltageV = 3.86
+  const currentMa = 210.4
+  const powerMw = voltageV * currentMa
+  const shuntVoltageMv = 21.8
+  const loadVoltageV = voltageV + shuntVoltageMv / 1000
+
   return {
     wifi: {
       state: connected ? 'connected' : 'disconnected',
@@ -176,9 +187,21 @@ const statusFromConfig = (): DeviceStatus => {
       totalBytes: 256 * 1024 * 1024,
     },
     battery: {
+      supported: true,
+      available: true,
+      overflow: false,
+      sampleTimeMs,
       percent: 87,
-      voltage: 3.86,
-      current: 210,
+      voltage: `${voltageV.toFixed(2)} V`,
+      current: `${currentMa.toFixed(2)} mA`,
+      power: `${powerMw.toFixed(2)} mW`,
+      loadVoltage: `${loadVoltageV.toFixed(2)} V`,
+      shuntVoltage: `${shuntVoltageMv.toFixed(2)} mV`,
+      voltageV,
+      currentMa,
+      powerMw,
+      loadVoltageV,
+      shuntVoltageMv,
     },
     portal: {
       url: 'http://192.168.4.1/',
@@ -191,7 +214,8 @@ const statusFromConfig = (): DeviceStatus => {
       cpuFrequencyMhz: 240,
       freeHeap: 2_200_000,
       psramFree: 7_500_000,
-      uptime: 18_420,
+      uptime: uptimeSeconds,
+      uptimeMs,
     },
     config: {
       deviceName: state.config.deviceName,

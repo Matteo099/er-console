@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <cstdio>
 
 namespace
 {
@@ -36,15 +37,16 @@ namespace
     }
 }
 
-PortalService::PortalService(StorageSystem* storage, NetworkSystem* network)
-    : storageSystem(storage), networkSystem(network)
+PortalService::PortalService(StorageSystem* storage, NetworkSystem* network, InputSystem* input)
+    : storageSystem(storage), networkSystem(network), inputSystem(input)
 {
 }
 
-void PortalService::setDependencies(StorageSystem* storage, NetworkSystem* network)
+void PortalService::setDependencies(StorageSystem* storage, NetworkSystem* network, InputSystem* input)
 {
     storageSystem = storage;
     networkSystem = network;
+    inputSystem = input;
 }
 
 DeviceConfig PortalService::getConfig() const
@@ -98,6 +100,42 @@ PortalStatusData PortalService::getStatus() const
         status.portalActive = true;
         status.apIp = WiFi.softAPIP().toString().c_str();
         status.apSsid = portalSsid();
+    }
+
+    if (inputSystem)
+    {
+        const InputSystem::PowerMetrics metrics = inputSystem->getPowerMetrics();
+        status.batterySupported = metrics.supported;
+        status.batteryAvailable = metrics.available;
+        status.batteryOverflow = metrics.overflow;
+        status.batterySampleTimeMs = metrics.sampleTimeMs;
+        status.batteryVoltageV = metrics.busVoltageV;
+        status.batteryCurrentMa = metrics.currentMa;
+        status.batteryPowerMw = metrics.powerMw;
+        status.batteryLoadVoltageV = metrics.loadVoltageV;
+        status.batteryShuntVoltageMv = metrics.shuntVoltageMv;
+
+        if (metrics.available)
+        {
+            char buffer[32];
+
+            std::snprintf(buffer, sizeof(buffer), "%.2f V", metrics.busVoltageV);
+            status.batteryVoltage = buffer;
+
+            std::snprintf(buffer, sizeof(buffer), "%.2f mA", metrics.currentMa);
+            status.batteryCurrent = buffer;
+
+            std::snprintf(buffer, sizeof(buffer), "%.2f mW", metrics.powerMw);
+            status.batteryPower = buffer;
+
+            std::snprintf(buffer, sizeof(buffer), "%.2f V", metrics.loadVoltageV);
+            status.batteryLoadVoltage = buffer;
+
+            std::snprintf(buffer, sizeof(buffer), "%.2f mV", metrics.shuntVoltageMv);
+            status.batteryShuntVoltage = buffer;
+
+            status.batteryPercent = "N/A";
+        }
     }
 
     return status;

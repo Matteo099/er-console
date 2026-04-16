@@ -210,6 +210,7 @@ void EscapeOS::init()
 
     SystemEventBus::init();
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_STORAGE, &storageSystem);
+    SystemEventBus::instance().registerService(SystemEventBus::SERVICE_INPUT, &inputSystem);
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_NETWORK, &networkSystem);
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_PORTAL, &portalSystem);
     running = true;

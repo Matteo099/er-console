@@ -41,6 +41,7 @@
                 "storage": "Almacenamiento",
                 "memory": "Memoria",
                 "cpuUptime": "CPU / Tiempo activo",
+                "power": "Monitor de Potencia",
                 "portal": "Portal",
                 "deviceControls": "Controles del Dispositivo"
             },
@@ -57,9 +58,22 @@
                 "freeHeap": "Heap libre",
                 "freePsram": "PSRAM libre",
                 "uptime": "Tiempo activo",
+                "monitor": "Monitor",
+                "voltage": "Voltaje",
+                "current": "Corriente",
+                "power": "Potencia",
+                "loadVoltage": "Voltaje de carga",
+                "shuntVoltage": "Voltaje shunt",
+                "sampleAge": "Edad de muestra",
                 "portalUrl": "URL del Portal",
                 "portalSsid": "SSID del Portal",
                 "portalIp": "IP del Portal"
+            },
+            "power": {
+                "unsupported": "INA219 no detectado",
+                "waitingSample": "Esperando la primera muestra",
+                "online": "Telemetria activa",
+                "overflow": "Desbordamiento detectado"
             },
             "deviceControlsDescription": "Reinicia o apaga el ESP32 desde este panel.",
             "actions": {

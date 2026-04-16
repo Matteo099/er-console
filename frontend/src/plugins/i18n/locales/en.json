@@ -41,6 +41,7 @@
                 "storage": "Storage",
                 "memory": "Memory",
                 "cpuUptime": "CPU / Uptime",
+                "power": "Power Monitor",
                 "portal": "Portal",
                 "deviceControls": "Device Controls"
             },
@@ -57,9 +58,22 @@
                 "freeHeap": "Free Heap",
                 "freePsram": "Free PSRAM",
                 "uptime": "Uptime",
+                "monitor": "Monitor",
+                "voltage": "Voltage",
+                "current": "Current",
+                "power": "Power",
+                "loadVoltage": "Load Voltage",
+                "shuntVoltage": "Shunt Voltage",
+                "sampleAge": "Sample Age",
                 "portalUrl": "Portal URL",
                 "portalSsid": "Portal SSID",
                 "portalIp": "Portal IP"
+            },
+            "power": {
+                "unsupported": "INA219 not detected",
+                "waitingSample": "Waiting for first sample",
+                "online": "Telemetry active",
+                "overflow": "Overflow detected"
             },
             "deviceControlsDescription": "Reboot or shutdown the ESP32 from this dashboard.",
             "actions": {

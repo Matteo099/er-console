@@ -48,9 +48,21 @@ export interface StorageInfo {
 }
 
 export interface BatteryStatus {
-  percent: number
-  voltage: number
-  current: number
+  supported?: boolean
+  available?: boolean
+  overflow?: boolean
+  sampleTimeMs?: number
+  percent: number | string
+  voltage: number | string
+  current: number | string
+  power?: string
+  loadVoltage?: string
+  shuntVoltage?: string
+  voltageV?: number
+  currentMa?: number
+  powerMw?: number
+  loadVoltageV?: number
+  shuntVoltageMv?: number
 }
 
 export interface PortalStatus {

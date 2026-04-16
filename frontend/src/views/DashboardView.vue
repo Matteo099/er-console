@@ -84,7 +84,27 @@
     </v-row>
 
     <v-row>
-      <v-col cols="12" lg="6">
+      <v-col cols="12" md="6" lg="4">
+        <v-card>
+          <v-card-title class="d-flex align-center ga-2">
+            <v-icon icon="mdi-car-battery" />
+            {{ t('erConsole.dashboard.sections.power') }}
+          </v-card-title>
+          <v-card-text>
+            <v-list density="compact" lines="one">
+              <v-list-item :title="powerStateLabel" :subtitle="t('erConsole.dashboard.labels.monitor')" />
+              <v-list-item :title="powerVoltage" :subtitle="t('erConsole.dashboard.labels.voltage')" />
+              <v-list-item :title="powerCurrent" :subtitle="t('erConsole.dashboard.labels.current')" />
+              <v-list-item :title="powerValue" :subtitle="t('erConsole.dashboard.labels.power')" />
+              <v-list-item :title="powerLoadVoltage" :subtitle="t('erConsole.dashboard.labels.loadVoltage')" />
+              <v-list-item :title="powerShuntVoltage" :subtitle="t('erConsole.dashboard.labels.shuntVoltage')" />
+              <v-list-item :title="powerSampleAge" :subtitle="t('erConsole.dashboard.labels.sampleAge')" />
+            </v-list>
+          </v-card-text>
+        </v-card>
+      </v-col>
+
+      <v-col cols="12" md="6" lg="4">
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-web" />
@@ -100,7 +120,7 @@
         </v-card>
       </v-col>
 
-      <v-col cols="12" lg="6">
+      <v-col cols="12" md="6" lg="4">
         <v-card>
           <v-card-title class="d-flex align-center ga-2">
             <v-icon icon="mdi-power" />
@@ -155,6 +175,24 @@ const rebooting = ref(false)
 const shuttingDown = ref(false)
 
 const status = computed(() => portalStore.status)
+type BatteryTelemetry = {
+  supported?: boolean
+  available?: boolean
+  overflow?: boolean
+  sampleTimeMs?: number
+  voltage?: string
+  current?: string
+  power?: string
+  loadVoltage?: string
+  shuntVoltage?: string
+  voltageV?: number
+  currentMa?: number
+  powerMw?: number
+  loadVoltageV?: number
+  shuntVoltageMv?: number
+}
+
+const battery = computed(() => status.value?.battery as BatteryTelemetry | undefined)
 
 const signalStrength = computed(() => {
   const rssi = status.value?.wifi?.signal
@@ -194,6 +232,68 @@ const memoryUsagePercentage = computed(() => {
 
   const used = total - freeHeap.value
   return Math.min(100, Math.max(0, Math.round((used / total) * 100)))
+})
+
+const formatMetric = (textValue: unknown, numericValue: unknown, unit: string): string => {
+  if (typeof textValue === 'string' && textValue.trim().length > 0) {
+    return textValue
+  }
+
+  if (typeof numericValue === 'number' && Number.isFinite(numericValue)) {
+    return `${numericValue.toFixed(2)} ${unit}`
+  }
+
+  return t('erConsole.common.na')
+}
+
+const powerStateLabel = computed(() => {
+  if (!battery.value?.supported) {
+    return t('erConsole.dashboard.power.unsupported')
+  }
+
+  if (battery.value?.available) {
+    return battery.value?.overflow
+      ? t('erConsole.dashboard.power.overflow')
+      : t('erConsole.dashboard.power.online')
+  }
+
+  return t('erConsole.dashboard.power.waitingSample')
+})
+
+const powerVoltage = computed(() =>
+  formatMetric(battery.value?.voltage, battery.value?.voltageV, 'V'),
+)
+
+const powerCurrent = computed(() =>
+  formatMetric(battery.value?.current, battery.value?.currentMa, 'mA'),
+)
+
+const powerValue = computed(() =>
+  formatMetric(battery.value?.power, battery.value?.powerMw, 'mW'),
+)
+
+const powerLoadVoltage = computed(() =>
+  formatMetric(battery.value?.loadVoltage, battery.value?.loadVoltageV, 'V'),
+)
+
+const powerShuntVoltage = computed(() =>
+  formatMetric(battery.value?.shuntVoltage, battery.value?.shuntVoltageMv, 'mV'),
+)
+
+const powerSampleAge = computed(() => {
+  const sampleTimeMs = battery.value?.sampleTimeMs
+  const uptimeMs = (status.value?.hardware as { uptimeMs?: number } | undefined)?.uptimeMs
+
+  if (
+    typeof sampleTimeMs !== 'number'
+    || typeof uptimeMs !== 'number'
+    || sampleTimeMs <= 0
+    || uptimeMs < sampleTimeMs
+  ) {
+    return t('erConsole.common.na')
+  }
+
+  return `${Math.floor((uptimeMs - sampleTimeMs) / 1000)}s`
 })
 
 const formatBytes = (bytes: number) => statusService.formatBytes(bytes)

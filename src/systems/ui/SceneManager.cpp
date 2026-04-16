@@ -5,6 +5,7 @@
 #include "scenes/about/AboutScene.h"
 #include "scenes/gamelist/GameListScene.h"
 #include "scenes/settings/SettingsScene.h"
+#include "scenes/monitor/MonitorScene.h"
 #include "scenes/network/NetworkScene.h"
 #include "scenes/game/GameScene.h"
 #include "core/SystemEventBus.h"
@@ -81,6 +82,10 @@ void SceneManager::update()
 
         case SceneChange::GoToSettings:
             changeScene(new SettingsScene());
+            break;
+
+        case SceneChange::GoToMonitor:
+            changeScene(new MonitorScene());
             break;
 
         case SceneChange::GoToAbout:

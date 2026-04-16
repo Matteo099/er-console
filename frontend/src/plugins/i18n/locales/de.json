@@ -41,6 +41,7 @@
                 "storage": "Speicher",
                 "memory": "Arbeitsspeicher",
                 "cpuUptime": "CPU / Laufzeit",
+                "power": "Leistungsmonitor",
                 "portal": "Portal",
                 "deviceControls": "Geraetesteuerung"
             },
@@ -57,9 +58,22 @@
                 "freeHeap": "Freier Heap",
                 "freePsram": "Freier PSRAM",
                 "uptime": "Laufzeit",
+                "monitor": "Monitor",
+                "voltage": "Spannung",
+                "current": "Strom",
+                "power": "Leistung",
+                "loadVoltage": "Lastspannung",
+                "shuntVoltage": "Shunt-Spannung",
+                "sampleAge": "Alter der Messung",
                 "portalUrl": "Portal-URL",
                 "portalSsid": "Portal-SSID",
                 "portalIp": "Portal-IP"
+            },
+            "power": {
+                "unsupported": "INA219 nicht erkannt",
+                "waitingSample": "Warten auf erste Messung",
+                "online": "Telemetrie aktiv",
+                "overflow": "Uberlauf erkannt"
             },
             "deviceControlsDescription": "ESP32 von diesem Dashboard neu starten oder herunterfahren.",
             "actions": {

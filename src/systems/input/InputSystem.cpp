@@ -4,6 +4,8 @@
 // #include <Adafruit_SSD1306.h>  // Assuming OLED library
 // #include <MFRC522.h>  // Assuming RFID library
 
+#include "log/Logger.h"
+
 // Mock or actual pins
 // #define RFID_SS_PIN 10
 // #define RFID_RST_PIN 9
@@ -25,10 +27,18 @@ void InputSystem::init(void *params) {
     // display.display();
     // delay(2000);
     // display.clearDisplay();
+
+    powerMetrics = PowerMetrics{};
+    powerMetrics.supported = ina219.init();
+    if (!powerMetrics.supported) {
+        Log::warn(Log::INPUT_TAG, "Power monitor (INA219) not available; continuing without telemetry");
+    } else {
+        Log::info(Log::INPUT_TAG, "Power monitor (INA219) initialized");
+    }
 }
 
 void InputSystem::update() {
-    // Update logic if needed
+    pollPowerMonitor();
 }
 
 void InputSystem::pinMode(int pin, int mode) {
@@ -68,4 +78,37 @@ void InputSystem::oledPrint(const char* text) {
     // display.setCursor(0,0);
     // display.println(text);
     // display.display();
+}
+
+InputSystem::PowerMetrics InputSystem::getPowerMetrics() const {
+    taskENTER_CRITICAL(&powerMetricsLock);
+    PowerMetrics copy = powerMetrics;
+    taskEXIT_CRITICAL(&powerMetricsLock);
+    return copy;
+}
+
+void InputSystem::pollPowerMonitor() {
+    if (!powerMetrics.supported)
+        return;
+
+    const uint32_t now = millis();
+    if (now - lastPowerPollMs < POWER_POLL_INTERVAL_MS)
+        return;
+
+    lastPowerPollMs = now;
+
+    INA219Reading reading;
+    if (!ina219.read(reading))
+        return;
+
+    taskENTER_CRITICAL(&powerMetricsLock);
+    powerMetrics.available = reading.available;
+    powerMetrics.overflow = reading.overflow;
+    powerMetrics.busVoltageV = reading.busVoltageV;
+    powerMetrics.shuntVoltageMv = reading.shuntVoltageMv;
+    powerMetrics.loadVoltageV = reading.loadVoltageV;
+    powerMetrics.currentMa = reading.currentMa;
+    powerMetrics.powerMw = reading.powerMw;
+    powerMetrics.sampleTimeMs = reading.sampleTimeMs;
+    taskEXIT_CRITICAL(&powerMetricsLock);
 }

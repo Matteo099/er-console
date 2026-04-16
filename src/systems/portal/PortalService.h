@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "services/DeviceConfigRepository.h"
+#include "systems/input/InputSystem.h"
 #include "systems/network/NetworkSystem.h"
 
 struct PortalStatusData
@@ -26,9 +27,20 @@ struct PortalStatusData
     uint64_t sdUsedBytes = 0;
     uint64_t sdFreeBytes = 0;
     bool batterySupported = false;
+    bool batteryAvailable = false;
+    bool batteryOverflow = false;
+    uint32_t batterySampleTimeMs = 0;
+    float batteryVoltageV = 0.0f;
+    float batteryCurrentMa = 0.0f;
+    float batteryPowerMw = 0.0f;
+    float batteryLoadVoltageV = 0.0f;
+    float batteryShuntVoltageMv = 0.0f;
     std::string batteryPercent = "N/A";
     std::string batteryVoltage = "N/A";
     std::string batteryCurrent = "N/A";
+    std::string batteryPower = "N/A";
+    std::string batteryLoadVoltage = "N/A";
+    std::string batteryShuntVoltage = "N/A";
 };
 
 struct WifiScanEntry
@@ -42,8 +54,8 @@ struct WifiScanEntry
 class PortalService
 {
 public:
-    PortalService(StorageSystem* storage = nullptr, NetworkSystem* network = nullptr);
-    void setDependencies(StorageSystem* storage, NetworkSystem* network);
+    PortalService(StorageSystem* storage = nullptr, NetworkSystem* network = nullptr, InputSystem* input = nullptr);
+    void setDependencies(StorageSystem* storage, NetworkSystem* network, InputSystem* input = nullptr);
 
     DeviceConfig getConfig() const;
     bool saveConfig(const DeviceConfig& config);
@@ -65,6 +77,7 @@ public:
 private:
     StorageSystem* storageSystem = nullptr;
     NetworkSystem* networkSystem = nullptr;
+    InputSystem* inputSystem = nullptr;
     DeviceConfigRepository configRepository;
     mutable DeviceConfig cachedConfig;
 };

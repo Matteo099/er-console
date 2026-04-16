@@ -8,6 +8,7 @@
 #include "config/Assets.h"
 #include "core/SystemEventBus.h"
 #include "log/Logger.h"
+#include "systems/input/InputSystem.h"
 
 PortalSystem::PortalSystem()
     : server(80)
@@ -20,7 +21,8 @@ void PortalSystem::init(void* params)
 
     storageSystem = static_cast<StorageSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
     networkSystem = static_cast<NetworkSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
-    service.setDependencies(storageSystem, networkSystem);
+    inputSystem = static_cast<InputSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
+    service.setDependencies(storageSystem, networkSystem, inputSystem);
 
     if (!storageSystem || !storageSystem->isReady())
     {

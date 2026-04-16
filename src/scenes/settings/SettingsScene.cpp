@@ -57,6 +57,12 @@ bool SettingsScene::handleUIEvent(const UIEvent& event)
         return true;
     }
 
+    if (clicked.buttonId == "monitor")
+    {
+        request = SceneRequest(SceneChange::GoToMonitor);
+        return true;
+    }
+
     if (clicked.buttonId == "back")
     {
         request = SceneRequest(SceneChange::GoToMainMenu);

@@ -17,6 +17,7 @@ enum class SceneChange
     GoToMainMenu,
     GoToGameList,
     GoToSettings,
+    GoToMonitor,
     GoToAbout,
     GoToNetwork,
     GoToGame,

@@ -41,6 +41,7 @@
                 "storage": "Archiviazione",
                 "memory": "Memoria",
                 "cpuUptime": "CPU / Uptime",
+                "power": "Monitor Potenza",
                 "portal": "Portale",
                 "deviceControls": "Controlli Dispositivo"
             },
@@ -57,9 +58,22 @@
                 "freeHeap": "Heap libero",
                 "freePsram": "PSRAM libera",
                 "uptime": "Uptime",
+                "monitor": "Monitor",
+                "voltage": "Tensione",
+                "current": "Corrente",
+                "power": "Potenza",
+                "loadVoltage": "Tensione di carico",
+                "shuntVoltage": "Tensione shunt",
+                "sampleAge": "Eta campione",
                 "portalUrl": "URL Portale",
                 "portalSsid": "SSID Portale",
                 "portalIp": "IP Portale"
+            },
+            "power": {
+                "unsupported": "INA219 non rilevato",
+                "waitingSample": "In attesa del primo campione",
+                "online": "Telemetria attiva",
+                "overflow": "Overflow rilevato"
             },
             "deviceControlsDescription": "Riavvia o spegni l'ESP32 da questa dashboard.",
             "actions": {

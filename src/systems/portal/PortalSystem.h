@@ -9,6 +9,7 @@
 class StatusController;
 class ConfigController;
 class FilesController;
+class InputSystem;
 
 class PortalSystem : public SystemService
 {
@@ -33,6 +34,7 @@ private:
 private:
     StorageSystem* storageSystem = nullptr;
     NetworkSystem* networkSystem = nullptr;
+    InputSystem* inputSystem = nullptr;
     PortalService service;
     WebServer server;
     DNSServer dnsServer;
