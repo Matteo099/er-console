@@ -162,12 +162,12 @@ const boardRect = {
   x: 690,
   y: 120,
   width: 420,
-  height: 860,
+  height: 760,
 }
 
 const leftPinX = boardRect.x - 10
 const rightPinX = boardRect.x + boardRect.width + 10
-const leftLabelX = boardRect.x - 96
+const leftLabelX = boardRect.x - 36
 const rightLabelX = boardRect.x + boardRect.width + 36
 const rowStartY = 190
 const rowSpacing = 29
@@ -506,8 +506,8 @@ const drawBoard = (ctx: CanvasRenderingContext2D) => {
   drawText(ctx, 'BOOT', boardRect.x + 125, boardRect.y + 396, 10, '#e2e8f0', '700')
   drawText(ctx, 'RESET', boardRect.x + 254, boardRect.y + 396, 10, '#e2e8f0', '700')
 
-  drawRoundedRect(ctx, boardRect.x + 104, boardRect.y + 684, 94, 58, 10, '#f3f4f6', '#9ca3af')
-  drawRoundedRect(ctx, boardRect.x + 222, boardRect.y + 684, 94, 58, 10, '#f3f4f6', '#9ca3af')
+  drawRoundedRect(ctx, boardRect.x + 104, boardRect.y + 700, 94, 80, 10, '#f3f4f6', '#9ca3af')
+  drawRoundedRect(ctx, boardRect.x + 222, boardRect.y + 700, 94, 80, 10, '#f3f4f6', '#9ca3af')
   drawText(ctx, 'UART', boardRect.x + 130, boardRect.y + 717, 13, '#6b7280', '700')
   drawText(ctx, 'USB', boardRect.x + 247, boardRect.y + 717, 13, '#6b7280', '700')
 
