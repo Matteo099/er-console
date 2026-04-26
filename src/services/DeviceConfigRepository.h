@@ -41,8 +41,6 @@ struct DeviceConfig
 class DeviceConfigRepository
 {
 public:
-    static constexpr const char* CONFIG_PATH = DEVICE_CONFIG_FILE;
-
     DeviceConfig defaultConfig() const;
     bool load(StorageSystem* storage, DeviceConfig& config) const;
     bool save(StorageSystem* storage, const DeviceConfig& config) const;

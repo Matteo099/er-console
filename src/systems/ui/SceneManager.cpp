@@ -33,6 +33,8 @@ void SceneManager::init(void *params)
 {
     Log::info(Log::UI_TAG, "Initializing SceneManager");
     current = nullptr;
+    pendingDelete = nullptr;
+    pendingDeleteAtTick = 0;
 }
 
 void SceneManager::changeScene(Scene *next)
@@ -40,11 +42,15 @@ void SceneManager::changeScene(Scene *next)
     if (!next)
         return;
 
-    if (current)
+    if (pendingDelete)
     {
-        current->onExit();
-        delete current;
+        pendingDelete->onExit();
+        delete pendingDelete;
+        pendingDelete = nullptr;
+        pendingDeleteAtTick = 0;
     }
+
+    Scene* previous = current;
 
     Log::info(Log::UI_TAG, "Changing scene to new scene.");
     current = next;
@@ -57,12 +63,23 @@ void SceneManager::changeScene(Scene *next)
         300,
         0,
         false);
+
+    pendingDelete = previous;
+    pendingDeleteAtTick = previous ? (lv_tick_get() + 300) : 0;
 }
 
 void SceneManager::update()
 {
     if (!current)
         return;
+
+    if (pendingDelete && lv_tick_get() >= pendingDeleteAtTick)
+    {
+        pendingDelete->onExit();
+        delete pendingDelete;
+        pendingDelete = nullptr;
+        pendingDeleteAtTick = 0;
+    }
 
     current->onUpdate();
 

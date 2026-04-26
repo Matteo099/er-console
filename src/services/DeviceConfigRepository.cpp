@@ -14,7 +14,7 @@ bool DeviceConfigRepository::load(StorageSystem* storage, DeviceConfig& config) 
         return false;
 
     std::string json;
-    if (!storage->readTextFile(CONFIG_PATH, json))
+    if (!storage->readTextFile(DEVICE_CONFIG_FILE, json))
     {
         config = defaultConfig();
         return false;
@@ -28,7 +28,7 @@ bool DeviceConfigRepository::save(StorageSystem* storage, const DeviceConfig& co
     if (!storage || !storage->isReady())
         return false;
 
-    return storage->writeTextFile(CONFIG_PATH, toJson(config), true);
+    return storage->writeTextFile(DEVICE_CONFIG_FILE, toJson(config), true);
 }
 
 std::string DeviceConfigRepository::toJson(const DeviceConfig& config) const

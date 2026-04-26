@@ -18,12 +18,15 @@ void UIManager::init(void *params)
     // 2. Initialize LVGL core 
     lvgl.init(&display, &display);
 
+    // Register LVGL filesystem access before any scene tries to load images
+    LVGLImageProvider::init();
+
     // 3. Initialize scene manager
     scenes.init();
 
     // 4. Load initial scene (BOOT)
-    scenes.changeScene(new SampleScene());
-    // scenes.changeScene(new BootScene());
+    // scenes.changeScene(new SampleScene());
+    scenes.changeScene(new BootScene());
 
     Log::info(Log::UI_TAG, "UI Manager ready");
 }

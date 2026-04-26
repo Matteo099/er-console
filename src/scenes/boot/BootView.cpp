@@ -53,6 +53,8 @@ void BootView::loadImages()
     if (!screen)
         return;
 
+    Log::debug(Log::SCENE_TAG, "Loading boot images into view");
+
     brandImg = BrandHeader::create(screen);
     logoImg = ImageView::create(screen, IMG_LOGO_FILE, LV_ALIGN_CENTER, 0, -10);
 

@@ -19,6 +19,7 @@ void BootScene::onUpdate()
     if (!imagesLoaded &&
         (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY))
     {
+        Log::debug(Log::SCENE_TAG, "images can now be loaded - initializing LVGL image provider and loading boot images");
         LVGLImageProvider::init(); // now SD is available
         view.loadImages();         // attach logo + brand
         imagesLoaded = true;

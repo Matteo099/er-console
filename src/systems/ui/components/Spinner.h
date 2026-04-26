@@ -1,7 +1,25 @@
 #pragma once
 
 #include "lvgl.h"
+#include <string>
 #include <utility>
+
+namespace
+{
+    inline std::string normalizeSpinnerSrc(const char* src)
+    {
+        if (!src || !*src)
+            return {};
+
+        if ((src[0] >= 'A' && src[0] <= 'Z') || (src[0] >= 'a' && src[0] <= 'z'))
+        {
+            if (src[1] == ':')
+                return src;
+        }
+
+        return std::string("S:") + src;
+    }
+}
 
 /**
  * @brief Rotating spinner component for loading/progress indication
@@ -46,7 +64,8 @@ public:
         {
             // Create image spinner
             spinner = lv_img_create(parent);
-            lv_img_set_src(spinner, imagePath);
+            const std::string resolvedSrc = normalizeSpinnerSrc(imagePath);
+            lv_img_set_src(spinner, resolvedSrc.c_str());
             lv_obj_set_size(spinner, width, height);
         }
         else

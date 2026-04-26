@@ -35,7 +35,7 @@ void AudioSystem::init(void *params)
     }
 
     Log::info(Log::AUDIO_TAG, "Audio system initialized");
-    driver->playWav(storage->open(AUDIO_STARTUP_FILE));
+    driver->playWav(storage->open(AUDIO_CLICK_FILE));
 }
 
 void AudioSystem::update()

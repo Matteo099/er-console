@@ -1,12 +1,16 @@
 #include "StorageSystem.h"
 
 #include "drivers/storage/ESP32SDCardDriver.h"
+#include "drivers/storage/SDLock.h"
 #include "config/BoardConfig.h"
 #include "log/Logger.h"
 #include <SD.h>
+#include <config/Assets.h>
 
 namespace
 {
+    static constexpr const char* SYSTEM_VOLUME_INFO_DIR = "System Volume Information";
+
     static void trimTrailingSlash(std::string& value)
     {
         while (!value.empty() && value.back() == '/')
@@ -32,11 +36,44 @@ void StorageSystem::init(void *params)
 
     ready = true;
     Log::info(Log::STORAGE_TAG, "Storage ready");
+
+    listFiles();
 }
 
 bool StorageSystem::isReady() const
 {
     return ready;
+}
+
+void StorageSystem::listFiles() const
+{
+    if (!ready)
+        return;
+
+    Log::info(Log::STORAGE_TAG, "Path probe: /.core=%s /games=%s /brand.png=%s",
+              exists(CORE_DIR) ? "yes" : "no",
+              exists(GAMES_DIR) ? "yes" : "no",
+              exists(IMG_BRAND_FILE) ? "yes" : "no");
+
+    std::vector<StorageEntry> coreEntries;
+    if (listDirectory(CORE_DIR, coreEntries, true))
+    {
+        Log::info(Log::STORAGE_TAG, "Listing files under /.core:");
+        for (const auto& entry : coreEntries)
+        {
+            Log::info(Log::STORAGE_TAG, " - %s%s (size: %u bytes)", entry.path.c_str(), entry.isDirectory ? "/" : "", entry.size);
+        }
+    }
+
+    std::vector<StorageEntry> gameEntries;
+    if (listDirectory(GAMES_DIR, gameEntries, true))
+    {
+        Log::info(Log::STORAGE_TAG, "Listing files under /games:");
+        for (const auto& entry : gameEntries)
+        {
+            Log::info(Log::STORAGE_TAG, " - %s%s (size: %u bytes)", entry.path.c_str(), entry.isDirectory ? "/" : "", entry.size);
+        }
+    }
 }
 
 IFile* StorageSystem::open(const char* path)
@@ -75,6 +112,8 @@ bool StorageSystem::writeTextFile(const char* path, const std::string& contents,
     if (!ready)
         return false;
 
+    SDLock::Guard guard;
+
     if (!ensureParents(path))
         return false;
 
@@ -99,6 +138,8 @@ File StorageSystem::openNative(const char* path, bool write)
     if (!ready)
         return File();
 
+    SDLock::Guard guard;
+
     if (write && !ensureParents(path))
         return File();
 
@@ -113,6 +154,8 @@ bool StorageSystem::removePath(const char* path)
     if (!ready)
         return false;
 
+    SDLock::Guard guard;
+
     return SD.remove(path);
 }
 
@@ -120,6 +163,8 @@ bool StorageSystem::movePath(const char* sourcePath, const char* destinationPath
 {
     if (!ready || !sourcePath || !destinationPath || !*sourcePath || !*destinationPath)
         return false;
+
+    SDLock::Guard guard;
 
     if (!SD.exists(sourcePath))
         return false;
@@ -138,6 +183,8 @@ bool StorageSystem::createDirectory(const char* path)
     if (!ready || !path || !*path)
         return false;
 
+    SDLock::Guard guard;
+
     if (SD.exists(path))
         return true;
 
@@ -149,7 +196,11 @@ bool StorageSystem::createDirectory(const char* path)
 
 bool StorageSystem::exists(const char* path) const
 {
-    return ready && path && SD.exists(path);
+    if (!ready || !path)
+        return false;
+
+    SDLock::Guard guard;
+    return SD.exists(path);
 }
 
 bool StorageSystem::listDirectory(const char* path, std::vector<StorageEntry>& out, bool recursive) const
@@ -157,9 +208,13 @@ bool StorageSystem::listDirectory(const char* path, std::vector<StorageEntry>& o
     if (!ready)
         return false;
 
+    SDLock::Guard guard;
+
     File directory = SD.open(path);
     if (!directory || !directory.isDirectory())
         return false;
+
+    std::vector<std::string> childDirectories;
 
     while (true)
     {
@@ -167,36 +222,60 @@ bool StorageSystem::listDirectory(const char* path, std::vector<StorageEntry>& o
         if (!entry)
             break;
 
+        const bool isDir = entry.isDirectory();
+        const uint64_t size = entry.size();
+        const std::string entryBaseName = fileName(entry.name());
+
         StorageEntry info;
         info.path = std::string(path);
         trimTrailingSlash(info.path);
         info.path += "/";
-        info.path += entry.name();
-        info.name = entry.name();
-        info.isDirectory = entry.isDirectory();
-        info.size = entry.size();
+        info.path += entryBaseName;
+        info.name = entryBaseName;
+        info.isDirectory = isDir;
+        info.size = size;
         out.push_back(info);
 
-        if (recursive && entry.isDirectory())
+        if (recursive && isDir)
         {
-            listDirectory(info.path.c_str(), out, true);
+            if (entryBaseName != SYSTEM_VOLUME_INFO_DIR)
+            {
+                childDirectories.push_back(info.path);
+            }
         }
 
         entry.close();
     }
 
     directory.close();
+
+    for (const auto& childPath : childDirectories)
+    {
+        if (!listDirectory(childPath.c_str(), out, true))
+        {
+            Log::warn(Log::STORAGE_TAG, "Failed to list subdirectory: %s", childPath.c_str());
+        }
+    }
+
     return true;
 }
 
 uint64_t StorageSystem::totalBytes() const
 {
-    return ready ? SD.totalBytes() : 0;
+    if (!ready)
+        return 0;
+
+    SDLock::Guard guard;
+    return SD.totalBytes();
 }
 
 uint64_t StorageSystem::usedBytes() const
 {
-    return ready ? SD.usedBytes() : 0;
+    if (!ready)
+        return 0;
+
+    SDLock::Guard guard;
+    return SD.usedBytes();
 }
 
 uint64_t StorageSystem::freeBytes() const

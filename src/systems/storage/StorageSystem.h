@@ -24,7 +24,6 @@ public:
     bool isReady() const;
     void update() override {};
 
-    const char* root() const { return "/sd"; }
     virtual IFile* open(const char* path);
     bool readTextFile(const char* path, std::string& out);
     bool writeTextFile(const char* path, const std::string& contents, bool overwrite = true);
@@ -37,6 +36,7 @@ public:
     uint64_t totalBytes() const;
     uint64_t usedBytes() const;
     uint64_t freeBytes() const;
+    void listFiles() const;
 
 private:
     bool ensureParents(const char* path);

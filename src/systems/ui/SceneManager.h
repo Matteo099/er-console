@@ -13,4 +13,6 @@ public:
 
 private:
     Scene* current = nullptr;
+    Scene* pendingDelete = nullptr;
+    uint32_t pendingDeleteAtTick = 0;
 };

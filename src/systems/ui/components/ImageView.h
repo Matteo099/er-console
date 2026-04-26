@@ -1,6 +1,24 @@
 #pragma once
 
 #include <lvgl.h>
+#include <string>
+
+namespace
+{
+    inline std::string normalizeImageViewSrc(const char* src)
+    {
+        if (!src || !*src)
+            return {};
+
+        if ((src[0] >= 'A' && src[0] <= 'Z') || (src[0] >= 'a' && src[0] <= 'z'))
+        {
+            if (src[1] == ':')
+                return src;
+        }
+
+        return std::string("S:") + src;
+    }
+}
 
 class ImageView
 {
@@ -13,7 +31,8 @@ public:
         lv_coord_t y = 0)
     {
         lv_obj_t* image = lv_img_create(parent);
-        lv_img_set_src(image, src);
+        const std::string resolvedSrc = normalizeImageViewSrc(src);
+        lv_img_set_src(image, resolvedSrc.c_str());
         lv_obj_align(image, align, x, y);
         return image;
     }
