@@ -41,7 +41,9 @@ namespace
     {
         return uri == "/generate_204" ||
                uri == "/hotspot-detect.html" ||
-               uri == "/ncsi.txt";
+               uri == "/ncsi.txt" ||
+               uri == "/connecttest.txt" ||
+               uri == "/redirect";
     }
 }
 
@@ -120,7 +122,8 @@ void PortalSystem::registerRoutes()
     const char *headerKeys[] = {"Accept-Encoding"};
     server.collectHeaders(headerKeys, 1);
 
-    server.onNotFound([this]() { serveStaticOrFallback(); });
+    server.onNotFound([this]()
+                      { serveStaticOrFallback(); });
 
     server.begin();
 }
@@ -145,7 +148,7 @@ void PortalSystem::serveStaticOrFallback()
     if (service.storage() && service.storage()->exists(storagePath.c_str()))
     {
         Log::info(Log::PORTAL_TAG, "Serving file '%s'", storagePath.c_str());
-        serveFile(uri);
+        serveFile(storagePath);
         return;
     }
 
@@ -167,19 +170,42 @@ void PortalSystem::serveFile(const String &path, bool fallbackToIndex)
         return;
     }
 
-    const bool requestGzip = false;//clientAcceptsGzip();
+    const bool clientWantsGzip = false; // Disable gzip for now
+    // const bool clientWantsGzip = clientAcceptsGzip();
+
     const String requestPath = path;
     const String storagePath = normalizePortalRequestPath(requestPath);
     String selectedPath = storagePath;
     bool usingGzip = false;
 
-    if (requestGzip)
+    // Only allow gzip for compressible assets
+    bool isCompressible =
+        storagePath.endsWith(".js") ||
+        storagePath.endsWith(".css") ||
+        storagePath.endsWith(".json") ||
+        storagePath.endsWith(".svg");
+
+    if (clientWantsGzip && isCompressible)
     {
         const String gzipPath = storagePath + ".gz";
+
         if (service.storage()->exists(gzipPath.c_str()))
         {
-            selectedPath = gzipPath;
-            usingGzip = true;
+            File test = service.storage()->openNative(gzipPath.c_str(), false);
+
+            if (test && test.size() > 20)
+            {
+                uint8_t b1 = test.read();
+                uint8_t b2 = test.read();
+                test.close();
+
+                // gzip magic header: 1F 8B
+                if (b1 == 0x1F && b2 == 0x8B)
+                {
+                    selectedPath = gzipPath;
+                    usingGzip = true;
+                }
+            }
         }
     }
 
