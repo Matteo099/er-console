@@ -9,11 +9,11 @@ void xTaskPortal(void *params)
     EscapeOS *os = static_cast<EscapeOS *>(params);
 
     xEventGroupWaitBits(SystemEventBus::systemEvents,
-                        EVT_STORAGE_READY | EVT_NETWORK_READY,
+                        EVT_NETWORK_READY,
+                        // EVT_STORAGE_READY | EVT_NETWORK_READY,
                         pdTRUE,
                         pdTRUE,
                         portMAX_DELAY);
-
     PortalSystem *portal = os->getPortalSystem();
     portal->init();
 

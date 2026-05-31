@@ -10,18 +10,53 @@
 #include "log/Logger.h"
 #include "systems/input/InputSystem.h"
 
+namespace
+{
+    static String normalizePortalRequestPath(const String &uri)
+    {
+        if (uri == "/" || uri == "/index.html")
+            return PORTAL_INDEX_FILE;
+
+        String requestPath = uri;
+        if (!requestPath.startsWith("/"))
+            requestPath = String("/") + requestPath;
+
+        if (requestPath.startsWith(PORTAL_DIR))
+            return requestPath;
+
+        return String(PORTAL_DIR) + requestPath;
+    }
+
+    static bool shouldFallbackToPortalIndex(const String &uri)
+    {
+        if (uri == "/" || uri == "/index.html")
+            return true;
+
+        // return uri.indexOf('.') < 0;
+        // also treat known SPA routes (no extension)
+        return uri.indexOf('.') < 0 && !uri.startsWith("/api/");
+    }
+
+    static bool isCaptivePortalProbe(const String &uri)
+    {
+        return uri == "/generate_204" ||
+               uri == "/hotspot-detect.html" ||
+               uri == "/ncsi.txt";
+    }
+}
+
 PortalSystem::PortalSystem()
     : server(80)
 {
 }
 
-void PortalSystem::init(void* params)
+void PortalSystem::init(void *params)
 {
     Log::info(Log::PORTAL_TAG, "Initializing portal system");
 
-    storageSystem = static_cast<StorageSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
-    networkSystem = static_cast<NetworkSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
-    inputSystem = static_cast<InputSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
+    storageSystem = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+    networkSystem = static_cast<NetworkSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
+    inputSystem = static_cast<InputSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
     service.setDependencies(storageSystem, networkSystem, inputSystem);
 
     if (!storageSystem || !storageSystem->isReady())
@@ -77,12 +112,12 @@ void PortalSystem::registerRoutes()
     configController->registerRoutes(server);
     filesController->registerRoutes(server);
 
-    server.on("/api/portal/url", HTTP_GET, [this]() {
+    server.on("/api/portal/url", HTTP_GET, [this]()
+              {
         const std::string payload = std::string("{\"url\":\"") + service.portalUrl() + "\"}";
-        server.send(200, "application/json", payload.c_str());
-    });
+        server.send(200, "application/json", payload.c_str()); });
 
-    const char* headerKeys[] = {"Accept-Encoding"};
+    const char *headerKeys[] = {"Accept-Encoding"};
     server.collectHeaders(headerKeys, 1);
 
     server.onNotFound([this]() { serveStaticOrFallback(); });
@@ -93,26 +128,38 @@ void PortalSystem::registerRoutes()
 void PortalSystem::serveStaticOrFallback()
 {
     const String uri = server.uri();
-    if (uri == "/" || uri == "/index.html")
+    Log::info(Log::PORTAL_TAG, "Received request for '%s'", uri.c_str());
+    if (isCaptivePortalProbe(uri))
     {
-        serveFile(PORTAL_INDEX_FILE, true);
+        server.send(204);
         return;
     }
 
-    String filePath = uri;
-    if (!filePath.startsWith("/"))
-        filePath = String("/") + filePath;
-
-    if (service.storage() && service.storage()->exists(filePath.c_str()))
+    if (uri.startsWith("/api/"))
     {
-        serveFile(filePath);
+        server.send(404, "application/json", "{\"error\":\"not_found\"}");
         return;
     }
 
-    serveFile(PORTAL_INDEX_FILE, true);
+    const String storagePath = normalizePortalRequestPath(uri);
+    if (service.storage() && service.storage()->exists(storagePath.c_str()))
+    {
+        Log::info(Log::PORTAL_TAG, "Serving file '%s'", storagePath.c_str());
+        serveFile(uri);
+        return;
+    }
+
+    if (shouldFallbackToPortalIndex(uri))
+    {
+        serveFile(PORTAL_INDEX_FILE, false);
+        return;
+    }
+
+    Log::warn(Log::PORTAL_TAG, "File not found for request '%s'", uri.c_str());
+    server.send(404, "text/plain", "Not found");
 }
 
-void PortalSystem::serveFile(const String& path, bool fallbackToIndex)
+void PortalSystem::serveFile(const String &path, bool fallbackToIndex)
 {
     if (!service.storage())
     {
@@ -120,13 +167,15 @@ void PortalSystem::serveFile(const String& path, bool fallbackToIndex)
         return;
     }
 
-    const bool requestGzip = clientAcceptsGzip();
-    String selectedPath = path;
+    const bool requestGzip = false;//clientAcceptsGzip();
+    const String requestPath = path;
+    const String storagePath = normalizePortalRequestPath(requestPath);
+    String selectedPath = storagePath;
     bool usingGzip = false;
 
     if (requestGzip)
     {
-        const String gzipPath = path + ".gz";
+        const String gzipPath = storagePath + ".gz";
         if (service.storage()->exists(gzipPath.c_str()))
         {
             selectedPath = gzipPath;
@@ -139,13 +188,13 @@ void PortalSystem::serveFile(const String& path, bool fallbackToIndex)
     if (!file && usingGzip)
     {
         usingGzip = false;
-        selectedPath = path;
+        selectedPath = storagePath;
         file = service.storage()->openNative(selectedPath.c_str(), false);
     }
 
     if (!file)
     {
-        if (fallbackToIndex && path != PORTAL_INDEX_FILE)
+        if (fallbackToIndex && requestPath != PORTAL_INDEX_FILE)
         {
             serveFile(PORTAL_INDEX_FILE, false);
             return;
@@ -174,18 +223,25 @@ bool PortalSystem::clientAcceptsGzip()
     return acceptEncoding.indexOf("gzip") >= 0;
 }
 
-String PortalSystem::mimeTypeForPath(const String& path)
+String PortalSystem::mimeTypeForPath(const String &path)
 {
     String normalizedPath = path;
     if (normalizedPath.endsWith(".gz"))
         normalizedPath.remove(normalizedPath.length() - 3);
 
-    if (normalizedPath.endsWith(".html")) return "text/html";
-    if (normalizedPath.endsWith(".css")) return "text/css";
-    if (normalizedPath.endsWith(".js")) return "application/javascript";
-    if (normalizedPath.endsWith(".json")) return "application/json";
-    if (normalizedPath.endsWith(".svg")) return "image/svg+xml";
-    if (normalizedPath.endsWith(".png")) return "image/png";
-    if (normalizedPath.endsWith(".jpg") || normalizedPath.endsWith(".jpeg")) return "image/jpeg";
+    if (normalizedPath.endsWith(".html"))
+        return "text/html";
+    if (normalizedPath.endsWith(".css"))
+        return "text/css";
+    if (normalizedPath.endsWith(".js"))
+        return "application/javascript";
+    if (normalizedPath.endsWith(".json"))
+        return "application/json";
+    if (normalizedPath.endsWith(".svg"))
+        return "image/svg+xml";
+    if (normalizedPath.endsWith(".png"))
+        return "image/png";
+    if (normalizedPath.endsWith(".jpg") || normalizedPath.endsWith(".jpeg"))
+        return "image/jpeg";
     return "application/octet-stream";
 }

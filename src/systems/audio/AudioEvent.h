@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <cstddef>
 
 enum class AudioEventType {
     BEEP,
@@ -9,6 +10,8 @@ enum class AudioEventType {
 };
 
 struct AudioEvent {
+    static constexpr std::size_t MAX_PATH_LENGTH = 128;
+
     AudioEventType type;
 
     union {
@@ -18,7 +21,7 @@ struct AudioEvent {
         } beep;
 
         struct {
-            const char* path;
+            char path[MAX_PATH_LENGTH];
         } wav;
 
         struct {

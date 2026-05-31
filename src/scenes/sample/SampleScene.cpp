@@ -6,6 +6,7 @@
 #include "scenes/menu/MainMenuScene.h"
 #include "systems/ui/lvgl/LVGLImageProvider.h"
 #include <systems/audio/AudioEvent.h>
+#include <cstdio>
 #include "scenes/sample/SampleEvents.h"
 
 
@@ -43,9 +44,9 @@ bool SampleScene::handleUIEvent(const UIEvent& event)
         const PlaySoundEvent& playEvent = static_cast<const PlaySoundEvent&>(event);
 
         Log::info(Log::SCENE_TAG, "Play sound!!!!!");
-        AudioEvent evt;
+        AudioEvent evt{};
         evt.type = AudioEventType::PLAY_WAV;
-        evt.wav.path = playEvent.soundPath.c_str();
+        std::snprintf(evt.wav.path, sizeof(evt.wav.path), "%s", playEvent.soundPath.c_str());
         xQueueSend(SystemEventBus::audioQueue, &evt, portMAX_DELAY);
 
         return true;  // Event handled
