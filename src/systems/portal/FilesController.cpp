@@ -12,6 +12,7 @@ void FilesController::registerRoutes(WebServer& server)
     server.on("/api/files", HTTP_GET, [&server, this]() { listFiles(server); });
     server.on("/api/files", HTTP_DELETE, [&server, this]() { deleteFile(server); });
     server.on("/api/files/move", HTTP_POST, [&server, this]() { moveFile(server); });
+    server.on("/api/files/download", HTTP_GET, [&server, this]() { downloadFile(server); });
     server.on("/api/files/upload", HTTP_POST,
               [&server, this]() { server.send(200, "application/json", "{\"ok\":true}"); },
               [&server, this]() { uploadFile(server); });
@@ -83,6 +84,50 @@ void FilesController::moveFile(WebServer& server)
     }
 
     server.send(200, "application/json", "{\"success\":true,\"message\":\"Path moved\"}");
+}
+
+void FilesController::downloadFile(WebServer& server)
+{
+    if (!server.hasArg("path"))
+    {
+        server.send(400, "application/json", "{\"error\":\"missing_path\"}");
+        return;
+    }
+
+    const String path = normalizePath(server.arg("path"));
+    if (path.indexOf("..") >= 0)
+    {
+        server.send(400, "application/json", "{\"error\":\"invalid_path\"}");
+        return;
+    }
+
+    if (!service.storage() || !service.storage()->isReady())
+    {
+        server.send(500, "application/json", "{\"error\":\"storage_unavailable\"}");
+        return;
+    }
+
+    if (!service.storage()->exists(path.c_str()))
+    {
+        server.send(404, "application/json", "{\"error\":\"not_found\"}");
+        return;
+    }
+
+    File file = service.storage()->openNative(path.c_str(), false);
+    if (!file || file.isDirectory())
+    {
+        if (file)
+            file.close();
+        server.send(404, "application/json", "{\"error\":\"not_found\"}");
+        return;
+    }
+
+    const int slashIndex = path.lastIndexOf('/');
+    const String fileName = slashIndex >= 0 ? path.substring(slashIndex + 1) : path;
+    server.sendHeader("Content-Disposition", String("attachment; filename=\"") + fileName + "\"");
+    server.sendHeader("Cache-Control", "no-store");
+    server.streamFile(file, guessMimeType(path));
+    file.close();
 }
 
 void FilesController::uploadFile(WebServer& server)
