@@ -14,7 +14,7 @@ void BootView::create()
 {
     screen = Screen::create();
     brandImg = BrandHeader::create(screen);
-    logoImg = ImageView::create(screen, IMG_LOGO_FILE, LV_ALIGN_CENTER, 0, -10);
+    // logoImg = ImageView::create(screen, IMG_LOGO_FILE, LV_ALIGN_CENTER, 0, -10);
 
     statusLabel = Label::create(screen, "Starting...", &lv_font_montserrat_14, LV_TEXT_ALIGN_CENTER);
     Label::setTextColor(statusLabel, lv_color_hex(0xCCCCCC));
@@ -24,7 +24,7 @@ void BootView::create()
     Align::alignTo(progressBar, statusLabel, LV_ALIGN_OUT_TOP_MID, 0, -10);
 
     // Start spinning animation on logo
-    Spinner::start(logoImg, 600);  // 600ms per rotation
+    // Spinner::start(logoImg, 600);  // 600ms per rotation
 
     currentProgress = 0;
     currentLabel = nullptr;
@@ -56,13 +56,13 @@ void BootView::loadImages()
     Log::debug(Log::SCENE_TAG, "Loading boot images into view");
 
     brandImg = BrandHeader::create(screen);
-    logoImg = ImageView::create(screen, IMG_LOGO_FILE, LV_ALIGN_CENTER, 0, -10);
+    // logoImg = ImageView::create(screen, IMG_LOGO_FILE, LV_ALIGN_CENTER, 0, -10);
 
     Align::setPosition(statusLabel, LV_ALIGN_BOTTOM_MID, 0, -28);
     Align::alignTo(progressBar, statusLabel, LV_ALIGN_OUT_TOP_MID, 0, -10);
 
     // Start spinning animation on logo
-    Spinner::start(logoImg, 600);  // 600ms per rotation
+    // Spinner::start(logoImg, 600);  // 600ms per rotation
 }
 
 void BootView::setProgress(uint8_t progress, const char *label)
