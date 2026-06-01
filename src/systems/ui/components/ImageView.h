@@ -23,16 +23,18 @@ namespace
 class ImageView
 {
 public:
-    static lv_obj_t* create(
-        lv_obj_t* parent,
-        const char* src,
+    static lv_obj_t *create(
+        lv_obj_t *parent,
+        const char *src,
         lv_align_t align = LV_ALIGN_CENTER,
         lv_coord_t x = 0,
-        lv_coord_t y = 0)
+        lv_coord_t y = 0,
+        uint16_t zoom = 256) // 256 = 100%
     {
-        lv_obj_t* image = lv_img_create(parent);
+        lv_obj_t *image = lv_img_create(parent);
         const std::string resolvedSrc = normalizeImageViewSrc(src);
         lv_img_set_src(image, resolvedSrc.c_str());
+        lv_img_set_zoom(image, zoom);
         lv_obj_align(image, align, x, y);
         return image;
     }

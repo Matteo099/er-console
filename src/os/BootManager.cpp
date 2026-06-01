@@ -17,7 +17,7 @@ void BootManager::run()
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_RAINBOWLED_INIT_REQ);
     xEventGroupWaitBits(SystemEventBus::systemEvents,
                         EVT_RAINBOWLED_READY,
-                        pdTRUE,
+                        pdFALSE,
                         pdTRUE,
                         portMAX_DELAY);
     vTaskDelay(pdMS_TO_TICKS(delayMs / 10));
@@ -27,7 +27,7 @@ void BootManager::run()
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_UI_INIT_REQ);
     xEventGroupWaitBits(SystemEventBus::systemEvents,
                         EVT_UI_READY,
-                        pdTRUE,
+                        pdFALSE,
                         pdTRUE,
                         portMAX_DELAY);
     vTaskDelay(pdMS_TO_TICKS(delayMs / 10));
@@ -37,17 +37,17 @@ void BootManager::run()
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_STORAGE_INIT_REQ);
     xEventGroupWaitBits(SystemEventBus::systemEvents,
                         EVT_STORAGE_READY,
-                        pdTRUE,
+                        pdFALSE,
                         pdTRUE,
                         portMAX_DELAY);
     vTaskDelay(pdMS_TO_TICKS(delayMs));
-    
+
     // ---- NETWORK ----
     emitStep(BootStep::NETWORK_INIT, "Initializing network");
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_NETWORK_INIT_REQ);
     xEventGroupWaitBits(SystemEventBus::systemEvents,
                         EVT_NETWORK_READY,
-                        pdTRUE,
+                        pdFALSE,
                         pdTRUE,
                         portMAX_DELAY);
     vTaskDelay(pdMS_TO_TICKS(delayMs));
@@ -58,7 +58,7 @@ void BootManager::run()
     xEventGroupWaitBits(
         SystemEventBus::systemEvents,
         EVT_AUDIO_READY,
-        pdTRUE,
+        pdFALSE,
         pdTRUE,
         portMAX_DELAY);
     vTaskDelay(pdMS_TO_TICKS(delayMs));
@@ -69,7 +69,7 @@ void BootManager::run()
     xEventGroupWaitBits(
         SystemEventBus::systemEvents,
         EVT_INPUT_READY,
-        pdTRUE,
+        pdFALSE,
         pdTRUE,
         portMAX_DELAY);
     vTaskDelay(pdMS_TO_TICKS(delayMs));
@@ -80,14 +80,16 @@ void BootManager::run()
     xEventGroupWaitBits(
         SystemEventBus::systemEvents,
         EVT_LUA_READY,
-        pdTRUE,
+        pdFALSE,
         pdTRUE,
         portMAX_DELAY);
     vTaskDelay(pdMS_TO_TICKS(delayMs));
 
+    Log::info(Log::BOOT_TAG, "All systems initialized, finalizing boot...");
     emitStep(BootStep::DONE, "Boot completed");
     vTaskDelay(pdMS_TO_TICKS(delayMs));
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_BOOT_DONE);
+    Log::info(Log::BOOT_TAG, "Boot process complete");
 }
 
 uint8_t BootManager::bootProgress(BootStep step)
@@ -109,7 +111,7 @@ void BootManager::emitStep(BootStep step, const char *label)
     evt.progress = progress;
     evt.label = label;
 
-    xQueueSend(SystemEventBus::bootQueue, &evt, portMAX_DELAY);
+    xQueueSend(SystemEventBus::bootQueue, &evt, 0);
 
     Log::info(Log::BOOT_TAG, "%s (%d%%)", label, progress);
 }
