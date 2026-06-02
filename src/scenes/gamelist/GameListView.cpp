@@ -16,7 +16,7 @@ void GameListView::create()
 {
     Log::debug(Log::UI_TAG, "Creating GameListView");
     screen = Screen::create();
-    auto layout = SceneLayout::create(screen);
+    auto layout = SceneLayout::create(screen, 70);
     header = BrandHeader::create(layout.top);
     list = ScrollList::create(layout.body, 220, 180, LV_ALIGN_TOP_MID, 0, 0);
     btnBack = BackButton::create(layout.footer, onBackClicked, this);

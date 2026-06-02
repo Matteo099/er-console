@@ -76,6 +76,7 @@ private:
 
     /* Bottom buttons */
     lv_obj_t *startPauseBtn = nullptr;
+    lv_obj_t *startPauseIcon = nullptr;
     lv_obj_t *startPauseLabel = nullptr;
     lv_obj_t *cancelBtn = nullptr;
 

@@ -27,6 +27,7 @@ private:
     lv_obj_t* btnSound = nullptr;
     lv_obj_t* lblWifi = nullptr;
     lv_obj_t* lblSound = nullptr;
+    lv_obj_t* iconSound = nullptr;
     lv_obj_t* btnBack = nullptr;
 
     SettingsAction pendingAction = SettingsAction::None;

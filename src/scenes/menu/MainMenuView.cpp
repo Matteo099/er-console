@@ -14,9 +14,9 @@ void MainMenuView::create()
     Log::debug(Log::UI_TAG, "Creating MainMenuView");
     screen = Screen::create();
 
-    auto layout = SceneLayout::create(screen, 56, 0, false);
+    auto layout = SceneLayout::create(screen, 70, 0, false);
 
-    brandImg = BrandHeader::create(layout.top, 75);
+    brandImg = BrandHeader::create(layout.top);
 
     menuContainer = Container::create(layout.body, 220, 140, LV_ALIGN_TOP_MID, 0, 0);
     Container::setFlex(menuContainer);

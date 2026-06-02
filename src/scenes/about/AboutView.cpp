@@ -15,7 +15,7 @@ void AboutView::create()
     Log::debug(Log::UI_TAG, "Creating AboutView");
 
     screen = Screen::create();
-    auto layout = SceneLayout::create(screen);
+    auto layout = SceneLayout::create(screen, 70);
     brandImg = BrandHeader::create(layout.top);
 
     container = Container::create(layout.body, 240, 140, LV_ALIGN_TOP_MID, 0, 0);

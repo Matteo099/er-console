@@ -16,7 +16,7 @@ void SettingsView::create()
     Log::debug(Log::UI_TAG, "Creating SettingsView");
 
     screen = Screen::create();
-    auto layout = SceneLayout::create(screen);
+    auto layout = SceneLayout::create(screen, 70);
     brandImg = BrandHeader::create(layout.top);
 
     container = Container::create(layout.body, 220, 200, LV_ALIGN_TOP_MID, 0, 0);
@@ -29,7 +29,8 @@ void SettingsView::create()
     btnMonitor = Button::create(container, "Monitor", onMonitorClicked, this, 200, 42, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_SETTINGS);
 
     btnSound = Button::create(container, "Sound: OFF", onSoundClicked, this, 200, 42, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_MUTE);
-    lblSound = lv_obj_get_child(btnSound, 0);
+    iconSound = lv_obj_get_child(btnSound, 0);
+    lblSound = lv_obj_get_child(btnSound, 1);
 
     btnBack = BackButton::create(layout.footer, onBackClicked, this);
 }
@@ -62,13 +63,17 @@ void SettingsView::destroy()
 
 void SettingsView::setSoundEnabled(bool enabled)
 {
-    if (!lblSound)
-        return;
-
-    lv_label_set_text(lblSound, enabled ? "Sound: ON" : "Sound: OFF");
+    if (lblSound)
+    {
+        lv_label_set_text(lblSound, enabled ? "Sound: ON" : "Sound: OFF");
+    }
+    if (iconSound)
+    {
+        lv_label_set_text(iconSound, enabled ? LV_SYMBOL_MUTE : LV_SYMBOL_VOLUME_MID);
+    }
 }
 
-void SettingsView::setWiFiStatus(const std::string& status)
+void SettingsView::setWiFiStatus(const std::string &status)
 {
     if (!lblWifi)
         return;
@@ -77,36 +82,36 @@ void SettingsView::setWiFiStatus(const std::string& status)
     lv_label_set_text(lblWifi, text.c_str());
 }
 
-void SettingsView::onWifiClicked(lv_event_t* e)
+void SettingsView::onWifiClicked(lv_event_t *e)
 {
-    auto* view = static_cast<SettingsView*>(lv_event_get_user_data(e));
+    auto *view = static_cast<SettingsView *>(lv_event_get_user_data(e));
     if (!view)
         return;
 
     view->emitEvent(ButtonClickedEvent("wifi_settings"));
 }
 
-void SettingsView::onSoundClicked(lv_event_t* e)
+void SettingsView::onSoundClicked(lv_event_t *e)
 {
-    auto* view = static_cast<SettingsView*>(lv_event_get_user_data(e));
+    auto *view = static_cast<SettingsView *>(lv_event_get_user_data(e));
     if (!view)
         return;
 
     view->emitEvent(ButtonClickedEvent("toggle_sound"));
 }
 
-void SettingsView::onMonitorClicked(lv_event_t* e)
+void SettingsView::onMonitorClicked(lv_event_t *e)
 {
-    auto* view = static_cast<SettingsView*>(lv_event_get_user_data(e));
+    auto *view = static_cast<SettingsView *>(lv_event_get_user_data(e));
     if (!view)
         return;
 
     view->emitEvent(ButtonClickedEvent("monitor"));
 }
 
-void SettingsView::onBackClicked(lv_event_t* e)
+void SettingsView::onBackClicked(lv_event_t *e)
 {
-    auto* view = static_cast<SettingsView*>(lv_event_get_user_data(e));
+    auto *view = static_cast<SettingsView *>(lv_event_get_user_data(e));
     if (!view)
         return;
 

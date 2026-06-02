@@ -11,10 +11,10 @@ void GameScene::onEnter()
 {
     Log::info(Log::SCENE_TAG, "Entering GameScene");
     view.setEventHandler(this);
+    view.create();
     view.setTime(remainingSec);
     view.setRunning(false);
     view.showLoadingBar();
-    view.create();
 
     // Get LuaSystem from SystemEventBus
     luaSystem = static_cast<LuaSystem*>(
