@@ -6,6 +6,7 @@
 #include "systems/ui/components/BrandHeader.h"
 #include "systems/ui/components/Button.h"
 #include "systems/ui/components/Container.h"
+#include "systems/ui/components/SceneLayout.h"
 #include "systems/ui/components/Screen.h"
 
 void MainMenuView::create()
@@ -13,9 +14,11 @@ void MainMenuView::create()
     Log::debug(Log::UI_TAG, "Creating MainMenuView");
     screen = Screen::create();
 
-    brandImg = BrandHeader::create(screen);
+    auto layout = SceneLayout::create(screen, 56, 0, false);
 
-    menuContainer = Container::create(screen, 220, 140, LV_ALIGN_CENTER, 0, 10);
+    brandImg = BrandHeader::create(layout.top, 75);
+
+    menuContainer = Container::create(layout.body, 220, 140, LV_ALIGN_TOP_MID, 0, 0);
     Container::setFlex(menuContainer);
 
     btnNewGame = Button::create(menuContainer, "New Game", onButtonClicked, this, 200, 42, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);

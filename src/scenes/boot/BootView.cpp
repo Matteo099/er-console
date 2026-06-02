@@ -6,6 +6,7 @@
 #include "systems/ui/components/ImageView.h"
 #include "systems/ui/components/Label.h"
 #include "systems/ui/components/ProgressBar.h"
+#include "systems/ui/components/SceneLayout.h"
 #include "systems/ui/components/Screen.h"
 #include "systems/ui/components/Align.h"
 #include "systems/ui/components/Spinner.h"
@@ -13,14 +14,19 @@
 void BootView::create()
 {
     screen = Screen::create();
-    brandImg = BrandHeader::create(screen);
+
+    auto layout = SceneLayout::create(screen, 72, 0);
+    topRow = layout.top;
+    contentRow = layout.body;
+
+    brandImg = BrandHeader::create(topRow);
     // logoImg = ImageView::create(screen, IMG_LOGO_FILE, LV_ALIGN_CENTER, 0, -10);
 
-    statusLabel = Label::create(screen, "Starting...", &lv_font_montserrat_14, LV_TEXT_ALIGN_CENTER);
+    statusLabel = Label::create(contentRow, "Starting...", &lv_font_montserrat_14, LV_TEXT_ALIGN_CENTER);
     Label::setTextColor(statusLabel, lv_color_hex(0xCCCCCC));
     Align::setPosition(statusLabel, LV_ALIGN_BOTTOM_MID, 0, -28);
 
-    progressBar = ProgressBar::create(screen);
+    progressBar = ProgressBar::create(contentRow);
     Align::alignTo(progressBar, statusLabel, LV_ALIGN_OUT_TOP_MID, 0, -10);
 
     // Start spinning animation on logo
@@ -34,11 +40,15 @@ void BootView::createTextOnly()
 {
     screen = Screen::create();
 
-    statusLabel = Label::create(screen, "Starting...", &lv_font_montserrat_14, LV_TEXT_ALIGN_CENTER);
+    auto layout = SceneLayout::create(screen, 72, 0);
+    topRow = layout.top;
+    contentRow = layout.body;
+
+    statusLabel = Label::create(contentRow, "Starting...", &lv_font_montserrat_14, LV_TEXT_ALIGN_CENTER);
     Label::setTextColor(statusLabel, lv_color_hex(0xCCCCCC));
     Align::setPosition(statusLabel, LV_ALIGN_CENTER, 0, 20);
 
-    progressBar = ProgressBar::create(screen);
+    progressBar = ProgressBar::create(contentRow);
     Align::alignTo(progressBar, statusLabel, LV_ALIGN_OUT_TOP_MID, 0, -12);
 
     brandImg = nullptr;
@@ -55,7 +65,10 @@ void BootView::loadImages()
 
     Log::debug(Log::SCENE_TAG, "Loading boot images into view");
 
-    brandImg = BrandHeader::create(screen);
+    if (!topRow)
+        return;
+
+    brandImg = BrandHeader::create(topRow);
     // logoImg = ImageView::create(screen, IMG_LOGO_FILE, LV_ALIGN_CENTER, 0, -10);
 
     Align::setPosition(statusLabel, LV_ALIGN_BOTTOM_MID, 0, -28);
@@ -99,6 +112,8 @@ void BootView::destroy()
     UICleanup::deleteRoot(screen);
 
     // Nullify remaining pointers
+    topRow = nullptr;
+    contentRow = nullptr;
     brandImg = nullptr;
     logoImg = nullptr;
     statusLabel = nullptr;

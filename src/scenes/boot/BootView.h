@@ -30,6 +30,8 @@ public:
 
 private:
     lv_obj_t *screen = nullptr;
+    lv_obj_t *topRow = nullptr;
+    lv_obj_t *contentRow = nullptr;
     lv_obj_t *brandImg = nullptr;
     lv_obj_t *logoImg = nullptr;
     lv_obj_t *statusLabel = nullptr;

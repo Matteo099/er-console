@@ -8,6 +8,7 @@
 #include "systems/ui/components/Button.h"
 #include "systems/ui/components/Container.h"
 #include "systems/ui/components/Label.h"
+#include "systems/ui/components/SceneLayout.h"
 #include "systems/ui/components/Screen.h"
 
 void SettingsView::create()
@@ -15,9 +16,10 @@ void SettingsView::create()
     Log::debug(Log::UI_TAG, "Creating SettingsView");
 
     screen = Screen::create();
-    brandImg = BrandHeader::create(screen);
+    auto layout = SceneLayout::create(screen);
+    brandImg = BrandHeader::create(layout.top);
 
-    container = Container::create(screen, 220, 200, LV_ALIGN_CENTER, 0, 10);
+    container = Container::create(layout.body, 220, 200, LV_ALIGN_TOP_MID, 0, 0);
     Container::setFlex(container);
 
     btnWifi = Button::create(container, "Wi-Fi", onWifiClicked, this, 200, 42, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_WIFI);
@@ -29,7 +31,7 @@ void SettingsView::create()
     btnSound = Button::create(container, "Sound: OFF", onSoundClicked, this, 200, 42, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_MUTE);
     lblSound = lv_obj_get_child(btnSound, 0);
 
-    btnBack = BackButton::create(screen, onBackClicked, this);
+    btnBack = BackButton::create(layout.footer, onBackClicked, this);
 }
 
 void SettingsView::update()

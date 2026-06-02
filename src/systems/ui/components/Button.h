@@ -35,6 +35,9 @@ public:
         lv_obj_align(btn, align, x, y);
         lv_obj_add_event_cb(btn, callback, LV_EVENT_CLICKED, userData);
         lv_obj_set_style_radius(btn, 8, 0);
+        lv_obj_set_style_border_width(btn, 0, 0);
+        lv_obj_set_style_outline_width(btn, 0, 0);
+        lv_obj_set_style_shadow_width(btn, 0, 0);
         lv_obj_set_style_pad_gap(btn, 6, 0);
 
         // Create flex container for icon + text

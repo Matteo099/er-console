@@ -7,6 +7,7 @@
 #include "systems/ui/components/Button.h"
 #include "systems/ui/components/Container.h"
 #include "systems/ui/components/Label.h"
+#include "systems/ui/components/SceneLayout.h"
 #include "systems/ui/components/Screen.h"
 
 void NetworkView::create()
@@ -14,12 +15,13 @@ void NetworkView::create()
     Log::debug(Log::UI_TAG, "Creating NetworkView");
 
     screen = Screen::create();
-    brandImg = BrandHeader::create(screen);
+    auto layout = SceneLayout::create(screen);
+    brandImg = BrandHeader::create(layout.top);
 
-    container = Container::create(screen, 240, 200, LV_ALIGN_CENTER, 0, 6);
+    container = Container::create(layout.body, 240, 200, LV_ALIGN_TOP_MID, 0, 0);
     Container::setFlex(container);
 
-    statusCard = Container::create(container, 220, 92, LV_ALIGN_CENTER, 0, 0);
+    statusCard = Container::create(container, 220, 92, LV_ALIGN_TOP_MID, 0, 0);
     Container::setFlex(statusCard);
     lv_obj_set_style_bg_opa(statusCard, LV_OPA_20, 0);
     lv_obj_set_style_bg_color(statusCard, lv_color_hex(0x0F172A), 0);
@@ -55,7 +57,7 @@ void NetworkView::create()
         LV_TEXT_ALIGN_CENTER,
         220);
 
-    portalCard = Container::create(container, 220, 88, LV_ALIGN_CENTER, 0, 0);
+    portalCard = Container::create(container, 220, 88, LV_ALIGN_TOP_MID, 0, 0);
     Container::setFlex(portalCard);
     lv_obj_set_style_bg_opa(portalCard, LV_OPA_20, 0);
     lv_obj_set_style_bg_color(portalCard, lv_color_hex(0x111827), 0);
@@ -84,7 +86,7 @@ void NetworkView::create()
         220);
 
     btnPortal = Button::create(container, "Edit Wi-Fi / QR", onPortalClicked, this, 180, 40, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_SETTINGS);
-    btnBack = BackButton::create(screen, onBackClicked, this);
+    btnBack = BackButton::create(layout.footer, onBackClicked, this);
 }
 
 void NetworkView::update()

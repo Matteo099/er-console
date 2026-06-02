@@ -8,6 +8,7 @@
 #include "systems/ui/components/Button.h"
 #include "systems/ui/components/GameCard.h"
 #include "systems/ui/components/Label.h"
+#include "systems/ui/components/SceneLayout.h"
 #include "systems/ui/components/Screen.h"
 #include "systems/ui/components/ScrollList.h"
 
@@ -15,9 +16,10 @@ void GameListView::create()
 {
     Log::debug(Log::UI_TAG, "Creating GameListView");
     screen = Screen::create();
-    header = BrandHeader::create(screen);
-    list = ScrollList::create(screen, 220, 180, LV_ALIGN_CENTER, 0, 10);
-    btnBack = BackButton::create(screen, onBackClicked, this);
+    auto layout = SceneLayout::create(screen);
+    header = BrandHeader::create(layout.top);
+    list = ScrollList::create(layout.body, 220, 180, LV_ALIGN_TOP_MID, 0, 0);
+    btnBack = BackButton::create(layout.footer, onBackClicked, this);
     rebuildCards();
 }
 

@@ -5,6 +5,7 @@
 #include "systems/ui/components/BrandHeader.h"
 #include "systems/ui/components/Container.h"
 #include "systems/ui/components/Label.h"
+#include "systems/ui/components/SceneLayout.h"
 #include "systems/ui/components/Screen.h"
 
 namespace
@@ -37,7 +38,7 @@ namespace
         lv_obj_t*& line2,
         lv_obj_t*& line3)
     {
-        lv_obj_t* card = Container::create(parent, CARD_WIDTH, CARD_HEIGHT, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_t* card = Container::create(parent, CARD_WIDTH, CARD_HEIGHT, LV_ALIGN_TOP_MID, 0, 0);
         Container::setFlex(card);
         applyCardTheme(card);
 
@@ -67,9 +68,10 @@ namespace
 void MonitorView::create()
 {
     screen = Screen::create();
-    brandImg = BrandHeader::create(screen);
+    auto layout = SceneLayout::create(screen);
+    brandImg = BrandHeader::create(layout.top);
 
-    container = Container::create(screen, 240, 220, LV_ALIGN_CENTER, 0, 8);
+    container = Container::create(layout.body, 240, 220, LV_ALIGN_TOP_MID, 0, 0);
     Container::setFlex(container);
 
     powerCard = createStatusCard(container, "Power status", powerLine1, powerLine2, powerLine3);
@@ -78,7 +80,7 @@ void MonitorView::create()
 
     sdCard = createStatusCard(container, "SD status", sdLine1, sdLine2, sdLine3);
 
-    btnBack = BackButton::create(screen, onBackClicked, this);
+    btnBack = BackButton::create(layout.footer, onBackClicked, this);
 }
 
 void MonitorView::update()

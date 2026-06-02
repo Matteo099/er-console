@@ -7,6 +7,7 @@
 #include "systems/ui/components/BrandHeader.h"
 #include "systems/ui/components/Container.h"
 #include "systems/ui/components/Label.h"
+#include "systems/ui/components/SceneLayout.h"
 #include "systems/ui/components/Screen.h"
 
 void AboutView::create()
@@ -14,9 +15,10 @@ void AboutView::create()
     Log::debug(Log::UI_TAG, "Creating AboutView");
 
     screen = Screen::create();
-    brandImg = BrandHeader::create(screen);
+    auto layout = SceneLayout::create(screen);
+    brandImg = BrandHeader::create(layout.top);
 
-    container = Container::create(screen, 240, 140, LV_ALIGN_CENTER, 0, 10);
+    container = Container::create(layout.body, 240, 140, LV_ALIGN_TOP_MID, 0, 0);
     Container::setFlex(container);
 
     // Info icon
@@ -48,7 +50,7 @@ void AboutView::create()
         Label::setTextColor(textLabel, lv_color_hex(0xCCCCCC));
     }
 
-    btnBack = BackButton::create(screen, onBackClicked, this);
+    btnBack = BackButton::create(layout.footer, onBackClicked, this);
 }
 
 void AboutView::update()
