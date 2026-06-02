@@ -1,4 +1,3 @@
-#pragma once
 
 #include "systems/ui/Scene.h"
 #include "systems/lua/LuaSystem.h"
@@ -23,7 +22,6 @@ public:
     void onExit() override;
 
     View& getView() override { return view; }
-    SceneTransition getTransition() const override { return SceneTransition::SlideLeft; }
     SceneRequest getRequest() const override;
 
     bool handleUIEvent(const UIEvent& event) override;

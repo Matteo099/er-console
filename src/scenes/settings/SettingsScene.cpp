@@ -53,19 +53,19 @@ bool SettingsScene::handleUIEvent(const UIEvent& event)
 
     if (clicked.buttonId == "wifi_settings")
     {
-        request = SceneRequest(SceneChange::GoToNetwork);
+        request = SceneRequest(SceneChange::GoToNetwork, SceneTransition::SlideLeft);
         return true;
     }
 
     if (clicked.buttonId == "monitor")
     {
-        request = SceneRequest(SceneChange::GoToMonitor);
+        request = SceneRequest(SceneChange::GoToMonitor, SceneTransition::SlideLeft);
         return true;
     }
 
     if (clicked.buttonId == "back")
     {
-        request = SceneRequest(SceneChange::GoToMainMenu);
+        request = SceneRequest(SceneChange::GoToMainMenu, SceneTransition::SlideRight);
         return true;
     }
 

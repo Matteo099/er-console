@@ -32,17 +32,17 @@ bool MainMenuScene::handleUIEvent(const UIEvent& event)
     const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
     if (clicked.buttonId == "new_game")
     {
-        request = SceneRequest(SceneChange::GoToGameList);
+        request = SceneRequest(SceneChange::GoToGameList, SceneTransition::SlideLeft);
         return true;
     }
     if (clicked.buttonId == "settings")
     {
-        request = SceneRequest(SceneChange::GoToSettings);
+        request = SceneRequest(SceneChange::GoToSettings, SceneTransition::SlideLeft);
         return true;
     }
     if (clicked.buttonId == "about")
     {
-        request = SceneRequest(SceneChange::GoToAbout);
+        request = SceneRequest(SceneChange::GoToAbout, SceneTransition::SlideLeft);
         return true;
     }
 

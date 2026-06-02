@@ -49,6 +49,6 @@ void BootScene::onExit()
 SceneRequest BootScene::getRequest() const
 {
     return bootCompleted && bootCompleteDelayTick <= 0
-               ? SceneRequest(SceneChange::GoToMainMenu)
+               ? SceneRequest(SceneChange::GoToMainMenu, SceneTransition::Fade)
                : SceneRequest();
 }

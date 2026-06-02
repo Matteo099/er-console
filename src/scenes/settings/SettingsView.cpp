@@ -69,7 +69,7 @@ void SettingsView::setSoundEnabled(bool enabled)
     }
     if (iconSound)
     {
-        lv_label_set_text(iconSound, enabled ? LV_SYMBOL_MUTE : LV_SYMBOL_VOLUME_MID);
+        lv_label_set_text(iconSound, enabled ? LV_SYMBOL_VOLUME_MID : LV_SYMBOL_MUTE);
     }
 }
 

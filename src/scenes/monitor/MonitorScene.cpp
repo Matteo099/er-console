@@ -43,7 +43,7 @@ bool MonitorScene::handleUIEvent(const UIEvent& event)
     const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
     if (clicked.buttonId == "back")
     {
-        request = SceneRequest(SceneChange::GoToSettings);
+        request = SceneRequest(SceneChange::GoToSettings, SceneTransition::SlideRight);
         return true;
     }
 

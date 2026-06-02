@@ -37,7 +37,7 @@ void SceneManager::init(void *params)
     pendingDeleteAtTick = 0;
 }
 
-void SceneManager::changeScene(Scene *next)
+void SceneManager::changeScene(Scene *next, SceneTransition transition)
 {
     if (!next)
         return;
@@ -59,7 +59,7 @@ void SceneManager::changeScene(Scene *next)
 
     lv_scr_load_anim(
         current->getView().getScreen(),
-        toLvgl(current->getTransition()),
+        toLvgl(transition),
         300,
         0,
         false);
@@ -90,27 +90,27 @@ void SceneManager::update()
         switch (req.change)
         {
         case SceneChange::GoToMainMenu:
-            changeScene(new MainMenuScene());
+            changeScene(new MainMenuScene(), req.transition);
             break;
 
         case SceneChange::GoToGameList:
-            changeScene(new GameListScene());
+            changeScene(new GameListScene(), req.transition);
             break;
 
         case SceneChange::GoToSettings:
-            changeScene(new SettingsScene());
+            changeScene(new SettingsScene(), req.transition);
             break;
 
         case SceneChange::GoToMonitor:
-            changeScene(new MonitorScene());
+            changeScene(new MonitorScene(), req.transition);
             break;
 
         case SceneChange::GoToAbout:
-            changeScene(new AboutScene());
+            changeScene(new AboutScene(), req.transition);
             break;
 
         case SceneChange::GoToNetwork:
-            changeScene(new NetworkScene());
+            changeScene(new NetworkScene(), req.transition);
             break;
 
         case SceneChange::GoToGame:
@@ -130,7 +130,7 @@ void SceneManager::update()
                     luaSystem->setGameView(static_cast<GameView*>(&gameScene->getView()));
                 }
             }
-            changeScene(gameScene);
+            changeScene(gameScene, req.transition);
             break;
         }
 

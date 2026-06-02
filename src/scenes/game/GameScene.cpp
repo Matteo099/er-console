@@ -90,7 +90,7 @@ bool GameScene::handleUIEvent(const UIEvent& event)
 
     if (clicked.buttonId == "cancel")
     {
-        request = SceneRequest(SceneChange::GoToGameList);
+        request = SceneRequest(SceneChange::GoToGameList, SceneTransition::SlideRight);
         return true;
     }
 

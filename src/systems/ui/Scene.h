@@ -26,16 +26,17 @@ enum class SceneChange
 struct SceneRequest
 {
     SceneChange change;
+    SceneTransition transition;
     void* params;
 
     // Default (no-op)
     constexpr SceneRequest()
-        : change(SceneChange::None), params(nullptr)
+        : change(SceneChange::None), transition(SceneTransition::None), params(nullptr)
     {}
 
     // Explicit request
-    constexpr SceneRequest(SceneChange c, void* p = nullptr)
-        : change(c), params(p)
+    constexpr SceneRequest(SceneChange c, SceneTransition t, void* p = nullptr)
+        : change(c), transition(t), params(p)
     {}
 
     constexpr bool isNone() const
@@ -54,7 +55,6 @@ public:
     virtual void onExit() = 0;
 
     virtual View &getView() = 0;
-    virtual SceneTransition getTransition() const { return SceneTransition::SlideLeft; }
     virtual SceneRequest getRequest() const
     {
         return {}; // default SceneRequest (None, nullptr)

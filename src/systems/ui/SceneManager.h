@@ -9,7 +9,7 @@ public:
     void init(void *params = nullptr) override;
     void update() override;
 
-    void changeScene(Scene* next);
+    void changeScene(Scene* next, SceneTransition transition);
 
 private:
     Scene* current = nullptr;

@@ -75,10 +75,12 @@ void MonitorView::create()
     Container::setFlex(container);
 
     powerCard = createStatusCard(container, "Power status", powerLine1, powerLine2, powerLine3);
+    lv_obj_set_style_margin_top(powerCard, 10, 0);
 
     espCard = createStatusCard(container, "ESP32 status", espLine1, espLine2, espLine3);
 
     sdCard = createStatusCard(container, "SD status", sdLine1, sdLine2, sdLine3);
+    lv_obj_set_style_margin_bottom(sdCard, 10, 0);
 
     btnBack = BackButton::create(layout.footer, onBackClicked, this);
 }

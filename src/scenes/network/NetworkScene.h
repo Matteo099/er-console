@@ -10,7 +10,6 @@ public:
     void onUpdate() override;
     void onExit() override;
     View& getView() override { return view; }
-    SceneTransition getTransition() const override { return SceneTransition::SlideLeft; }
     SceneRequest getRequest() const override;
     bool handleUIEvent(const UIEvent& event) override;
 

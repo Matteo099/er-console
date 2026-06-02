@@ -25,8 +25,8 @@ void UIManager::init(void *params)
     scenes.init();
 
     // 4. Load initial scene (BOOT)
-    // scenes.changeScene(new SampleScene());
-    scenes.changeScene(new BootScene());
+    // scenes.changeScene(new SampleScene(), SceneTransition::None);
+    scenes.changeScene(new BootScene(), SceneTransition::Fade);
 
     Log::info(Log::UI_TAG, "UI Manager ready");
 }

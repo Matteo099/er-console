@@ -45,7 +45,7 @@ bool GameListScene::handleUIEvent(const UIEvent& event)
     const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
     if (clicked.buttonId == "back")
     {
-        request = SceneRequest(SceneChange::GoToMainMenu);
+        request = SceneRequest(SceneChange::GoToMainMenu, SceneTransition::SlideRight);
         return true;
     }
 
@@ -53,7 +53,7 @@ bool GameListScene::handleUIEvent(const UIEvent& event)
     {
         if (selectedIndex >= 0 && selectedIndex < static_cast<int>(games.size()))
         {
-            request = SceneRequest(SceneChange::GoToGame, &games[selectedIndex].id);
+            request = SceneRequest(SceneChange::GoToGame, SceneTransition::SlideLeft, &games[selectedIndex].id);
         }
         return true;
     }

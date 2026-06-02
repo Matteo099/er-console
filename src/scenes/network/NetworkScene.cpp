@@ -49,7 +49,7 @@ bool NetworkScene::handleUIEvent(const UIEvent& event)
 
     if (clicked.buttonId == "back")
     {
-        request = SceneRequest(SceneChange::GoToSettings);
+        request = SceneRequest(SceneChange::GoToSettings, SceneTransition::SlideRight);
         return true;
     }
 

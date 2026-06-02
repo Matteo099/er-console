@@ -11,7 +11,6 @@ public:
     void onExit() override;
 
     View& getView() override { return view; }
-    SceneTransition getTransition() const override { return SceneTransition::Fade; }
     SceneRequest getRequest() const override;
 
     // UI event handling

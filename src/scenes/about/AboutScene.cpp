@@ -32,7 +32,7 @@ bool AboutScene::handleUIEvent(const UIEvent& event)
     const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
     if (clicked.buttonId == "back")
     {
-        request = SceneRequest(SceneChange::GoToMainMenu);
+        request = SceneRequest(SceneChange::GoToMainMenu, SceneTransition::SlideRight);
         return true;
     }
     return false;
