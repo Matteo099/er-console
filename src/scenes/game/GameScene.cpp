@@ -29,12 +29,12 @@ void GameScene::onEnter()
         return;
     }
 
-    if (gameId.empty())
+    if (gameInfo.id.empty())
     {
         loadState = GameLoadState::LoadFailed;
         view.hideLoadingBar();
-        view.setErrorMessage("Game ID not available");
-        Log::error(Log::GAME_TAG, "Game ID not available");
+        view.setErrorMessage("Game info not available");
+        Log::error(Log::GAME_TAG, "Game info not available");
         return;
     }
 
@@ -120,11 +120,12 @@ bool GameScene::handleUIEvent(const UIEvent &event)
 
 bool GameScene::loadGameScript()
 {
-    if (!luaSystem || gameId.empty())
+    if (!luaSystem || gameInfo.id.empty())
         return false;
 
     // Build path: /games/{gameId}/game.lua
-    std::string scriptPath = "/games/" + gameId + "/game.lua";
+    std::string scriptPath = "/games/" + gameInfo.id + "/game.lua";
+    remainingSec = gameInfo.durationMin * 60;
 
     Log::info(Log::LUA_TAG, "Loading game script: %s", scriptPath.c_str());
 

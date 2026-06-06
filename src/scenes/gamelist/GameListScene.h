@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameInfo.h"
+#include "../game/GameInfo.h"
 #include "systems/ui/Scene.h"
 #include "scenes/gamelist/GameListView.h"
 #include <vector>

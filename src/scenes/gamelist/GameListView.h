@@ -3,7 +3,7 @@
 #include "systems/ui/View.h"
 #include "systems/ui/UICleanup.h"
 #include "GameListAction.h"
-#include "GameInfo.h"
+#include "../game/GameInfo.h"
 
 #include <vector>
 

@@ -116,11 +116,11 @@ void SceneManager::update()
         case SceneChange::GoToGame:
         {
             GameScene* gameScene = new GameScene();
-            // Extract game ID from params
+            // Extract game info from params
             if (req.params)
             {
-                std::string* gameIdPtr = static_cast<std::string*>(req.params);
-                gameScene->setGameId(*gameIdPtr);
+                GameInfo* gameInfoPtr = static_cast<GameInfo*>(req.params);
+                gameScene->setGameInfo(*gameInfoPtr);
 
                 // Also set the GameView's LuaSystem reference
                 LuaSystem* luaSystem = static_cast<LuaSystem*>(

@@ -4,6 +4,7 @@
 #include "GameView.h"
 #include "GameState.h"
 #include <string>
+#include "GameInfo.h"
 
 enum class GameLoadState
 {
@@ -27,11 +28,11 @@ public:
     bool handleUIEvent(const UIEvent& event) override;
 
     // Called by SceneManager with game ID
-    void setGameId(const std::string& id) { gameId = id; }
+    void setGameInfo(const GameInfo& info) { gameInfo = info; }
 
 private:
     // Game identification
-    std::string gameId;
+    GameInfo gameInfo;
 
     // View
     GameView view;

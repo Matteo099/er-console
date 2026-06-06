@@ -54,7 +54,7 @@ bool GameListScene::handleUIEvent(const UIEvent &event)
     {
         if (selectedIndex >= 0 && selectedIndex < static_cast<int>(games.size()))
         {
-            request = SceneRequest(SceneChange::GoToGame, SceneTransition::SlideLeft, &games[selectedIndex].id);
+            request = SceneRequest(SceneChange::GoToGame, SceneTransition::SlideLeft, &games[selectedIndex]);
         }
         return true;
     }
