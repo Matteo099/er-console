@@ -11,7 +11,6 @@
 namespace
 {
     constexpr lv_coord_t CARD_WIDTH = 220;
-    constexpr lv_coord_t CARD_HEIGHT = 88;
     constexpr lv_coord_t CARD_TITLE_WIDTH = 220;
     constexpr lv_coord_t CARD_LINE_WIDTH = 220;
 
@@ -20,6 +19,7 @@ namespace
         if (!card)
             return;
 
+        lv_obj_set_style_pad_all(card, 6, 0);
         lv_obj_set_style_bg_opa(card, LV_OPA_20, 0);
         lv_obj_set_style_bg_color(card, lv_color_hex(0x111827), 0);
         lv_obj_set_style_border_width(card, 1, 0);
@@ -38,7 +38,7 @@ namespace
         lv_obj_t*& line2,
         lv_obj_t*& line3)
     {
-        lv_obj_t* card = Container::create(parent, CARD_WIDTH, CARD_HEIGHT, LV_ALIGN_TOP_MID, 0, 0);
+        lv_obj_t* card = Container::create(parent, CARD_WIDTH, LV_SIZE_CONTENT, LV_ALIGN_TOP_MID, 0, 0);
         Container::setFlex(card);
         applyCardTheme(card);
 
@@ -71,7 +71,7 @@ void MonitorView::create()
     auto layout = SceneLayout::create(screen);
     brandImg = BrandHeader::create(layout.top);
 
-    container = Container::create(layout.body, 240, 220, LV_ALIGN_TOP_MID, 0, 0);
+    container = Container::create(layout.body, 240, LV_SIZE_CONTENT, LV_ALIGN_TOP_MID, 0, 0);
     Container::setFlex(container);
 
     powerCard = createStatusCard(container, "Power status", powerLine1, powerLine2, powerLine3);
