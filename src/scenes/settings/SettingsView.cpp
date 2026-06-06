@@ -16,7 +16,7 @@ void SettingsView::create()
     Log::debug(Log::UI_TAG, "Creating SettingsView");
 
     screen = Screen::create();
-    auto layout = SceneLayout::create(screen, 70);
+    auto layout = SceneLayout::create(screen);
     brandImg = BrandHeader::create(layout.top);
 
     container = Container::create(layout.body, 220, 200, LV_ALIGN_TOP_MID, 0, 0);

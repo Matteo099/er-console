@@ -14,7 +14,7 @@ public:
 
     static Parts create(
         lv_obj_t* screen,
-        lv_coord_t topHeight = 56,
+        lv_coord_t topHeight = 60,
         lv_coord_t footerHeight = 56,
         bool bodyScrollable = true)
     {

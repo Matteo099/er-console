@@ -15,13 +15,14 @@
 void GameListView::create()
 {
     screen = Screen::create();
-    auto layout = SceneLayout::create(screen, 60);
+    auto layout = SceneLayout::create(screen);
 
     header = BrandHeader::create(layout.top);
 
     cardContainer = lv_obj_create(layout.body);
     lv_obj_remove_style_all(cardContainer);
     lv_obj_set_size(cardContainer, LV_PCT(100), LV_PCT(100));
+    lv_obj_set_style_pad_all(cardContainer, 6, 0);
 
     // FOOTER
     auto footerRow = lv_obj_create(layout.footer);

@@ -15,21 +15,12 @@ void AboutView::create()
     Log::debug(Log::UI_TAG, "Creating AboutView");
 
     screen = Screen::create();
-    auto layout = SceneLayout::create(screen, 70);
+    auto layout = SceneLayout::create(screen);
     brandImg = BrandHeader::create(layout.top);
 
-    container = Container::create(layout.body, 240, 140, LV_ALIGN_TOP_MID, 0, 0);
+    container = Container::create(layout.body, 240, LV_SIZE_CONTENT, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_set_style_pad_all(container, 20, 0);
     Container::setFlex(container);
-
-    // Info icon
-    lv_obj_t *iconLabel = Label::create(
-        container,
-        LV_SYMBOL_FILE,
-        nullptr,
-        LV_TEXT_ALIGN_CENTER,
-        240);
-    lv_obj_set_style_text_font(iconLabel, &lv_font_roboto_mono_30, 0);
-    Label::setTextColor(iconLabel, lv_color_hex(0x64B5F6));
 
     textLabel = Label::create(
         container,
@@ -40,7 +31,7 @@ void AboutView::create()
         "Commit: " FW_GIT_HASH "\n\n",
         &lv_font_roboto_mono_14,
         LV_TEXT_ALIGN_CENTER,
-        240);
+        LV_PCT(100));
     if (FW_DEV_MODE == 1)
     {
         Label::setTextColor(textLabel, lv_color_hex(0xFF5555));
