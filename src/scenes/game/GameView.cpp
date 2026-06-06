@@ -27,7 +27,7 @@ void GameView::create()
         "Open escape-room engine\n"
         "for ESP32-based consoles.\n\n"
         "© 2026",
-        &lv_font_montserrat_14,
+        &lv_font_roboto_mono_14,
         LV_TEXT_ALIGN_CENTER,
         220);
     Label::setTextColor(textLabel, lv_color_hex(0xCCCCCC));
@@ -37,14 +37,14 @@ void GameView::create()
     lv_obj_set_style_bg_color(gameContentArea, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(gameContentArea, LV_OPA_COVER, 0);
 
-    timerLabel = Label::create(root, "00:00:00", &lv_font_montserrat_48, LV_TEXT_ALIGN_CENTER);
+    timerLabel = Label::create(root, "00:00:00", &lv_font_roboto_mono_48, LV_TEXT_ALIGN_CENTER);
     Align::setPosition(timerLabel, LV_ALIGN_CENTER, 0, -40);
 
     loadingContainer = Container::create(root, 200, 100, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_bg_color(loadingContainer, lv_color_hex(0x333333), 0);
     lv_obj_set_style_bg_opa(loadingContainer, LV_OPA_COVER, 0);
 
-    loadingLabel = Label::create(loadingContainer, "Loading game...", &lv_font_montserrat_14, LV_TEXT_ALIGN_CENTER, 200);
+    loadingLabel = Label::create(loadingContainer, "Loading game...", &lv_font_roboto_mono_14, LV_TEXT_ALIGN_CENTER, 200);
     Align::setPosition(loadingLabel, LV_ALIGN_TOP_MID, 0, 10);
 
     loadingBar = ProgressBar::create(loadingContainer, 160, 20);
@@ -166,13 +166,13 @@ void GameView::drawText(int x, int y, const char *text, int fontSize, uint32_t c
     lv_obj_t *label = Label::create(gameContentArea, text, nullptr, LV_TEXT_ALIGN_LEFT, LV_SIZE_CONTENT, x, y);
     Label::setTextColor(label, lv_color_hex(color));
 
-    const lv_font_t *font = &lv_font_montserrat_14;
+    const lv_font_t *font = &lv_font_roboto_mono_14;
     if (fontSize >= 24)
-        font = &lv_font_montserrat_28;
+        font = &lv_font_roboto_mono_28;
     else if (fontSize >= 20)
-        font = &lv_font_montserrat_20;
+        font = &lv_font_roboto_mono_20;
     else if (fontSize >= 16)
-        font = &lv_font_montserrat_16;
+        font = &lv_font_roboto_mono_16;
 
     Label::setFont(label, font);
 }

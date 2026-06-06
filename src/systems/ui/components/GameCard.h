@@ -42,7 +42,7 @@ private:
     {
         lv_obj_t *l = lv_label_create(parent);
         lv_label_set_text(l, symbol);
-        lv_obj_set_style_text_font(l, &lv_font_montserrat_14, 0);
+        // lv_obj_set_style_text_font(l, &lv_font_roboto_mono_14, 0);
         return l;
     }
 
@@ -101,7 +101,7 @@ public:
         // =====================
         lv_obj_t *title = lv_label_create(card);
         lv_label_set_text(title, data.title.c_str());
-        lv_obj_set_style_text_font(title, &lv_font_montserrat_20, 0);
+        lv_obj_set_style_text_font(title, &lv_font_roboto_mono_20, 0);
         lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_set_width(title, LV_PCT(100));
 
@@ -112,7 +112,7 @@ public:
         // =====================
         lv_obj_t *desc = lv_label_create(card);
         lv_label_set_text(desc, data.description.c_str());
-        lv_obj_set_style_text_font(desc, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(desc, &lv_font_roboto_mono_12, 0);
         lv_obj_set_width(desc, LV_PCT(100));
         lv_obj_set_style_text_align(desc, LV_TEXT_ALIGN_CENTER, 0);
 
@@ -132,16 +132,16 @@ public:
         lv_obj_t *diffRow = createRow(card);
         icon(diffRow, LV_SYMBOL_SETTINGS);
         snprintf(buf, sizeof(buf), "Difficulty: %d/5", data.difficulty);
-        text(diffRow, buf, &lv_font_montserrat_14);
+        text(diffRow, buf, &lv_font_roboto_mono_14);
 
         lv_obj_t *durationRow = createRow(card);
         icon(durationRow, LV_SYMBOL_REFRESH);
         snprintf(buf, sizeof(buf), "%d minutes", data.durationMin);
-        text(durationRow, buf, &lv_font_montserrat_14);
+        text(durationRow, buf, &lv_font_roboto_mono_14);
 
         lv_obj_t *authorRow = createRow(card);
         icon(authorRow, LV_SYMBOL_DIRECTORY);
-        text(authorRow, data.author.c_str(), &lv_font_montserrat_14);
+        text(authorRow, data.author.c_str(), &lv_font_roboto_mono_14);
 
         return card;
     }

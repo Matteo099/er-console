@@ -33,10 +33,14 @@ libdeps = os.path.join(project_dir, ".pio", "libdeps", env_name)
 # Source files (versioned)
 lv_src = os.path.join(project_dir, "include", "lv_conf.h")
 # tft_src = os.path.join(project_dir, "include", "User_Setup.h")
+fonts_src = os.path.join(project_dir, "include", "fonts")
 
 # Destination paths (where libraries expect them)
 lv_dst = os.path.join(libdeps, "lv_conf.h")
 # tft_dst = os.path.join(libdeps, "TFT_eSPI", "User_Setup.h")
+
+# LVGL font directory
+lvgl_fonts_dst = os.path.join(libdeps, "lvgl", "src", "font")
 
 def copy_if_exists(src, dst):
     if not os.path.exists(src):
@@ -55,5 +59,27 @@ def filecmp(src, dst):
     except:
         return False
 
+def sync_directory(src_dir, dst_dir):
+    if not os.path.isdir(src_dir):
+        print(f"[WARN] Missing source directory: {src_dir}")
+        return
+
+    for root, dirs, files in os.walk(src_dir):
+        rel_path = os.path.relpath(root, src_dir)
+        dst_root = os.path.join(dst_dir, rel_path)
+
+        for file in files:
+            src_file = os.path.join(root, file)
+            dst_file = os.path.join(dst_root, file)
+
+            os.makedirs(dst_root, exist_ok=True)
+
+            if not os.path.exists(dst_file) or not filecmp(src_file, dst_file):
+                shutil.copy2(src_file, dst_file)
+                print(f"[SYNC] {src_file} -> {dst_file}")
+
 copy_if_exists(lv_src, lv_dst)
 # copy_if_exists(tft_src, tft_dst)
+
+# Sync all fonts
+sync_directory(fonts_src, lvgl_fonts_dst)

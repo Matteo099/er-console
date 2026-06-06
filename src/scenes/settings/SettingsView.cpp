@@ -23,7 +23,7 @@ void SettingsView::create()
     Container::setFlex(container);
 
     btnWifi = Button::create(container, "Wi-Fi", onWifiClicked, this, 200, 42, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_WIFI);
-    lblWifi = Label::create(container, "Wi-Fi status: Unknown", &lv_font_montserrat_12, LV_TEXT_ALIGN_CENTER, 220);
+    lblWifi = Label::create(container, "Wi-Fi status: Unknown", &lv_font_roboto_mono_12, LV_TEXT_ALIGN_CENTER, 220);
     lv_obj_set_style_text_color(lblWifi, lv_color_hex(0x999999), 0);
 
     btnMonitor = Button::create(container, "Monitor", onMonitorClicked, this, 200, 42, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_SETTINGS);

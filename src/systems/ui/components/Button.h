@@ -62,14 +62,14 @@ public:
         {
             lv_obj_t *icon_label = lv_label_create(btn);
             lv_label_set_text(icon_label, icon);
-            lv_obj_set_style_text_font(icon_label, &lv_font_montserrat_18, 0);
+            lv_obj_set_style_text_font(icon_label, &lv_font_roboto_mono_18, 0);
         }
 
         if (label)
         {
             lv_obj_t *lbl = lv_label_create(btn);
             lv_label_set_text(lbl, label);
-            lv_obj_set_style_text_font(lbl, &lv_font_montserrat_14, 0);
+            lv_obj_set_style_text_font(lbl, &lv_font_roboto_mono_14, 0);
         }
 
         return btn;

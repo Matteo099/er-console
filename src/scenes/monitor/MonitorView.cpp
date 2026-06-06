@@ -28,7 +28,7 @@ namespace
 
     static lv_obj_t* createLine(lv_obj_t* card)
     {
-        return Label::create(card, "-", &lv_font_montserrat_12, LV_TEXT_ALIGN_CENTER, CARD_LINE_WIDTH);
+        return Label::create(card, "-", &lv_font_roboto_mono_12, LV_TEXT_ALIGN_CENTER, CARD_LINE_WIDTH);
     }
 
     static lv_obj_t* createStatusCard(
@@ -42,7 +42,7 @@ namespace
         Container::setFlex(card);
         applyCardTheme(card);
 
-        lv_obj_t* heading = Label::create(card, title, &lv_font_montserrat_16, LV_TEXT_ALIGN_CENTER, CARD_TITLE_WIDTH);
+        lv_obj_t* heading = Label::create(card, title, &lv_font_roboto_mono_16, LV_TEXT_ALIGN_CENTER, CARD_TITLE_WIDTH);
         Label::setTextColor(heading, lv_color_hex(0x7DD3FC));
 
         line1 = createLine(card);

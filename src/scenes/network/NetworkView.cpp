@@ -31,7 +31,7 @@ void NetworkView::create()
     lv_obj_t* heading = Label::create(
         statusCard,
         "Network status",
-        &lv_font_montserrat_18,
+        &lv_font_roboto_mono_18,
         LV_TEXT_ALIGN_CENTER,
         220);
     lv_obj_set_style_text_color(heading, lv_color_hex(0x7DD3FC), 0);
@@ -39,21 +39,21 @@ void NetworkView::create()
     statusLabel = Label::create(
         statusCard,
         "Status: Unknown",
-        &lv_font_montserrat_14,
+        &lv_font_roboto_mono_14,
         LV_TEXT_ALIGN_CENTER,
         220);
 
     ssidLabel = Label::create(
         statusCard,
         "SSID: —",
-        &lv_font_montserrat_14,
+        &lv_font_roboto_mono_14,
         LV_TEXT_ALIGN_CENTER,
         220);
 
     ipLabel = Label::create(
         statusCard,
         "IP: —",
-        &lv_font_montserrat_14,
+        &lv_font_roboto_mono_14,
         LV_TEXT_ALIGN_CENTER,
         220);
 
@@ -67,7 +67,7 @@ void NetworkView::create()
     portalLabel = Label::create(
         portalCard,
         "Scan to open setup portal",
-        &lv_font_montserrat_14,
+        &lv_font_roboto_mono_14,
         LV_TEXT_ALIGN_CENTER,
         220);
 
@@ -81,7 +81,7 @@ void NetworkView::create()
     qrHelp = Label::create(
         portalCard,
         "Use the button to show the QR code",
-        &lv_font_montserrat_12,
+        &lv_font_roboto_mono_12,
         LV_TEXT_ALIGN_CENTER,
         220);
 

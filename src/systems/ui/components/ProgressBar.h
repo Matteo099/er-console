@@ -25,8 +25,10 @@ public:
 
         lv_obj_set_style_anim_time(bar, animTime, 0);
 
-        lv_obj_set_style_bg_color(bar, bgColor, LV_PART_MAIN);
-        lv_obj_set_style_bg_color(bar, indicatorColor, LV_PART_INDICATOR);
+        lv_obj_set_style_bg_color(bar, lv_theme_get_color_secondary(bar), LV_PART_MAIN);
+        lv_obj_set_style_bg_color(bar, lv_theme_get_color_primary(bar), LV_PART_INDICATOR);
+        // lv_obj_set_style_bg_color(bar, bgColor, LV_PART_MAIN);
+        // lv_obj_set_style_bg_color(bar, indicatorColor, LV_PART_INDICATOR);
         lv_obj_set_style_radius(bar, 7, LV_PART_MAIN | LV_PART_INDICATOR);
 
         return bar;

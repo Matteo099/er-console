@@ -26,7 +26,7 @@ void BootView::createTextOnly()
     middleRow = layout.body;
     bottomRow = layout.footer;
 
-    statusLabel = Label::create(bottomRow, "Starting...", &lv_font_montserrat_14, LV_TEXT_ALIGN_CENTER);
+    statusLabel = Label::create(bottomRow, "Starting...", &lv_font_roboto_mono_14, LV_TEXT_ALIGN_CENTER);
     Label::setTextColor(statusLabel, lv_color_hex(0xCCCCCC));
     Align::setPosition(statusLabel, LV_ALIGN_CENTER, 0, 20);
 

@@ -28,7 +28,7 @@ void AboutView::create()
         nullptr,
         LV_TEXT_ALIGN_CENTER,
         240);
-    lv_obj_set_style_text_font(iconLabel, &lv_font_montserrat_30, 0);
+    lv_obj_set_style_text_font(iconLabel, &lv_font_roboto_mono_30, 0);
     Label::setTextColor(iconLabel, lv_color_hex(0x64B5F6));
 
     textLabel = Label::create(
@@ -38,7 +38,7 @@ void AboutView::create()
         "Version " FW_VERSION "\n"
         "Build: " FW_BUILD_DATE "\n"
         "Commit: " FW_GIT_HASH "\n\n",
-        &lv_font_montserrat_14,
+        &lv_font_roboto_mono_14,
         LV_TEXT_ALIGN_CENTER,
         240);
     if (FW_DEV_MODE == 1)

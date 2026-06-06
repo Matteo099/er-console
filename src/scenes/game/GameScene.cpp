@@ -126,6 +126,7 @@ bool GameScene::loadGameScript()
     // Build path: /games/{gameId}/game.lua
     std::string scriptPath = "/games/" + gameInfo.id + "/game.lua";
     remainingSec = gameInfo.durationMin * 60;
+    view.setTime(remainingSec);
 
     Log::info(Log::LUA_TAG, "Loading game script: %s", scriptPath.c_str());
 

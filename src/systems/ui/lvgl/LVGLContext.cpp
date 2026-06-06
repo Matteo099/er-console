@@ -53,6 +53,15 @@ void LVGLContext::init(DisplayDriver *displayDrv, TouchController *touchDrv)
     lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
     lv_indev_set_read_cb(indev, touch_read_cb);
 
+    // Theme
+    lv_theme_t *theme = lv_theme_default_init(
+        disp, // your display
+        lv_palette_main(LV_PALETTE_GREEN),
+        lv_palette_main(LV_PALETTE_BLUE),
+        true, // dark mode
+        LV_FONT_DEFAULT);
+    lv_disp_set_theme(disp, theme);
+
     Log::info(Log::DISPLAY_TAG, "LVGL Context initialization complete");
 }
 
