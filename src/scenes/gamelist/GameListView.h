@@ -15,11 +15,8 @@ public:
     void destroy() override;
 
     lv_obj_t *getScreen() override { return screen; };
-
+    GameInfo* getCurrentGame();
     void setGames(const std::vector<GameInfo> &games);
-
-    bool hasSelectionChanged() const { return selectionChanged; }
-    int getSelectedIndex() const { return selectedIndex; }
 
 private:
     struct CardUserData
@@ -29,25 +26,28 @@ private:
     };
 
 private:
-    static void onCardClicked(lv_event_t *e);
     static void onStartClicked(lv_event_t *e);
     static void onBackClicked(lv_event_t *e);
-
-    void rebuildCards();
-    void updateCardSelectionState(size_t index);
+    static void onPrevClicked(lv_event_t* e);
+    static void onNextClicked(lv_event_t* e);
+    
+    void rebuildCurrentCard();
 
 private:
     lv_obj_t *screen = nullptr;
     lv_obj_t *header = nullptr;
-    lv_obj_t *list = nullptr;
     lv_obj_t *btnBack = nullptr;
 
     std::vector<GameInfo> games;
-    std::vector<lv_obj_t*> cards;
-    std::vector<CardUserData> cardUserData;
 
-    int selectedIndex = -1;
-    bool selectionChanged = false;
+    lv_obj_t *cardContainer = nullptr;
+    lv_obj_t *pageLabel = nullptr;
+
+    lv_obj_t *btnPrev = nullptr;
+    lv_obj_t *btnNext = nullptr;
+    lv_obj_t *btnStart = nullptr;
+
+    size_t currentIndex = 0;
 
     GameListAction pendingAction = GameListAction::None;
 };

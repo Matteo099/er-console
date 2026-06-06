@@ -18,42 +18,59 @@ public:
      * @param y Y offset
      * @param icon Optional LVGL symbol (e.g., LV_SYMBOL_PLAY). Pass nullptr for text-only
      */
-    static lv_obj_t* create(
-        lv_obj_t* parent,
-        const char* label,
+    static lv_obj_t *create(
+        lv_obj_t *parent,
+        const char *label,
         lv_event_cb_t callback,
-        void* userData,
+        void *userData,
         lv_coord_t width = 200,
         lv_coord_t height = 42,
         lv_align_t align = LV_ALIGN_CENTER,
         lv_coord_t x = 0,
         lv_coord_t y = 0,
-        const char* icon = nullptr)
+        const char *icon = nullptr)
     {
-        lv_obj_t* btn = lv_btn_create(parent);
-        lv_obj_set_size(btn, width, height);
-        lv_obj_align(btn, align, x, y);
+        lv_obj_t *btn = lv_btn_create(parent);
+
         lv_obj_add_event_cb(btn, callback, LV_EVENT_CLICKED, userData);
+
         lv_obj_set_style_radius(btn, 8, 0);
         lv_obj_set_style_border_width(btn, 0, 0);
         lv_obj_set_style_outline_width(btn, 0, 0);
         lv_obj_set_style_shadow_width(btn, 0, 0);
-        lv_obj_set_style_pad_gap(btn, 6, 0);
+        lv_obj_set_style_pad_gap(btn, 4, 0);
 
-        // Create flex container for icon + text
         lv_obj_set_flex_flow(btn, LV_FLEX_FLOW_ROW);
-        lv_obj_set_flex_align(btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_flex_align(btn,
+                              LV_FLEX_ALIGN_CENTER,
+                              LV_FLEX_ALIGN_CENTER,
+                              LV_FLEX_ALIGN_CENTER);
+
+        // ❗ KEY FIX:
+        // If width is small → assume flex usage → ignore align()
+        if (width <= 60)
+        {
+            lv_obj_set_size(btn, LV_SIZE_CONTENT, height);
+        }
+        else
+        {
+            lv_obj_set_size(btn, width, height);
+            lv_obj_align(btn, align, x, y);
+        }
 
         if (icon)
         {
-            lv_obj_t* icon_label = lv_label_create(btn);
+            lv_obj_t *icon_label = lv_label_create(btn);
             lv_label_set_text(icon_label, icon);
             lv_obj_set_style_text_font(icon_label, &lv_font_montserrat_18, 0);
         }
 
-        lv_obj_t* lbl = lv_label_create(btn);
-        lv_label_set_text(lbl, label);
-        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_14, 0);
+        if (label)
+        {
+            lv_obj_t *lbl = lv_label_create(btn);
+            lv_label_set_text(lbl, label);
+            lv_obj_set_style_text_font(lbl, &lv_font_montserrat_14, 0);
+        }
 
         return btn;
     }

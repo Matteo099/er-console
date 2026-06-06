@@ -14,116 +14,122 @@
 
 void GameListView::create()
 {
-    Log::debug(Log::UI_TAG, "Creating GameListView");
     screen = Screen::create();
     auto layout = SceneLayout::create(screen, 70);
+
     header = BrandHeader::create(layout.top);
-    list = ScrollList::create(layout.body, 220, 180, LV_ALIGN_TOP_MID, 0, 0);
-    btnBack = BackButton::create(layout.footer, onBackClicked, this);
-    rebuildCards();
+
+    cardContainer = lv_obj_create(layout.body);
+    lv_obj_remove_style_all(cardContainer);
+    lv_obj_set_size(cardContainer, LV_PCT(100), LV_PCT(100));
+
+    // FOOTER
+    auto footerRow = lv_obj_create(layout.footer);
+    lv_obj_remove_style_all(footerRow);
+    lv_obj_set_size(footerRow, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(footerRow, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(footerRow, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_all(footerRow, 6, 0);
+
+    // ICON ONLY BUTTONS
+    btnBack = Button::create(footerRow, nullptr, onBackClicked, this, 40, 40, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_CLOSE);
+    btnPrev = Button::create(footerRow, nullptr, onPrevClicked, this, 40, 40, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_LEFT);
+
+    pageLabel = lv_label_create(footerRow);
+    lv_obj_set_style_text_font(pageLabel, &lv_font_montserrat_14, 0);
+
+    btnNext = Button::create(footerRow, nullptr, onNextClicked, this, 40, 40, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_RIGHT);
+    btnStart = Button::create(footerRow, nullptr, onStartClicked, this, 40, 40, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);
+
+    rebuildCurrentCard();
 }
 
-void GameListView::setGames(const std::vector<GameInfo>& g)
+void GameListView::setGames(
+    const std::vector<GameInfo> &g)
 {
     games = g;
-    rebuildCards();
+
+    currentIndex = 0;
+
+    rebuildCurrentCard();
 }
 
-void GameListView::rebuildCards()
+void GameListView::rebuildCurrentCard()
 {
-    if (!list)
+    if (!cardContainer)
         return;
 
-    lv_obj_clean(list);
+    lv_obj_clean(cardContainer);
 
-    cards.clear();
-    cardUserData.clear();
-    cardUserData.reserve(games.size());
-    selectedIndex = -1;
-    selectionChanged = false;
-
-    for (size_t i = 0; i < games.size(); ++i)
-    {
-        const auto& game = games[i];
-
-        GameCard::GameData cardData{
-            game.title,
-            game.description,
-            game.difficulty,
-            game.durationMin
-        };
-
-        cardUserData.push_back({ this, static_cast<int>(i) });
-        lv_obj_t* card = GameCard::create(
-            list,
-            cardData,
-            onCardClicked,
-            &cardUserData.back());
-
-        cards.push_back(card);
-    }
-}
-
-void GameListView::updateCardSelectionState(size_t index)
-{
-    if (index >= cards.size() || index >= games.size())
+    if (games.empty())
         return;
 
-    lv_obj_t* card = cards[index];
-    const auto& game = games[index];
+    const auto &game = games[currentIndex];
 
-    GameCard::GameData cardData{
-        game.title,
-        game.description,
-        game.difficulty,
-        game.durationMin
-    };
-
-    if (static_cast<int>(index) == selectedIndex)
-    {
-        GameCard::setExpanded(card, cardData, onStartClicked, this);
-    }
-    else
-    {
-        GameCard::setCollapsed(card, cardData);
-    }
+    GameCard::GameData data{game.title, game.description, game.author, game.difficulty, game.durationMin};
+    GameCard::create(cardContainer, data);
+    char pageText[32];
+    snprintf(pageText, sizeof(pageText), "%u / %u", static_cast<unsigned>(currentIndex + 1), static_cast<unsigned>(games.size()));
+    lv_label_set_text(pageLabel, pageText);
 }
 
 void GameListView::update()
 {
-    if (!selectionChanged)
-        return;
-
-    for (size_t i = 0; i < cards.size(); ++i)
-        updateCardSelectionState(i);
-
-    selectionChanged = false;
 }
 
-void GameListView::onCardClicked(lv_event_t* e)
+void GameListView::onPrevClicked(lv_event_t *e)
 {
-    auto* data = static_cast<CardUserData*>(lv_event_get_user_data(e));
-    if (!data || !data->view)
+    auto *view =
+        static_cast<GameListView *>(
+            lv_event_get_user_data(e));
+
+    if (!view || view->games.empty())
         return;
 
-    GameListView* view = data->view;
-    int index = data->index;
-    view->selectedIndex = (view->selectedIndex == index) ? -1 : index;
-    view->selectionChanged = true;
+    if (view->currentIndex == 0)
+        view->currentIndex =
+            view->games.size() - 1;
+    else
+        --view->currentIndex;
+
+    view->rebuildCurrentCard();
 }
 
-void GameListView::onStartClicked(lv_event_t* e)
+GameInfo *GameListView::getCurrentGame()
 {
-    auto* view = static_cast<GameListView*>(lv_event_get_user_data(e));
+    if (games.empty())
+        return nullptr;
+
+    return &games[currentIndex];
+}
+
+void GameListView::onNextClicked(lv_event_t *e)
+{
+    auto *view =
+        static_cast<GameListView *>(
+            lv_event_get_user_data(e));
+
+    if (!view || view->games.empty())
+        return;
+
+    view->currentIndex =
+        (view->currentIndex + 1) % view->games.size();
+
+    view->rebuildCurrentCard();
+}
+
+void GameListView::onStartClicked(lv_event_t *e)
+{
+    auto *view = static_cast<GameListView *>(lv_event_get_user_data(e));
     if (!view)
         return;
 
     view->emitEvent(ButtonClickedEvent("start_game"));
 }
 
-void GameListView::onBackClicked(lv_event_t* e)
+void GameListView::onBackClicked(lv_event_t *e)
 {
-    auto* view = static_cast<GameListView*>(lv_event_get_user_data(e));
+    auto *view = static_cast<GameListView *>(lv_event_get_user_data(e));
     if (!view)
         return;
 
@@ -139,15 +145,18 @@ void GameListView::destroy()
     UICleanup::deleteRoot(screen);
 
     // Nullify remaining pointers
+    screen = nullptr;
     header = nullptr;
-    list = nullptr;
+    cardContainer = nullptr;
+
     btnBack = nullptr;
+    btnPrev = nullptr;
+    btnNext = nullptr;
+    btnStart = nullptr;
+
+    pageLabel = nullptr;
 
     // Clear dynamic object tracking
-    cards.clear();
-    cardUserData.clear();
-
-    selectedIndex = -1;
-    selectionChanged = false;
     pendingAction = GameListAction::None;
+    currentIndex = 0;
 }

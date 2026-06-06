@@ -19,7 +19,7 @@ public:
 
 private:
     GameListView view;
-    int selectedIndex = -1;
+    // int selectedIndex = -1;
     std::vector<GameInfo> games;
     SceneRequest request = SceneRequest();
 

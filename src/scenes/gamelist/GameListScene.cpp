@@ -15,16 +15,12 @@ void GameListScene::onEnter()
     Log::info(Log::SCENE_TAG, "Entering GameListScene");
     view.setEventHandler(this);
     loadGames();
-    view.setGames(games);
     view.create();
+    view.setGames(games);
 }
 
 void GameListScene::onUpdate()
 {
-    if (view.hasSelectionChanged())
-    {
-        selectedIndex = view.getSelectedIndex();
-    }
     view.update();
 }
 
@@ -52,10 +48,15 @@ bool GameListScene::handleUIEvent(const UIEvent &event)
 
     if (clicked.buttonId == "start_game")
     {
-        if (selectedIndex >= 0 && selectedIndex < static_cast<int>(games.size()))
+        if (GameInfo *game =
+                view.getCurrentGame())
         {
-            request = SceneRequest(SceneChange::GoToGame, SceneTransition::SlideLeft, &games[selectedIndex]);
+            request = SceneRequest(
+                SceneChange::GoToGame,
+                SceneTransition::SlideLeft,
+                game);
         }
+
         return true;
     }
 
@@ -102,6 +103,7 @@ void GameListScene::loadGames()
         info.id = entry.name;
         info.title = doc["name"].is<const char *>() ? doc["name"].as<const char *>() : entry.name;
         info.description = doc["description"].as<const char *>() ? doc["description"].as<const char *>() : "";
+        info.author = doc["author"].as<const char *>() ? doc["author"].as<const char *>() : "";
         info.difficulty = doc["difficulty"] | 1;
         info.durationMin = doc["durationMin"] | 0;
         games.push_back(info);
