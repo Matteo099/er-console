@@ -212,6 +212,8 @@ void EscapeOS::init()
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_INPUT, &inputSystem);
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_NETWORK, &networkSystem);
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_PORTAL, &portalSystem);
+    SystemEventBus::instance().registerService(SystemEventBus::SERVICE_AUDIO, &audioSystem);
+    SystemEventBus::instance().registerService(SystemEventBus::SERVICE_LUA, &luaSystem);
     running = true;
 
     createTasks();

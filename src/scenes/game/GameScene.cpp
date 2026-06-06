@@ -17,20 +17,29 @@ void GameScene::onEnter()
     view.showLoadingBar();
 
     // Get LuaSystem from SystemEventBus
-    luaSystem = static_cast<LuaSystem*>(
+    luaSystem = static_cast<LuaSystem *>(
         SystemEventBus::instance().getService(SystemEventBus::SERVICE_LUA));
 
-    if (luaSystem && !gameId.empty())
-    {
-        loadState = GameLoadState::Loading;
-        loadGameScript();
-    }
-    else
+    if (!luaSystem)
     {
         loadState = GameLoadState::LoadFailed;
         view.hideLoadingBar();
-        Log::error(Log::GAME_TAG, "GameScene: LuaSystem or gameId not available");
+        view.setErrorMessage("Lua system not available");
+        Log::error(Log::GAME_TAG, "LuaSystem service not found in SystemEventBus");
+        return;
     }
+
+    if (gameId.empty())
+    {
+        loadState = GameLoadState::LoadFailed;
+        view.hideLoadingBar();
+        view.setErrorMessage("Game ID not available");
+        Log::error(Log::GAME_TAG, "Game ID not available");
+        return;
+    }
+
+    loadState = GameLoadState::Loading;
+    loadGameScript();
 }
 
 void GameScene::onUpdate()
@@ -66,12 +75,12 @@ SceneRequest GameScene::getRequest() const
     return request;
 }
 
-bool GameScene::handleUIEvent(const UIEvent& event)
+bool GameScene::handleUIEvent(const UIEvent &event)
 {
     if (event.getType() != ButtonClickedEvent::TYPE)
         return false;
 
-    const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
+    const auto &clicked = static_cast<const ButtonClickedEvent &>(event);
     if (clicked.buttonId == "start_pause")
     {
         if (state == GameState::Ready || state == GameState::Paused)

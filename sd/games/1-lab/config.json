@@ -1,0 +1,8 @@
+{
+    "name": "Centrale Nucleare Dolomiti",
+    "description": "La Centrale Nucleare Dolomiti...",
+    "version": "1.0",
+    "author": "Matteo Romagnoli",
+    "durationMin": 60,
+    "difficulty": 2
+}
