@@ -1,0 +1,8 @@
+{
+    "name": "Centrale Nucleare Dolomiti",
+    "description": "La Centrale Nucleare Dolomiti è una centrale nucleare situata nelle Dolomiti, in Italia. È stata costruita per fornire energia pulita e sostenibile alla regione, contribuendo alla riduzione delle emissioni di carbonio e alla lotta contro il cambiamento climatico. La centrale utilizza tecnologie avanzate per garantire la sicurezza e l'efficienza, e rappresenta un importante passo verso un futuro energetico più verde.",
+    "version": "1.0",
+    "author": "Matteo Romagnoli",
+    "durationMin": 3600,
+    "difficulty": 4
+}
