@@ -15,7 +15,7 @@
 void GameListView::create()
 {
     screen = Screen::create();
-    auto layout = SceneLayout::create(screen, 70);
+    auto layout = SceneLayout::create(screen, 60);
 
     header = BrandHeader::create(layout.top);
 
