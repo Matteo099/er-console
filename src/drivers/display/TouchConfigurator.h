@@ -19,7 +19,7 @@ public:
     cfg.pin_mosi = 11;  // T_DIN
     cfg.pin_miso = 13;  // T_DO
     cfg.pin_cs = 7;     // T_CS
-    cfg.pin_int = 6;    // T_IRQ
+    cfg.pin_int = -1;    // T_IRQ
 
     cfg.bus_shared = true; // Shared with TFT
     cfg.offset_rotation = 0;
