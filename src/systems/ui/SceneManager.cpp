@@ -29,7 +29,7 @@ static lv_scr_load_anim_t toLvgl(SceneTransition t)
     }
 }
 
-static void oldScreenUnloadCb(lv_event_t* e)
+void SceneManager::oldScreenUnloadCb(lv_event_t* e)
 {
     Scene* scene =
         static_cast<Scene*>(lv_event_get_user_data(e));
