@@ -20,11 +20,7 @@ void SampleView::update()
 
 void SampleView::destroy()
 {
-    // Clean up tracker (for any dynamic objects)
-    getObjectTracker().cleanup();
-
-    // Delete root (cascades to all children)
-    UICleanup::deleteRoot(screen);
+    screen = nullptr;
 
     // Nullify remaining pointers
     btn = nullptr;

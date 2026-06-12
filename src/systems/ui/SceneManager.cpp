@@ -29,43 +29,64 @@ static lv_scr_load_anim_t toLvgl(SceneTransition t)
     }
 }
 
+static void oldScreenUnloadCb(lv_event_t* e)
+{
+    Scene* scene =
+        static_cast<Scene*>(lv_event_get_user_data(e));
+
+    if (!scene)
+        return;
+
+    Log::info(Log::UI_TAG, "Destroying old scene after screen unload");
+
+    scene->onExit();
+    delete scene;
+}
+
 void SceneManager::init(void *params)
 {
     Log::info(Log::UI_TAG, "Initializing SceneManager");
     current = nullptr;
-    pendingDelete = nullptr;
-    pendingDeleteAtTick = 0;
 }
 
-void SceneManager::changeScene(Scene *next, SceneTransition transition)
+void SceneManager::changeScene(Scene* next, SceneTransition transition)
 {
     if (!next)
         return;
 
-    if (pendingDelete)
-    {
-        pendingDelete->onExit();
-        delete pendingDelete;
-        pendingDelete = nullptr;
-        pendingDeleteAtTick = 0;
-    }
-
     Scene* previous = current;
 
-    Log::info(Log::UI_TAG, "Changing scene to new scene.");
-    current = next;
+    Log::info(Log::UI_TAG, "Changing scene");
 
+    current = next;
     current->onEnter();
+
+    lv_obj_t* oldScreen = nullptr;
+
+    if (previous)
+    {
+        oldScreen = previous->getView().getScreen();
+
+        if (oldScreen)
+        {
+            lv_obj_add_event_cb(
+                oldScreen,
+                oldScreenUnloadCb,
+                LV_EVENT_SCREEN_UNLOADED,
+                previous);
+        }
+    }
 
     lv_scr_load_anim(
         current->getView().getScreen(),
         toLvgl(transition),
         300,
         0,
-        false);
+        true);
 
-    pendingDelete = previous;
-    pendingDeleteAtTick = previous ? (lv_tick_get() + 300) : 0;
+    // Special case:
+    // If there was no previous scene, nothing will trigger deletion.
+    // That's fine because there is nothing to delete.
 }
 
 void SceneManager::update()
@@ -73,16 +94,7 @@ void SceneManager::update()
     if (!current)
         return;
 
-    if (pendingDelete && lv_tick_get() >= pendingDeleteAtTick)
-    {
-        pendingDelete->onExit();
-        delete pendingDelete;
-        pendingDelete = nullptr;
-        pendingDeleteAtTick = 0;
-    }
-
     current->onUpdate();
-
     SceneRequest req = current->getRequest();
 
     if (!req.isNone())

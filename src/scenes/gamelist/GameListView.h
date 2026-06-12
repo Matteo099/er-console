@@ -1,7 +1,6 @@
 #pragma once
 
 #include "systems/ui/View.h"
-#include "systems/ui/UICleanup.h"
 #include "GameListAction.h"
 #include "../game/GameInfo.h"
 

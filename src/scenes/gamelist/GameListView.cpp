@@ -139,14 +139,9 @@ void GameListView::onBackClicked(lv_event_t *e)
 
 void GameListView::destroy()
 {
-    // Clean up tracker (for any dynamic objects)
-    getObjectTracker().cleanup();
-
-    // Delete root (cascades to all children including cards)
-    UICleanup::deleteRoot(screen);
+    screen = nullptr;
 
     // Nullify remaining pointers
-    screen = nullptr;
     header = nullptr;
     cardContainer = nullptr;
 

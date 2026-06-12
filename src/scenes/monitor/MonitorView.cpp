@@ -91,10 +91,8 @@ void MonitorView::update()
 
 void MonitorView::destroy()
 {
-    getObjectTracker().cleanup();
-    UICleanup::deleteRoot(screen);
-
     screen = nullptr;
+
     brandImg = nullptr;
     container = nullptr;
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "systems/ui/View.h"
-#include "systems/ui/UICleanup.h"
 #include <string>
 #include <cstdint>
 
@@ -44,11 +43,11 @@ public:
     void setButtonCallback(lv_obj_t* btn, const char* callbackName);
     void removeButton(lv_obj_t* btn);
 
-    lv_obj_t *getScreen() override { return root; };
+    lv_obj_t *getScreen() override { return screen; };
 
 private:
     /* Root */
-    lv_obj_t *root = nullptr;
+    lv_obj_t *screen = nullptr;
 
     /* Header */
     lv_obj_t *header = nullptr;

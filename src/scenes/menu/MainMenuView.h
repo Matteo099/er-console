@@ -2,7 +2,6 @@
 
 #include "MainMenuAction.h"
 #include "systems/ui/View.h"
-#include "systems/ui/UICleanup.h"
 #include <lvgl.h>
 
 /**

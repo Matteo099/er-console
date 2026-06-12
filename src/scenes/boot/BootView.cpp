@@ -81,14 +81,7 @@ void BootView::update()
 
 void BootView::destroy()
 {
-    // Clean up tracker (for any dynamic objects)
-    getObjectTracker().cleanup();
-
-    // Clean up spinner animation before object deletion
-    Spinner::cleanup(logoImg);
-
-    // Delete root (cascades to all children)
-    UICleanup::deleteRoot(screen);
+    screen = nullptr;
 
     // Nullify remaining pointers
     topRow = nullptr;

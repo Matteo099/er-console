@@ -33,9 +33,8 @@ void UIManager::init(void *params)
 
 void UIManager::update()
 {
-    // Advance scene logic (non-blocking)
-    scenes.update();
-
     // Advance LVGL timers & rendering
     lvgl.update();
+    // Advance scene logic (non-blocking)
+    scenes.update();
 }

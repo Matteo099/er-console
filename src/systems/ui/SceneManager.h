@@ -13,6 +13,6 @@ public:
 
 private:
     Scene* current = nullptr;
-    Scene* pendingDelete = nullptr;
-    uint32_t pendingDeleteAtTick = 0;
+    
+    static void oldScreenUnloadCb(lv_event_t* e);
 };

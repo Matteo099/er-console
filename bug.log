@@ -1,0 +1,31 @@
+[Warn]  (70.808, +70808)         lv_obj_get_display: No screen found lv_obj_tree.c:323
+[Warn]  (70.808, +0)     lv_obj_get_display: No screen found lv_obj_tree.c:323
+[Warn]  (70.811, +3)     lv_obj_get_display: No screen found lv_obj_tree.c:323
+[Warn]  (70.817, +6)     lv_obj_get_display: No screen found lv_obj_tree.c:323
+[Warn]  (70.824, +7)     lv_obj_get_display: No screen found lv_obj_tree.c:323
+[Warn]  (70.831, +7)     lv_obj_get_display: No screen found lv_obj_tree.c:323
+Guru Meditation Error: Core  1 panic'ed (LoadProhibited). Exception was unhandled.
+
+Core  1 register dump:
+PC      : 0x40056f5c  PS      : 0x00060530  A0      : 0x8202beec  A1      : 0x3fcf71c0  
+A2      : 0x3fcf71ec  A3      : 0x00006608  A4      : 0x00000014  A5      : 0x3fcf71ec  
+A6      : 0x00000000  A7      : 0x00000001  A8      : 0x00000000  A9      : 0x3fcf71a0  
+A10     : 0x3fccd5a4  A11     : 0x00000010  A12     : 0x00000000  A13     : 0x14820000  
+A14     : 0x60024000  A15     : 0x6002401c  SAR     : 0x0000000a  EXCCAUSE: 0x0000001c  
+EXCVADDR: 0x00006608  LBEG    : 0x40056f5c  LEND    : 0x40056f72  LCOUNT  : 0x00000000  
+
+
+Backtrace: 0x40056f59:0x3fcf71c0 0x4202bee9:0x3fcf71d0 0x4201bea4:0x3fcf7220 0x4201c034:0x3fcf7260 0x42021df9:0x3fcf72a0 0x4202b5be:0x3fcf72c0 0x4202da0d:0x3fcf72f0 0x42018b17:0x3fcf7320 0x420189ca:0x3fcf7340 0x42008c9f:0x3fcf7360
+  #0  0x4202bee9 in lv_event_send at .pio/libdeps/esp32-s3-devkitc-1-n16r8v/lvgl/src/misc/lv_event.c:104
+      (inlined by) lv_event_send at .pio/libdeps/esp32-s3-devkitc-1-n16r8v/lvgl/src/misc/lv_event.c:95
+  #1  0x4201bea4 in event_send_core at .pio/libdeps/esp32-s3-devkitc-1-n16r8v/lvgl/src/core/lv_obj_event.c:370 (discriminator 4)
+  #2  0x4201c034 in lv_obj_send_event at .pio/libdeps/esp32-s3-devkitc-1-n16r8v/lvgl/src/core/lv_obj_event.c:69 (discriminator 2)
+  #3  0x42021df9 in scr_anim_completed at .pio/libdeps/esp32-s3-devkitc-1-n16r8v/lvgl/src/display/lv_display.c:1341
+  #4  0x4202b5be in anim_completed_handler at .pio/libdeps/esp32-s3-devkitc-1-n16r8v/lvgl/src/misc/lv_anim.c:681
+      (inlined by) anim_timer at .pio/libdeps/esp32-s3-devkitc-1-n16r8v/lvgl/src/misc/lv_anim.c:641
+  #5  0x4202da0d in lv_timer_exec at .pio/libdeps/esp32-s3-devkitc-1-n16r8v/lvgl/src/misc/lv_timer.c:327
+      (inlined by) lv_timer_handler at .pio/libdeps/esp32-s3-devkitc-1-n16r8v/lvgl/src/misc/lv_timer.c:107
+      (inlined by) lv_timer_handler at .pio/libdeps/esp32-s3-devkitc-1-n16r8v/lvgl/src/misc/lv_timer.c:63
+  #6  0x42018b17 in LVGLContext::update() at src/systems/ui/lvgl/LVGLContext.cpp:70
+  #7  0x420189ca in UIManager::update() at src/systems/ui/UIManager.cpp:40
+  #8  0x42008c9f in xTaskUI(void*) at src/os/EscapeOS.cpp:85

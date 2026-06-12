@@ -3,7 +3,6 @@
 #include <lvgl.h>
 #include <stdint.h>
 #include "systems/ui/View.h"
-#include "systems/ui/UICleanup.h"
 #include "systems/ui/components/Spinner.h"
 
 /**

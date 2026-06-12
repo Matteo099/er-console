@@ -13,12 +13,12 @@
 
 void GameView::create()
 {
-    root = Screen::create();
-    lv_obj_set_size(root, LV_PCT(100), LV_PCT(100));
+    screen = Screen::create();
+    lv_obj_set_size(screen, LV_PCT(100), LV_PCT(100));
 
-    brandImg = BrandHeader::create(root);
+    brandImg = BrandHeader::create(screen);
 
-    container = Container::create(root, 220, 120, LV_ALIGN_CENTER, 0, 10);
+    container = Container::create(screen, 220, 120, LV_ALIGN_CENTER, 0, 10);
     Container::setFlex(container);
 
     textLabel = Label::create(
@@ -32,15 +32,15 @@ void GameView::create()
         220);
     Label::setTextColor(textLabel, lv_color_hex(0xCCCCCC));
 
-    gameContentArea = Container::create(root, LV_PCT(100), LV_PCT(100) - 96 - 48);
+    gameContentArea = Container::create(screen, LV_PCT(100), LV_PCT(100) - 96 - 48);
     lv_obj_set_pos(gameContentArea, 0, 48);
     lv_obj_set_style_bg_color(gameContentArea, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(gameContentArea, LV_OPA_COVER, 0);
 
-    timerLabel = Label::create(root, "00:00:00", &lv_font_roboto_mono_48, LV_TEXT_ALIGN_CENTER);
+    timerLabel = Label::create(screen, "00:00:00", &lv_font_roboto_mono_48, LV_TEXT_ALIGN_CENTER);
     Align::setPosition(timerLabel, LV_ALIGN_CENTER, 0, -40);
 
-    loadingContainer = Container::create(root, 200, 100, LV_ALIGN_CENTER, 0, 0);
+    loadingContainer = Container::create(screen, 200, 100, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_bg_color(loadingContainer, lv_color_hex(0x333333), 0);
     lv_obj_set_style_bg_opa(loadingContainer, LV_OPA_COVER, 0);
 
@@ -53,11 +53,11 @@ void GameView::create()
 
     lv_obj_add_flag(loadingContainer, LV_OBJ_FLAG_HIDDEN);
 
-    startPauseBtn = Button::create(root, "Start", onStartPause, this, 120, 44, LV_ALIGN_BOTTOM_LEFT, 20, -20, LV_SYMBOL_PLAY);
+    startPauseBtn = Button::create(screen, "Start", onStartPause, this, 120, 44, LV_ALIGN_BOTTOM_LEFT, 20, -20, LV_SYMBOL_PLAY);
     startPauseIcon = lv_obj_get_child(startPauseBtn, 0);
     startPauseLabel = lv_obj_get_child(startPauseBtn, 1);
 
-    cancelBtn = Button::create(root, "Cancel", onCancel, this, 120, 44, LV_ALIGN_BOTTOM_RIGHT, -20, -20, LV_SYMBOL_CLOSE);
+    cancelBtn = Button::create(screen, "Cancel", onCancel, this, 120, 44, LV_ALIGN_BOTTOM_RIGHT, -20, -20, LV_SYMBOL_CLOSE);
     infoBtn = nullptr;
     settingsBtn = nullptr;
 }
@@ -69,11 +69,7 @@ void GameView::update()
 
 void GameView::destroy()
 {
-    // Clean up any dynamically created Lua objects tracked by the tracker
-    getObjectTracker().cleanup();
-
-    // Delete root (cascades to all static children per LVGL hierarchy)
-    UICleanup::deleteRoot(root);
+    screen = nullptr;
 
     // Nullify all remaining pointers (defensive programming)
     // These are now safe to access even though objects are deleted
@@ -139,7 +135,7 @@ void GameView::setErrorMessage(const std::string &message)
 
     if (!errorLabel)
     {
-        errorLabel = Label::create(root, "", nullptr, LV_TEXT_ALIGN_CENTER, LV_PCT(80));
+        errorLabel = Label::create(screen, "", nullptr, LV_TEXT_ALIGN_CENTER, LV_PCT(80));
         Align::setPosition(errorLabel, LV_ALIGN_CENTER, 0, 0);
         lv_label_set_long_mode(errorLabel, LV_LABEL_LONG_WRAP);
         Label::setTextColor(errorLabel, lv_color_hex(0xFF0000));
