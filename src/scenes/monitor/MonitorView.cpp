@@ -11,76 +11,155 @@
 namespace
 {
     constexpr lv_coord_t CARD_WIDTH = 220;
-    constexpr lv_coord_t CARD_TITLE_WIDTH = 220;
-    constexpr lv_coord_t CARD_LINE_WIDTH = 220;
 
-    static void applyCardTheme(lv_obj_t* card)
+    static lv_obj_t *createCard(
+        lv_obj_t *parent,
+        const char *title)
     {
-        if (!card)
-            return;
+        auto *card =
+            lv_obj_create(parent);
 
-        lv_obj_set_style_pad_all(card, 6, 0);
-        lv_obj_set_style_bg_opa(card, LV_OPA_20, 0);
-        lv_obj_set_style_bg_color(card, lv_color_hex(0x111827), 0);
-        lv_obj_set_style_border_width(card, 1, 0);
-        lv_obj_set_style_border_color(card, lv_color_hex(0x1F2937), 0);
-    }
+        lv_obj_set_size(
+            card,
+            CARD_WIDTH,
+            LV_SIZE_CONTENT);
 
-    static lv_obj_t* createLine(lv_obj_t* card)
-    {
-        return Label::create(card, "-", &lv_font_roboto_mono_12, LV_TEXT_ALIGN_CENTER, CARD_LINE_WIDTH);
-    }
+        lv_obj_set_style_bg_color(
+            card,
+            lv_color_hex(0x111827),
+            0);
 
-    static lv_obj_t* createStatusCard(
-        lv_obj_t* parent,
-        const char* title,
-        lv_obj_t*& line1,
-        lv_obj_t*& line2,
-        lv_obj_t*& line3)
-    {
-        lv_obj_t* card = Container::create(parent, CARD_WIDTH, LV_SIZE_CONTENT, LV_ALIGN_TOP_MID, 0, 0);
-        Container::setFlex(card);
-        applyCardTheme(card);
+        lv_obj_set_style_bg_opa(
+            card,
+            LV_OPA_20,
+            0);
 
-        lv_obj_t* heading = Label::create(card, title, &lv_font_roboto_mono_16, LV_TEXT_ALIGN_CENTER, CARD_TITLE_WIDTH);
-        Label::setTextColor(heading, lv_color_hex(0x7DD3FC));
+        lv_obj_set_style_border_width(
+            card,
+            1,
+            0);
 
-        line1 = createLine(card);
-        line2 = createLine(card);
-        line3 = createLine(card);
+        lv_obj_set_style_border_color(
+            card,
+            lv_color_hex(0x1F2937),
+            0);
+
+        lv_obj_set_style_pad_all(
+            card,
+            10,
+            0);
+
+        lv_obj_set_flex_flow(
+            card,
+            LV_FLEX_FLOW_COLUMN);
+
+        lv_obj_set_style_pad_gap(
+            card,
+            8,
+            0);
+
+        auto *lbl =
+            lv_label_create(card);
+
+        lv_label_set_text(lbl, title);
+
+        lv_obj_set_style_text_color(
+            lbl,
+            lv_color_hex(0x7DD3FC),
+            0);
+
         return card;
     }
 
-    static void setTripleLines(
-        lv_obj_t* line1,
-        lv_obj_t* line2,
-        lv_obj_t* line3,
-        const std::string& text1,
-        const std::string& text2,
-        const std::string& text3)
+    static lv_obj_t *createMetricBar(
+        lv_obj_t *parent,
+        lv_obj_t *&valueLabel)
     {
-        if (line1) lv_label_set_text(line1, text1.c_str());
-        if (line2) lv_label_set_text(line2, text2.c_str());
-        if (line3) lv_label_set_text(line3, text3.c_str());
+        valueLabel =
+            lv_label_create(parent);
+
+        lv_label_set_text(
+            valueLabel,
+            "-");
+
+        auto *bar =
+            lv_bar_create(parent);
+
+        lv_obj_set_width(
+            bar,
+            LV_PCT(100));
+
+        lv_obj_set_height(
+            bar,
+            12);
+
+        lv_bar_set_range(
+            bar,
+            0,
+            100);
+
+        return bar;
     }
 }
 
 void MonitorView::create()
 {
     screen = Screen::create();
+
     auto layout = SceneLayout::create(screen);
     brandImg = BrandHeader::create(layout.top);
-
     container = Container::create(layout.body, 240, LV_SIZE_CONTENT, LV_ALIGN_TOP_MID, 0, 0);
     Container::setFlex(container);
 
-    powerCard = createStatusCard(container, "Power status", powerLine1, powerLine2, powerLine3);
-    lv_obj_set_style_margin_top(powerCard, 10, 0);
+    //
+    // POWER CARD
+    //
+    powerCard = createCard(container, "Power");
+    powerArc = lv_arc_create(powerCard);
+    lv_obj_set_size(powerArc, 90, 90);
+    lv_arc_set_range(powerArc, 0, 5000);
+    // 0-5W
+    powerValue = lv_label_create(powerArc);
+    lv_label_set_text(powerValue, "0.0W");
+    lv_obj_center(powerValue);
+    voltageBar = lv_bar_create(powerCard);
+    lv_bar_set_range(voltageBar, 0, 5500);
+    // mV
+    voltageLabel = lv_label_create(powerCard);
+    currentBar = lv_bar_create(powerCard);
+    lv_bar_set_range(currentBar, 0, 2000);
+    // 2A
+    currentLabel = lv_label_create(powerCard);
 
-    espCard = createStatusCard(container, "ESP32 status", espLine1, espLine2, espLine3);
+    //
+    // ESP32 CARD
+    //
+    espCard = createCard(container, "ESP32");
+    cpuArc = lv_arc_create(espCard);
+    lv_obj_set_size(cpuArc, 90, 90);
+    lv_arc_set_range(cpuArc, 0, 100);
+    lv_arc_set_value(cpuArc, 0);
+    cpuValue = lv_label_create(cpuArc);
+    lv_label_set_text(cpuValue, "0%");
+    lv_obj_center(cpuValue);
+    cpuLabel = lv_label_create(cpuArc);
+    lv_label_set_text(cpuLabel, "CPU");
+    lv_obj_align(cpuLabel, LV_ALIGN_CENTER, 0, 18);
+    uptimeLabel = lv_label_create(espCard);
+    lv_label_set_text(uptimeLabel, "Uptime --");
+    heapBar = createMetricBar(espCard, heapLabel);
+    psramBar = createMetricBar(espCard, psramLabel);
 
-    sdCard = createStatusCard(container, "SD status", sdLine1, sdLine2, sdLine3);
-    lv_obj_set_style_margin_bottom(sdCard, 10, 0);
+    //
+    // SD CARD
+    //
+    sdCard = createCard(container, "Storage");
+    sdBar = lv_bar_create(sdCard);
+    lv_obj_set_width(sdBar, LV_PCT(100));
+    lv_obj_set_height(sdBar, 14);
+    lv_bar_set_range(sdBar, 0, 100);
+    sdUsedLabel = lv_label_create(sdCard);
+    sdFreeLabel = lv_label_create(sdCard);
 
     btnBack = BackButton::create(layout.footer, onBackClicked, this);
 }
@@ -93,45 +172,102 @@ void MonitorView::destroy()
 {
     screen = nullptr;
 
-    brandImg = nullptr;
     container = nullptr;
-
-    powerCard = nullptr;
-    powerLine1 = nullptr;
-    powerLine2 = nullptr;
-    powerLine3 = nullptr;
-
-    espCard = nullptr;
-    espLine1 = nullptr;
-    espLine2 = nullptr;
-    espLine3 = nullptr;
-
-    sdCard = nullptr;
-    sdLine1 = nullptr;
-    sdLine2 = nullptr;
-    sdLine3 = nullptr;
-
+    brandImg = nullptr;
     btnBack = nullptr;
+    powerCard = nullptr;
+    espCard = nullptr;
+    sdCard = nullptr;
+    powerArc = nullptr;
+    powerValue = nullptr;
+    voltageBar = nullptr;
+    voltageLabel = nullptr;
+    currentBar = nullptr;
+    currentLabel = nullptr;
+    cpuArc = nullptr;
+    cpuValue = nullptr;
+    cpuLabel = nullptr;
+    uptimeLabel = nullptr;
+    heapBar = nullptr;
+    heapLabel = nullptr;
+    psramBar = nullptr;
+    psramLabel = nullptr;
+    sdBar = nullptr;
+    sdUsedLabel = nullptr;
+    sdFreeLabel = nullptr;
 }
 
-void MonitorView::setPowerStatus(const std::string& line1, const std::string& line2, const std::string& line3)
+void MonitorView::setCpuUsage(
+    uint8_t percent)
 {
-    setTripleLines(powerLine1, powerLine2, powerLine3, line1, line2, line3);
+    lv_arc_set_value(cpuArc, percent);
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%u%%", percent);
+    lv_label_set_text(cpuValue, buf);
 }
 
-void MonitorView::setEspStatus(const std::string& line1, const std::string& line2, const std::string& line3)
+void MonitorView::setHeap(
+    uint32_t usedKb,
+    uint32_t totalKb)
 {
-    setTripleLines(espLine1, espLine2, espLine3, line1, line2, line3);
+    uint8_t pct = totalKb ? (usedKb * 100) / totalKb : 0;
+    lv_bar_set_value(heapBar, pct, LV_ANIM_ON);
+    char buf[64];
+    snprintf(buf, sizeof(buf), "Heap %lu/%lu KB", usedKb, totalKb);
+    lv_label_set_text(heapLabel, buf);
 }
 
-void MonitorView::setSdStatus(const std::string& line1, const std::string& line2, const std::string& line3)
+void MonitorView::setPsram(
+    uint32_t usedKb,
+    uint32_t totalKb)
 {
-    setTripleLines(sdLine1, sdLine2, sdLine3, line1, line2, line3);
+    uint8_t pct = totalKb ? (usedKb * 100) / totalKb : 0;
+    lv_bar_set_value(psramBar, pct, LV_ANIM_ON);
+    char buf[64];
+    snprintf(buf, sizeof(buf), "PSRAM %lu/%lu KB", usedKb, totalKb);
+    lv_label_set_text(psramLabel, buf);
 }
 
-void MonitorView::onBackClicked(lv_event_t* e)
+void MonitorView::setUptime(
+    const char *text)
 {
-    auto* view = static_cast<MonitorView*>(lv_event_get_user_data(e));
+    lv_label_set_text(uptimeLabel, text);
+}
+
+void MonitorView::setSdStorage(
+    uint32_t usedMb,
+    uint32_t totalMb)
+{
+    uint32_t freeMb = totalMb - usedMb;
+    uint8_t pct = totalMb ? (usedMb * 100) / totalMb : 0;
+    lv_bar_set_value(sdBar, pct, LV_ANIM_ON);
+    char buf[64];
+    snprintf(buf, sizeof(buf), "Used %lu / %lu MB", usedMb, totalMb);
+    lv_label_set_text(sdUsedLabel, buf);
+    snprintf(buf, sizeof(buf), "Free %lu MB", freeMb);
+    lv_label_set_text(sdFreeLabel, buf);
+}
+
+void MonitorView::setPower(
+    float voltageV,
+    float currentMa,
+    float powerMw)
+{
+    lv_arc_set_value(powerArc, static_cast<int>(powerMw));
+    char buf[32];
+    std::snprintf(buf, sizeof(buf), "%.2fW", powerMw / 1000.0f);
+    lv_label_set_text(powerValue, buf);
+    lv_bar_set_value(voltageBar, static_cast<int>(voltageV * 1000), LV_ANIM_ON);
+    std::snprintf(buf, sizeof(buf), "%.2fV", voltageV);
+    lv_label_set_text(voltageLabel, buf);
+    lv_bar_set_value(currentBar, static_cast<int>(currentMa), LV_ANIM_ON);
+    std::snprintf(buf, sizeof(buf), "%.0fmA", currentMa);
+    lv_label_set_text(currentLabel, buf);
+}
+
+void MonitorView::onBackClicked(lv_event_t *e)
+{
+    auto *view = static_cast<MonitorView *>(lv_event_get_user_data(e));
     if (!view)
         return;
 

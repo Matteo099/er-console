@@ -7,14 +7,17 @@
 #include "systems/ui/UIEvents.h"
 #include "systems/input/InputSystem.h"
 #include "systems/storage/StorageSystem.h"
+#include "core/CpuMonitor.h"
 
 void MonitorScene::onEnter()
 {
     view.setEventHandler(this);
     view.create();
 
-    input = static_cast<InputSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
-    storage = static_cast<StorageSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+    CpuMonitor::begin();
+
+    input = static_cast<InputSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
+    storage = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
 
     refreshTelemetry();
 }
@@ -35,12 +38,12 @@ SceneRequest MonitorScene::getRequest() const
     return request;
 }
 
-bool MonitorScene::handleUIEvent(const UIEvent& event)
+bool MonitorScene::handleUIEvent(const UIEvent &event)
 {
     if (event.getType() != ButtonClickedEvent::TYPE)
         return false;
 
-    const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
+    const auto &clicked = static_cast<const ButtonClickedEvent &>(event);
     if (clicked.buttonId == "back")
     {
         request = SceneRequest(SceneChange::GoToSettings, SceneTransition::SlideRight);
@@ -52,60 +55,84 @@ bool MonitorScene::handleUIEvent(const UIEvent& event)
 
 void MonitorScene::refreshTelemetry()
 {
-    char line1[96];
-    char line2[96];
-    char line3[96];
 
+    //
+    // Power
+    //
     if (!input)
     {
-        view.setPowerStatus("Input service unavailable", "-", "-");
+        view.setPower(0, 0, 0);
     }
     else
     {
         const auto power = input->getPowerMetrics();
-        if (!power.supported)
+        if (!power.supported || !power.available)
         {
-            view.setPowerStatus("INA219 not detected", "-", "-");
-        }
-        else if (!power.available)
-        {
-            view.setPowerStatus("Power monitor active", "Waiting sample...", "-");
+            view.setPower(0, 0, 0);
         }
         else
         {
-            std::snprintf(line1, sizeof(line1), "Bus %.2fV | Load %.2fV", power.busVoltageV, power.loadVoltageV);
-            std::snprintf(line2, sizeof(line2), "Current %.1fmA | Power %.1fmW", power.currentMa, power.powerMw);
-            std::snprintf(line3, sizeof(line3), "Shunt %.2fmV", power.shuntVoltageMv);
-            view.setPowerStatus(line1, line2, line3);
+            view.setPower(power.loadVoltageV, power.currentMa, power.powerMw);
         }
     }
 
-    std::snprintf(line1, sizeof(line1), "CPU %lu MHz | Uptime %lus", ESP.getCpuFreqMHz(), millis() / 1000UL);
-    std::snprintf(line2, sizeof(line2), "Heap %s", formatBytes(ESP.getFreeHeap()));
-    std::snprintf(line3, sizeof(line3), "PSRAM %s", formatBytes(ESP.getFreePsram()));
-    view.setEspStatus(line1, line2, line3);
+    //
+    // ESP32
+    //
+    char uptime[32];
+    const uint32_t uptimeSec = millis() / 1000UL;
+    const uint32_t hours = uptimeSec / 3600UL;
+    const uint32_t mins = (uptimeSec % 3600UL) / 60UL;
+    const uint32_t secs = uptimeSec % 60UL;
+    std::snprintf(uptime, sizeof(uptime), "Uptime %luh %lum %lus", hours, mins, secs);
+    view.setUptime(uptime);
+
+    //
+    // CPU
+    //
+    // ESP32 frequency is fixed so this is only illustrative.
+    // Replace with real CPU load if you have it.
+    //
+    CpuMonitor::update();
+    view.setCpuUsage(CpuMonitor::usagePercent());
+
+    //
+    // Heap
+    //
+
+    const uint32_t freeHeap = ESP.getFreeHeap();
+    const uint32_t totalHeap = ESP.getHeapSize();
+    const uint32_t usedHeap = totalHeap - freeHeap;
+    view.setHeap(usedHeap / 1024, totalHeap / 1024);
+
+    //
+    // PSRAM
+    //
+
+    const uint32_t totalPsram = ESP.getPsramSize();
+    const uint32_t freePsram = ESP.getFreePsram();
+    const uint32_t usedPsram = totalPsram > freePsram ? totalPsram - freePsram : 0;
+    view.setPsram(usedPsram / 1024, totalPsram / 1024);
+
+    //
+    // SD Card
+    //
 
     if (!storage || !storage->isReady())
     {
-        view.setSdStatus("SD not ready", "-", "-");
+        view.setSdStorage(0, 0);
+        return;
     }
-    else
-    {
-        const uint64_t total = storage->totalBytes();
-        const uint64_t used = storage->usedBytes();
-        const uint64_t free = storage->freeBytes();
 
-        std::snprintf(line1, sizeof(line1), "Total %s", formatBytes(total));
-        std::snprintf(line2, sizeof(line2), "Used %s", formatBytes(used));
-        std::snprintf(line3, sizeof(line3), "Free %s", formatBytes(free));
-        view.setSdStatus(line1, line2, line3);
-    }
+    const uint64_t totalBytes = storage->totalBytes();
+    const uint64_t usedBytes = storage->usedBytes();
+    view.setSdStorage(static_cast<uint32_t>(usedBytes / (1024ULL * 1024ULL)), static_cast<uint32_t>(totalBytes / (1024ULL * 1024ULL)));
 }
 
-const char* MonitorScene::formatBytes(uint64_t bytes)
+const char *MonitorScene::formatBytes(uint64_t bytes)
 {
     static char buffer[32];
-    const char* units[] = {"B", "KB", "MB", "GB"};
+    const char *units[] = {"B", "KB", "MB", "GB"};
     double value = static_cast<double>(bytes);
     int unit = 0;
 
