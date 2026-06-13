@@ -1,6 +1,6 @@
 #include "CpuMonitor.h"
 #include "esp_freertos_hooks.h"
-#include <Arduino.h>
+#include "esp_timer.h"
 
 // ------------------------------
 // Static storage
@@ -9,7 +9,7 @@ volatile uint32_t CpuMonitor::tickCount[2] = {0, 0};
 volatile uint32_t CpuMonitor::idleCount[2] = {0, 0};
 
 uint8_t CpuMonitor::cpuUsage[2] = {0, 0};
-uint32_t CpuMonitor::lastUpdateMs = 0;
+int64_t  CpuMonitor::lastUpdateMs = 0;
 bool CpuMonitor::initialized = false;
 
 // ------------------------------
@@ -42,10 +42,10 @@ static void tickHook1()
 // ------------------------------
 void CpuMonitor::begin()
 {
-    if(initialized)
+    if (initialized)
         return;
-        
-    lastUpdateMs = millis();
+
+    lastUpdateMs = esp_timer_get_time();
 
     esp_register_freertos_idle_hook_for_cpu(idleHook0, 0);
     esp_register_freertos_idle_hook_for_cpu(idleHook1, 1);
@@ -58,9 +58,9 @@ void CpuMonitor::begin()
 
 void CpuMonitor::update()
 {
-    const uint32_t now = millis();
+    int64_t now = esp_timer_get_time();
 
-    if (now - lastUpdateMs < 1000)
+    if (now - lastUpdateMs < 500000) // Update every 0.5 seconds
         return;
 
     lastUpdateMs = now;
@@ -82,8 +82,10 @@ void CpuMonitor::update()
             load = 100.0f * (1.0f - idleRatio);
         }
 
-        if (load < 0) load = 0;
-        if (load > 100) load = 100;
+        if (load < 0)
+            load = 0;
+        if (load > 100)
+            load = 100;
 
         cpuUsage[c] = (uint8_t)load;
     }

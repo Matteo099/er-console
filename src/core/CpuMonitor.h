@@ -17,6 +17,6 @@ public:
 
 private:
     static uint8_t cpuUsage[2];
-    static uint32_t lastUpdateMs;
+    static int64_t lastUpdateMs;
     static bool initialized;
 };

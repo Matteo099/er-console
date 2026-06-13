@@ -109,6 +109,13 @@ void MonitorScene::refreshTelemetry()
     view.setPsram(usedPsram / 1024, totalPsram / 1024);
 
     //
+    // TOTAL RAM (Heap + PSRAM)
+    //
+    const uint32_t usedRam = usedHeap + usedPsram;
+    const uint32_t totalRam = totalHeap + totalPsram;
+    view.setRamUsage(usedRam / 1024, totalRam / 1024);
+
+    //
     // SD Card
     //
     if (!storage || !storage->isReady())

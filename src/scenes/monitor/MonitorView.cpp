@@ -10,64 +10,22 @@
 
 namespace
 {
-    constexpr lv_coord_t CARD_WIDTH = 220;
-
     static lv_obj_t *createCard(
         lv_obj_t *parent,
         const char *title)
     {
-        auto *card =
-            lv_obj_create(parent);
-
-        lv_obj_set_size(
-            card,
-            CARD_WIDTH,
-            LV_SIZE_CONTENT);
-
-        lv_obj_set_style_bg_color(
-            card,
-            lv_color_hex(0x111827),
-            0);
-
-        lv_obj_set_style_bg_opa(
-            card,
-            LV_OPA_20,
-            0);
-
-        lv_obj_set_style_border_width(
-            card,
-            1,
-            0);
-
-        lv_obj_set_style_border_color(
-            card,
-            lv_color_hex(0x1F2937),
-            0);
-
-        lv_obj_set_style_pad_all(
-            card,
-            10,
-            0);
-
-        lv_obj_set_flex_flow(
-            card,
-            LV_FLEX_FLOW_COLUMN);
-
-        lv_obj_set_style_pad_gap(
-            card,
-            8,
-            0);
-
-        auto *lbl =
-            lv_label_create(card);
-
+        auto *card = lv_obj_create(parent);
+        lv_obj_set_size(card, LV_PCT(90), LV_SIZE_CONTENT);
+        lv_obj_set_style_bg_color(card, lv_color_hex(0x111827), 0);
+        lv_obj_set_style_bg_opa(card, LV_OPA_20, 0);
+        lv_obj_set_style_border_width(card, 1, 0);
+        lv_obj_set_style_border_color(card, lv_color_hex(0x1F2937), 0);
+        lv_obj_set_style_pad_all(card, 10, 0);
+        lv_obj_set_flex_flow(card, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_style_pad_gap(card, 8, 0);
+        auto *lbl = lv_label_create(card);
         lv_label_set_text(lbl, title);
-
-        lv_obj_set_style_text_color(
-            lbl,
-            lv_color_hex(0x7DD3FC),
-            0);
-
+        lv_obj_set_style_text_color(lbl, lv_color_hex(0x7DD3FC), 0);
         return card;
     }
 
@@ -75,31 +33,49 @@ namespace
         lv_obj_t *parent,
         lv_obj_t *&valueLabel)
     {
-        valueLabel =
-            lv_label_create(parent);
-
-        lv_label_set_text(
-            valueLabel,
-            "-");
-
-        auto *bar =
-            lv_bar_create(parent);
-
-        lv_obj_set_width(
-            bar,
-            LV_PCT(100));
-
-        lv_obj_set_height(
-            bar,
-            12);
-
-        lv_bar_set_range(
-            bar,
-            0,
-            100);
-
+        valueLabel = lv_label_create(parent);
+        lv_label_set_text(valueLabel, "-");
+        auto *bar = lv_bar_create(parent);
+        lv_obj_set_width(bar, LV_PCT(100));
+        lv_obj_set_height(bar, 12);
+        lv_bar_set_range(bar, 0, 100);
         return bar;
     }
+
+    static lv_obj_t *createGaugeBox(
+        lv_obj_t *parent,
+        const char *title,
+        lv_obj_t *&valueLabel,
+        lv_obj_t *&titleLabel)
+    {
+        auto *box = lv_obj_create(parent);
+
+        lv_obj_set_size(box, 110, 110);
+        lv_obj_set_style_bg_opa(box, LV_OPA_TRANSP, 0);
+        lv_obj_set_style_border_width(box, 0, 0);
+        lv_obj_set_flex_flow(box, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_style_clip_corner(box, true, 0);
+        lv_obj_set_style_pad_all(box, 2, 0);
+
+        auto *arc = lv_arc_create(box);
+        lv_obj_set_size(arc, 90, 90);
+
+        lv_arc_set_range(arc, 0, 100);
+        lv_arc_set_value(arc, 0);
+
+        lv_obj_clear_flag(arc, LV_OBJ_FLAG_CLICKABLE);
+
+        valueLabel = lv_label_create(arc);
+        lv_label_set_text(valueLabel, "0%");
+        lv_obj_center(valueLabel);
+
+        titleLabel = lv_label_create(arc);
+        lv_label_set_text(titleLabel, title);
+        lv_obj_align(titleLabel, LV_ALIGN_CENTER, 0, 18);
+
+        return arc;
+    }
+
 }
 
 void MonitorView::create()
@@ -108,8 +84,38 @@ void MonitorView::create()
 
     auto layout = SceneLayout::create(screen);
     brandImg = BrandHeader::create(layout.top);
-    container = Container::create(layout.body, 240, LV_SIZE_CONTENT, LV_ALIGN_TOP_MID, 0, 0);
+    container = Container::create(layout.body, LV_PCT(95), LV_SIZE_CONTENT, LV_ALIGN_TOP_MID, 0, 0);
     Container::setFlex(container);
+
+    //
+    // ESP32 CARD
+    //
+    espCard = createCard(container, "ESP32");
+    lv_obj_t *metricsRow = lv_obj_create(espCard);
+    lv_obj_set_size(metricsRow, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(metricsRow, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(metricsRow, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_all(metricsRow, 0, 0);
+    lv_obj_set_style_pad_gap(metricsRow, 10, 0);
+    lv_obj_set_style_border_width(metricsRow, 0, 0);
+    lv_obj_set_style_bg_opa(metricsRow, LV_OPA_TRANSP, 0);
+    cpuArc = createGaugeBox(metricsRow, "CPU", cpuValue, cpuLabel);
+    ramArc = createGaugeBox(metricsRow, "RAM", ramValue, ramLabel);
+    uptimeLabel = lv_label_create(espCard);
+    lv_label_set_text(uptimeLabel, "Uptime --");
+    heapBar = createMetricBar(espCard, heapLabel);
+    psramBar = createMetricBar(espCard, psramLabel);
+
+    //
+    // SD CARD
+    //
+    sdCard = createCard(container, "Storage");
+    sdBar = lv_bar_create(sdCard);
+    lv_obj_set_width(sdBar, LV_PCT(100));
+    lv_obj_set_height(sdBar, 14);
+    lv_bar_set_range(sdBar, 0, 100);
+    sdUsedLabel = lv_label_create(sdCard);
+    sdFreeLabel = lv_label_create(sdCard);
 
     //
     // POWER CARD
@@ -130,36 +136,6 @@ void MonitorView::create()
     lv_bar_set_range(currentBar, 0, 2000);
     // 2A
     currentLabel = lv_label_create(powerCard);
-
-    //
-    // ESP32 CARD
-    //
-    espCard = createCard(container, "ESP32");
-    cpuArc = lv_arc_create(espCard);
-    lv_obj_set_size(cpuArc, 90, 90);
-    lv_arc_set_range(cpuArc, 0, 100);
-    lv_arc_set_value(cpuArc, 0);
-    cpuValue = lv_label_create(cpuArc);
-    lv_label_set_text(cpuValue, "0%");
-    lv_obj_center(cpuValue);
-    cpuLabel = lv_label_create(cpuArc);
-    lv_label_set_text(cpuLabel, "CPU");
-    lv_obj_align(cpuLabel, LV_ALIGN_CENTER, 0, 18);
-    uptimeLabel = lv_label_create(espCard);
-    lv_label_set_text(uptimeLabel, "Uptime --");
-    heapBar = createMetricBar(espCard, heapLabel);
-    psramBar = createMetricBar(espCard, psramLabel);
-
-    //
-    // SD CARD
-    //
-    sdCard = createCard(container, "Storage");
-    sdBar = lv_bar_create(sdCard);
-    lv_obj_set_width(sdBar, LV_PCT(100));
-    lv_obj_set_height(sdBar, 14);
-    lv_bar_set_range(sdBar, 0, 100);
-    sdUsedLabel = lv_label_create(sdCard);
-    sdFreeLabel = lv_label_create(sdCard);
 
     btnBack = BackButton::create(layout.footer, onBackClicked, this);
 }
@@ -187,6 +163,9 @@ void MonitorView::destroy()
     cpuArc = nullptr;
     cpuValue = nullptr;
     cpuLabel = nullptr;
+    ramArc = nullptr;
+    ramValue = nullptr;
+    ramLabel = nullptr;
     uptimeLabel = nullptr;
     heapBar = nullptr;
     heapLabel = nullptr;
@@ -204,6 +183,17 @@ void MonitorView::setCpuUsage(
     char buf[16];
     snprintf(buf, sizeof(buf), "%u%%", percent);
     lv_label_set_text(cpuValue, buf);
+}
+
+void MonitorView::setRamUsage(uint32_t usedKb, uint32_t totalKb)
+{
+    uint8_t pct = totalKb ? (usedKb * 100) / totalKb : 0;
+
+    lv_arc_set_value(ramArc, pct);
+
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%u%%", pct);
+    lv_label_set_text(ramValue, buf);
 }
 
 void MonitorView::setHeap(

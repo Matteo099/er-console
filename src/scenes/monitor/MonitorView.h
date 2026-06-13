@@ -19,6 +19,10 @@ public:
         uint32_t usedKb,
         uint32_t totalKb);
 
+    void setRamUsage(
+        uint32_t usedKb,
+        uint32_t totalKb);
+
     void setPsram(
         uint32_t usedKb,
         uint32_t totalKb);
@@ -57,6 +61,10 @@ private:
     lv_obj_t *cpuArc = nullptr;
     lv_obj_t *cpuValue = nullptr;
     lv_obj_t *cpuLabel = nullptr;
+
+    lv_obj_t *ramArc = nullptr;
+    lv_obj_t *ramValue = nullptr;
+    lv_obj_t *ramLabel = nullptr;
 
     lv_obj_t *uptimeLabel = nullptr;
 
