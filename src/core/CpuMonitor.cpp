@@ -1,78 +1,105 @@
 #include "CpuMonitor.h"
+#include "esp_freertos_hooks.h"
 #include <Arduino.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+// ------------------------------
+// Static storage
+// ------------------------------
+volatile uint32_t CpuMonitor::tickCount[2] = {0, 0};
+volatile uint32_t CpuMonitor::idleCount[2] = {0, 0};
 
-uint32_t CpuMonitor::lastSampleTime = 0;
-uint32_t CpuMonitor::activeTime = 0;
-uint8_t CpuMonitor::cpuUsage = 0;
-bool CpuMonitor::isInitialized = false;
+uint8_t CpuMonitor::cpuUsage[2] = {0, 0};
+uint32_t CpuMonitor::lastUpdateMs = 0;
+bool CpuMonitor::initialized = false;
 
 // ------------------------------
-// Measurement task
+// FreeRTOS hooks
 // ------------------------------
-static void cpuProbeTask(void *param)
+static bool idleHook0()
 {
-    while (true)
-    {
-        CpuMonitor::activeTime++;
-        vTaskDelay(pdMS_TO_TICKS(1));
-    }
+    CpuMonitor::idleCount[0]++;
+    return true;
 }
 
+static bool idleHook1()
+{
+    CpuMonitor::idleCount[1]++;
+    return true;
+}
+
+static void tickHook0()
+{
+    CpuMonitor::tickCount[0]++;
+}
+
+static void tickHook1()
+{
+    CpuMonitor::tickCount[1]++;
+}
+
+// ------------------------------
+// Init
+// ------------------------------
 void CpuMonitor::begin()
 {
-    if (isInitialized)
+    if(initialized)
         return;
+        
+    lastUpdateMs = millis();
 
-    lastSampleTime = millis();
-    activeTime = 0;
-    cpuUsage = 0;
+    esp_register_freertos_idle_hook_for_cpu(idleHook0, 0);
+    esp_register_freertos_idle_hook_for_cpu(idleHook1, 1);
 
-    xTaskCreatePinnedToCore(
-        cpuProbeTask,
-        "cpuProbe",
-        2048,
-        nullptr,
-        1,
-        nullptr,
-        0);
+    esp_register_freertos_tick_hook_for_cpu(tickHook0, 0);
+    esp_register_freertos_tick_hook_for_cpu(tickHook1, 1);
 
-    isInitialized = true;
-}
-
-uint8_t CpuMonitor::usagePercent()
-{
-    return cpuUsage;
+    initialized = true;
 }
 
 void CpuMonitor::update()
 {
     const uint32_t now = millis();
 
-    const uint32_t elapsed = now - lastSampleTime;
-
-    if (elapsed < 1000)
+    if (now - lastUpdateMs < 1000)
         return;
 
-    lastSampleTime = now;
+    lastUpdateMs = now;
 
-    // expected ticks in 1s window
-    const uint32_t expected = 1000;
+    for (int c = 0; c < 2; c++)
+    {
+        uint32_t ticks = tickCount[c];
+        uint32_t idle = idleCount[c];
 
-    // how many times probe task actually ran
-    uint32_t measured = activeTime;
+        // reset counters
+        tickCount[c] = 0;
+        idleCount[c] = 0;
 
-    activeTime = 0;
+        float load = 0;
 
-    // convert to % idle vs busy
-    float load = 100.0f * (1.0f - (float)measured / expected);
+        if (ticks > 0)
+        {
+            float idleRatio = (float)idle / (float)ticks;
+            load = 100.0f * (1.0f - idleRatio);
+        }
 
-    if (load < 0)
-        load = 0;
-    if (load > 100)
-        load = 100;
+        if (load < 0) load = 0;
+        if (load > 100) load = 100;
 
-    cpuUsage = (uint8_t)load;
+        cpuUsage[c] = (uint8_t)load;
+    }
+}
+
+uint8_t CpuMonitor::usagePercentCore0()
+{
+    return cpuUsage[0];
+}
+
+uint8_t CpuMonitor::usagePercentCore1()
+{
+    return cpuUsage[1];
+}
+
+uint8_t CpuMonitor::usagePercentAvg()
+{
+    return (cpuUsage[0] + cpuUsage[1]) / 2;
 }

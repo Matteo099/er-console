@@ -55,7 +55,6 @@ bool MonitorScene::handleUIEvent(const UIEvent &event)
 
 void MonitorScene::refreshTelemetry()
 {
-
     //
     // Power
     //
@@ -90,16 +89,12 @@ void MonitorScene::refreshTelemetry()
     //
     // CPU
     //
-    // ESP32 frequency is fixed so this is only illustrative.
-    // Replace with real CPU load if you have it.
-    //
     CpuMonitor::update();
-    view.setCpuUsage(CpuMonitor::usagePercent());
+    view.setCpuUsage(CpuMonitor::usagePercentAvg());
 
     //
     // Heap
     //
-
     const uint32_t freeHeap = ESP.getFreeHeap();
     const uint32_t totalHeap = ESP.getHeapSize();
     const uint32_t usedHeap = totalHeap - freeHeap;
@@ -108,7 +103,6 @@ void MonitorScene::refreshTelemetry()
     //
     // PSRAM
     //
-
     const uint32_t totalPsram = ESP.getPsramSize();
     const uint32_t freePsram = ESP.getFreePsram();
     const uint32_t usedPsram = totalPsram > freePsram ? totalPsram - freePsram : 0;
@@ -117,7 +111,6 @@ void MonitorScene::refreshTelemetry()
     //
     // SD Card
     //
-
     if (!storage || !storage->isReady())
     {
         view.setSdStorage(0, 0);
