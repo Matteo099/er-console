@@ -53,7 +53,7 @@ void GameView::create()
 
     lv_obj_add_flag(loadingContainer, LV_OBJ_FLAG_HIDDEN);
 
-    cancelBtn = Button::create(screen, "Cancel", onCancel, this, 120, 44, LV_ALIGN_BOTTOM_LEFT, -20, 20, LV_SYMBOL_CLOSE);
+    cancelBtn = Button::create(screen, "Cancel", onCancel, this, 120, 44, LV_ALIGN_BOTTOM_LEFT, 20, -20, LV_SYMBOL_CLOSE);
     
     startPauseBtn = Button::create(screen, "Start", onStartPause, this, 120, 44, LV_ALIGN_BOTTOM_RIGHT, -20, -20, LV_SYMBOL_PLAY);
     startPauseIcon = lv_obj_get_child(startPauseBtn, 0);
