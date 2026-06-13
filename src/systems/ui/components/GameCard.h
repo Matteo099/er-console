@@ -48,6 +48,7 @@ private:
             return nullptr;
 
         lv_label_set_text(l, symbol ? symbol : "");
+        lv_obj_set_style_text_color(l, lv_color_black(), 0);
         return l;
     }
 
@@ -58,7 +59,10 @@ private:
             return nullptr;
 
         lv_label_set_text(l, str ? str : "");
-        lv_obj_set_style_text_font(l, font, 0);
+        lv_obj_set_style_text_color(l, lv_color_black(), 0);
+
+        if (font)
+            lv_obj_set_style_text_font(l, font, 0);
 
         return l;
     }
@@ -104,24 +108,19 @@ public:
         lv_obj_set_flex_align(
             card,
             LV_FLEX_ALIGN_START,
-            LV_FLEX_ALIGN_START, // TODO: revert - LV_FLEX_ALIGN_CENTER
+            LV_FLEX_ALIGN_CENTER,
             LV_FLEX_ALIGN_CENTER);
 
         // Title
-        lv_obj_t *title = lv_label_create(card);
-        lv_label_set_text(title, data.title.c_str());
-        lv_obj_set_style_text_font(title, &lv_font_roboto_mono_20, 0);
-        // TODO: revert - lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, 0);
+        lv_obj_t *title = text(card, data.title.c_str(), &lv_font_roboto_mono_20);
+        lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_set_width(title, LV_PCT(100));
-
         lv_obj_set_style_pad_bottom(title, 6, 0);
 
         // Description
-        lv_obj_t *desc = lv_label_create(card);
-        lv_label_set_text(desc, data.description.c_str());
-        lv_obj_set_style_text_font(desc, &lv_font_roboto_mono_12, 0);
+        lv_obj_t *desc = text(card, data.description.c_str(), &lv_font_roboto_mono_12);
+        lv_obj_set_style_text_align(desc, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_set_width(desc, LV_PCT(100));
-        // TODO: revert - lv_obj_set_style_text_align(desc, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_set_style_pad_bottom(desc, 8, 0);
 
         divider(card);
