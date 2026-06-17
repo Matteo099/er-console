@@ -2,13 +2,13 @@
 
 #include <Arduino.h>
 
-RelaySystem::RelaySystem(ChannelSystem &channels) : channels(channels) {}
+RelaySystem::RelaySystem(ChannelSystem *channels) : channels(channels) {}
 
 bool RelaySystem::init()
 {
     for (auto &relay : relays)
     {
-        channels.pinMode(relay.channel, OUTPUT);
+        channels->pinMode(relay.channel, OUTPUT);
         set(&relay - &relays[0], false);
     }
     return true;
@@ -44,7 +44,7 @@ void RelaySystem::set(uint8_t relay, bool state)
     auto &r = relays[relay];
     r.state = state;
     bool output = r.activeLow ? !state : state;
-    channels.digitalWrite(r.channel, output);
+    channels->digitalWrite(r.channel, output);
 }
 
 bool RelaySystem::get(uint8_t relay) const

@@ -4,65 +4,85 @@
 
 InputSystem::InputSystem()
 {
+    subsystems.reserve(16);
 }
 
-bool InputSystem::_init(const InputConfig &config)
+bool InputSystem::begin(const InputConfig &config)
 {
     subsystems.clear();
     if (config.channels.enabled)
     {
-        channelSystem.init();
+        nativeChannel = new NativeChannelProvider();
+        mcpDriver1 = new MCP23017Driver(100, 0x20);
+        mcpDriver2 = new MCP23017Driver(116, 0x21);
+        muxDriver = new CD74HC4067Driver(1, 2, 3, 4, 5);
+        mcp1 = new MCPChannelProvider(*mcpDriver1, 100);
+        mcp2 = new MCPChannelProvider(*mcpDriver2, 116);
+        mux1 = new MuxChannelProvider(*muxDriver, 16);
+        channelSystem = new ChannelSystem();
+        channelSystem->registerProvider(nativeChannel);
+        channelSystem->registerProvider(mcp1);
+        channelSystem->registerProvider(mcp2);
+        channelSystem->registerProvider(mux1);
+
+        channelSystem->init();
         channelInitialized = true;
-        subsystems.push_back(&channelSystem);
+        subsystems.push_back(channelSystem);
     }
     if (config.power.enabled)
     {
-        powerDriver = INA219Driver(Wire, config.power.address);
-        powerSystem = PowerSystem(powerDriver);
-        if (powerSystem.init())
+        powerDriver = new INA219Driver(Wire, config.power.address);
+        powerSystem = new PowerSystem(*powerDriver);
+        if (powerSystem->init())
         {
             powerInitialized = true;
-            subsystems.push_back(&powerSystem);
+            subsystems.push_back(powerSystem);
         }
     }
     if (config.rfid.enabled)
     {
-        rfidDriver = MFRC522Driver(config.rfid.ssPin, config.rfid.rstPin);
-        rfidSystem = RFIDSystem(rfidDriver);
-        if (rfidSystem.init())
+        rfidDriver = new MFRC522Driver(config.rfid.ssPin, config.rfid.rstPin);
+        rfidSystem = new RFIDSystem(*rfidDriver);
+        if (rfidSystem->init())
         {
             rfidInitialized = true;
-            subsystems.push_back(&rfidSystem);
+            subsystems.push_back(rfidSystem);
         }
     }
     if (config.oled.enabled)
     {
-        oledDriver = SSD1306Driver(config.oled.width, config.oled.height, Wire, config.oled.address);
-        oledSystem = OLEDSystem(oledDriver);
-        if (oledSystem.init())
+        oledDriver = new SSD1306Driver(config.oled.width, config.oled.height, Wire, config.oled.address);
+        oledSystem = new OLEDSystem(*oledDriver);
+        if (oledSystem->init())
         {
             oledInitialized = true;
-            subsystems.push_back(&oledSystem);
+            subsystems.push_back(oledSystem);
         }
     }
     if (config.rgb.enabled)
     {
-        rgbLedSystem.init();
+        rgbExpander = new PCA9685Driver(config.rgb.address);
+        rgbLedSystem = new RgbLedSystem();
+        rgbLedSystem->registerDriver(rgbExpander);
+        rgbLedSystem->init();
         rgbInitialized = true;
-        subsystems.push_back(&rgbLedSystem);
+        subsystems.push_back(rgbLedSystem);
     }
     if (config.sevenSegment.enabled)
     {
-        sevenSegmentSystem.init();
+        sevenSegDriver = new MAX7219Driver(config.sevenSegment.csPin, config.sevenSegment.digits);
+        sevenSegmentSystem = new SevenSegmentSystem();
+        sevenSegmentSystem->registerDriver(sevenSegDriver);
+        sevenSegmentSystem->init();
         sevenSegmentInitialized = true;
-        subsystems.push_back(&sevenSegmentSystem);
+        subsystems.push_back(sevenSegmentSystem);
     }
     if (config.relays.enabled)
     {
-        relaySystem = RelaySystem(channelSystem);
-        relaySystem.init();
+        relaySystem = new RelaySystem(channelSystem);
+        relaySystem->init();
         relayInitialized = true;
-        subsystems.push_back(&relaySystem);
+        subsystems.push_back(relaySystem);
     }
     return true;
 }
@@ -70,20 +90,6 @@ bool InputSystem::_init(const InputConfig &config)
 void InputSystem::init(void *params)
 {
     (void)params;
-
-    registerSubsystems();
-
-    Log::info(Log::INPUT_TAG,
-              "Initializing %u input subsystems",
-              static_cast<unsigned>(subsystems.size()));
-
-    for (ISubsystem *subsystem : subsystems)
-    {
-        if (!subsystem)
-            continue;
-
-        subsystem->init();
-    }
 
     Log::info(Log::INPUT_TAG,
               "Input subsystem initialization completed");
@@ -96,21 +102,6 @@ void InputSystem::update()
         if (system)
             system->update();
     }
-}
-
-void InputSystem::registerSubsystems()
-{
-    subsystems.clear();
-
-    subsystems.reserve(7);
-
-    subsystems.push_back(&powerSystem);
-    subsystems.push_back(&rfidSystem);
-    subsystems.push_back(&oledSystem);
-    subsystems.push_back(&channelSystem);
-    subsystems.push_back(&relaySystem);
-    subsystems.push_back(&rgbLedSystem);
-    subsystems.push_back(&sevenSegmentSystem);
 }
 
 /**
@@ -144,7 +135,7 @@ PowerSystem *InputSystem::power()
         return nullptr;
     }
 
-    return &powerSystem;
+    return powerSystem;
 }
 
 /**
@@ -178,7 +169,7 @@ RFIDSystem *InputSystem::rfid()
         return nullptr;
     }
 
-    return &rfidSystem;
+    return rfidSystem;
 }
 
 /**
@@ -205,7 +196,7 @@ OLEDSystem *InputSystem::oled()
         return nullptr;
     }
 
-    return &oledSystem;
+    return oledSystem;
 }
 
 /**
@@ -220,18 +211,18 @@ OLEDSystem *InputSystem::oled()
  *     ->pinMode(
  *         5,
  *        OUTPUT);
- * 
+ *
  * // Read pin 5 state (ESP32 GPIO)
  * bool state =
  *    input.channels()
  *       ->digitalRead(5);
- * 
+ *
  * // Set pin 5 HIGH (MCP23017)
  * input.channels()
  *      ->digitalWrite(
  *          100,
  *          HIGH);
- * 
+ *
  * // Read analog value from channel 203 (CD74HC4067)
  * int value =
  *   input.channels()
@@ -248,7 +239,7 @@ ChannelSystem *InputSystem::channels()
         return nullptr;
     }
 
-    return &channelSystem;
+    return channelSystem;
 }
 
 /**
@@ -263,17 +254,17 @@ ChannelSystem *InputSystem::channels()
  *      ->set(
  *          0,
  *          true);
- * 
+ *
  * // Turn OFF
  * input.relays()
  *     ->set(
  *         0,
  *        false);
- * 
+ *
  * // Toggle
  * input.relays()
  *    ->toggle(0);
- * 
+ *
  * // Pulse (500ms pulse)
  * input.relays()
  *   ->pulse(
@@ -291,7 +282,7 @@ RelaySystem *InputSystem::relays()
         return nullptr;
     }
 
-    return &relaySystem;
+    return relaySystem;
 }
 
 /**
@@ -306,7 +297,7 @@ RelaySystem *InputSystem::relays()
  *      ->setColor(
  *          0,
  *          {255,0,0});
- * 
+ *
  * // set brightness to 50%
  * input.rgb()
  *      ->setBrightness(
@@ -324,7 +315,7 @@ RgbLedSystem *InputSystem::rgb()
         return nullptr;
     }
 
-    return &rgbLedSystem;
+    return rgbLedSystem;
 }
 
 /**
@@ -340,7 +331,7 @@ RgbLedSystem *InputSystem::rgb()
  *      ->display(
  *          0,
  *          "12.5");
- * 
+ *
  * // Set brightness to 50%
  * input.sevenSegment()
  *     ->brightness(
@@ -358,5 +349,5 @@ SevenSegmentSystem *InputSystem::sevenSegment()
         return nullptr;
     }
 
-    return &sevenSegmentSystem;
+    return sevenSegmentSystem;
 }

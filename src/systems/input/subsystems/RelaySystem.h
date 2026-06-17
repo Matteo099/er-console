@@ -8,7 +8,7 @@
 class RelaySystem : public ISubsystem
 {
 public:
-    RelaySystem(ChannelSystem &channels);
+    RelaySystem(ChannelSystem *channels);
     bool init() override;
     void update() override;
     void registerRelay(uint8_t id, uint16_t channel, bool activeLow = false);
@@ -26,6 +26,6 @@ private:
         bool pulsing;
         uint32_t pulseEnd;
     };
-    ChannelSystem &channels;
+    ChannelSystem *channels = nullptr;
     std::vector<RelayConfig> relays;
 };

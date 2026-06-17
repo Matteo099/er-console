@@ -9,6 +9,11 @@ class NativeChannelProvider : public IChannelProvider
 {
 
 public:
+    bool init() override
+    {
+        return true;
+    }
+    
     bool owns(uint16_t c) const override
     {
         return c < 40;

@@ -16,10 +16,24 @@ public:
     {
     }
 
+    bool init() override
+    {
+        return driver.init();
+    }
+
     bool owns(uint16_t c) const override
     {
         return c >= base &&
                c < base + 16;
+    }
+
+    void pinMode(
+        uint16_t c,
+        uint8_t mode) override
+    {
+        driver.pinMode(
+            c - base,
+            mode);
     }
 
     void digitalWrite(
@@ -38,8 +52,13 @@ public:
             c - base);
     }
 
+    int analogRead(
+        uint16_t c) override
+    {
+        return -1;
+    }
+
 private:
     MCP23017Driver &driver;
-
     uint16_t base;
 };

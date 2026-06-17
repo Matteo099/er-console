@@ -32,6 +32,7 @@ public:
     ~InputSystem() override = default;
 
     void init(void *params = nullptr) override;
+    bool begin(const InputConfig &config);
     void update() override;
 
     PowerSystem *power();
@@ -41,10 +42,6 @@ public:
     RelaySystem *relays();
     RgbLedSystem *rgb();
     SevenSegmentSystem *sevenSegment();
-
-private:
-    void registerSubsystems();
-    bool _init(const InputConfig &config);
 
 private:
     bool powerInitialized = false;
@@ -57,22 +54,25 @@ private:
 
     std::vector<ISubsystem *> subsystems;
 
-    INA219Driver powerDriver;
-    MFRC522Driver rfidDriver;
-    SSD1306Driver oledDriver;
-    NativeChannelProvider nativeChannel;
-    MCPChannelProvider mcp1;
-    MCPChannelProvider mcp2;
-    MuxChannelProvider mux1;
-    ESP32PwmRgbDriver statusLed;
-    PCA9685Driver rgbExpander;
-    MAX7219Driver sevenSegDriver;
+    INA219Driver *powerDriver = nullptr;
+    MFRC522Driver *rfidDriver = nullptr;
+    SSD1306Driver *oledDriver = nullptr;
+    NativeChannelProvider *nativeChannel = nullptr;
+    MCP23017Driver *mcpDriver1 = nullptr;
+    MCP23017Driver *mcpDriver2 = nullptr;
+    CD74HC4067Driver *muxDriver = nullptr;
+    MCPChannelProvider *mcp1 = nullptr;
+    MCPChannelProvider *mcp2 = nullptr;
+    MuxChannelProvider *mux1 = nullptr;
+    ESP32PwmRgbDriver *statusLed = nullptr;
+    PCA9685Driver *rgbExpander = nullptr;
+    MAX7219Driver *sevenSegDriver = nullptr;
 
-    PowerSystem powerSystem;
-    RFIDSystem rfidSystem;
-    OLEDSystem oledSystem;
-    ChannelSystem channelSystem;
-    RelaySystem relaySystem;
-    RgbLedSystem rgbLedSystem;
-    SevenSegmentSystem sevenSegmentSystem;
+    PowerSystem *powerSystem = nullptr;
+    RFIDSystem *rfidSystem = nullptr;
+    OLEDSystem *oledSystem = nullptr;
+    ChannelSystem *channelSystem = nullptr;
+    RelaySystem *relaySystem = nullptr;
+    RgbLedSystem *rgbLedSystem = nullptr;
+    SevenSegmentSystem *sevenSegmentSystem = nullptr;
 };

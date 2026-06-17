@@ -16,10 +16,22 @@ public:
     {
     }
 
+    bool init() override
+    {
+        return mux.init();
+    }
+
     bool owns(uint16_t c) const override
     {
         return c >= base &&
                c < base + 16;
+    }
+
+    void pinMode(
+        uint16_t c,
+        uint8_t mode) override
+    {
+        // Mux channels can't set pinMode, so we ignore this
     }
 
     int analogRead(
