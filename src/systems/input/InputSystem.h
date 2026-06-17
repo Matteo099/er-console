@@ -5,6 +5,7 @@
 #include "core/SystemService.h"
 
 #include "subsystems/ISubsystem.h"
+#include "InputConfig.h"
 
 #include "drivers/input/power/INA219Driver.h"
 #include "drivers/input/rfid/MFRC522Driver.h"
@@ -27,24 +28,33 @@
 class InputSystem : public SystemService
 {
 public:
-    InputSystem() = default;
+    InputSystem();
     ~InputSystem() override = default;
 
     void init(void *params = nullptr) override;
     void update() override;
 
-    PowerSystem &power();
-    RFIDSystem &rfid();
-    OLEDSystem &oled();
-    ChannelSystem &channels();
-    RelaySystem &relays();
-    RgbLedSystem &rgb();
-    SevenSegmentSystem &sevenSegment();
+    PowerSystem *power();
+    RFIDSystem *rfid();
+    OLEDSystem *oled();
+    ChannelSystem *channels();
+    RelaySystem *relays();
+    RgbLedSystem *rgb();
+    SevenSegmentSystem *sevenSegment();
 
 private:
     void registerSubsystems();
+    bool _init(const InputConfig &config);
 
 private:
+    bool powerInitialized = false;
+    bool rfidInitialized = false;
+    bool oledInitialized = false;
+    bool channelInitialized = false;
+    bool rgbInitialized = false;
+    bool sevenSegmentInitialized = false;
+    bool relayInitialized = false;
+
     std::vector<ISubsystem *> subsystems;
 
     INA219Driver powerDriver;
@@ -62,7 +72,6 @@ private:
     RFIDSystem rfidSystem;
     OLEDSystem oledSystem;
     ChannelSystem channelSystem;
-
     RelaySystem relaySystem;
     RgbLedSystem rgbLedSystem;
     SevenSegmentSystem sevenSegmentSystem;

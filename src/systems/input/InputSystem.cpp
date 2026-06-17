@@ -2,29 +2,69 @@
 
 #include "log/Logger.h"
 
-InputSystem::InputSystem() : powerDriver(),
-                             rfidDriver(RFID_SS_PIN, RFID_RST_PIN),
-                             oledDriver(128, 64, Wire, 0x3C),
-                             nativeChannel(),
-                             mcp1(100, 0x20),
-                             mcp2(116, 0x21),
-                             mux1(200, 34, 25, 26, 27, 14),
-                             statusLed(21, 22, 23),
-                             rgbExpander(0x40),
-                             sevenSegDriver(5, 8),
-
-                             powerSystem(powerDriver),
-                             rfidSystem(rfidDriver),
-                             oledSystem(oledDriver),
-                             relaySystem(channelSystem)
+InputSystem::InputSystem()
 {
-    channelSystem.registerProvider(&nativeChannel);
-    channelSystem.registerProvider(&mcp1);
-    channelSystem.registerProvider(&mcp2);
-    channelSystem.registerProvider(&mux1);
-    rgbLedSystem.registerDriver(&statusLed);
-    rgbLedSystem.registerDriver(&rgbExpander);
-    sevenSegmentSystem.registerDriver(&sevenSegDriver);
+}
+
+bool InputSystem::_init(const InputConfig &config)
+{
+    subsystems.clear();
+    if (config.channels.enabled)
+    {
+        channelSystem.init();
+        channelInitialized = true;
+        subsystems.push_back(&channelSystem);
+    }
+    if (config.power.enabled)
+    {
+        powerDriver = INA219Driver(Wire, config.power.address);
+        powerSystem = PowerSystem(powerDriver);
+        if (powerSystem.init())
+        {
+            powerInitialized = true;
+            subsystems.push_back(&powerSystem);
+        }
+    }
+    if (config.rfid.enabled)
+    {
+        rfidDriver = MFRC522Driver(config.rfid.ssPin, config.rfid.rstPin);
+        rfidSystem = RFIDSystem(rfidDriver);
+        if (rfidSystem.init())
+        {
+            rfidInitialized = true;
+            subsystems.push_back(&rfidSystem);
+        }
+    }
+    if (config.oled.enabled)
+    {
+        oledDriver = SSD1306Driver(config.oled.width, config.oled.height, Wire, config.oled.address);
+        oledSystem = OLEDSystem(oledDriver);
+        if (oledSystem.init())
+        {
+            oledInitialized = true;
+            subsystems.push_back(&oledSystem);
+        }
+    }
+    if (config.rgb.enabled)
+    {
+        rgbLedSystem.init();
+        rgbInitialized = true;
+        subsystems.push_back(&rgbLedSystem);
+    }
+    if (config.sevenSegment.enabled)
+    {
+        sevenSegmentSystem.init();
+        sevenSegmentInitialized = true;
+        subsystems.push_back(&sevenSegmentSystem);
+    }
+    if (config.relays.enabled)
+    {
+        relaySystem = RelaySystem(channelSystem);
+        relaySystem.init();
+        relayInitialized = true;
+        subsystems.push_back(&relaySystem);
+    }
+    return true;
 }
 
 void InputSystem::init(void *params)
@@ -51,12 +91,10 @@ void InputSystem::init(void *params)
 
 void InputSystem::update()
 {
-    for (ISubsystem *subsystem : subsystems)
+    for (auto *system : subsystems)
     {
-        if (!subsystem)
-            continue;
-
-        subsystem->update();
+        if (system)
+            system->update();
     }
 }
 
@@ -75,156 +113,250 @@ void InputSystem::registerSubsystems()
     subsystems.push_back(&sevenSegmentSystem);
 }
 
-PowerSystem &InputSystem::power()
-{
-    return powerSystem;
-}
-
-/*
-Usage:
-
-RFIDTag tag;
-if(input.rfid().consumeTag(tag))
-{
-    Log::info(
-        Log::APP_TAG,
-        "Card scanned: %s",
-        tag.uid.c_str());
-}
+/**
+ * Initialize:
+ *
+ * InputConfig cfg;
+ *
+ * cfg.power.enabled=true;
+ * cfg.power.address=0x40;
+ *
+ * input.init(cfg);
+ *
+ *
+ * Usage:
+ *
+ * auto p=input.power();
+ *
+ * if(p)
+ * {
+ *    auto m=p->metrics();
+ * }
  */
-RFIDSystem &InputSystem::rfid()
+PowerSystem *InputSystem::power()
 {
-    return rfidSystem;
+    if (!powerInitialized)
+    {
+        Log::warn(
+            Log::INPUT_TAG,
+            "PowerSystem not initialized");
+
+        return nullptr;
+    }
+
+    return &powerSystem;
 }
 
-
-/*
-Usage:
-
-input.oled().showMessage(
-    "System Ready");
-*/
-OLEDSystem &InputSystem::oled()
+/**
+ * Initialize:
+ *
+ * cfg.rfid.enabled=true;
+ * cfg.rfid.ssPin=5;
+ * cfg.rfid.rstPin=27;
+ *
+ *
+ * Usage:
+ *
+ * if(auto r=input.rfid())
+ * {
+ *     RFIDTag tag;
+ *
+ *     if(r->consumeTag(tag))
+ *     {
+ *        Serial.println(tag.uid);
+ *     }
+ * }
+ */
+RFIDSystem *InputSystem::rfid()
 {
-    return oledSystem;
+    if (!rfidInitialized)
+    {
+        Log::warn(
+            Log::INPUT_TAG,
+            "RFIDSystem not initialized");
+
+        return nullptr;
+    }
+
+    return &rfidSystem;
 }
 
-/*
-Example usage
-
-ESP32 GPIO:
-input.channels()
-     .pinMode(
-          5,
-          OUTPUT);
-input.channels()
-     .digitalWrite(
-          5,
-          HIGH);
-
-MCP23017:
-input.channels()
-     .digitalWrite(
-          100,
-          HIGH);
-
-CD74HC4067:
-int sensor =
-    input.channels()
-         .analogRead(203);
-*/
-ChannelSystem &InputSystem::channels()
+/**
+ * Initialize:
+ *
+ * cfg.oled.enabled=true;
+ * cfg.oled.address=0x3C;
+ *
+ *
+ * Usage:
+ *
+ * input.oled()
+ *      ->showMessage(
+ *          "READY");
+ */
+OLEDSystem *InputSystem::oled()
 {
-    return channelSystem;
+    if (!oledInitialized)
+    {
+        Log::warn(
+            Log::INPUT_TAG,
+            "OLEDSystem not initialized");
+
+        return nullptr;
+    }
+
+    return &oledSystem;
 }
 
-
-/*
-Usage
-
-Register relays (during setup):
-input.relays()
-     .registerRelay(
-        0,
-        100,
-        true);
-
-Turn ON:
-input.relays()
-     .set(
-        0,
-        true);
-
-OFF:
-input.relays()
-     .set(
-        0,
-        false);
-
-Toggle:
-input.relays()
-     .toggle(0);
-
-Pulse (500ms pulse):
-input.relays()
-     .pulse(
-        0,
-        500);
-*/
-RelaySystem &InputSystem::relays()
+/**
+ * Initialize:
+ *
+ * cfg.channels.enabled=true;
+ *
+ *
+ * Usage:
+ * // Set pin 5 as OUTPUT (ESP32 GPIO)
+ * input.channels()
+ *     ->pinMode(
+ *         5,
+ *        OUTPUT);
+ * 
+ * // Read pin 5 state (ESP32 GPIO)
+ * bool state =
+ *    input.channels()
+ *       ->digitalRead(5);
+ * 
+ * // Set pin 5 HIGH (MCP23017)
+ * input.channels()
+ *      ->digitalWrite(
+ *          100,
+ *          HIGH);
+ * 
+ * // Read analog value from channel 203 (CD74HC4067)
+ * int value =
+ *   input.channels()
+ *     ->analogRead(203);
+ */
+ChannelSystem *InputSystem::channels()
 {
-    return relaySystem;
+    if (!channelInitialized)
+    {
+        Log::warn(
+            Log::INPUT_TAG,
+            "ChannelSystem not initialized");
+
+        return nullptr;
+    }
+
+    return &channelSystem;
 }
 
-/*
-Usage:
-
-// set red color
-input.rgb()
-     .setColor(
-          0,
-          {255,0,0});
-
-
-// set brightness to 50%
-input.rgb()
-     .setBrightness(
-          0,
-          50);
-*/
-RgbLedSystem &InputSystem::rgb()
+/**
+ * Initialize:
+ *
+ * cfg.relays.enabled=true;
+ *
+ *
+ * Usage:
+ * // Turn ON
+ * input.relays()
+ *      ->set(
+ *          0,
+ *          true);
+ * 
+ * // Turn OFF
+ * input.relays()
+ *     ->set(
+ *         0,
+ *        false);
+ * 
+ * // Toggle
+ * input.relays()
+ *    ->toggle(0);
+ * 
+ * // Pulse (500ms pulse)
+ * input.relays()
+ *   ->pulse(
+ *       0,
+ *      500);
+ */
+RelaySystem *InputSystem::relays()
 {
-    return rgbLedSystem;
+    if (!relayInitialized)
+    {
+        Log::warn(
+            Log::INPUT_TAG,
+            "RelaySystem not initialized");
+
+        return nullptr;
+    }
+
+    return &relaySystem;
 }
 
-/*
-Usage
-
-Show number:
-input.sevenSegment()
-     .display(
-        0,
-        "1234");
-
-Temperature:
-input.sevenSegment()
-     .display(
-        0,
-        "25.5");
-
-Error:
-input.sevenSegment()
-     .display(
-        0,
-        "E-01");
-
-Brightness:
-input.sevenSegment()
-     .brightness(
-        0,
-        5);
-*/
-SevenSegmentSystem &InputSystem::sevenSegment()
+/**
+ * Initialize:
+ *
+ * cfg.rgb.enabled=true;
+ *
+ *
+ * Usage:
+ * // set red color
+ * input.rgb()
+ *      ->setColor(
+ *          0,
+ *          {255,0,0});
+ * 
+ * // set brightness to 50%
+ * input.rgb()
+ *      ->setBrightness(
+ *         0,
+ *        50);
+ */
+RgbLedSystem *InputSystem::rgb()
 {
-    return sevenSegmentSystem;
+    if (!rgbInitialized)
+    {
+        Log::warn(
+            Log::INPUT_TAG,
+            "RgbLedSystem not initialized");
+
+        return nullptr;
+    }
+
+    return &rgbLedSystem;
+}
+
+/**
+ * Initialize:
+ *
+ * cfg.sevenSegment.enabled=true;
+ * cfg.sevenSegment.csPin=5;
+ *
+ *
+ * Usage:
+ * // Show number
+ * input.sevenSegment()
+ *      ->display(
+ *          0,
+ *          "12.5");
+ * 
+ * // Set brightness to 50%
+ * input.sevenSegment()
+ *     ->brightness(
+ *          0,
+ *          5);
+ */
+SevenSegmentSystem *InputSystem::sevenSegment()
+{
+    if (!sevenSegmentInitialized)
+    {
+        Log::warn(
+            Log::INPUT_TAG,
+            "SevenSegmentSystem not initialized");
+
+        return nullptr;
+    }
+
+    return &sevenSegmentSystem;
 }
