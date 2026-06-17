@@ -1,0 +1,31 @@
+#include "PCA9685Driver.h"
+
+PCA9685Driver::PCA9685Driver(uint8_t address) : pwm(address), address(address) {}
+
+bool PCA9685Driver::init()
+{
+    if (!pwm.begin())
+        return false;
+    pwm.setPWMFreq(1000);
+    for (int i = 0; i < 16; i++)
+        brightness[i] = 255;
+    initialized = true;
+    return true;
+}
+
+bool PCA9685Driver::available() const { return initialized; }
+
+void PCA9685Driver::writeChannel(uint8_t channel, uint16_t value) { pwm.setPWM(channel, 0, value); }
+
+void PCA9685Driver::setRGB(uint8_t channel, const RGBColor &c)
+{
+    uint16_t r = c.r * brightness[channel] / 255;
+    uint16_t g = c.g * brightness[channel] / 255;
+    uint16_t b = c.b * brightness[channel] / 255;
+    uint8_t base = channel * 3;
+    writeChannel(base, r * 16);
+    writeChannel(base + 1, g * 16);
+    writeChannel(base + 2, b * 16);
+}
+
+void PCA9685Driver::setBrightness(uint8_t channel, uint8_t value) { brightness[channel] = value; }

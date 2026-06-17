@@ -1,114 +1,230 @@
 #include "InputSystem.h"
-#include <Arduino.h>  // Assuming Arduino framework for GPIO
-// #include <Wire.h>     // For I2C (OLED)
-// #include <Adafruit_SSD1306.h>  // Assuming OLED library
-// #include <MFRC522.h>  // Assuming RFID library
 
 #include "log/Logger.h"
 
-// Mock or actual pins
-// #define RFID_SS_PIN 10
-// #define RFID_RST_PIN 9
-// #define OLED_RESET -1
-// #define SCREEN_ADDRESS 0x3C
+InputSystem::InputSystem() : powerDriver(),
+                             rfidDriver(RFID_SS_PIN, RFID_RST_PIN),
+                             oledDriver(128, 64, Wire, 0x3C),
+                             nativeChannel(),
+                             mcp1(100, 0x20),
+                             mcp2(116, 0x21),
+                             mux1(200, 34, 25, 26, 27, 14),
+                             statusLed(21, 22, 23),
+                             rgbExpander(0x40),
+                             sevenSegDriver(5, 8),
 
-// MFRC522 rfid(RFID_SS_PIN, RFID_RST_PIN);
-// Adafruit_SSD1306 display(128, 64, &Wire, OLED_RESET);
+                             powerSystem(powerDriver),
+                             rfidSystem(rfidDriver),
+                             oledSystem(oledDriver),
+                             relaySystem(channelSystem)
+{
+    channelSystem.registerProvider(&nativeChannel);
+    channelSystem.registerProvider(&mcp1);
+    channelSystem.registerProvider(&mcp2);
+    channelSystem.registerProvider(&mux1);
+    rgbLedSystem.registerDriver(&statusLed);
+    rgbLedSystem.registerDriver(&rgbExpander);
+    sevenSegmentSystem.registerDriver(&sevenSegDriver);
+}
 
-void InputSystem::init(void *params) {
-    // Initialize GPIO, RFID, OLED
+void InputSystem::init(void *params)
+{
+    (void)params;
 
-    // SPI.begin();
-    // rfid.PCD_Init();
-    
-    // if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
-    //     Serial.println(F("SSD1306 allocation failed"));
-    // }
-    // display.display();
-    // delay(2000);
-    // display.clearDisplay();
+    registerSubsystems();
 
-    powerMetrics = PowerMetrics{};
-    powerMetrics.supported = ina219.init();
-    if (!powerMetrics.supported) {
-        Log::warn(Log::INPUT_TAG, "Power monitor (INA219) not available; continuing without telemetry");
-    } else {
-        Log::info(Log::INPUT_TAG, "Power monitor (INA219) initialized");
+    Log::info(Log::INPUT_TAG,
+              "Initializing %u input subsystems",
+              static_cast<unsigned>(subsystems.size()));
+
+    for (ISubsystem *subsystem : subsystems)
+    {
+        if (!subsystem)
+            continue;
+
+        subsystem->init();
+    }
+
+    Log::info(Log::INPUT_TAG,
+              "Input subsystem initialization completed");
+}
+
+void InputSystem::update()
+{
+    for (ISubsystem *subsystem : subsystems)
+    {
+        if (!subsystem)
+            continue;
+
+        subsystem->update();
     }
 }
 
-void InputSystem::update() {
-    pollPowerMonitor();
+void InputSystem::registerSubsystems()
+{
+    subsystems.clear();
+
+    subsystems.reserve(7);
+
+    subsystems.push_back(&powerSystem);
+    subsystems.push_back(&rfidSystem);
+    subsystems.push_back(&oledSystem);
+    subsystems.push_back(&channelSystem);
+    subsystems.push_back(&relaySystem);
+    subsystems.push_back(&rgbLedSystem);
+    subsystems.push_back(&sevenSegmentSystem);
 }
 
-void InputSystem::pinMode(int pin, int mode) {
-    ::pinMode(pin, mode);
+PowerSystem &InputSystem::power()
+{
+    return powerSystem;
 }
 
-void InputSystem::digitalWrite(int pin, int value) {
-    ::digitalWrite(pin, value);
+/*
+Usage:
+
+RFIDTag tag;
+if(input.rfid().consumeTag(tag))
+{
+    Log::info(
+        Log::APP_TAG,
+        "Card scanned: %s",
+        tag.uid.c_str());
+}
+ */
+RFIDSystem &InputSystem::rfid()
+{
+    return rfidSystem;
 }
 
-int InputSystem::digitalRead(int pin) {
-    return ::digitalRead(pin);
+
+/*
+Usage:
+
+input.oled().showMessage(
+    "System Ready");
+*/
+OLEDSystem &InputSystem::oled()
+{
+    return oledSystem;
 }
 
-void InputSystem::analogWrite(int pin, int value) {
-    ::analogWrite(pin, value);
+/*
+Example usage
+
+ESP32 GPIO:
+input.channels()
+     .pinMode(
+          5,
+          OUTPUT);
+input.channels()
+     .digitalWrite(
+          5,
+          HIGH);
+
+MCP23017:
+input.channels()
+     .digitalWrite(
+          100,
+          HIGH);
+
+CD74HC4067:
+int sensor =
+    input.channels()
+         .analogRead(203);
+*/
+ChannelSystem &InputSystem::channels()
+{
+    return channelSystem;
 }
 
-std::string InputSystem::rfidRead() {
-    // if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) {
-    //     return "";
-    // }
-    
-    // String id = "";
-    // for (byte i = 0; i < rfid.uid.size; i++) {
-    //     id += String(rfid.uid.uidByte[i], HEX);
-    // }
-    // rfid.PICC_HaltA();
-    // return id.c_str();
-    return "mocked_rfid_id";
+
+/*
+Usage
+
+Register relays (during setup):
+input.relays()
+     .registerRelay(
+        0,
+        100,
+        true);
+
+Turn ON:
+input.relays()
+     .set(
+        0,
+        true);
+
+OFF:
+input.relays()
+     .set(
+        0,
+        false);
+
+Toggle:
+input.relays()
+     .toggle(0);
+
+Pulse (500ms pulse):
+input.relays()
+     .pulse(
+        0,
+        500);
+*/
+RelaySystem &InputSystem::relays()
+{
+    return relaySystem;
 }
 
-void InputSystem::oledPrint(const char* text) {
-    // display.clearDisplay();
-    // display.setTextSize(1);
-    // display.setTextColor(SSD1306_WHITE);
-    // display.setCursor(0,0);
-    // display.println(text);
-    // display.display();
+/*
+Usage:
+
+// set red color
+input.rgb()
+     .setColor(
+          0,
+          {255,0,0});
+
+
+// set brightness to 50%
+input.rgb()
+     .setBrightness(
+          0,
+          50);
+*/
+RgbLedSystem &InputSystem::rgb()
+{
+    return rgbLedSystem;
 }
 
-InputSystem::PowerMetrics InputSystem::getPowerMetrics() const {
-    taskENTER_CRITICAL(&powerMetricsLock);
-    PowerMetrics copy = powerMetrics;
-    taskEXIT_CRITICAL(&powerMetricsLock);
-    return copy;
-}
+/*
+Usage
 
-void InputSystem::pollPowerMonitor() {
-    if (!powerMetrics.supported)
-        return;
+Show number:
+input.sevenSegment()
+     .display(
+        0,
+        "1234");
 
-    const uint32_t now = millis();
-    if (now - lastPowerPollMs < POWER_POLL_INTERVAL_MS)
-        return;
+Temperature:
+input.sevenSegment()
+     .display(
+        0,
+        "25.5");
 
-    lastPowerPollMs = now;
+Error:
+input.sevenSegment()
+     .display(
+        0,
+        "E-01");
 
-    INA219Reading reading;
-    if (!ina219.read(reading))
-        return;
-
-    taskENTER_CRITICAL(&powerMetricsLock);
-    powerMetrics.available = reading.available;
-    powerMetrics.overflow = reading.overflow;
-    powerMetrics.busVoltageV = reading.busVoltageV;
-    powerMetrics.shuntVoltageMv = reading.shuntVoltageMv;
-    powerMetrics.loadVoltageV = reading.loadVoltageV;
-    powerMetrics.currentMa = reading.currentMa;
-    powerMetrics.powerMw = reading.powerMw;
-    powerMetrics.sampleTimeMs = reading.sampleTimeMs;
-    taskEXIT_CRITICAL(&powerMetricsLock);
+Brightness:
+input.sevenSegment()
+     .brightness(
+        0,
+        5);
+*/
+SevenSegmentSystem &InputSystem::sevenSegment()
+{
+    return sevenSegmentSystem;
 }

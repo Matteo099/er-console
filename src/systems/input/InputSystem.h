@@ -1,45 +1,69 @@
 #pragma once
 
-#include "core/SystemService.h"
-#include "drivers/input/INA219Driver.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/portmacro.h"
-#include <string>
+#include <vector>
 
-class InputSystem : public SystemService {
+#include "core/SystemService.h"
+
+#include "subsystems/ISubsystem.h"
+
+#include "drivers/input/power/INA219Driver.h"
+#include "drivers/input/rfid/MFRC522Driver.h"
+#include "drivers/input/oled/SSD1306Driver.h"
+#include "drivers/input/channel/NativeChannelProvider.h"
+#include "drivers/input/channel/MCPChannelProvider.h"
+#include "drivers/input/channel/MuxChannelProvider.h"
+#include "drivers/input/rgb/ESP32PwmRgbDriver.h"
+#include "drivers/input/rgb/PCA9685Driver.h"
+#include "drivers/input/sevensegment/MAX7219Driver.h"
+
+#include "subsystems/PowerSystem.h"
+#include "subsystems/RFIDSystem.h"
+#include "subsystems/OLEDSystem.h"
+#include "subsystems/ChannelSystem.h"
+#include "subsystems/RelaySystem.h"
+#include "subsystems/RgbLedSystem.h"
+#include "subsystems/SevenSegmentSystem.h"
+
+class InputSystem : public SystemService
+{
 public:
-    struct PowerMetrics {
-        bool supported = false;
-        bool available = false;
-        bool overflow = false;
-        float busVoltageV = 0.0f;
-        float shuntVoltageMv = 0.0f;
-        float loadVoltageV = 0.0f;
-        float currentMa = 0.0f;
-        float powerMw = 0.0f;
-        uint32_t sampleTimeMs = 0;
-    };
+    InputSystem() = default;
+    ~InputSystem() override = default;
 
     void init(void *params = nullptr) override;
     void update() override;
 
-    void pinMode(int pin, int mode);  // mode: 0=INPUT, 1=OUTPUT, etc.
-    void digitalWrite(int pin, int value);  // value: 0=LOW, 1=HIGH
-    int digitalRead(int pin);
-    void analogWrite(int pin, int value);  // PWM, if supported
-
-    std::string rfidRead();  // Read RFID badge ID
-    void oledPrint(const char* text);  // Print to OLED display
-
-    PowerMetrics getPowerMetrics() const;
+    PowerSystem &power();
+    RFIDSystem &rfid();
+    OLEDSystem &oled();
+    ChannelSystem &channels();
+    RelaySystem &relays();
+    RgbLedSystem &rgb();
+    SevenSegmentSystem &sevenSegment();
 
 private:
-    void pollPowerMonitor();
+    void registerSubsystems();
 
 private:
-    INA219Driver ina219;
-    mutable portMUX_TYPE powerMetricsLock = portMUX_INITIALIZER_UNLOCKED;
-    PowerMetrics powerMetrics;
-    uint32_t lastPowerPollMs = 0;
-    static constexpr uint32_t POWER_POLL_INTERVAL_MS = 500;
+    std::vector<ISubsystem *> subsystems;
+
+    INA219Driver powerDriver;
+    MFRC522Driver rfidDriver;
+    SSD1306Driver oledDriver;
+    NativeChannelProvider nativeChannel;
+    MCPChannelProvider mcp1;
+    MCPChannelProvider mcp2;
+    MuxChannelProvider mux1;
+    ESP32PwmRgbDriver statusLed;
+    PCA9685Driver rgbExpander;
+    MAX7219Driver sevenSegDriver;
+
+    PowerSystem powerSystem;
+    RFIDSystem rfidSystem;
+    OLEDSystem oledSystem;
+    ChannelSystem channelSystem;
+
+    RelaySystem relaySystem;
+    RgbLedSystem rgbLedSystem;
+    SevenSegmentSystem sevenSegmentSystem;
 };
