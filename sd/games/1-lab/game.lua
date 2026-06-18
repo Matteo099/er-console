@@ -1,75 +1,170 @@
--- The Abandoned Lab - Lua Game Script
--- This script demonstrates the Lua game system
+--------------------------------------------------
+-- ESCAPE ROOM GAME
+-- Prototype
+--------------------------------------------------
+--------------------------------------------------
+-- GAME STATE
+--------------------------------------------------
+local state = {
+    running = false,
+    completed = false,
 
--- Game state
-local gameState = {
-    initialized = false,
-    puzzleSolved = false,
-    attemptCount = 0,
-    maxAttempts = 3
+    startTime = 0,
+    elapsed = 0,
+
+    -- puzzles
+    powerRestored = false,
+    rfidAccepted = false,
+    buttonsSolved = false,
+
+    -- electronic locks
+    doorUnlocked = false,
+
+    -- timers
+    messageTimer = 0,
+
+    -- input memory
+    lastRFID = nil,
+
+    -- buttons
+    button1 = false,
+    button2 = false,
+    button3 = false
 }
 
--- Initialize the game
+--------------------------------------------------
+-- HARDWARE CONFIGURATION
+--------------------------------------------------
+local CONFIG = {
+    -- RFID
+    accessCard = "A1B2C3D4",
+
+    -- Channels
+    button1 = 1,
+    button2 = 2,
+    button3 = 3,
+
+    -- Relay
+    doorRelay = 0,
+
+    -- Power monitor threshold
+    minVoltage = 11.5
+}
+
+--------------------------------------------------
+-- UTILITIES
+--------------------------------------------------
+local function display(text)
+    input.oled.clear()
+    input.oled.showMessage(text)
+end
+
+local function logState()
+    log.debug("STATE power=%s rfid=%s buttons=%s door=%s", tostring(state.powerRestored), tostring(state.rfidAccepted),
+        tostring(state.buttonsSolved), tostring(state.doorUnlocked))
+end
+
+local function unlockDoor()
+    if state.doorUnlocked then
+        return
+    end
+
+    log.info("Unlocking escape room door")
+    input.relays.set(CONFIG.doorRelay, true)
+    state.doorUnlocked = true
+    display("DOOR OPEN")
+end
+
+--------------------------------------------------
+-- INITIALIZATION
+--------------------------------------------------
 function init()
-    print("Lab01 Game: Initializing...")
-    gameState.initialized = true
-    
-    -- Clear display and show initial message
-    display.clear()
-    display.text(10, 50, "Welcome to the Abandoned Lab", 20, 0xFFD700)
-    display.text(10, 90, "Find the code to unlock the exit", 14, 0xFFFFFF)
-    display.text(10, 130, "The code is: 1234", 14, 0x00FF00)
-    
-    print("Lab01 Game: Initialized successfully")
+    log.info("Escape room initialization")
+    state.running = true
+    state.startTime = time.millis()
+
+    --
+    -- Configure channels
+    --
+    input.channels.pinMode(CONFIG.button1, INPUT)
+    input.channels.pinMode(CONFIG.button2, INPUT)
+    input.channels.pinMode(CONFIG.button3, INPUT)
+
+    --
+    -- Lock door
+    --
+    input.relays.set(CONFIG.doorRelay, false)
+    display("ESCAPE ROOM\nSTART")
+    log.info("Game started")
 end
 
--- Update is called every frame when game is running
+--------------------------------------------------
+-- UPDATE LOOP
+--------------------------------------------------
+
 function update(dt)
-    -- dt is delta time in seconds
-    
-    -- Draw game content
-    if gameState.initialized then
-        -- Draw background grid pattern
-        display.rect(20, 180, 280, 120, 0x333333, false)
-        
-        -- Show current attempt count
-        local attemptText = string.format("Attempts: %d/%d", gameState.attemptCount, gameState.maxAttempts)
-        display.text(30, 200, attemptText, 14, 0xFFFFFF)
-        
-        -- Show puzzle status
-        if gameState.puzzleSolved then
-            display.text(30, 230, "PUZZLE SOLVED! Exit is unlocked.", 14, 0x00FF00)
-        else
-            display.text(30, 230, "Enter the code to proceed...", 14, 0xFFCC00)
+    if not state.running then
+        return
+    end
+    state.elapsed = time.millis() - state.startTime
+
+    --------------------------------------------------
+    -- POWER PUZZLE
+    --------------------------------------------------
+    local power = input.power.metrics()
+    if power ~= nil then
+        if power.voltage > CONFIG.minVoltage then
+            if not state.powerRestored then
+                log.info("Power restored")
+                state.powerRestored = true
+                display("POWER OK")
+            end
         end
-        
-        -- Show instructions
-        display.text(30, 270, "Use the buttons to enter digits", 12, 0x888888)
+    end
+
+    --------------------------------------------------
+    -- RFID PUZZLE
+    --------------------------------------------------
+    local tag = input.rfid.consume()
+    if tag ~= nil then
+        log.info("RFID detected %s", tag.uid)
+        state.lastRFID = tag.uid
+        if tag.uid == CONFIG.accessCard then
+            state.rfidAccepted = true
+            display("CARD ACCEPTED")
+            log.info("Correct RFID")
+        else
+            display("WRONG CARD")
+            log.warn("Invalid RFID")
+        end
+    end
+
+    --------------------------------------------------
+    -- BUTTON PUZZLE
+    --------------------------------------------------
+    state.button1 = input.channels.digitalRead(CONFIG.button1)
+    state.button2 = input.channels.digitalRead(CONFIG.button2)
+    state.button3 = input.channels.digitalRead(CONFIG.button3)
+    if state.button1 and state.button2 and state.button3 then
+        if not state.buttonsSolved then
+            state.buttonsSolved = true
+            log.info("Button sequence solved")
+            display("BUTTONS OK")
+        end
+    end
+
+    --------------------------------------------------
+    -- FINAL CONDITION
+    --------------------------------------------------
+    if state.powerRestored and state.rfidAccepted and state.buttonsSolved then
+        unlockDoor()
+        state.completed = true
+    end
+
+    --------------------------------------------------
+    -- DEBUG
+    --------------------------------------------------
+    if state.elapsed % 10000 < 20 then
+        logState()
     end
 end
-
--- Called when a button is pressed (can be extended)
-function onButtonPress(buttonId)
-    print("Button pressed: " .. buttonId)
-    
-    gameState.attemptCount = gameState.attemptCount + 1
-    
-    if gameState.attemptCount >= gameState.maxAttempts then
-        print("Game Over - Too many attempts!")
-    end
-end
-
--- Puzzle solving function (example)
-function solvePuzzle(code)
-    if code == 1234 then
-        gameState.puzzleSolved = true
-        print("Puzzle solved!")
-        return true
-    else
-        gameState.attemptCount = gameState.attemptCount + 1
-        print("Wrong code! Attempts remaining: " .. (gameState.maxAttempts - gameState.attemptCount))
-        return false
-    end
-end
-
-print("Lab01 Game script loaded successfully")
