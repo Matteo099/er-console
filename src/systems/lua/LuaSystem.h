@@ -51,6 +51,7 @@ private:
     GameView* gameView = nullptr;
     AudioSystem* audioSystem = nullptr;
     InputSystem* inputSystem = nullptr;
+    uint32_t lastTickMs = 0;
 
     // State flags
     bool ready = false;
