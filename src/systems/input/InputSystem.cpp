@@ -105,9 +105,12 @@ bool InputSystem::begin(const InputConfig &config)
     }
     if (config.rgb.enabled)
     {
-        rgbExpander = new PCA9685Driver(config.rgb.address);
         rgbLedSystem = new RgbLedSystem();
-        rgbLedSystem->registerDriver(rgbExpander);
+        if (config.rgb.usePCA9685)
+        {
+            rgbExpander = new PCA9685Driver(config.rgb.address);
+            rgbLedSystem->registerDriver(rgbExpander);
+        }
         if (!rgbLedSystem->init())
         {
             destroyRgb();

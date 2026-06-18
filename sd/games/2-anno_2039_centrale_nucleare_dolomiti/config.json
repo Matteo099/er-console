@@ -4,5 +4,28 @@
     "version": "1.0",
     "author": "Matteo Romagnoli",
     "durationMin": 3600,
-    "difficulty": 4
+    "difficulty": 4,
+    "inputs": {
+        "power": {
+            "enabled": false
+        },
+        "rfid": {
+            "enabled": false
+        },
+        "oled": {
+            "enabled": false
+        },
+        "channels": {
+            "enabled": false
+        },
+        "rgb": {
+            "enabled": false
+        },
+        "sevenSegment": {
+            "enabled": false
+        },
+        "relays": {
+            "enabled": false
+        }
+    }
 }

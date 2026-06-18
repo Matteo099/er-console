@@ -18,7 +18,9 @@ void GameScene::onEnter()
 
     // Get LuaSystem from SystemEventBus
     luaSystem = static_cast<LuaSystem *>(
-        SystemEventBus::instance().getService(SystemEventBus::SERVICE_LUA));
+        SystemEventBus::instance().getService(SystemEventBus::SERVICE_LUA));        
+    inputSystem = static_cast<InputSystem *>(
+        SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
 
     if (!luaSystem)
     {
@@ -26,6 +28,15 @@ void GameScene::onEnter()
         view.hideLoadingBar();
         view.setErrorMessage("Lua system not available");
         Log::error(Log::GAME_TAG, "LuaSystem service not found in SystemEventBus");
+        return;
+    }
+
+    if(!inputSystem)
+    {
+        loadState = GameLoadState::LoadFailed;
+        view.hideLoadingBar();
+        view.setErrorMessage("Input system not available");
+        Log::error(Log::GAME_TAG, "InputSystem service not found in SystemEventBus");
         return;
     }
 
@@ -122,6 +133,18 @@ bool GameScene::loadGameScript()
 {
     if (!luaSystem || gameInfo.id.empty())
         return false;
+
+    // prepare input system with game-specific configuration
+    Log::info(Log::GAME_TAG, "Initializing InputSystem with game input configuration");
+    if (!inputSystem->begin(gameInfo.inputConfig))
+    {
+        loadState = GameLoadState::LoadFailed;
+        view.hideLoadingBar();
+        view.setErrorMessage("Failed to initialize input system");
+        Log::error(Log::GAME_TAG, "Failed to initialize InputSystem with game input configuration");
+        return false;
+    }
+    Log::info(Log::LUA_TAG, "InputSystem initialized successfully with game input configuration");
 
     // Build path: /games/{gameId}/game.lua
     std::string scriptPath = "/games/" + gameInfo.id + "/game.lua";

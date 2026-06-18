@@ -4,5 +4,51 @@
     "version": "1.0",
     "author": "Matteo Romagnoli",
     "durationMin": 60,
-    "difficulty": 2
+    "difficulty": 2,
+    "inputs": {
+        "power": {
+            "enabled": true,
+            "address": 64
+        },
+        "rfid": {
+            "enabled": true,
+            "ssPin": 10,
+            "rstPin": 9
+        },
+        "oled": {
+            "enabled": true,
+            "width": 128,
+            "height": 64,
+            "address": 60
+        },
+        "channels": {
+            "enabled": true,
+            "mcp1Enabled": true,
+            "mcp1Base": 100,
+            "mcp1Address": 32,
+            "mcp2Enabled": false,
+            "mcp2Base": 120,
+            "mcp2Address": 33,
+            "muxEnabled": true,
+            "muxBase": 200,
+            "muxCsPin": 5,
+            "muxS0Pin": 12,
+            "muxS1Pin": 13,
+            "muxS2Pin": 14,
+            "muxS3Pin": 15
+        },
+        "rgb": {
+            "enabled": true,
+            "usePCA9685": true,
+            "address": 64
+        },
+        "sevenSegment": {
+            "enabled": true,
+            "csPin": 5,
+            "digits": 8
+        },
+        "relays": {
+            "enabled": true
+        }
+    }
 }

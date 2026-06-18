@@ -2,6 +2,7 @@
 
 #include <string>
 #include <cstdint>
+#include "systems/input/InputConfig.h"
 
 struct GameInfo {
     std::string id;
@@ -10,4 +11,5 @@ struct GameInfo {
     std::string author;
     uint8_t difficulty;
     uint16_t durationMin;
+    InputConfig inputConfig;
 };

@@ -108,12 +108,7 @@ bool LuaSystem::loadScript(const char *path)
     // Load Lua chunk via streaming reader
     if (lua_load(L, luaFileReader, file, path, nullptr) != LUA_OK)
     {
-        Log::error(
-            Log::LUA_TAG,
-            "Lua load error (%s): %s",
-            path,
-            lua_tostring(L, -1));
-
+        Log::error(Log::LUA_TAG, "Lua load error (%s): %s", path, lua_tostring(L, -1));
         lua_pop(L, 1);
         file->close();
         delete file;
@@ -124,12 +119,7 @@ bool LuaSystem::loadScript(const char *path)
     Log::info(Log::LUA_TAG, "Executing Lua script: %s", path);
     if (lua_pcall(L, 0, 0, 0) != LUA_OK)
     {
-        Log::error(
-            Log::LUA_TAG,
-            "Lua runtime error (%s): %s",
-            path,
-            lua_tostring(L, -1));
-
+        Log::error(Log::LUA_TAG, "Lua runtime error (%s): %s", path, lua_tostring(L, -1));
         lua_pop(L, 1);
         file->close();
         delete file;
@@ -142,11 +132,7 @@ bool LuaSystem::loadScript(const char *path)
     {
         if (lua_pcall(L, 0, 0, 0) != LUA_OK)
         {
-            Log::error(
-                Log::LUA_TAG,
-                "Lua init() error: %s",
-                lua_tostring(L, -1));
-
+            Log::error(Log::LUA_TAG, "Lua init() error: %s", lua_tostring(L, -1));
             lua_pop(L, 1);
             file->close();
             delete file;

@@ -1,6 +1,7 @@
 
 #include "systems/ui/Scene.h"
 #include "systems/lua/LuaSystem.h"
+#include "systems/input/InputSystem.h"
 #include "GameView.h"
 #include "GameState.h"
 #include <string>
@@ -39,6 +40,7 @@ private:
 
     // Lua system integration
     LuaSystem* luaSystem = nullptr;
+    InputSystem* inputSystem = nullptr;
     GameLoadState loadState = GameLoadState::Idle;
     bool luaUpdateCalledThisFrame = false;
 
