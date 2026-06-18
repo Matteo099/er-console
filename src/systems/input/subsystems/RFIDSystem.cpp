@@ -26,32 +26,32 @@ bool RFIDSystem::isSupported() const { return supported; }
 
 bool RFIDSystem::getLastTag(RFIDTag& tag) const
 {
-    taskENTER_CRITICAL(&lock);
+    portENTER_CRITICAL(&lock);
 
     if (!newTagAvailable)
     {
-        taskEXIT_CRITICAL(&lock);
+        portEXIT_CRITICAL(&lock);
         return false;
     }
 
     tag = lastTag;
 
-    taskEXIT_CRITICAL(&lock);
+    portEXIT_CRITICAL(&lock);
 
     return true;
 }
 
 bool RFIDSystem::consumeTag(RFIDTag &tag)
 {
-    taskENTER_CRITICAL(&lock);
+    portENTER_CRITICAL(&lock);
     if (!newTagAvailable)
     {
-        taskEXIT_CRITICAL(&lock);
+        portEXIT_CRITICAL(&lock);
         return false;
     }
     tag = lastTag;
     newTagAvailable = false;
-    taskEXIT_CRITICAL(&lock);
+    portEXIT_CRITICAL(&lock);
     return true;
 }
 
@@ -78,12 +78,12 @@ void RFIDSystem::poll()
     RFIDTag tag;
     if (!reader.readTag(tag))
         return;
-    taskENTER_CRITICAL(&lock);
+    portENTER_CRITICAL(&lock);
     const bool duplicate = tag.uid == lastTag.uid && (now - lastTag.timestampMs) < DUPLICATE_TIMEOUT_MS;
     if (!duplicate)
     {
         lastTag = tag;
         newTagAvailable = true;
     }
-    taskEXIT_CRITICAL(&lock);
+    portEXIT_CRITICAL(&lock);
 }

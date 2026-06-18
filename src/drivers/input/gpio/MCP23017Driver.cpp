@@ -1,5 +1,7 @@
 #include "MCP23017Driver.h"
 
+MCP23017Driver::MCP23017Driver(uint16_t basePin, uint8_t address) : basePin(basePin), address(address) {}
+
 bool MCP23017Driver::init()
 {
     initialized = mcp.begin_I2C(address);

@@ -29,7 +29,7 @@ class InputSystem : public SystemService
 {
 public:
     InputSystem();
-    ~InputSystem() override = default;
+    ~InputSystem();
 
     void init(void *params = nullptr) override;
     bool begin(const InputConfig &config);
@@ -75,4 +75,14 @@ private:
     RelaySystem *relaySystem = nullptr;
     RgbLedSystem *rgbLedSystem = nullptr;
     SevenSegmentSystem *sevenSegmentSystem = nullptr;
+
+    void reset();
+    void clearFlags();
+    void destroyChannels();
+    void destroyPower();
+    void destroyRfid();
+    void destroyOled();
+    void destroyRgb();
+    void destroySevenSegment();
+    void destroyRelay();
 };

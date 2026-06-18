@@ -102,10 +102,10 @@ PortalStatusData PortalService::getStatus() const
         status.apSsid = portalSsid();
     }
 
-    if (inputSystem)
+    if (inputSystem && inputSystem->power())
     {
-        const InputSystem::PowerMetrics metrics = inputSystem->getPowerMetrics();
-        status.batterySupported = metrics.supported;
+        const auto metrics = inputSystem->power()->getMetrics();
+        status.batterySupported = inputSystem->power()->isSupported();
         status.batteryAvailable = metrics.available;
         status.batteryOverflow = metrics.overflow;
         status.batterySampleTimeMs = metrics.sampleTimeMs;

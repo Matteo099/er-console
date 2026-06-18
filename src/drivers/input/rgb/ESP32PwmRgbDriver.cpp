@@ -27,7 +27,7 @@ void ESP32PwmRgbDriver::writePWM(uint8_t channel, uint8_t value)
     ledcWrite(channel, pwm);
 }
 
-void ESP32PwmRgbDriver::setRGB(uint8_t, const RGBColor &color)
+void ESP32PwmRgbDriver::setRGB(uint8_t, const LedColor &color)
 {
     writePWM(0, color.r);
     writePWM(1, color.g);

@@ -17,7 +17,7 @@ bool PCA9685Driver::available() const { return initialized; }
 
 void PCA9685Driver::writeChannel(uint8_t channel, uint16_t value) { pwm.setPWM(channel, 0, value); }
 
-void PCA9685Driver::setRGB(uint8_t channel, const RGBColor &c)
+void PCA9685Driver::setRGB(uint8_t channel, const LedColor &c)
 {
     uint16_t r = c.r * brightness[channel] / 255;
     uint16_t g = c.g * brightness[channel] / 255;

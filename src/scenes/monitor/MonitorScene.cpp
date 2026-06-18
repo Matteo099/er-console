@@ -64,14 +64,14 @@ void MonitorScene::refreshTelemetry()
     }
     else
     {
-        const auto power = input->getPowerMetrics();
-        if (!power.supported || !power.available)
+        const auto power = input->power();
+        if (!power || !power->isSupported())
         {
             view.setPower(0, 0, 0);
         }
         else
         {
-            view.setPower(power.loadVoltageV, power.currentMa, power.powerMw);
+            view.setPower(power->getMetrics().loadVoltageV, power->getMetrics().currentMa, power->getMetrics().powerMw);
         }
     }
 

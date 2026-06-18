@@ -10,7 +10,7 @@ public:
     PCA9685Driver(uint8_t address = 0x40);
     bool init() override;
     bool available() const override;
-    void setRGB(uint8_t channel, const RGBColor &color) override;
+    void setRGB(uint8_t channel, const LedColor &color) override;
     void setBrightness(uint8_t channel, uint8_t brightness) override;
 
 private:

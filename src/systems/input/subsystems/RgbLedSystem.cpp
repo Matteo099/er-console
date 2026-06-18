@@ -11,7 +11,7 @@ bool RgbLedSystem::init()
 
 void RgbLedSystem::update() {}
 
-void RgbLedSystem::setColor(uint8_t led, RGBColor color)
+void RgbLedSystem::setColor(uint8_t led, LedColor color)
 {
     if (led >= drivers.size())
         return;

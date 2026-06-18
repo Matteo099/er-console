@@ -22,11 +22,11 @@ void OLEDSystem::update()
 {
     if (!supported)
         return;
-    taskENTER_CRITICAL(&lock);
+    portENTER_CRITICAL(&lock);
     const bool redraw = dirty;
     const std::string text = message;
     dirty = false;
-    taskEXIT_CRITICAL(&lock);
+    portEXIT_CRITICAL(&lock);
     if (!redraw)
         return;
     display.clear();
@@ -38,24 +38,24 @@ bool OLEDSystem::isSupported() const { return supported; }
 
 void OLEDSystem::clear()
 {
-    taskENTER_CRITICAL(&lock);
+    portENTER_CRITICAL(&lock);
     message.clear();
     dirty = true;
-    taskEXIT_CRITICAL(&lock);
+    portEXIT_CRITICAL(&lock);
 }
 
 void OLEDSystem::showMessage(const std::string &text)
 {
-    taskENTER_CRITICAL(&lock);
+    portENTER_CRITICAL(&lock);
     message = text;
     dirty = true;
-    taskEXIT_CRITICAL(&lock);
+    portEXIT_CRITICAL(&lock);
 }
 
 std::string OLEDSystem::currentMessage() const
 {
-    taskENTER_CRITICAL(&lock);
+    portENTER_CRITICAL(&lock);
     std::string copy = message;
-    taskEXIT_CRITICAL(&lock);
+    portEXIT_CRITICAL(&lock);
     return copy;
 }

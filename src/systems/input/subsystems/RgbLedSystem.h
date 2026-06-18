@@ -11,7 +11,7 @@ public:
     void registerDriver(IRgbLedDriver *driver);
     bool init() override;
     void update() override;
-    void setColor(uint8_t led, RGBColor color);
+    void setColor(uint8_t led, LedColor color);
     void setBrightness(uint8_t led, uint8_t value);
 
 private:

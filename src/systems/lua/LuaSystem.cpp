@@ -307,8 +307,8 @@ static int lua_input_pinMode(lua_State* L)
     InputSystem* inputSys = (InputSystem*)lua_touserdata(L, -1);
     lua_pop(L, 1);
 
-    if (inputSys)
-        inputSys->pinMode(pin, mode);
+    if (inputSys && inputSys->channels())
+        inputSys->channels()->pinMode(pin, mode);
 
     return 0;
 }
@@ -322,8 +322,8 @@ static int lua_input_digitalWrite(lua_State* L)
     InputSystem* inputSys = (InputSystem*)lua_touserdata(L, -1);
     lua_pop(L, 1);
 
-    if (inputSys)
-        inputSys->digitalWrite(pin, value);
+    if (inputSys && inputSys->channels())
+        inputSys->channels()->digitalWrite(pin, value);
 
     return 0;
 }
@@ -336,8 +336,8 @@ static int lua_input_digitalRead(lua_State* L)
     InputSystem* inputSys = (InputSystem*)lua_touserdata(L, -1);
     lua_pop(L, 1);
 
-    if (inputSys) {
-        int value = inputSys->digitalRead(pin);
+    if (inputSys && inputSys->channels()) {
+        int value = inputSys->channels()->digitalRead(pin);
         lua_pushinteger(L, value);
         return 1;
     }
@@ -353,8 +353,8 @@ static int lua_input_analogWrite(lua_State* L)
     InputSystem* inputSys = (InputSystem*)lua_touserdata(L, -1);
     lua_pop(L, 1);
 
-    if (inputSys)
-        inputSys->analogWrite(pin, value);
+    if (inputSys && inputSys->channels())
+        inputSys->channels()->analogWrite(pin, value);
 
     return 0;
 }
@@ -366,10 +366,13 @@ static int lua_input_rfidRead(lua_State* L)
     InputSystem* inputSys = (InputSystem*)lua_touserdata(L, -1);
     lua_pop(L, 1);
 
-    if (inputSys) {
-        std::string id = inputSys->rfidRead();
-        lua_pushstring(L, id.c_str());
-        return 1;
+    if (inputSys && inputSys->rfid()) {
+        RFIDTag tag;
+        if (!inputSys->rfid()->consumeTag(tag))
+        {
+            lua_pushnil(L);
+            return 1;
+        }
     }
     return 0;
 }
@@ -383,8 +386,8 @@ static int lua_input_oledPrint(lua_State* L)
     InputSystem* inputSys = (InputSystem*)lua_touserdata(L, -1);
     lua_pop(L, 1);
 
-    if (inputSys)
-        inputSys->oledPrint(text);
+    if (inputSys && inputSys->oled())
+        inputSys->oled()->showMessage(text);
 
     return 0;
 }

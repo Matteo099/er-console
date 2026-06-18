@@ -58,4 +58,12 @@ void SSD1306Driver::refresh()
     display.display();
 }
 
-DisplaySize SSD1306Driver::size() const { return {displayWidth, displayHeight}; }
+DisplaySize SSD1306Driver::size() const
+{
+    DisplaySize size;
+
+    size.width = displayWidth;
+    size.height = displayHeight;
+
+    return size;
+}

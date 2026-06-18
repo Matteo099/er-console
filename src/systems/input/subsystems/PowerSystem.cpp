@@ -26,9 +26,9 @@ bool PowerSystem::isSupported() const { return supported; }
 
 PowerReading PowerSystem::getMetrics() const
 {
-    taskENTER_CRITICAL(&lock);
+    portENTER_CRITICAL(&lock);
     PowerReading copy = metrics;
-    taskEXIT_CRITICAL(&lock);
+    portEXIT_CRITICAL(&lock);
     return copy;
 }
 
@@ -43,7 +43,7 @@ void PowerSystem::poll()
     PowerReading reading;
     if (!monitor.read(reading))
         return;
-    taskENTER_CRITICAL(&lock);
+    portENTER_CRITICAL(&lock);
     metrics = reading;
-    taskEXIT_CRITICAL(&lock);
+    portEXIT_CRITICAL(&lock);
 }
