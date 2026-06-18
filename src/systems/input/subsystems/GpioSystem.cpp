@@ -5,7 +5,8 @@ void GpioSystem::registerProvider(IGpioProvider *provider) { providers.push_back
 bool GpioSystem::init()
 {
     for (auto *provider : providers)
-        provider->init();
+        if (!provider->init())
+            return false;
     return true;
 }
 

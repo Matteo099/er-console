@@ -5,7 +5,8 @@ void SevenSegmentSystem::registerDriver(ISevenSegmentDriver *driver) { drivers.p
 bool SevenSegmentSystem::init()
 {
     for (auto d : drivers)
-        d->init();
+        if (!d->init())
+            return false;
     return true;
 }
 

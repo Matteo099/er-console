@@ -5,7 +5,8 @@ void ChannelSystem::registerProvider(IChannelProvider *provider) { providers.pus
 bool ChannelSystem::init()
 {
     for (auto p : providers)
-        p->init();
+        if(!p->init())
+            return false;
     return true;
 }
 

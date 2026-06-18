@@ -5,7 +5,8 @@ void RgbLedSystem::registerDriver(IRgbLedDriver *driver) { drivers.push_back(dri
 bool RgbLedSystem::init()
 {
     for (auto d : drivers)
-        d->init();
+        if (!d->init())
+            return false;
     return true;
 }
 

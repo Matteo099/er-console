@@ -10,7 +10,8 @@ bool MultiplexerSystem::init()
 {
     for(auto* mux : multiplexers)
     {
-        mux->init();
+        if (!mux->init())
+            return false;
     }
 
     return true;
