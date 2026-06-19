@@ -3,15 +3,8 @@
 #include "log/Logger.h"
 
 /**
- * Lua API for logging and system info:
  * system.info("Game started")
- * system.warn("Low power")
- * system.error("RFID reader unavailable")
- * system.debug("Player position: x=10, y=20")
- * local logs = system.logs(10) -> returns recent logs as a string
- * system.clearLogs() -> clears recent logs buffer
  */
-
 int CoreBindings::info(lua_State *L)
 {
     const char *msg = luaL_checkstring(L, 1);
@@ -19,6 +12,9 @@ int CoreBindings::info(lua_State *L)
     return 0;
 }
 
+/**
+ * system.warn("Low power")
+ */
 int CoreBindings::warn(lua_State *L)
 {
     const char *msg = luaL_checkstring(L, 1);
@@ -26,6 +22,9 @@ int CoreBindings::warn(lua_State *L)
     return 0;
 }
 
+/**
+ * system.error("RFID reader unavailable")
+ */
 int CoreBindings::error(lua_State *L)
 {
     const char *msg = luaL_checkstring(L, 1);
@@ -33,6 +32,9 @@ int CoreBindings::error(lua_State *L)
     return 0;
 }
 
+/**
+ * system.debug("Player position: x=10, y=20")
+ */
 int CoreBindings::debug(lua_State *L)
 {
     const char *msg = luaL_checkstring(L, 1);
@@ -40,6 +42,9 @@ int CoreBindings::debug(lua_State *L)
     return 0;
 }
 
+/**
+ * local logs = system.logs(10) -> returns recent logs as a string
+ */
 int CoreBindings::logs(lua_State *L)
 {
     size_t maxLines = luaL_optinteger(L, 1, 200);
@@ -48,6 +53,9 @@ int CoreBindings::logs(lua_State *L)
     return 1;
 }
 
+/**
+ * system.clearLogs() -> clears recent logs buffer
+ */
 int CoreBindings::clearLogs(lua_State *L)
 {
     Log::clearRecentLogs();

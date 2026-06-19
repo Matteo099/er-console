@@ -2,8 +2,6 @@
 
 #include "systems/input/subsystems/RelaySystem.h"
 
-#define RELAY_PTR_KEY "lua.relaySystem"
-
 RelaySystem *RelayBindings::getSystem(lua_State *L)
 {
     lua_getfield(L, LUA_REGISTRYINDEX, RELAY_PTR_KEY);

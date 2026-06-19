@@ -6,24 +6,36 @@ float TimeBindings::s_delta = 0.0f;
 
 void TimeBindings::setDelta(float dt) { s_delta = dt; }
 
+/**
+ * time.now() -- milliseconds since boot
+ */
 int TimeBindings::now(lua_State *L)
 {
     lua_pushinteger(L, millis());
     return 1;
 }
 
+/**
+ * time.seconds() -- seconds since boot
+ */
 int TimeBindings::seconds(lua_State *L)
 {
     lua_pushnumber(L, millis() / 1000.0);
     return 1;
 }
 
+/**
+ * time.uptime() -- alias of time.seconds()
+ */
 int TimeBindings::uptime(lua_State *L)
 {
     lua_pushnumber(L, millis() / 1000.0);
     return 1;
 }
 
+/**
+ * time.clock() -- "HH:MM:SS"
+ */
 int TimeBindings::clock(lua_State *L)
 {
     unsigned long ms = millis();
@@ -36,6 +48,9 @@ int TimeBindings::clock(lua_State *L)
     return 1;
 }
 
+/**
+ * time.delta() -- frame delta
+ */
 int TimeBindings::delta(lua_State *L)
 {
     lua_pushnumber(L, s_delta);
@@ -44,13 +59,6 @@ int TimeBindings::delta(lua_State *L)
 
 TimeBindings::TimeBindings() {}
 
-/**
- * time.now()         -- milliseconds since boot
- * time.seconds()     -- seconds since boot
- * time.clock()       -- "HH:MM:SS"
- * time.delta()       -- frame delta
- * time.uptime()      -- alias of seconds()
- */
 void TimeBindings::registerAPI(lua_State *L)
 {
     lua_newtable(L);

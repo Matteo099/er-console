@@ -10,6 +10,7 @@
 #include "SevenSegmentBindings.h"
 
 InputBindings::InputBindings(InputSystem *inputSystem) : input(inputSystem) {}
+
 void InputBindings::registerAPI(lua_State *L)
 {
     if (!input)

@@ -6,7 +6,7 @@ RFIDBindings::RFIDBindings(RFIDSystem *system) : rfid(system) {}
 
 RFIDSystem *RFIDBindings::get(lua_State *L)
 {
-    lua_getfield(L, LUA_REGISTRYINDEX, "rfidSystem_ptr");
+    lua_getfield(L, LUA_REGISTRYINDEX, RFID_PTR_KEY);
     auto *system = static_cast<RFIDSystem *>(lua_touserdata(L, -1));
     lua_pop(L, 1);
     return system;

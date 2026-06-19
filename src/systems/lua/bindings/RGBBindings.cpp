@@ -2,12 +2,6 @@
 
 #include "systems/input/subsystems/RgbLedSystem.h"
 
-#define RGB_PTR_KEY "lua.rgbSystem"
-
-// ------------------------------------
-// Retrieve system
-// ------------------------------------
-
 RgbLedSystem *RGBBindings::get(lua_State *L)
 {
     lua_getfield(L, LUA_REGISTRYINDEX, RGB_PTR_KEY);
@@ -16,15 +10,9 @@ RgbLedSystem *RGBBindings::get(lua_State *L)
     return system;
 }
 
-// ------------------------------------
-// input.rgb.setColor(
-//      led,
-//      r,
-//      g,
-//      b
-// )
-// ------------------------------------
-
+/**
+ * input.rgb.setColor(0, 255, 0, 0) -> sets LED 0 to red
+ */
 int RGBBindings::setColor(lua_State *L)
 {
     auto *system = get(L);
@@ -42,13 +30,9 @@ int RGBBindings::setColor(lua_State *L)
     return 0;
 }
 
-// ------------------------------------
-// input.rgb.setBrightness(
-//      led,
-//      value
-// )
-// ------------------------------------
-
+/**
+ * input.rgb.setBrightness(0, 128) -> sets LED 0 to half brightness
+ */
 int RGBBindings::setBrightness(lua_State *L)
 {
     auto *system = get(L);

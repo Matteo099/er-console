@@ -14,6 +14,12 @@ public:
 
     void beep(uint16_t freq = 1000, uint16_t ms = 100);
 
+    void play(const char *path);
+    void stop();
+
+    void setVolume(uint8_t volume);
+    uint8_t getVolume() const;
+
 private:
     StorageSystem *storage;
     AudioDriver *driver;

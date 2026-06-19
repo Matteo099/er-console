@@ -2,11 +2,6 @@
 
 #include "systems/input/subsystems/OLEDSystem.h"
 
-#define OLED_PTR_KEY "lua.oledSystem"
-
-// -------------------------
-// helper
-// -------------------------
 OLEDSystem *OLEDBindings::get(lua_State *L)
 {
     lua_getfield(L, LUA_REGISTRYINDEX, OLED_PTR_KEY);
@@ -15,9 +10,9 @@ OLEDSystem *OLEDBindings::get(lua_State *L)
     return sys;
 }
 
-// -------------------------
-// OLED: isSupported
-// -------------------------
+/**
+ * input.oled.isSupported()
+ */
 int OLEDBindings::isSupported(lua_State *L)
 {
     auto *sys = get(L);
@@ -25,9 +20,9 @@ int OLEDBindings::isSupported(lua_State *L)
     return 1;
 }
 
-// -------------------------
-// OLED: show(text)
-// -------------------------
+/**
+ * input.oled.show("Hello, OLED!")
+ */
 int OLEDBindings::show(lua_State *L)
 {
     auto *sys = get(L);
@@ -38,9 +33,9 @@ int OLEDBindings::show(lua_State *L)
     return 0;
 }
 
-// -------------------------
-// OLED: clear()
-// -------------------------
+/**
+ * input.oled.clear()
+ */
 int OLEDBindings::clear(lua_State *L)
 {
     auto *sys = get(L);
@@ -49,10 +44,9 @@ int OLEDBindings::clear(lua_State *L)
     return 0;
 }
 
-// -------------------------
-// OLED: currentMessage()
-// returns current buffer
-// -------------------------
+/**
+ * local message = input.oled.currentMessage()
+ */
 int OLEDBindings::currentMessage(lua_State *L)
 {
     auto *sys = get(L);
@@ -66,14 +60,8 @@ int OLEDBindings::currentMessage(lua_State *L)
     return 1;
 }
 
-// -------------------------
-// constructor
-// -------------------------
 OLEDBindings::OLEDBindings(OLEDSystem *system) : oled(system) {}
 
-// -------------------------
-// register API
-// -------------------------
 void OLEDBindings::registerAPI(lua_State *L)
 {
     // store pointer

@@ -2,8 +2,6 @@
 
 #include "systems/input/subsystems/ChannelSystem.h"
 
-#define CHANNEL_PTR_KEY "lua.channelSystem"
-
 /*
     Helper:
     Retrieve ChannelSystem pointer
@@ -16,14 +14,9 @@ ChannelSystem *ChannelBindings::get(lua_State *L)
     return channel;
 }
 
-/*
-    Lua:
-
-    input.channels.pinMode(
-        5,
-        OUTPUT
-    )
-*/
+/**
+ * inputs.channels.pinMode(5, OUTPUT)
+ */
 int ChannelBindings::pinMode(lua_State *L)
 {
     auto *channels = get(L);
@@ -35,14 +28,9 @@ int ChannelBindings::pinMode(lua_State *L)
     return 0;
 }
 
-/*
-    Lua:
-
-    input.channels.digitalWrite(
-        10,
-        1
-    )
-*/
+/**
+ * inputs.channels.digitalWrite(5, true)
+ */
 int ChannelBindings::digitalWrite(lua_State *L)
 {
     auto *channels = get(L);

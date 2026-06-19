@@ -2,8 +2,6 @@
 
 #include "systems/input/subsystems/SevenSegmentSystem.h"
 
-#define SEVEN_SEGMENT_PTR_KEY "lua.sevenSegmentSystem"
-
 SevenSegmentSystem *SevenSegmentBindings::get(lua_State *L)
 {
     lua_getfield(L, LUA_REGISTRYINDEX, SEVEN_SEGMENT_PTR_KEY);

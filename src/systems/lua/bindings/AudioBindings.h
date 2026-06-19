@@ -14,5 +14,10 @@ private:
 
 private:
     static AudioSystem *get(lua_State *L);
+
     static int beep(lua_State *L);
+    static int play(lua_State *L);
+    static int stop(lua_State *L);
+    static int setVolume(lua_State *L);
+    static int getVolume(lua_State *L);
 };

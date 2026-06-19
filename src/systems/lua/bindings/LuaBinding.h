@@ -7,6 +7,14 @@ extern "C"
 #include "lauxlib.h"
 }
 
+#define AUDIO_SYSTEM_PTR_KEY "audioSystem_ptr"
+#define CHANNEL_PTR_KEY "lua.channelSystem"
+#define OLED_PTR_KEY "lua.oledSystem"
+#define RGB_PTR_KEY "lua.rgbSystem"
+#define RELAY_PTR_KEY "lua.relaySystem"
+#define RFID_PTR_KEY "lua.rfidSystem"
+#define SEVEN_SEGMENT_PTR_KEY "lua.sevenSegmentSystem"
+
 class LuaBinding
 {
 public:

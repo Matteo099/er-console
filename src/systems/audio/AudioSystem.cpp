@@ -11,9 +11,9 @@
 AudioSystem::AudioSystem()
 {
     driver = new MAX98357Driver(
-        I2S_BCLK_PIN, // BCLK
-        I2S_LRCLK_PIN,  // LRCK
-        I2S_DOUT_PIN  // DOUT
+        I2S_BCLK_PIN,  // BCLK
+        I2S_LRCLK_PIN, // LRCK
+        I2S_DOUT_PIN   // DOUT
     );
 }
 
@@ -49,29 +49,19 @@ void AudioSystem::update()
             switch (evt.type)
             {
             case AudioEventType::BEEP:
-                Log::debug(Log::AUDIO_TAG, "Playing beep freq=%d ms=%d", evt.beep.freq, evt.beep.ms);
-                driver->playTone(
-                    evt.beep.freq,
-                    evt.beep.ms);
+                beep(evt.beep.freq, evt.beep.ms);
                 break;
 
             case AudioEventType::PLAY_WAV:
-            {
-                Log::info(Log::AUDIO_TAG, "Playing wav: %s", evt.wav.path);
-                IFile *f = storage->open(evt.wav.path);
-                driver->playWav(f);
+                play(evt.wav.path);
                 break;
-            }
 
             case AudioEventType::STOP:
-                Log::debug(Log::AUDIO_TAG, "Stopping audio");
-                driver->stop();
+                stop();
                 break;
 
             case AudioEventType::SET_VOLUME:
-                Log::info(Log::AUDIO_TAG, "Setting volume to %d", evt.volume.volume);
-                volume = evt.volume.volume;
-                driver->setVolume(volume);
+                setVolume(evt.volume.volume);
                 break;
             }
         }
@@ -80,5 +70,54 @@ void AudioSystem::update()
 
 void AudioSystem::beep(uint16_t freq, uint16_t ms)
 {
+    Log::debug(Log::AUDIO_TAG, "Playing beep freq=%d ms=%d", freq, ms);
     driver->playTone(freq, ms);
+}
+
+void AudioSystem::play(const char *path)
+{
+    if (!storage || !path)
+        return;
+
+    Log::info(Log::AUDIO_TAG, "Playing wav: %s", path);
+
+    IFile *file = storage->open(path);
+
+    if (!file)
+    {
+        Log::error(Log::AUDIO_TAG, "Unable to open audio file: %s", path);
+        return;
+    }
+
+    driver->playWav(file);
+}
+
+void AudioSystem::stop()
+{
+    if (!driver)
+        return;
+
+    Log::debug(Log::AUDIO_TAG, "Stopping audio");
+
+    driver->stop();
+}
+
+void AudioSystem::setVolume(uint8_t volume)
+{
+    if (!driver)
+        return;
+
+    if (volume > 100)
+        volume = 100;
+
+    this->volume = volume;
+
+    Log::info(Log::AUDIO_TAG, "Setting volume to %d", volume);
+
+    driver->setVolume(volume);
+}
+
+uint8_t AudioSystem::getVolume() const
+{
+    return volume;
 }
