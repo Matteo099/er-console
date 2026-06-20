@@ -21,8 +21,7 @@ void LuaSystem::init(void *params)
 {
     Log::info(Log::LUA_TAG, "Initializing LuaSystem");
 
-    storage = static_cast<StorageSystem *>(params);
-    if (!storage)
+    if (!storageSystem)
     {
         Log::error(Log::LUA_TAG, "StorageSystem not provided");
         return;
@@ -95,15 +94,18 @@ static const char *luaFileReader(lua_State *L, void *data, size_t *size)
 
 bool LuaSystem::loadScript(const char *path)
 {
-    if (!L || !storage)
+    reset(); // reset state before loading new script
+
+    if (!L || !storageSystem)
         return false;
 
-    IFile *file = storage->open(path);
+    IFile *file = storageSystem->open(path);
     if (!file)
     {
         Log::error(Log::LUA_TAG, "Cannot open script: %s", path);
         return false;
     }
+
 
     // Load Lua chunk via streaming reader
     if (lua_load(L, luaFileReader, file, path, nullptr) != LUA_OK)
@@ -126,8 +128,14 @@ bool LuaSystem::loadScript(const char *path)
         return false;
     }
 
+    // Debug: Check if 'system' table is available
+    // lua_getglobal(L, "system");
+    // Log::debug(Log::LUA_TAG, "system type = %s", lua_typename(L, lua_type(L, -1)));
+    // lua_pop(L, 1);
+
     // Optional init()
     lua_getglobal(L, "init");
+    Log::debug(Log::LUA_TAG, "init type = %s", lua_typename(L, lua_type(L, -1)));
     if (lua_isfunction(L, -1))
     {
         if (lua_pcall(L, 0, 0, 0) != LUA_OK)
@@ -198,7 +206,7 @@ void LuaSystem::tick()
     }
 }
 
-void LuaSystem::restart()
+void LuaSystem::reset()
 {
     destroyVM();
 
@@ -207,12 +215,15 @@ void LuaSystem::restart()
 
     registerBaseLibraries();
     registerGameAPI();
+    ready = true;
     lastTickMs = millis();
-    loadMainScript("/scripts/main.lua");
 }
 
 void LuaSystem::registerGameAPI()
 {
+    Log::info(Log::LUA_TAG, "Registering Lua APIs");
+    Log::info(Log::LUA_TAG, "storage=%p input=%p audio=%p", storageSystem, inputSystem, audioSystem);
+
     LuaBindingManager manager;
 
     manager.add(new InputBindings(inputSystem));
@@ -221,6 +232,8 @@ void LuaSystem::registerGameAPI()
     manager.add(new CoreBindings());
 
     manager.registerAll(L);
+
+    Log::info(Log::LUA_TAG, "Lua APIs registered");
 }
 
 void LuaSystem::registerBaseLibraries()

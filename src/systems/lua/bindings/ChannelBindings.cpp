@@ -15,15 +15,15 @@ ChannelSystem *ChannelBindings::get(lua_State *L)
 }
 
 /**
- * inputs.channels.pinMode(5, OUTPUT)
+ * inputs.channels.pinMode(OUTPUT, 5)
  */
 int ChannelBindings::pinMode(lua_State *L)
 {
     auto *channels = get(L);
     if (!channels)
         return 0;
-    uint16_t channel = luaL_checkinteger(L, 1);
-    uint8_t mode = luaL_checkinteger(L, 2);
+    uint8_t mode = luaL_checkinteger(L, 1);
+    uint16_t channel = luaL_checkinteger(L, 2);
     channels->pinMode(channel, mode);
     return 0;
 }
@@ -42,12 +42,9 @@ int ChannelBindings::digitalWrite(lua_State *L)
     return 0;
 }
 
-/*
-    Lua:
-
-    value =
-        input.channels.digitalRead(10)
-*/
+/**
+ * local value = inputs.channels.digitalRead(10)
+ */
 int ChannelBindings::digitalRead(lua_State *L)
 {
     auto *channels = get(L);
@@ -62,12 +59,9 @@ int ChannelBindings::digitalRead(lua_State *L)
     return 1;
 }
 
-/*
-    Lua:
-
-    value =
-        input.channels.analogRead(200)
-*/
+/**
+ * local value = inputs.channels.analogRead(200)
+ */
 int ChannelBindings::analogRead(lua_State *L)
 {
     auto *channels = get(L);
@@ -82,14 +76,9 @@ int ChannelBindings::analogRead(lua_State *L)
     return 1;
 }
 
-/*
-    Lua:
-
-    input.channels.analogWrite(
-        200,
-        128
-    )
-*/
+/**
+ * inputs.channels.analogWrite(200, 128)
+ */
 int ChannelBindings::analogWrite(lua_State *L)
 {
     auto *channels = get(L);
@@ -105,19 +94,11 @@ ChannelBindings::ChannelBindings(ChannelSystem *system) : channels(system) {}
 
 void ChannelBindings::registerAPI(lua_State *L)
 {
-    /*
-        store pointer
-    */
-
+    // store pointer
     lua_pushlightuserdata(L, channels);
     lua_setfield(L, LUA_REGISTRYINDEX, CHANNEL_PTR_KEY);
-    /*
-        create:
 
-        input.channels
-
-    */
-
+    // create: input.channels
     ensureTable(L, "input");
     lua_getglobal(L, "input");
 

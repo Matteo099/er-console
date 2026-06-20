@@ -8,7 +8,7 @@
 int CoreBindings::info(lua_State *L)
 {
     const char *msg = luaL_checkstring(L, 1);
-    Log::info(Log::LUA_TAG, "%s", msg);
+    Log::info(Log::LUA_SCRIPT_TAG, "%s", msg);
     return 0;
 }
 
@@ -18,7 +18,7 @@ int CoreBindings::info(lua_State *L)
 int CoreBindings::warn(lua_State *L)
 {
     const char *msg = luaL_checkstring(L, 1);
-    Log::warn(Log::LUA_TAG, "%s", msg);
+    Log::warn(Log::LUA_SCRIPT_TAG, "%s", msg);
     return 0;
 }
 
@@ -28,7 +28,7 @@ int CoreBindings::warn(lua_State *L)
 int CoreBindings::error(lua_State *L)
 {
     const char *msg = luaL_checkstring(L, 1);
-    Log::error(Log::LUA_TAG, "%s", msg);
+    Log::error(Log::LUA_SCRIPT_TAG, "%s", msg);
     return 0;
 }
 
@@ -38,7 +38,7 @@ int CoreBindings::error(lua_State *L)
 int CoreBindings::debug(lua_State *L)
 {
     const char *msg = luaL_checkstring(L, 1);
-    Log::debug(Log::LUA_TAG, "%s", msg);
+    Log::debug(Log::LUA_SCRIPT_TAG, "%s", msg);
     return 0;
 }
 

@@ -11,6 +11,7 @@ namespace Log {
     constexpr const char* STORAGE_TAG = "STORAGE";
     constexpr const char* AUDIO_TAG = "AUDIO";
     constexpr const char* LUA_TAG = "LUA";
+    constexpr const char* LUA_SCRIPT_TAG = "LUASCRIPT";
     constexpr const char* GAME_TAG = "GAME";
     constexpr const char* DISPLAY_TAG = "DISPLAY";
     constexpr const char* INPUT_TAG = "INPUT";

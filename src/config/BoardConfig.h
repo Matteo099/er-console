@@ -177,6 +177,8 @@ GAIN pin: (do not connect)
 #define GPIO_FREE_9          41
 #define GPIO_FREE_10         42
 #define GPIO_FREE_11         47
+#define GPIO_MIN_PIN         0
+#define GPIO_MAX_PIN         48
 
 
 

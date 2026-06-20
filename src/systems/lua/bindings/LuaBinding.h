@@ -1,5 +1,7 @@
 #pragma once
 
+#include "log/Logger.h"
+
 extern "C"
 {
 #include "lua.h"
@@ -25,15 +27,18 @@ public:
 protected:
     static void ensureTable(lua_State *L, const char *name)
     {
+        Log::debug(Log::LUA_TAG, "ensureTable(%s)", name);
         lua_getglobal(L, name);
         if (!lua_istable(L, -1))
         {
+            Log::debug(Log::LUA_TAG, "%s does not exist, creating", name);
             lua_pop(L, 1);
             lua_newtable(L);
             lua_setglobal(L, name);
         }
         else
         {
+            Log::debug(Log::LUA_TAG, "%s already exists", name);
             lua_pop(L, 1);
         }
     }

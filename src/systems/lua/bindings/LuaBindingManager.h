@@ -8,10 +8,13 @@ class LuaBindingManager
 {
 
 public:
+    ~LuaBindingManager();
+    
     void add(LuaBinding *binding);
 
     void registerAll(lua_State *L);
 
 private:
+    
     std::vector<LuaBinding *> bindings;
 };

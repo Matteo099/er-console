@@ -144,18 +144,18 @@ bool GameScene::loadGameScript()
         Log::error(Log::GAME_TAG, "Failed to initialize InputSystem with game input configuration");
         return false;
     }
-    Log::info(Log::LUA_TAG, "InputSystem initialized successfully with game input configuration");
+    Log::info(Log::GAME_TAG, "InputSystem initialized successfully with game input configuration");
 
     // Build path: /games/{gameId}/game.lua
     std::string scriptPath = "/games/" + gameInfo.id + "/game.lua";
     remainingSec = gameInfo.durationMin * 60;
     view.setTime(remainingSec);
 
-    Log::info(Log::LUA_TAG, "Loading game script: %s", scriptPath.c_str());
+    Log::info(Log::GAME_TAG, "Loading game script: %s", scriptPath.c_str());
 
     if (!luaSystem->loadScript(scriptPath.c_str()))
     {
-        Log::error(Log::LUA_TAG, "Failed to load game script: %s", scriptPath.c_str());
+        Log::error(Log::GAME_TAG, "Failed to load game script: %s", scriptPath.c_str());
         loadState = GameLoadState::LoadFailed;
         view.hideLoadingBar();
         view.setErrorMessage("Failed to load game script");
@@ -164,7 +164,7 @@ bool GameScene::loadGameScript()
 
     loadState = GameLoadState::LoadComplete;
     view.hideLoadingBar();
-    Log::info(Log::LUA_TAG, "Game script loaded successfully");
+    Log::info(Log::GAME_TAG, "Game script loaded successfully");
 
     return true;
 }

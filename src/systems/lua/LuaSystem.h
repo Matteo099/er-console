@@ -28,7 +28,7 @@ public:
     bool loadScript(const char* path);
     bool loadMainScript(const char* path);
     void unloadScript();
-    void restart();
+    void reset();
 
     // State
     bool isReady() const { return ready; }
@@ -39,6 +39,7 @@ public:
 
     // API registration (for dependency injection)
     void setGameView(GameView* view) { gameView = view; }
+    void setStorageSystem(StorageSystem* sys) { storageSystem = sys; }
     void setAudioSystem(AudioSystem* sys) { audioSystem = sys; }
     void setInputSystem(InputSystem* sys) { inputSystem = sys; }
 
@@ -47,8 +48,8 @@ private:
     lua_State* L = nullptr;
 
     // Dependencies
-    StorageSystem* storage = nullptr;
     GameView* gameView = nullptr;
+    StorageSystem* storageSystem = nullptr;
     AudioSystem* audioSystem = nullptr;
     InputSystem* inputSystem = nullptr;
     uint32_t lastTickMs = 0;

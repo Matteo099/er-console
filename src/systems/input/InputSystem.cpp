@@ -21,12 +21,14 @@ bool InputSystem::begin(const InputConfig &config)
         channelSystem = new ChannelSystem();
         nativeChannel = new NativeChannelProvider();
         channelSystem->registerProvider(nativeChannel);
+        Log::debug(Log::INPUT_TAG, "NativeChannelProvider registered");
 
         if (config.channels.mcp1Enabled)
         {
             mcpDriver1 = new MCP23017Driver(config.channels.mcp1Base, config.channels.mcp1Address);
             mcp1 = new MCPChannelProvider(*mcpDriver1, config.channels.mcp1Base);
             channelSystem->registerProvider(mcp1);
+                Log::debug(Log::INPUT_TAG, "MCP23017Driver 1 registered at base %d", config.channels.mcp1Base);
         }
 
         if (config.channels.mcp2Enabled)
@@ -34,6 +36,7 @@ bool InputSystem::begin(const InputConfig &config)
             mcpDriver2 = new MCP23017Driver(config.channels.mcp2Base, config.channels.mcp2Address);
             mcp2 = new MCPChannelProvider(*mcpDriver2, config.channels.mcp2Base);
             channelSystem->registerProvider(mcp2);
+            Log::debug(Log::INPUT_TAG, "MCP23017Driver 2 registered at base %d", config.channels.mcp2Base);
         }
 
         if (config.channels.muxEnabled)
@@ -41,6 +44,7 @@ bool InputSystem::begin(const InputConfig &config)
             muxDriver = new CD74HC4067Driver(config.channels.muxCsPin, config.channels.muxS0Pin, config.channels.muxS1Pin, config.channels.muxS2Pin, config.channels.muxS3Pin);
             mux1 = new MuxChannelProvider(*muxDriver, config.channels.muxBase);
             channelSystem->registerProvider(mux1);
+            Log::debug(Log::INPUT_TAG, "CD74HC4067Driver registered at base %d", config.channels.muxBase);
         }
 
         if (!channelSystem->init())
@@ -53,6 +57,7 @@ bool InputSystem::begin(const InputConfig &config)
         {
             channelInitialized = true;
             subsystems.push_back(channelSystem);
+            Log::debug(Log::INPUT_TAG, "ChannelSystem initialized");
         }
     }
     if (config.power.enabled)
@@ -68,6 +73,7 @@ bool InputSystem::begin(const InputConfig &config)
         else
         {
             powerInitialized = true;
+            Log::debug(Log::INPUT_TAG, "PowerSystem initialized");
             subsystems.push_back(powerSystem);
         }
     }
@@ -84,6 +90,7 @@ bool InputSystem::begin(const InputConfig &config)
         else
         {
             rfidInitialized = true;
+            Log::debug(Log::INPUT_TAG, "RFIDSystem initialized");
             subsystems.push_back(rfidSystem);
         }
     }
@@ -100,6 +107,7 @@ bool InputSystem::begin(const InputConfig &config)
         else
         {
             oledInitialized = true;
+            Log::debug(Log::INPUT_TAG, "OLEDSystem initialized");
             subsystems.push_back(oledSystem);
         }
     }
@@ -121,6 +129,7 @@ bool InputSystem::begin(const InputConfig &config)
         {
             rgbInitialized = true;
             subsystems.push_back(rgbLedSystem);
+            Log::debug(Log::INPUT_TAG, "RgbLedSystem initialized");
         }
     }
     if (config.sevenSegment.enabled)
@@ -137,6 +146,7 @@ bool InputSystem::begin(const InputConfig &config)
         else
         {
             sevenSegmentInitialized = true;
+            Log::debug(Log::INPUT_TAG, "SevenSegmentSystem initialized");
             subsystems.push_back(sevenSegmentSystem);
         }
     }
@@ -160,6 +170,7 @@ bool InputSystem::begin(const InputConfig &config)
         {
             relayInitialized = true;
             subsystems.push_back(relaySystem);
+            Log::debug(Log::INPUT_TAG, "RelaySystem initialized");
         }
     }
     return true;
