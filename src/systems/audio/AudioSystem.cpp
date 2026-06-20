@@ -1,10 +1,13 @@
 #include "AudioSystem.h"
 
+#include <cstring>
+
 #include "config/BoardConfig.h"
 #include "core/SystemEventBus.h"
 #include "systems/audio/AudioEvent.h"
 #include "drivers/audio/MAX98357Driver.h"
 #include "log/Logger.h"
+#include "drivers/storage/MemoryFile.h"
 
 #include "config/Assets.h"
 
@@ -15,6 +18,15 @@ AudioSystem::AudioSystem()
         I2S_LRCLK_PIN, // LRCK
         I2S_DOUT_PIN   // DOUT
     );
+}
+
+AudioSystem::~AudioSystem()
+{
+    for (auto &entry : cache)
+    {
+        delete[] entry.data;
+        entry.data = nullptr;
+    }
 }
 
 void AudioSystem::init(void *params)
@@ -80,16 +92,21 @@ void AudioSystem::play(const char *path)
         return;
 
     Log::info(Log::AUDIO_TAG, "Playing wav: %s", path);
+    AudioCacheEntry *entry = findCache(path);
 
-    IFile *file = storage->open(path);
-
-    if (!file)
+    if (!entry)
     {
-        Log::error(Log::AUDIO_TAG, "Unable to open audio file: %s", path);
+        entry = loadCache(path);
+    }
+
+    if (!entry)
+    {
+        Log::error(Log::AUDIO_TAG, "Failed loading %s", path);
         return;
     }
 
-    driver->playWav(file);
+    MemoryFile file(entry->data, entry->size);
+    driver->playWav(&file);
 }
 
 void AudioSystem::stop()
@@ -120,4 +137,101 @@ void AudioSystem::setVolume(uint8_t volume)
 uint8_t AudioSystem::getVolume() const
 {
     return volume;
+}
+
+AudioCacheEntry *AudioSystem::findCache(const char *path)
+{
+    uint32_t now = millis();
+
+    for (auto &entry : cache)
+    {
+        if (entry.data &&
+            strcmp(entry.path, path) == 0)
+        {
+            entry.lastUsed = now;
+            return &entry;
+        }
+    }
+
+    return nullptr;
+}
+
+AudioCacheEntry *AudioSystem::loadCache(const char *path)
+{
+    IFile *file = storage->open(path);
+
+    if (!file)
+        return nullptr;
+
+    constexpr size_t CHUNK = 1024;
+    size_t capacity = CHUNK;
+    size_t length = 0;
+    uint8_t *buffer = new uint8_t[capacity];
+    uint8_t temp[CHUNK];
+
+    while (file->available())
+    {
+        int read = file->read(temp, CHUNK);
+
+        if (read <= 0)
+            break;
+
+        if (length + read > capacity)
+        {
+            size_t newCapacity = capacity * 2;
+
+            while (newCapacity < length + read)
+                newCapacity *= 2;
+
+            uint8_t *newBuffer = new uint8_t[newCapacity];
+            memcpy(newBuffer, buffer, length);
+            delete[] buffer;
+            buffer = newBuffer;
+            capacity = newCapacity;
+        }
+
+        memcpy(buffer + length, temp, read);
+        length += read;
+    }
+
+    file->close();
+    delete file;
+
+    int slot = -1;
+    for (int i = 0; i < AUDIO_CACHE_SIZE; i++)
+    {
+        if (!cache[i].data)
+        {
+            slot = i;
+            break;
+        }
+    }
+
+    // LRU eviction
+    if (slot == -1)
+    {
+        uint32_t oldest = UINT32_MAX;
+
+        for (int i = 0; i < AUDIO_CACHE_SIZE; i++)
+        {
+            if (cache[i].lastUsed < oldest)
+            {
+                oldest = cache[i].lastUsed;
+                slot = i;
+            }
+        }
+
+        delete[] cache[slot].data;
+    }
+
+    AudioCacheEntry &entry = cache[slot];
+    strncpy( entry.path, path, AudioEvent::MAX_PATH_LENGTH - 1);
+    entry.path[AudioEvent::MAX_PATH_LENGTH - 1] = '\0';
+    entry.data = buffer;
+    entry.size = length;
+    entry.lastUsed = millis();
+
+    Log::debug( Log::AUDIO_TAG, "Cached audio %s (%u bytes)", path, length);
+
+    return &entry;
 }

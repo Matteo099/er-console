@@ -6,7 +6,7 @@
 
 void BootManager::run()
 {
-    int delayMs = 2000;
+    int delayMs = 200;
 
     // ---- CORE INIT ----
     emitStep(BootStep::CORE_INIT, "Initializing core services");

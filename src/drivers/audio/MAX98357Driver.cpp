@@ -72,6 +72,7 @@ void MAX98357Driver::playWav(IFile *file)
     if (!file)
         return;
 
+    Log::debug(Log::DRIVER_TAG, "Playing WAV file");
     file->seek(44); // WAV header
 
     digitalWrite(I2S_SHUTDOWN_PIN, HIGH);
@@ -83,8 +84,7 @@ void MAX98357Driver::playWav(IFile *file)
     }
     digitalWrite(I2S_SHUTDOWN_PIN, LOW);
 
-    file->close();
-    delete file;
+    // file->close(); // Caller is responsible for closing the file
 }
 
 void MAX98357Driver::applyVolume(int16_t *buffer, size_t samples)

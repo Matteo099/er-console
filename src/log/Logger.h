@@ -37,5 +37,4 @@ namespace Log {
 
     std::string getRecentLogs(std::size_t maxLines = 200);
     void clearRecentLogs();
-
 }
