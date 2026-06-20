@@ -102,7 +102,7 @@ end
 -- UPDATE LOOP
 --------------------------------------------------
 
-function update(dt)
+function update(dt, paused)
     if not state.running then
         return
     end

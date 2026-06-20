@@ -30,6 +30,10 @@ public:
     void unloadScript();
     void reset();
 
+    // Game control
+    void pause() { gamePaused = true; }
+    void resume() { gamePaused = false; }
+
     // State
     bool isReady() const { return ready; }
     bool isScriptLoaded() const { return scriptLoaded; }
@@ -57,6 +61,7 @@ private:
     // State flags
     bool ready = false;
     bool scriptLoaded = false;
+    bool gamePaused = true;
 
     // Internal helpers
     bool createVM();

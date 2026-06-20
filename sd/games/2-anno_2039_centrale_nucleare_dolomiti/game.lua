@@ -73,7 +73,7 @@ function init()
     gameState.initialized = true
 end
 
-function update(dt)
+function update(dt, paused)
     if not gameState.initialized then return end
     
     if not gameState.paused then

@@ -98,11 +98,13 @@ bool GameScene::handleUIEvent(const UIEvent &event)
         {
             state = GameState::Running;
             lastTickMs = lv_tick_get();
+            luaSystem->resume();
             view.setRunning(true);
         }
         else if (state == GameState::Running)
         {
             state = GameState::Paused;
+            luaSystem->pause();
             view.setRunning(false);
         }
         return true;
@@ -110,6 +112,7 @@ bool GameScene::handleUIEvent(const UIEvent &event)
 
     if (clicked.buttonId == "cancel")
     {
+        stopGame();
         request = SceneRequest(SceneChange::GoToGameList, SceneTransition::SlideRight);
         return true;
     }
@@ -162,6 +165,7 @@ bool GameScene::loadGameScript()
         return false;
     }
 
+    luaSystem->pause();
     loadState = GameLoadState::LoadComplete;
     view.hideLoadingBar();
     Log::info(Log::GAME_TAG, "Game script loaded successfully");
@@ -179,4 +183,16 @@ void GameScene::updateLua()
     {
         luaSystem->update();
     }
+}
+
+void GameScene::stopGame()
+{
+    if (state == GameState::Running || state == GameState::Paused)
+    {
+        state = GameState::Finished;
+        view.setRunning(false);
+        Log::info(Log::GAME_TAG, "Game stopped by user");
+    }
+
+    luaSystem->unloadScript();
 }

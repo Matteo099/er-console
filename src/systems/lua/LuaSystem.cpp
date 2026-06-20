@@ -168,6 +168,7 @@ bool LuaSystem::loadMainScript(const char *path)
 void LuaSystem::unloadScript()
 {
     scriptLoaded = false;
+    gamePaused = true;
 }
 
 void LuaSystem::tick()
@@ -197,8 +198,9 @@ void LuaSystem::tick()
     lastTickMs = now;
     TimeBindings::setDelta(dt);
     lua_pushnumber(L, dt);
+    lua_pushboolean(L, gamePaused);
 
-    if (lua_pcall(L, 1, 0, 0) != LUA_OK)
+    if (lua_pcall(L, 2, 0, 0) != LUA_OK)
     {
         Log::error(Log::LUA_TAG, "Lua update() error: %s", lua_tostring(L, -1));
         lua_pop(L, 1);

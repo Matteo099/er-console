@@ -55,7 +55,11 @@ end
 -- UPDATE
 --------------------------------------------------
 
-function update(dt)
+function update(dt, paused)
+    
+    if(paused) then
+        return
+    end
 
     if not state.initialized then
         system.warn("Update called before initialization, ignoring")
@@ -70,16 +74,16 @@ function update(dt)
     -- Log input changes
     --------------------------------------------------
 
-    if not ch1 then
-        system.info("Channel 1 ACTIVE")
+    if ch1 then
+        system.info("Channel 1 PRESSED")
     end
 
-    if not ch2 then
-        system.info("Channel 2 ACTIVE")
+    if ch2 then
+        system.info("Channel 2 PRESSED")
     end
 
-    if not ch3 then
-        system.info("Channel 3 ACTIVE")
+    if ch3 then
+        system.info("Channel 3 PRESSED")
     end
 
     --------------------------------------------------

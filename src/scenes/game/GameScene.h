@@ -54,4 +54,5 @@ private:
     // Internal helpers
     bool loadGameScript();
     void updateLua();
+    void stopGame();
 };
