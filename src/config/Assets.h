@@ -18,6 +18,8 @@
 // Audio files
 #define AUDIO_STARTUP_FILE AUDIO_DIR "/stage.wav"
 #define AUDIO_CLICK_FILE AUDIO_DIR "/fireball.wav"
+#define AUDIO_CLICK1_FILE AUDIO_DIR "/click1.wav"
+#define AUDIO_CLICK2_FILE AUDIO_DIR "/click2.wav"
 
 // Image files
 #define IMG_LOGO_FILE IMAGES_DIR "/logo.png"

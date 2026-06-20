@@ -1,10 +1,39 @@
 #pragma once
 
+#include <cstring>
 #include <lvgl.h>
+
+#include "core/SystemEventBus.h"
+#include "systems/audio/AudioEvent.h"
+#include "config/Assets.h"
 
 class Button
 {
 public:
+
+    static void playClick(lv_event_t *e)
+    {
+        (void)e;
+
+        AudioEvent evt{};
+
+        evt.type = AudioEventType::PLAY_WAV;
+
+        strncpy(
+            evt.wav.path,
+            AUDIO_CLICK1_FILE,
+            AudioEvent::MAX_PATH_LENGTH - 1
+        );
+
+        evt.wav.path[AudioEvent::MAX_PATH_LENGTH - 1] = '\0';
+
+        xQueueSend(
+            SystemEventBus::audioQueue,
+            &evt,
+            portMAX_DELAY
+        );
+    }
+
     /**
      * @brief Create a button with optional icon and label
      * @param parent Parent object
@@ -33,6 +62,7 @@ public:
         lv_obj_t *btn = lv_btn_create(parent);
 
         lv_obj_add_event_cb(btn, callback, LV_EVENT_CLICKED, userData);
+        lv_obj_add_event_cb(btn, playClick, LV_EVENT_CLICKED, nullptr);
 
         lv_obj_set_style_radius(btn, 8, 0);
         lv_obj_set_style_border_width(btn, 0, 0);
