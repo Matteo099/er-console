@@ -14,5 +14,5 @@ end
 
 
 ---Called before script unload
-function shutdown()
+function exit()
 end

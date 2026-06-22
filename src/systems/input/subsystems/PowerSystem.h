@@ -19,6 +19,8 @@ public:
 
     bool isSupported() const;
 
+    void shutdown() override;
+
 private:
     void poll();
 

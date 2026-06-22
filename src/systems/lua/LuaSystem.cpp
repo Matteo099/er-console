@@ -170,6 +170,28 @@ void LuaSystem::unloadScript()
 {
     scriptLoaded = false;
     gamePaused = true;
+
+    if (!L)
+        return;
+
+    // Call Lua exit() if it exists
+    lua_getglobal(L, "exit");
+
+    if (lua_isfunction(L, -1))
+    {
+        if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+        {
+            Log::error(Log::LUA_TAG, "Lua exit() error: %s", lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
+    }
+    else
+    {
+        lua_pop(L, 1); // remove non-function value
+    }
+
+    // TODO:
+    inputSystem.shutdown();
 }
 
 void LuaSystem::tick()

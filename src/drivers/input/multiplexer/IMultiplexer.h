@@ -9,6 +9,8 @@ public:
 
     virtual bool init() = 0;
 
+    virtual void shutdown() = 0;
+
     virtual uint8_t channelCount() const = 0;
 
     virtual bool selectChannel(uint8_t channel) = 0;

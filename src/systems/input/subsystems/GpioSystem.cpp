@@ -12,6 +12,12 @@ bool GpioSystem::init()
 
 void GpioSystem::update() {}
 
+void GpioSystem::shutdown()
+{
+    for (auto *provider : providers)
+        provider->shutdown();
+}
+
 IGpioProvider *GpioSystem::providerFor(uint16_t pin)
 {
     for (auto *provider : providers)

@@ -17,6 +17,8 @@ public:
 
     void update() override;
 
+    void shutdown() override;
+
     bool isSupported() const;
 
     void clear();

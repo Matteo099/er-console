@@ -11,8 +11,8 @@ public:
     ~LuaBindingManager();
     
     void add(LuaBinding *binding);
-
     void registerAll(lua_State *L);
+    void shutdownAll(lua_State *L);
 
 private:
     

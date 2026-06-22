@@ -28,6 +28,14 @@ void RelaySystem::update()
     }
 }
 
+void RelaySystem::shutdown()
+{
+    for (auto &relay : relays)
+    {
+        channels->digitalWrite(relay.channel, relay.activeLow ? HIGH : LOW);
+    }
+}
+
 void RelaySystem::registerRelay(uint8_t id, uint16_t channel, bool activeLow)
 {
     if (id >= relays.size())

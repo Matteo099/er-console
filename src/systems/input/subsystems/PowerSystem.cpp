@@ -22,6 +22,16 @@ bool PowerSystem::init()
 
 void PowerSystem::update() { poll(); }
 
+void PowerSystem::shutdown()
+{
+    if (supported)
+    {
+        monitor.shutdown();
+        supported = false;
+        Log::info(Log::INPUT_TAG, "Power monitor shutdown");
+    }
+}   
+
 bool PowerSystem::isSupported() const { return supported; }
 
 PowerReading PowerSystem::getMetrics() const

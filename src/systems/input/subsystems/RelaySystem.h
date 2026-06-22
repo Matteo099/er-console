@@ -11,6 +11,7 @@ public:
     RelaySystem(ChannelSystem *channels);
     bool init() override;
     void update() override;
+    void shutdown() override;
     void registerRelay(uint8_t id, uint16_t channel, bool activeLow = false);
     void set(uint8_t relay, bool state);
     bool get(uint8_t relay) const;

@@ -25,6 +25,23 @@ bool SSD1306Driver::init()
     return true;
 }
 
+void SSD1306Driver::shutdown()
+{
+    if (!initialized)
+        return;
+
+    // Clear framebuffer
+    display.clearDisplay();
+    display.display();
+
+    // Put panel into sleep mode
+    display.ssd1306_command(SSD1306_DISPLAYOFF);
+
+    initialized = false;
+
+    Log::info(Log::DRIVER_TAG, "SSD1306 shutdown");
+}
+
 bool SSD1306Driver::isAvailable() const { return initialized; }
 
 void SSD1306Driver::clear()

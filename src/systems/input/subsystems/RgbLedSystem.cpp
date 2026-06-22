@@ -25,3 +25,11 @@ void RgbLedSystem::setBrightness(uint8_t led, uint8_t value)
         return;
     drivers[led]->setBrightness(0, value);
 }
+
+void RgbLedSystem::shutdown()
+{
+    for (auto d : drivers)
+    {
+        d->shutdown();
+    }
+}

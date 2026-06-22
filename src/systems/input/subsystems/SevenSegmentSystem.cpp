@@ -12,6 +12,14 @@ bool SevenSegmentSystem::init()
 
 void SevenSegmentSystem::update() {}
 
+void SevenSegmentSystem::shutdown()
+{
+    for (auto d : drivers)
+    {
+        d->shutdown();
+    }
+}
+
 void SevenSegmentSystem::display(uint8_t index, const std::string &value)
 {
     if (index >= drivers.size())

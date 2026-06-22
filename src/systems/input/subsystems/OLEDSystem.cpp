@@ -34,6 +34,16 @@ void OLEDSystem::update()
     display.refresh();
 }
 
+void OLEDSystem::shutdown()
+{
+    if (supported)
+    {
+        display.shutdown();
+        supported = false;
+        Log::info(Log::INPUT_TAG, "OLED display shutdown");
+    }
+}
+
 bool OLEDSystem::isSupported() const { return supported; }
 
 void OLEDSystem::clear()

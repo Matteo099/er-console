@@ -81,3 +81,9 @@ function update(dt, paused)
         system.info(string.format("Heartbeat - CH1=%s CH2=%s CH3=%s", tostring(ch1), tostring(ch2), tostring(ch3)))
     end
 end
+
+
+function exit()
+    system.info("Framework test exiting")
+    
+end

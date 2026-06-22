@@ -9,6 +9,8 @@ public:
     MCPChannelProvider(MCP23017Driver &driver, uint16_t base) : driver(driver), base(base) {}
     
     bool init() override { return driver.init(); }
+
+    void shutdown() override { driver.shutdown(); }
     
     bool owns(uint16_t c) const override { return c >= base && c < base + 16; }
     

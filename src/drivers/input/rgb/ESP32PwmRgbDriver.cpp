@@ -19,6 +19,31 @@ bool ESP32PwmRgbDriver::init()
     return true;
 }
 
+void ESP32PwmRgbDriver::shutdown()
+{
+    if (!initialized)
+        return;
+
+    // Turn LED off before releasing PWM
+    ledcWrite(0, 0);
+    ledcWrite(1, 0);
+    ledcWrite(2, 0);
+
+    // Stop PWM channels
+    ledcDetachPin(rPin);
+    ledcDetachPin(gPin);
+    ledcDetachPin(bPin);
+
+    // Release GPIOs
+    pinMode(rPin, INPUT);
+    pinMode(gPin, INPUT);
+    pinMode(bPin, INPUT);
+
+    // Reset state
+    brightness = 255;
+    initialized = false;
+}
+
 bool ESP32PwmRgbDriver::available() const { return initialized; }
 
 void ESP32PwmRgbDriver::writePWM(uint8_t channel, uint8_t value)

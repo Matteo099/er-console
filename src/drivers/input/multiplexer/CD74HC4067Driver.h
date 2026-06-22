@@ -17,6 +17,8 @@ public:
 
     bool init() override;
 
+    void shutdown() override;
+
     uint8_t channelCount() const override;
 
     bool selectChannel(uint8_t channel) override;

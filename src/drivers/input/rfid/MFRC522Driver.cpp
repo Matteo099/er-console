@@ -21,6 +21,29 @@ bool MFRC522Driver::init()
     return true;
 }
 
+void MFRC522Driver::shutdown()
+{
+    if (!initialized)
+        return;
+
+    // Stop any active RFID communication
+    reader.PICC_HaltA();
+    reader.PCD_StopCrypto1();
+
+    // Disable antenna / RF field
+    reader.PCD_AntennaOff();
+
+    // Reset MFRC522 registers to default state
+    reader.PCD_Reset();
+
+    // Release SPI pins only if this driver owns SPI
+    // SPI.end();
+
+    initialized = false;
+
+    Log::info(Log::DRIVER_TAG, "MFRC522 shutdown");
+}
+
 bool MFRC522Driver::readTag(RFIDTag &tag)
 {
     if (!initialized)

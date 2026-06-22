@@ -9,6 +9,8 @@ public:
 
     virtual bool init() = 0;
 
+    virtual void shutdown() = 0;
+
     virtual bool readTag(RFIDTag& tag) = 0;
 
     virtual bool isAvailable() const = 0;

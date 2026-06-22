@@ -11,6 +11,7 @@ class ChannelSystem : public ISubsystem
 public:
     void registerProvider(IChannelProvider *provider);
     bool init() override;
+    void shutdown() override;
     void update() override;
     void pinMode(uint16_t channel, uint8_t mode);
     void digitalWrite(uint16_t channel, bool state);

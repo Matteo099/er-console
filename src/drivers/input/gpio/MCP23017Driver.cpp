@@ -8,6 +8,15 @@ bool MCP23017Driver::init()
     return initialized;
 }
 
+void MCP23017Driver::shutdown()
+{
+    for (uint8_t pin = 0; pin < 16; pin++)
+    {
+        mcp.digitalWrite(pin, LOW);
+        mcp.pinMode(pin, INPUT);
+    }
+}
+
 bool MCP23017Driver::ownsPin(uint16_t pin) const { return pin >= basePin && pin < basePin + 16; }
 
 uint16_t MCP23017Driver::toLocal(uint16_t pin) const { return pin - basePin; }

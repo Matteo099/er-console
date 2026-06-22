@@ -22,6 +22,16 @@ bool RFIDSystem::init()
 
 void RFIDSystem::update() { poll(); }
 
+void RFIDSystem::shutdown()
+{
+    if (supported)
+    {
+        reader.shutdown();
+        supported = false;
+        Log::info(Log::INPUT_TAG, "RFID reader shutdown");
+    }
+}
+
 bool RFIDSystem::isSupported() const { return supported; }
 
 bool RFIDSystem::getLastTag(RFIDTag& tag) const

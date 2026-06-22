@@ -21,6 +21,14 @@ void MultiplexerSystem::update()
 {
 }
 
+void MultiplexerSystem::shutdown()
+{
+    for(auto* mux : multiplexers)
+    {
+        mux->shutdown();
+    }
+}
+
 bool MultiplexerSystem::select(
     uint8_t mux,
     uint8_t channel)

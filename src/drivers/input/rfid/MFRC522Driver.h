@@ -14,6 +14,8 @@ public:
 
     bool init() override;
 
+    void shutdown() override;
+
     bool readTag(RFIDTag& tag) override;
 
     bool isAvailable() const override;

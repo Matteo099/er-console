@@ -15,6 +15,8 @@ public:
 
     void update() override;
 
+    void shutdown() override;
+
     bool select(
         uint8_t mux,
         uint8_t channel);

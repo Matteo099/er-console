@@ -10,6 +10,7 @@ class SSD1306Driver : public IDisplay
 public:
     SSD1306Driver(uint16_t width = 128, uint16_t height = 64, TwoWire &wire = Wire, uint8_t address = 0x3C);
     bool init() override;
+    void shutdown() override;
     bool isAvailable() const override;
     void clear() override;
     void print(const std::string &text, uint16_t x = 0, uint16_t y = 0) override;

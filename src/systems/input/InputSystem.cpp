@@ -28,7 +28,7 @@ bool InputSystem::begin(const InputConfig &config)
             mcpDriver1 = new MCP23017Driver(config.channels.mcp1Base, config.channels.mcp1Address);
             mcp1 = new MCPChannelProvider(*mcpDriver1, config.channels.mcp1Base);
             channelSystem->registerProvider(mcp1);
-                Log::debug(Log::INPUT_TAG, "MCP23017Driver 1 registered at base %d", config.channels.mcp1Base);
+            Log::debug(Log::INPUT_TAG, "MCP23017Driver 1 registered at base %d", config.channels.mcp1Base);
         }
 
         if (config.channels.mcp2Enabled)
@@ -178,6 +178,11 @@ bool InputSystem::begin(const InputConfig &config)
 
 void InputSystem::destroyChannels()
 {
+    if (channelSystem)
+    {
+        channelSystem->shutdown();
+    }
+
     delete mcp1;
     mcp1 = nullptr;
 
@@ -207,6 +212,11 @@ void InputSystem::destroyChannels()
 
 void InputSystem::destroyPower()
 {
+    if (powerSystem)
+    {
+        powerSystem->shutdown();
+    }
+
     delete powerSystem;
     powerSystem = nullptr;
 
@@ -215,8 +225,14 @@ void InputSystem::destroyPower()
 
     powerInitialized = false;
 }
+
 void InputSystem::destroyRfid()
 {
+    if (rfidSystem)
+    {
+        rfidSystem->shutdown();
+    }
+
     delete rfidSystem;
     rfidSystem = nullptr;
 
@@ -228,6 +244,11 @@ void InputSystem::destroyRfid()
 
 void InputSystem::destroyOled()
 {
+    if (oledSystem)
+    {
+        oledSystem->shutdown();
+    }
+
     delete oledSystem;
     oledSystem = nullptr;
 
@@ -239,6 +260,11 @@ void InputSystem::destroyOled()
 
 void InputSystem::destroyRgb()
 {
+    if (rgbLedSystem)
+    {
+        rgbLedSystem->shutdown();
+    }
+
     delete rgbLedSystem;
     rgbLedSystem = nullptr;
 
@@ -250,6 +276,11 @@ void InputSystem::destroyRgb()
 
 void InputSystem::destroySevenSegment()
 {
+    if (sevenSegmentSystem)
+    {
+        sevenSegmentSystem->shutdown();
+    }
+
     delete sevenSegmentSystem;
     sevenSegmentSystem = nullptr;
 
@@ -261,6 +292,11 @@ void InputSystem::destroySevenSegment()
 
 void InputSystem::destroyRelay()
 {
+    if (relaySystem)
+    {
+        relaySystem->shutdown();
+    }
+    
     delete relaySystem;
     relaySystem = nullptr;
 

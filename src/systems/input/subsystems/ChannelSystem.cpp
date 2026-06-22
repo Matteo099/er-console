@@ -12,6 +12,12 @@ bool ChannelSystem::init()
 
 void ChannelSystem::update() {}
 
+void ChannelSystem::shutdown()
+{
+    for (auto p : providers)
+        p->shutdown();
+}
+
 IChannelProvider *ChannelSystem::findProvider(uint16_t channel)
 {
     for (auto p : providers)

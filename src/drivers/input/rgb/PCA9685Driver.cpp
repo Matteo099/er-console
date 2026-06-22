@@ -13,6 +13,25 @@ bool PCA9685Driver::init()
     return true;
 }
 
+void PCA9685Driver::shutdown()
+{
+    if (!initialized)
+        return;
+
+    // Turn off all PWM outputs
+    for (uint8_t channel = 0; channel < 16; channel++)
+    {
+        pwm.setPWM(channel, 0, 0);
+        brightness[channel] = 255;
+    }
+
+    // Put PCA9685 into sleep mode
+    // Stops oscillator and PWM generation
+    pwm.sleep();
+
+    initialized = false;
+}
+
 bool PCA9685Driver::available() const { return initialized; }
 
 void PCA9685Driver::writeChannel(uint8_t channel, uint16_t value) { pwm.setPWM(channel, 0, value); }

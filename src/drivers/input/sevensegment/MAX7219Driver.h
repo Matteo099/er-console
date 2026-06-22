@@ -5,57 +5,22 @@
 
 #include "ISevenSegmentDriver.h"
 
-
-class MAX7219Driver :
-    public ISevenSegmentDriver
+class MAX7219Driver : public ISevenSegmentDriver
 {
-
 public:
-
-    MAX7219Driver(
-        uint8_t csPin,
-        uint8_t digits = 8);
-
-
+    MAX7219Driver(uint8_t csPin, uint8_t digits = 8);
     bool init() override;
-
-
+    void shutdown() override;
     bool available() const override;
-
-
     uint8_t digits() const override;
-
-
     void clear() override;
-
-
-    void setDigit(
-        uint8_t digit,
-        char value,
-        bool dot=false) override;
-
-
-    void setBrightness(
-        uint8_t value) override;
-
-
+    void setDigit(uint8_t digit, char value, bool dot = false) override;
+    void setBrightness(uint8_t value) override;
 
 private:
-
-
-    void writeRegister(
-        uint8_t reg,
-        uint8_t data);
-
-
-
+    void writeRegister(uint8_t reg, uint8_t data);
     uint8_t csPin;
-
     uint8_t digitCount;
-
-
-    bool initialized=false;
-
-
-    uint8_t brightness=8;
+    bool initialized = false;
+    uint8_t brightness = 8;
 };

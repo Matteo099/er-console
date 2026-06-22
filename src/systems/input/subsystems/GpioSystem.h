@@ -11,6 +11,7 @@ public:
     void registerProvider(IGpioProvider *provider);
     bool init() override;
     void update() override;
+    void shutdown() override;
     void pinMode(uint16_t pin, uint8_t mode);
     void digitalWrite(uint16_t pin, bool state);
     bool digitalRead(uint16_t pin);
