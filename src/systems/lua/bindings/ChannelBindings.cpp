@@ -14,23 +14,26 @@ ChannelSystem *ChannelBindings::get(lua_State *L)
     return channel;
 }
 
-/**
- * inputs.channels.pinMode(OUTPUT, 5)
- */
+// @doc Set the mode of a digital pin.
+// @param channel The channel number to set the mode for.
+// @param mode The mode to set.
+// @example input.channels.pinMode(4, PinMode.INPUT_PULLUP)
+// @lua input.channels.pinMode(channel:uint16, mode:PinMode) -> void
 int ChannelBindings::pinMode(lua_State *L)
 {
     auto *channels = get(L);
     if (!channels)
         return 0;
-    uint8_t mode = luaL_checkinteger(L, 1);
-    uint16_t channel = luaL_checkinteger(L, 2);
+    uint16_t channel = luaL_checkinteger(L, 1);
+    uint8_t mode = luaL_checkinteger(L, 2);
     channels->pinMode(channel, mode);
     return 0;
 }
 
-/**
- * inputs.channels.digitalWrite(5, true)
- */
+// @doc Write a digital value to a pin
+// @param channel The channel number to write to
+// @param value The value to write (true or false)
+// @lua input.channels.digitalWrite(channel:uint16, value:boolean) -> void
 int ChannelBindings::digitalWrite(lua_State *L)
 {
     auto *channels = get(L);
@@ -42,9 +45,10 @@ int ChannelBindings::digitalWrite(lua_State *L)
     return 0;
 }
 
-/**
- * local value = inputs.channels.digitalRead(10)
- */
+// @doc Read a digital value from a pin
+// @param channel The channel number to read from
+// @return The digital value read from the pin (true or false)
+// @lua input.channels.digitalRead(channel:uint16) -> bool
 int ChannelBindings::digitalRead(lua_State *L)
 {
     auto *channels = get(L);
@@ -59,9 +63,10 @@ int ChannelBindings::digitalRead(lua_State *L)
     return 1;
 }
 
-/**
- * local value = inputs.channels.analogRead(200)
- */
+// @doc Read an analog value from a pin
+// @param channel The channel number to read from
+// @return The analog value read from the pin (0-255)
+// @lua input.channels.analogRead(channel:uint16) -> uint8
 int ChannelBindings::analogRead(lua_State *L)
 {
     auto *channels = get(L);
@@ -76,9 +81,10 @@ int ChannelBindings::analogRead(lua_State *L)
     return 1;
 }
 
-/**
- * inputs.channels.analogWrite(200, 128)
- */
+// @doc Write an analog value to a pin
+// @param channel The channel number to write to
+// @param value The value to write (0-255)
+// @lua input.channels.analogWrite(channel:uint16, value:uint8) -> void
 int ChannelBindings::analogWrite(lua_State *L)
 {
     auto *channels = get(L);

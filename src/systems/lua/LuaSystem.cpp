@@ -9,6 +9,7 @@
 #include "bindings/InputBindings.h"
 #include "bindings/AudioBindings.h"
 #include "bindings/CoreBindings.h"
+#include "bindings/LuaConstantsBinding.h"
 
 LuaSystem::LuaSystem() {}
 
@@ -232,6 +233,7 @@ void LuaSystem::registerGameAPI()
     manager.add(new AudioBindings(audioSystem));
     manager.add(new TimeBindings());
     manager.add(new CoreBindings());
+    manager.add(new LuaConstantsBinding());
 
     manager.registerAll(L);
 

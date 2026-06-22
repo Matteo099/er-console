@@ -1,21 +1,3 @@
-------------------------------------------------
--- ARDUINO-LIKE CONSTANTS
-------------------------------------------------
-local Arduino = {
-    LOW = 0x0,
-    HIGH = 0x1,
-
-    INPUT = 0x01,
-    OUTPUT = 0x03,
-    PULLUP = 0x04,
-    INPUT_PULLUP = 0x05,
-    PULLDOWN = 0x08,
-    INPUT_PULLDOWN = 0x09,
-    OPEN_DRAIN = 0x10,
-    OUTPUT_OPEN_DRAIN = 0x13,
-    ANALOG = 0xC0
-}
-
 --------------------------------------------------
 -- FRAMEWORK TEST
 --------------------------------------------------
@@ -42,9 +24,9 @@ local CONFIG = {
 function init()
     system.info("Framework test started")
 
-    input.channels.pinMode(CONFIG.input1, Arduino.INPUT_PULLUP)
-    input.channels.pinMode(CONFIG.input2, Arduino.INPUT_PULLUP)
-    input.channels.pinMode(CONFIG.input3, Arduino.INPUT_PULLUP)
+    input.channels.pinMode(CONFIG.input1, PinMode.INPUT_PULLUP)
+    input.channels.pinMode(CONFIG.input2, PinMode.INPUT_PULLUP)
+    input.channels.pinMode(CONFIG.input3, PinMode.INPUT_PULLUP)
 
     state.initialized = true
 

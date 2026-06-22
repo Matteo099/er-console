@@ -10,9 +10,11 @@ SevenSegmentSystem *SevenSegmentBindings::get(lua_State *L)
     return system;
 }
 
-/**
- * input.sevenSegment.display( 0, "1234" )
- */
+// @doc Display a value on a specific seven-segment display
+// @param display The display number (0-3)
+// @param value The value to display (string)
+// @example input.sevenSegment.display(0, "1234") -- displays "1234" on display 0
+// @lua input.sevenSegment.display(display:int, value:string) -> void
 int SevenSegmentBindings::display(lua_State *L)
 {
     auto *system = get(L);
@@ -24,9 +26,10 @@ int SevenSegmentBindings::display(lua_State *L)
     return 0;
 }
 
-/**
- * input.sevenSegment.clear(0)
- */
+// @doc Clear a specific seven-segment display
+// @param display The display number (0-3)
+// @example input.sevenSegment.clear(0) -- clears display 0
+// @lua input.sevenSegment.clear(display:int) -> void
 int SevenSegmentBindings::clear(lua_State *L)
 {
     auto *system = get(L);
@@ -37,9 +40,11 @@ int SevenSegmentBindings::clear(lua_State *L)
     return 0;
 }
 
-/**
- * input.sevenSegment.brightness(0, 5)
- */
+// @doc Set the brightness of a specific seven-segment display
+// @param display The display number (0-3)
+// @param value The brightness value (0-255)
+// @example input.sevenSegment.brightness(0, 128) -- sets display 0 to half brightness
+// @lua input.sevenSegment.brightness(display:int, value:int) -> void
 int SevenSegmentBindings::brightness(lua_State *L)
 {
     auto *system = get(L);

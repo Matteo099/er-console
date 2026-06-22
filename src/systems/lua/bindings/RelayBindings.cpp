@@ -10,9 +10,11 @@ RelaySystem *RelayBindings::getSystem(lua_State *L)
     return system;
 }
 
-/**
- * input.relays.set( 0, true )
- */
+// @doc Set the state of a relay
+// @param relay The relay number (0-3)
+// @param state The state to set (true for on, false for off)
+// @example input.relays.set(0, true) -- turn on relay 0
+// @lua input.relays.set(relay:int, state:bool) -> void
 int RelayBindings::set(lua_State *L)
 {
     auto *system = getSystem(L);
@@ -24,9 +26,11 @@ int RelayBindings::set(lua_State *L)
     return 0;
 }
 
-/**
- * input.relays.get(0)
- */
+// @doc Get the state of a relay
+// @param relay The relay number (0-3)
+// @return The state of the relay (true for on, false for off)
+// @example local state = input.relays.get(0) -- get the state of relay 0
+// @lua input.relays.get(relay:int) -> bool
 int RelayBindings::get(lua_State *L)
 {
     auto *system = getSystem(L);
@@ -40,9 +44,10 @@ int RelayBindings::get(lua_State *L)
     return 1;
 }
 
-/**
- * input.relays.toggle(0)
- */
+// @doc Toggle the state of a relay
+// @param relay The relay number (0-3)
+// @example input.relays.toggle(0) -- toggle the state of relay 0
+// @lua input.relays.toggle(relay:int) -> void
 int RelayBindings::toggle(lua_State *L)
 {
     auto *system = getSystem(L);
@@ -53,9 +58,11 @@ int RelayBindings::toggle(lua_State *L)
     return 0;
 }
 
-/**
- * input.relays.pulse(0, 1000)
- */
+// @doc Pulse a relay for a specified duration
+// @param relay The relay number (0-3)
+// @param duration The duration of the pulse in milliseconds
+// @example input.relays.pulse(0, 1000) -- pulse relay 0 for 1 second
+// @lua input.relays.pulse(relay:int, duration:int) -> void
 int RelayBindings::pulse(lua_State *L)
 {
     auto *system = getSystem(L);

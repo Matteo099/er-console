@@ -12,9 +12,11 @@ AudioSystem *AudioBindings::get(lua_State *L)
     return system;
 }
 
-/**
- * audio.beep(1000, 250)
- */
+// @doc Play a beep.
+// @param frequency Tone frequency in Hz.
+// @param duration Duration in milliseconds.
+// @example audio.beep(1000, 250)
+// @lua audio.beep(frequency:uint16=1000, duration:uint16=100) -> void
 int AudioBindings::beep(lua_State *L)
 {
     auto *audio = get(L);
@@ -26,9 +28,10 @@ int AudioBindings::beep(lua_State *L)
     return 0;
 }
 
-/**
- * audio.play("path/to/file.wav")
- */
+// @doc Play a wav audio file from storage
+// @param path Path to the audio file in storage
+// @example audio.play("beep.wav")
+// @lua audio.play(path:string) -> void
 int AudioBindings::play(lua_State *L)
 {
     auto *audio = get(L);
@@ -39,9 +42,9 @@ int AudioBindings::play(lua_State *L)
     return 0;
 }
 
-/**
- * audio.stop()
- */
+// @doc Stop the currently playing audio
+// @example audio.stop()
+// @lua audio.stop() -> void
 int AudioBindings::stop(lua_State *L)
 {
     auto *audio = get(L);
@@ -51,9 +54,10 @@ int AudioBindings::stop(lua_State *L)
     return 0;
 }
 
-/**
- * audio.setVolume(80)
- */
+// @doc Set the audio volume
+// @param volume The volume level (0-100)
+// @example audio.setVolume(80)
+// @lua audio.setVolume(volume:uint8) -> void
 int AudioBindings::setVolume(lua_State *L)
 {
     auto *audio = get(L);
@@ -68,9 +72,10 @@ int AudioBindings::setVolume(lua_State *L)
     return 0;
 }
 
-/**
- * local v = audio.getVolume()
- */
+// @doc Get the current audio volume
+// @example currentVolume = audio.getVolume()
+// @return Current volume value (0-100)
+// @lua audio.getVolume() -> uint8
 int AudioBindings::getVolume(lua_State *L)
 {
     auto *audio = get(L);

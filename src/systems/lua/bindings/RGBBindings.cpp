@@ -10,9 +10,13 @@ RgbLedSystem *RGBBindings::get(lua_State *L)
     return system;
 }
 
-/**
- * input.rgb.setColor(0, 255, 0, 0) -> sets LED 0 to red
- */
+// @doc Set the color of a specific RGB LED
+// @param led The LED number (0-3)
+// @param r The red component (0-255)
+// @param g The green component (0-255)
+// @param b The blue component (0-255)
+// @example input.rgb.setColor(0, 255, 0, 0) -- sets LED 0 to red
+// @lua input.rgb.setColor(led:int, r:int, g:int, b:int) -> void
 int RGBBindings::setColor(lua_State *L)
 {
     auto *system = get(L);
@@ -30,9 +34,11 @@ int RGBBindings::setColor(lua_State *L)
     return 0;
 }
 
-/**
- * input.rgb.setBrightness(0, 128) -> sets LED 0 to half brightness
- */
+// @doc Set the brightness of a specific RGB LED
+// @param led The LED number (0-3)
+// @param value The brightness value (0-255)
+// @example input.rgb.setBrightness(0, 128) -- sets LED 0 to half brightness
+// @lua input.rgb.setBrightness(led:int, value:int) -> void
 int RGBBindings::setBrightness(lua_State *L)
 {
     auto *system = get(L);

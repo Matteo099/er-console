@@ -19,7 +19,10 @@ RFIDSystem *RFIDBindings::get(lua_State *L)
  *     print(tag.uid)
  * end
  */
-
+// @doc Consume the next available RFID tag
+// @return A table containing the tag information, or nil if no new tag is available
+// @example local tag = input.rfid.consume()
+// @lua input.rfid.consume() -> table|nil
 int RFIDBindings::consume(lua_State *L)
 {
     auto *rfid = get(L);
@@ -49,6 +52,10 @@ int RFIDBindings::consume(lua_State *L)
  *     print(tag.uid)
  * end
  */
+// @doc Get the last available RFID tag
+// @return A table containing the tag information, or nil if no tag is available
+// @example local tag = input.rfid.last() 
+// @lua input.rfid.last() -> table|nil
 int RFIDBindings::last(lua_State *L)
 {
     auto *rfid = get(L);

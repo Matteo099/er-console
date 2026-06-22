@@ -2,9 +2,10 @@
 
 #include "log/Logger.h"
 
-/**
- * system.info("Game started")
- */
+// @doc Log an info message to the console
+// @param msg The info message to log
+// @example system.info("Hello from Lua!")
+// @lua system.info(msg:string) -> void
 int CoreBindings::info(lua_State *L)
 {
     const char *msg = luaL_checkstring(L, 1);
@@ -12,9 +13,10 @@ int CoreBindings::info(lua_State *L)
     return 0;
 }
 
-/**
- * system.warn("Low power")
- */
+// @doc Log a warning message to the console
+// @param msg The warning message to log
+// @example system.warn("Low power")
+// @lua system.warn(msg:string) -> void
 int CoreBindings::warn(lua_State *L)
 {
     const char *msg = luaL_checkstring(L, 1);
@@ -22,9 +24,10 @@ int CoreBindings::warn(lua_State *L)
     return 0;
 }
 
-/**
- * system.error("RFID reader unavailable")
- */
+// @doc Log an error message to the console
+// @param msg The error message to log
+// @example system.error("RFID reader unavailable")
+// @lua system.error(msg:string) -> void
 int CoreBindings::error(lua_State *L)
 {
     const char *msg = luaL_checkstring(L, 1);
@@ -32,9 +35,10 @@ int CoreBindings::error(lua_State *L)
     return 0;
 }
 
-/**
- * system.debug("Player position: x=10, y=20")
- */
+// @doc Log a debug message to the console
+// @param msg The debug message to log
+// @example system.debug("Player position: x=10, y=20")
+// @lua system.debug(msg:string) -> void
 int CoreBindings::debug(lua_State *L)
 {
     const char *msg = luaL_checkstring(L, 1);
@@ -42,9 +46,11 @@ int CoreBindings::debug(lua_State *L)
     return 0;
 }
 
-/**
- * local logs = system.logs(10) -> returns recent logs as a string
- */
+// @doc Get recent logs as a string
+// @param maxLines The maximum number of log lines to retrieve (default: 200)
+// @return A string containing the recent logs
+// @example system.logs(10)
+// @lua system.logs(maxLines?:uint16) -> string
 int CoreBindings::logs(lua_State *L)
 {
     size_t maxLines = luaL_optinteger(L, 1, 200);
@@ -53,9 +59,9 @@ int CoreBindings::logs(lua_State *L)
     return 1;
 }
 
-/**
- * system.clearLogs() -> clears recent logs buffer
- */
+// @doc Clear the recent logs buffer
+// @example system.clearLogs()
+// @lua system.clearLogs() -> void
 int CoreBindings::clearLogs(lua_State *L)
 {
     Log::clearRecentLogs();

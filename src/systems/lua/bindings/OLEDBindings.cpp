@@ -10,9 +10,10 @@ OLEDSystem *OLEDBindings::get(lua_State *L)
     return sys;
 }
 
-/**
- * input.oled.isSupported()
- */
+// @doc Check if the OLED display is supported
+// @return true if the OLED display is supported, false otherwise
+// @example if input.oled.isSupported() then print("OLED is supported") else print("OLED is not supported") end
+// @lua input.oled.isSupported() -> bool
 int OLEDBindings::isSupported(lua_State *L)
 {
     auto *sys = get(L);
@@ -20,9 +21,10 @@ int OLEDBindings::isSupported(lua_State *L)
     return 1;
 }
 
-/**
- * input.oled.show("Hello, OLED!")
- */
+// @doc Display a message on the OLED display
+// @param text The message to display
+// @example input.oled.show("Hello, World!")
+// @lua input.oled.show(text:string) -> void
 int OLEDBindings::show(lua_State *L)
 {
     auto *sys = get(L);
@@ -33,9 +35,9 @@ int OLEDBindings::show(lua_State *L)
     return 0;
 }
 
-/**
- * input.oled.clear()
- */
+// @doc Clear the OLED display
+// @example input.oled.clear()
+// @lua input.oled.clear() -> void
 int OLEDBindings::clear(lua_State *L)
 {
     auto *sys = get(L);
@@ -44,9 +46,9 @@ int OLEDBindings::clear(lua_State *L)
     return 0;
 }
 
-/**
- * local message = input.oled.currentMessage()
- */
+// @doc Get the current message displayed on the OLED display
+// @example local message = input.oled.currentMessage()
+// @lua input.oled.currentMessage() -> string
 int OLEDBindings::currentMessage(lua_State *L)
 {
     auto *sys = get(L);
