@@ -2,6 +2,7 @@
 
 #include "core/SystemEventBus.h"
 #include "log/Logger.h"
+#include "drivers/bus/SPIBusManager.h"
 
 void xTaskPortal(void *params)
 {
@@ -211,6 +212,8 @@ void EscapeOS::init()
     Log::init(Log::Level::DEBUG);
     Log::info(Log::OS_TAG, "EscapeOS initializing...");
 
+    SPIBusManager::init();
+
     SystemEventBus::init();
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_STORAGE, &storageSystem);
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_INPUT, &inputSystem);
@@ -219,7 +222,7 @@ void EscapeOS::init()
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_AUDIO, &audioSystem);
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_LUA, &luaSystem);
     running = true;
-
+    
     createTasks();
 }
 

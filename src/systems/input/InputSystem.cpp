@@ -1,6 +1,7 @@
 #include "InputSystem.h"
 
 #include "log/Logger.h"
+#include "drivers/bus/SPIBusManager.h"
 
 InputSystem::InputSystem()
 {
@@ -16,6 +17,7 @@ bool InputSystem::begin(const InputConfig &config)
 {
     reset();
     auto& i2c = I2CBusManager::bus();
+    auto& spi = SPIBusManager::bus();
 
     if (config.channels.enabled)
     {
@@ -80,7 +82,7 @@ bool InputSystem::begin(const InputConfig &config)
     }
     if (config.rfid.enabled)
     {
-        rfidDriver = new MFRC522Driver(config.rfid.ssPin, config.rfid.rstPin);
+        rfidDriver = new MFRC522Driver(spi, config.rfid.ssPin, config.rfid.rstPin);
         rfidSystem = new RFIDSystem(*rfidDriver);
         if (!rfidSystem->init())
         {
@@ -135,7 +137,7 @@ bool InputSystem::begin(const InputConfig &config)
     }
     if (config.sevenSegment.enabled)
     {
-        sevenSegDriver = new MAX7219Driver(config.sevenSegment.csPin, config.sevenSegment.digits);
+        sevenSegDriver = new MAX7219Driver(spi, config.sevenSegment.csPin, config.sevenSegment.digits);
         sevenSegmentSystem = new SevenSegmentSystem();
         sevenSegmentSystem->registerDriver(sevenSegDriver);
         if (!sevenSegmentSystem->init())

@@ -2,7 +2,7 @@
 
 #include "config/BoardConfig.h"
 #include "log/Logger.h"
-#include "drivers/input/I2CBusLock.h"
+#include "drivers/bus/I2CBusLock.h"
 
 SSD1306Driver::SSD1306Driver(
     uint16_t width,

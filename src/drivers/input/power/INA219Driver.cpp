@@ -4,7 +4,7 @@
 
 #include "config/BoardConfig.h"
 #include "log/Logger.h"
-#include "drivers/input/I2CBusLock.h"
+#include "drivers/bus/I2CBusLock.h"
 
 INA219Driver::INA219Driver(TwoWire &wire, uint8_t address) : wireBus(&wire), deviceAddress(address), sensor(address) {}
 

@@ -1,11 +1,11 @@
 #include "LVGLImageProvider.h"
-#include "drivers/storage/SDLock.h"
+#include "drivers/bus/SPIBusLock.h"
 #include "log/Logger.h"
 #include <SD.h>
 
 static void* fs_open(lv_fs_drv_t*, const char* path, lv_fs_mode_t mode)
 {
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
 
     Log::debug(Log::DISPLAY_TAG, "LVGL loading image: %s", path);
     const bool write = (mode & LV_FS_MODE_WR) != 0;
@@ -21,7 +21,7 @@ static void* fs_open(lv_fs_drv_t*, const char* path, lv_fs_mode_t mode)
 
 static lv_fs_res_t fs_close(lv_fs_drv_t*, void* file_p)
 {
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
 
     if (!file_p)
         return LV_FS_RES_INV_PARAM;
@@ -37,7 +37,7 @@ static lv_fs_res_t fs_read(
     lv_fs_drv_t*, void* file_p,
     void* buf, uint32_t btr, uint32_t* br)
 {
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
 
     if (!file_p || !buf || !br)
         return LV_FS_RES_INV_PARAM;
@@ -53,7 +53,7 @@ static lv_fs_res_t fs_read(
 static lv_fs_res_t fs_seek(
     lv_fs_drv_t*, void* file_p, uint32_t pos, lv_fs_whence_t whence)
 {
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
 
     if (!file_p)
         return LV_FS_RES_INV_PARAM;
@@ -87,7 +87,7 @@ static lv_fs_res_t fs_seek(
 static lv_fs_res_t fs_tell(
     lv_fs_drv_t*, void* file_p, uint32_t* pos)
 {
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
 
     if (!file_p || !pos)
         return LV_FS_RES_INV_PARAM;

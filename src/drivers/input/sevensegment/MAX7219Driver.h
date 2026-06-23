@@ -8,7 +8,11 @@
 class MAX7219Driver : public ISevenSegmentDriver
 {
 public:
-    MAX7219Driver(uint8_t csPin, uint8_t digits = 8);
+    MAX7219Driver(
+        SPIClass &spi,
+        uint8_t csPin,
+        uint8_t digits = 8);
+
     bool init() override;
     void shutdown() override;
     bool available() const override;
@@ -19,6 +23,7 @@ public:
 
 private:
     void writeRegister(uint8_t reg, uint8_t data);
+    SPIClass *spiBus = nullptr;
     uint8_t csPin;
     uint8_t digitCount;
     bool initialized = false;

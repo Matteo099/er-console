@@ -1,6 +1,6 @@
 #include "PCA9685Driver.h"
 
-#include "drivers/input/I2CBusLock.h"
+#include "drivers/bus/I2CBusLock.h"
 
 PCA9685Driver::PCA9685Driver(TwoWire &wire, uint8_t address) : wireBus(&wire), pwm(address, wire), address(address) {}
 

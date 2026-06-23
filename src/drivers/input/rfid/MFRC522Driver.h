@@ -9,6 +9,7 @@ class MFRC522Driver : public IRFIDReader
 {
 public:
     MFRC522Driver(
+        SPIClass& spi,
         uint8_t ssPin,
         uint8_t rstPin);
 
@@ -21,6 +22,7 @@ public:
     bool isAvailable() const override;
 
 private:
+    SPIClass* spiBus = nullptr;
     uint8_t ssPin;
     uint8_t rstPin;
 

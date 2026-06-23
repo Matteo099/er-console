@@ -1,7 +1,8 @@
 #include "StorageSystem.h"
 
 #include "drivers/storage/ESP32SDCardDriver.h"
-#include "drivers/storage/SDLock.h"
+#include "drivers/bus/SPIBusLock.h"
+#include "drivers/bus/SPIBusManager.h"
 #include "config/BoardConfig.h"
 #include "log/Logger.h"
 #include <SD.h>
@@ -20,7 +21,8 @@ namespace
 
 StorageSystem::StorageSystem()
 {
-    driver = new ESP32SDCardDriver(SD_CS_PIN);
+    auto& spi = SPIBusManager::bus();
+    driver = new ESP32SDCardDriver(spi, SD_CS_PIN);
 }
 
 void StorageSystem::init(void *params)
@@ -112,7 +114,7 @@ bool StorageSystem::writeTextFile(const char* path, const std::string& contents,
     if (!ready)
         return false;
 
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
 
     if (!ensureParents(path))
         return false;
@@ -138,7 +140,7 @@ File StorageSystem::openNative(const char* path, bool write)
     if (!ready)
         return File();
 
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
 
     if (write && !ensureParents(path))
         return File();
@@ -154,7 +156,7 @@ bool StorageSystem::removePath(const char* path)
     if (!ready)
         return false;
 
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
 
     return SD.remove(path);
 }
@@ -164,7 +166,7 @@ bool StorageSystem::movePath(const char* sourcePath, const char* destinationPath
     if (!ready || !sourcePath || !destinationPath || !*sourcePath || !*destinationPath)
         return false;
 
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
 
     if (!SD.exists(sourcePath))
         return false;
@@ -183,7 +185,7 @@ bool StorageSystem::createDirectory(const char* path)
     if (!ready || !path || !*path)
         return false;
 
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
 
     if (SD.exists(path))
         return true;
@@ -199,7 +201,7 @@ bool StorageSystem::exists(const char* path) const
     if (!ready || !path)
         return false;
 
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
     return SD.exists(path);
 }
 
@@ -208,7 +210,7 @@ bool StorageSystem::listDirectory(const char* path, std::vector<StorageEntry>& o
     if (!ready)
         return false;
 
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
 
     File directory = SD.open(path);
     if (!directory || !directory.isDirectory())
@@ -265,7 +267,7 @@ uint64_t StorageSystem::totalBytes() const
     if (!ready)
         return 0;
 
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
     return SD.totalBytes();
 }
 
@@ -274,7 +276,7 @@ uint64_t StorageSystem::usedBytes() const
     if (!ready)
         return 0;
 
-    SDLock::Guard guard;
+    SPIBusLock::Guard guard;
     return SD.usedBytes();
 }
 

@@ -16,7 +16,7 @@
 #include "drivers/input/rgb/ESP32PwmRgbDriver.h"
 #include "drivers/input/rgb/PCA9685Driver.h"
 #include "drivers/input/sevensegment/MAX7219Driver.h"
-#include "drivers/input/I2CBusManager.h"
+#include "drivers/bus/I2CBusManager.h"
 
 #include "subsystems/PowerSystem.h"
 #include "subsystems/RFIDSystem.h"

@@ -1,6 +1,6 @@
 #include "MCP23017Driver.h"
 
-#include "drivers/input/I2CBusLock.h"
+#include "drivers/bus/I2CBusLock.h"
 
 MCP23017Driver::MCP23017Driver(TwoWire &wire, uint16_t basePin, uint8_t address) : wireBus(&wire), basePin(basePin), address(address) {}
 
