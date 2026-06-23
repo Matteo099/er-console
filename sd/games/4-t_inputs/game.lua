@@ -3,9 +3,9 @@
 --------------------------------------------------
 local state = {
     initialized = false,
-    lastLogTime = 0
+    lastLogTime = 0,
+    unlockCounter = 0
 }
-local timer = 0
 
 --------------------------------------------------
 -- CONFIG
@@ -67,16 +67,23 @@ function update(dt, paused)
 
     if ch3 then
         system.info("Channel 3 PRESSED")
+        state.unlockCounter = state.unlockCounter + 1
+    end
+
+
+    if state.unlockCounter >= 5 then
+        system.info("Framework test complete, unlocking game")
+        scene.completeGame()
     end
 
     --------------------------------------------------
     -- Periodic heartbeat
     --------------------------------------------------
 
-    timer = timer + dt
+    state.lastLogTime = state.lastLogTime + dt
 
-    if timer >= 5.0 then
-        timer = 0
+    if state.lastLogTime >= 5.0 then
+        state.lastLogTime = 0
 
         system.info(string.format("Heartbeat - CH1=%s CH2=%s CH3=%s", tostring(ch1), tostring(ch2), tostring(ch3)))
     end

@@ -232,6 +232,65 @@ function input.sevenSegment.clear(display) end
 ---@param value string The value to display (string)
 function input.sevenSegment.display(display, value) end
 
+---@class scene
+scene = {}
+
+---Clears the game drawing area
+function scene.clearDisplay() end
+
+---Complete the escape room successfully
+---
+--- Example:
+--- scene.completeGame()
+function scene.completeGame() end
+
+---Draw line on screen
+---
+--- Example:
+--- scene.drawLine(10, 10, 100, 100, 0x00FF00)
+---@param x1 integer X position of start point
+---@param y1 integer Y position of start point
+---@param x2 integer X position of end point
+---@param y2 integer Y position of end point
+---@param color integer RGB color
+function scene.drawLine(x1, y1, x2, y2, color) end
+
+---Draw rectangle on screen
+---
+--- Example:
+--- scene.drawRect(10, 10, 100, 50, 0xFF0000, true)
+---@param x integer X position
+---@param y integer Y position
+---@param width integer Width of rectangle
+---@param height integer Height of rectangle
+---@param color integer RGB color
+---@param fill boolean Whether to fill the rectangle
+function scene.drawRect(x, y, width, height, color, fill) end
+
+---Draw text on screen
+---@param x integer X position
+---@param y integer Y position
+---@param text string Text content
+---@param fontSize integer Font size
+---@param color integer RGB color
+function scene.drawText(x, y, text, fontSize, color) end
+
+---Remove a button from the game view
+---
+--- Example:
+--- scene.removeButton(button)
+---@param button any
+function scene.removeButton(button) end
+
+---Set a Lua callback for a button
+---
+--- Example:
+--- scene.createButton(10, 10, 100, 50, "Click Me")
+--- scene.setButtonCallback(button, "onButtonClick")
+---@param button any
+---@param callbackName string Name of the Lua function to call when button is clicked
+function scene.setButtonCallback(button, callbackName) end
+
 ---@class system
 system = {}
 

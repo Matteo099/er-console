@@ -16,6 +16,7 @@ extern "C"
 #define RELAY_PTR_KEY "lua.relaySystem"
 #define RFID_PTR_KEY "lua.rfidSystem"
 #define SEVEN_SEGMENT_PTR_KEY "lua.sevenSegmentSystem"
+#define GAME_SCENE_PTR_KEY "lua.gameScene"
 
 class LuaBinding
 {

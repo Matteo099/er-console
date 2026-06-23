@@ -23,15 +23,17 @@ public:
     void onUpdate() override;
     void onExit() override;
 
-    View& getView() override { return view; }
+    View &getView() override { return view; }
     SceneRequest getRequest() const override;
 
-    bool handleUIEvent(const UIEvent& event) override;
+    bool handleUIEvent(const UIEvent &event) override;
 
     // Called by SceneManager with game ID
-    void setGameInfo(const GameInfo& info) { gameInfo = info; }
+    void setGameInfo(const GameInfo &info) { gameInfo = info; }
 
     void completeGame();
+
+    GameView *getGameView() { return &view; }
 
 private:
     // Game identification
@@ -41,8 +43,8 @@ private:
     GameView view;
 
     // Lua system integration
-    LuaSystem* luaSystem = nullptr;
-    InputSystem* inputSystem = nullptr;
+    LuaSystem *luaSystem = nullptr;
+    InputSystem *inputSystem = nullptr;
     GameLoadState loadState = GameLoadState::Idle;
     bool luaUpdateCalledThisFrame = false;
 
