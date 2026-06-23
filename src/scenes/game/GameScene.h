@@ -31,6 +31,8 @@ public:
     // Called by SceneManager with game ID
     void setGameInfo(const GameInfo& info) { gameInfo = info; }
 
+    void completeGame();
+
 private:
     // Game identification
     GameInfo gameInfo;

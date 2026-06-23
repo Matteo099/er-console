@@ -18,7 +18,7 @@ void GameScene::onEnter()
 
     // Get LuaSystem from SystemEventBus
     luaSystem = static_cast<LuaSystem *>(
-        SystemEventBus::instance().getService(SystemEventBus::SERVICE_LUA));        
+        SystemEventBus::instance().getService(SystemEventBus::SERVICE_LUA));
     inputSystem = static_cast<InputSystem *>(
         SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
 
@@ -31,7 +31,7 @@ void GameScene::onEnter()
         return;
     }
 
-    if(!inputSystem)
+    if (!inputSystem)
     {
         loadState = GameLoadState::LoadFailed;
         view.hideLoadingBar();
@@ -66,7 +66,14 @@ void GameScene::onUpdate()
             view.setTime(remainingSec);
 
             if (remainingSec == 0)
+            {
                 state = GameState::Finished;
+
+                luaSystem->pause();
+
+                view.setRunning(false);
+                view.showGameOver();
+            }
         }
     }
     view.update();
@@ -79,6 +86,19 @@ void GameScene::onExit()
     {
         luaSystem->unloadScript();
     }
+}
+
+void GameScene::completeGame()
+{
+    if (state == GameState::Finished)
+        return;
+
+    state = GameState::Finished;
+
+    luaSystem->pause();
+
+    view.setRunning(false);
+    view.showVictory();
 }
 
 SceneRequest GameScene::getRequest() const

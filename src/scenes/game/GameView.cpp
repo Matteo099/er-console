@@ -32,6 +32,11 @@ void GameView::create()
         220);
     Label::setTextColor(textLabel, lv_color_hex(0xCCCCCC));
 
+    resultLabel = Label::create(screen, "", &lv_font_roboto_mono_28, LV_TEXT_ALIGN_CENTER, 240);
+    Align::setPosition(resultLabel, LV_ALIGN_CENTER, 0, 30);
+    Label::setTextColor(resultLabel, lv_color_hex(0xFFFFFF));
+    lv_obj_add_flag(resultLabel, LV_OBJ_FLAG_HIDDEN);
+
     gameContentArea = Container::create(screen, LV_PCT(100), LV_PCT(100) - 96 - 48);
     lv_obj_set_pos(gameContentArea, 0, 48);
     lv_obj_set_style_bg_color(gameContentArea, lv_color_black(), 0);
@@ -54,18 +59,41 @@ void GameView::create()
     lv_obj_add_flag(loadingContainer, LV_OBJ_FLAG_HIDDEN);
 
     cancelBtn = Button::create(screen, "Cancel", onCancel, this, 120, 44, LV_ALIGN_BOTTOM_LEFT, 20, -20, LV_SYMBOL_CLOSE);
-    
+
     startPauseBtn = Button::create(screen, "Start", onStartPause, this, 120, 44, LV_ALIGN_BOTTOM_RIGHT, -20, -20, LV_SYMBOL_PLAY);
     startPauseIcon = lv_obj_get_child(startPauseBtn, 0);
     startPauseLabel = lv_obj_get_child(startPauseBtn, 1);
-    
+
     infoBtn = nullptr;
     settingsBtn = nullptr;
+    warningBlinkState = false;
+    lastBlinkMs = 0;
+    gameFinished = false;
+    remainingSeconds = 0;
 }
 
 void GameView::update()
 {
-    /* no periodic UI logic */
+    if (!timerLabel)
+        return;
+
+    if (remainingSeconds > WARNING_THRESHOLD_SEC)
+        return;
+
+    uint32_t now = lv_tick_get();
+
+    if (now - lastBlinkMs >= 500)
+    {
+        warningBlinkState = !warningBlinkState;
+        lastBlinkMs = now;
+
+        lv_obj_set_style_text_color(
+            timerLabel,
+            warningBlinkState
+                ? lv_color_hex(0xFF0000)
+                : lv_color_hex(0xFFFFFF),
+            0);
+    }
 }
 
 void GameView::destroy()
@@ -87,6 +115,7 @@ void GameView::destroy()
     loadingLabel = nullptr;
     errorLabel = nullptr;
     gameContentArea = nullptr;
+    resultLabel = nullptr;
 }
 
 /* ================= API ================= */
@@ -98,15 +127,81 @@ void GameView::setGameTitle(const std::string &title)
 
 void GameView::setTime(uint32_t seconds)
 {
-    if (timerLabel)
-    {
-        char buf[16];
-        snprintf(buf, sizeof(buf), "%02lu:%02lu:%02lu",
-                 seconds / 3600,
-                 (seconds % 3600) / 60,
-                 seconds % 60);
+    remainingSeconds = seconds;
+    if (!timerLabel)
+        return;
 
-        lv_label_set_text(timerLabel, buf);
+    char buf[16];
+
+    snprintf(buf,
+             sizeof(buf),
+             "%02lu:%02lu:%02lu",
+             seconds / 3600,
+             (seconds % 3600) / 60,
+             seconds % 60);
+
+    lv_label_set_text(timerLabel, buf);
+}
+
+void GameView::showGameOver()
+{
+    if (!resultLabel)
+        return;
+
+    lv_label_set_text(resultLabel, "GAME OVER");
+
+    lv_obj_set_style_text_color(
+        resultLabel,
+        lv_color_hex(0xFF0000),
+        0);
+
+    lv_obj_clear_flag(resultLabel, LV_OBJ_FLAG_HIDDEN);
+
+    setFinished(false);
+}
+
+void GameView::showVictory()
+{
+    if (!resultLabel)
+        return;
+
+    lv_label_set_text(resultLabel, "YOU WIN!");
+
+    lv_obj_set_style_text_color(
+        resultLabel,
+        lv_color_hex(0x00FF00),
+        0);
+
+    lv_obj_clear_flag(resultLabel, LV_OBJ_FLAG_HIDDEN);
+
+    setFinished(true);
+}
+
+void GameView::setFinished(bool success)
+{
+    gameFinished = true;
+
+    if (startPauseBtn)
+        lv_obj_add_flag(startPauseBtn, LV_OBJ_FLAG_HIDDEN);
+
+    if (cancelBtn)
+    {
+        lv_obj_clear_flag(cancelBtn, LV_OBJ_FLAG_HIDDEN);
+
+        auto icon = lv_obj_get_child(cancelBtn, 0);
+        auto label = lv_obj_get_child(cancelBtn, 1);
+
+        if (icon)
+            lv_label_set_text(icon, LV_SYMBOL_CLOSE);
+
+        if (label)
+            lv_label_set_text(label, "Close");
+
+        Align::setPosition(
+            cancelBtn,
+            LV_ALIGN_BOTTOM_MID,
+            0,
+            -20);
     }
 }
 
