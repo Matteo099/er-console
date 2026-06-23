@@ -176,6 +176,12 @@ bool InputSystem::begin(const InputConfig &config)
     return true;
 }
 
+void InputSystem::shutdown()
+{
+    Log::info(Log::INPUT_TAG, "Shutting down InputSystem");
+    reset();
+}
+
 void InputSystem::destroyChannels()
 {
     if (channelSystem)

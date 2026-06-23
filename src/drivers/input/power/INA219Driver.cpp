@@ -28,6 +28,16 @@ bool INA219Driver::init()
     return true;
 }
 
+void INA219Driver::shutdown()
+{
+    if (initialized)
+    {
+        // No specific shutdown needed for INA219, but we can reset the sensor if desired
+        initialized = false;
+        Log::info(Log::DRIVER_TAG, "INA219 shutdown");
+    }
+}
+
 bool INA219Driver::read(PowerReading &reading)
 {
     if (!initialized)

@@ -24,6 +24,8 @@ public:
 
     virtual bool init() = 0;
 
+    virtual void shutdown() = 0;
+
     virtual bool read(PowerReading& reading) = 0;
 
     virtual bool isAvailable() const = 0;

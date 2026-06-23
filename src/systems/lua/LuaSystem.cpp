@@ -190,8 +190,7 @@ void LuaSystem::unloadScript()
         lua_pop(L, 1); // remove non-function value
     }
 
-    // TODO:
-    inputSystem.shutdown();
+    inputSystem->shutdown();
 }
 
 void LuaSystem::tick()

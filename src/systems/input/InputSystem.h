@@ -34,6 +34,7 @@ public:
     void init(void *params = nullptr) override;
     bool begin(const InputConfig &config);
     void update() override;
+    void shutdown();
 
     PowerSystem *power();
     RFIDSystem *rfid();

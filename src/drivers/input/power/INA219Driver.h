@@ -14,6 +14,8 @@ public:
 
     bool init() override;
 
+    void shutdown() override;
+
     bool read(PowerReading &reading) override;
 
     bool isAvailable() const override;
