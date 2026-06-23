@@ -133,8 +133,8 @@ GAIN pin: (do not connect)
    - SSD1306 OLED display
 */
 
-#define I2C_SDA_PIN          2
-#define I2C_SCL_PIN          1
+#define I2C_SDA_PIN          14
+#define I2C_SCL_PIN          15
 
 #define I2C_FREQUENCY        400000   // 400kHz fast I2C
 
@@ -166,10 +166,10 @@ GAIN pin: (do not connect)
    - Encoders
 */
 
-#define GPIO_FREE_1          3
-#define GPIO_FREE_2          5
-#define GPIO_FREE_3          14
-#define GPIO_FREE_4          15
+#define GPIO_FREE_1          1
+#define GPIO_FREE_2          2
+#define GPIO_FREE_3          3
+#define GPIO_FREE_4          5
 #define GPIO_FREE_5          21
 #define GPIO_FREE_6          38
 #define GPIO_FREE_7          39

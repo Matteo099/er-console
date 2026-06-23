@@ -6,7 +6,7 @@ MFRC522Driver::MFRC522Driver(uint8_t ssPin, uint8_t rstPin) : ssPin(ssPin), rstP
 
 bool MFRC522Driver::init()
 {
-    SPI.begin();
+    // SPI.begin();
     reader.PCD_Init();
     delay(50);
     const byte version = reader.PCD_ReadRegister(MFRC522::VersionReg);

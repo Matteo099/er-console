@@ -4,18 +4,14 @@
 
 #include "config/BoardConfig.h"
 #include "log/Logger.h"
+#include "drivers/input/I2CBusLock.h"
 
 INA219Driver::INA219Driver(TwoWire &wire, uint8_t address) : wireBus(&wire), deviceAddress(address), sensor(address) {}
 
 bool INA219Driver::init()
 {
-    if (!wireBus)
-    {
-        Log::error(Log::DRIVER_TAG, "INA219 invalid wire bus");
-        initialized = false;
-        return false;
-    }
-    wireBus->begin(I2C_SDA_PIN, I2C_SCL_PIN, I2C_FREQUENCY);
+    I2CBusLock::Guard guard;
+
     if (!sensor.begin(wireBus))
     {
         Log::warn(Log::DRIVER_TAG, "INA219 not detected at 0x%02X", deviceAddress);
@@ -30,18 +26,21 @@ bool INA219Driver::init()
 
 void INA219Driver::shutdown()
 {
-    if (initialized)
-    {
-        // No specific shutdown needed for INA219, but we can reset the sensor if desired
-        initialized = false;
-        Log::info(Log::DRIVER_TAG, "INA219 shutdown");
-    }
+    if (!initialized)
+        return;
+
+    // No specific shutdown needed for INA219, but we can reset the sensor if desired
+    initialized = false;
+    Log::info(Log::DRIVER_TAG, "INA219 shutdown");
 }
 
 bool INA219Driver::read(PowerReading &reading)
 {
     if (!initialized)
         return false;
+
+    I2CBusLock::Guard guard;
+
     const float shuntVoltageMv = sensor.getShuntVoltage_mV();
     const float busVoltageV = sensor.getBusVoltage_V();
     const float currentMa = sensor.getCurrent_mA();

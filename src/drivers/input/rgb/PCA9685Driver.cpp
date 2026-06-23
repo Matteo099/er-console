@@ -1,9 +1,13 @@
 #include "PCA9685Driver.h"
 
-PCA9685Driver::PCA9685Driver(uint8_t address) : pwm(address), address(address) {}
+#include "drivers/input/I2CBusLock.h"
+
+PCA9685Driver::PCA9685Driver(TwoWire &wire, uint8_t address) : wireBus(&wire), pwm(address, wire), address(address) {}
 
 bool PCA9685Driver::init()
 {
+    I2CBusLock::Guard guard;
+
     if (!pwm.begin())
         return false;
     pwm.setPWMFreq(1000);
@@ -17,6 +21,8 @@ void PCA9685Driver::shutdown()
 {
     if (!initialized)
         return;
+
+    I2CBusLock::Guard guard;
 
     // Turn off all PWM outputs
     for (uint8_t channel = 0; channel < 16; channel++)
@@ -34,7 +40,11 @@ void PCA9685Driver::shutdown()
 
 bool PCA9685Driver::available() const { return initialized; }
 
-void PCA9685Driver::writeChannel(uint8_t channel, uint16_t value) { pwm.setPWM(channel, 0, value); }
+void PCA9685Driver::writeChannel(uint8_t channel, uint16_t value)
+{
+    I2CBusLock::Guard guard;
+    pwm.setPWM(channel, 0, value);
+}
 
 void PCA9685Driver::setRGB(uint8_t channel, const LedColor &c)
 {

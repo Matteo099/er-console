@@ -15,6 +15,7 @@ InputSystem::~InputSystem()
 bool InputSystem::begin(const InputConfig &config)
 {
     reset();
+    auto& i2c = I2CBusManager::bus();
 
     if (config.channels.enabled)
     {
@@ -25,7 +26,7 @@ bool InputSystem::begin(const InputConfig &config)
 
         if (config.channels.mcp1Enabled)
         {
-            mcpDriver1 = new MCP23017Driver(config.channels.mcp1Base, config.channels.mcp1Address);
+            mcpDriver1 = new MCP23017Driver(i2c, config.channels.mcp1Base, config.channels.mcp1Address);
             mcp1 = new MCPChannelProvider(*mcpDriver1, config.channels.mcp1Base);
             channelSystem->registerProvider(mcp1);
             Log::debug(Log::INPUT_TAG, "MCP23017Driver 1 registered at base %d", config.channels.mcp1Base);
@@ -33,7 +34,7 @@ bool InputSystem::begin(const InputConfig &config)
 
         if (config.channels.mcp2Enabled)
         {
-            mcpDriver2 = new MCP23017Driver(config.channels.mcp2Base, config.channels.mcp2Address);
+            mcpDriver2 = new MCP23017Driver(i2c, config.channels.mcp2Base, config.channels.mcp2Address);
             mcp2 = new MCPChannelProvider(*mcpDriver2, config.channels.mcp2Base);
             channelSystem->registerProvider(mcp2);
             Log::debug(Log::INPUT_TAG, "MCP23017Driver 2 registered at base %d", config.channels.mcp2Base);
@@ -62,7 +63,7 @@ bool InputSystem::begin(const InputConfig &config)
     }
     if (config.power.enabled)
     {
-        powerDriver = new INA219Driver(Wire, config.power.address);
+        powerDriver = new INA219Driver(i2c, config.power.address);
         powerSystem = new PowerSystem(*powerDriver);
         if (!powerSystem->init())
         {
@@ -96,7 +97,7 @@ bool InputSystem::begin(const InputConfig &config)
     }
     if (config.oled.enabled)
     {
-        oledDriver = new SSD1306Driver(config.oled.width, config.oled.height, Wire, config.oled.address);
+        oledDriver = new SSD1306Driver(config.oled.width, config.oled.height, i2c, config.oled.address);
         oledSystem = new OLEDSystem(*oledDriver);
         if (!oledSystem->init())
         {
@@ -116,7 +117,7 @@ bool InputSystem::begin(const InputConfig &config)
         rgbLedSystem = new RgbLedSystem();
         if (config.rgb.usePCA9685)
         {
-            rgbExpander = new PCA9685Driver(config.rgb.address);
+            rgbExpander = new PCA9685Driver(i2c, config.rgb.address);
             rgbLedSystem->registerDriver(rgbExpander);
         }
         if (!rgbLedSystem->init())
@@ -302,7 +303,7 @@ void InputSystem::destroyRelay()
     {
         relaySystem->shutdown();
     }
-    
+
     delete relaySystem;
     relaySystem = nullptr;
 
@@ -325,6 +326,14 @@ void InputSystem::reset()
 void InputSystem::init(void *params)
 {
     (void)params;
+
+    if (!i2cManager.init(I2C_SDA_PIN,
+                         I2C_SCL_PIN,
+                         I2C_FREQUENCY))
+    {
+        Log::error(Log::INPUT_TAG, "Failed to initialize I2C bus");
+        return;
+    }
 
     Log::info(Log::INPUT_TAG, "InputSystem initialization completed (nothing to do)");
 }
