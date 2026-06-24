@@ -1,13 +1,19 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 
-class IFile {
+class IFile
+{
 public:
     virtual ~IFile() = default;
 
     virtual int read(uint8_t* buffer, size_t len) = 0;
+    virtual size_t write(const uint8_t* buffer, size_t len) = 0;
+
     virtual bool seek(size_t pos) = 0;
     virtual bool available() = 0;
+
+    virtual void flush() = 0;
     virtual void close() = 0;
 };

@@ -6,14 +6,7 @@
 #include "core/SystemService.h"
 #include "drivers/storage/SDCardDriver.h"
 #include "drivers/storage/IFile.h"
-
-struct StorageEntry
-{
-    std::string path;
-    std::string name;
-    bool isDirectory = false;
-    uint64_t size = 0;
-};
+#include "drivers/storage/StorageEntry.h"
 
 class StorageSystem : public SystemService
 {
@@ -39,10 +32,6 @@ public:
     void listFiles() const;
 
 private:
-    bool ensureParents(const char* path);
-    static std::string parentPath(const char* path);
-    static std::string fileName(const char* path);
-
     SDCardDriver* driver;
     bool ready = false;
 };

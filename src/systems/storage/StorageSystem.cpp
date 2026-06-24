@@ -1,27 +1,20 @@
 #include "StorageSystem.h"
 
 #include "drivers/storage/ESP32SDCardDriver.h"
-#include "drivers/bus/SPIBusLock.h"
 #include "drivers/bus/SPIBusManager.h"
 #include "config/BoardConfig.h"
+#include "config/Assets.h"
 #include "log/Logger.h"
-#include <SD.h>
-#include <config/Assets.h>
 
 namespace
 {
-    static constexpr const char* SYSTEM_VOLUME_INFO_DIR = "System Volume Information";
-
-    static void trimTrailingSlash(std::string& value)
-    {
-        while (!value.empty() && value.back() == '/')
-            value.pop_back();
-    }
+    static constexpr const char *SYSTEM_VOLUME_INFO_DIR =
+        "System Volume Information";
 }
 
 StorageSystem::StorageSystem()
 {
-    auto& spi = SPIBusManager::bus();
+    auto &spi = SPIBusManager::bus();
     driver = new ESP32SDCardDriver(spi, SD_CS_PIN);
 }
 
@@ -37,6 +30,7 @@ void StorageSystem::init(void *params)
     }
 
     ready = true;
+
     Log::info(Log::STORAGE_TAG, "Storage ready");
 
     listFiles();
@@ -52,210 +46,214 @@ void StorageSystem::listFiles() const
     if (!ready)
         return;
 
-    Log::info(Log::STORAGE_TAG, "Path probe: /.core=%s /games=%s /brand.png=%s",
-              exists(CORE_DIR) ? "yes" : "no",
-              exists(GAMES_DIR) ? "yes" : "no",
-              exists(IMG_BRAND_FILE) ? "yes" : "no");
+    Log::info(
+        Log::STORAGE_TAG,
+        "Path probe: /.core=%s /games=%s /brand.png=%s",
+        exists(CORE_DIR) ? "yes" : "no",
+        exists(GAMES_DIR) ? "yes" : "no",
+        exists(IMG_BRAND_FILE) ? "yes" : "no");
 
     std::vector<StorageEntry> coreEntries;
+
     if (listDirectory(CORE_DIR, coreEntries, true))
     {
-        Log::info(Log::STORAGE_TAG, "Listing files under /.core:");
-        for (const auto& entry : coreEntries)
+        Log::info(
+            Log::STORAGE_TAG,
+            "Listing files under /.core:");
+
+        for (const auto &entry : coreEntries)
         {
-            Log::info(Log::STORAGE_TAG, " - %s%s (size: %u bytes)", entry.path.c_str(), entry.isDirectory ? "/" : "", entry.size);
+            Log::info(
+                Log::STORAGE_TAG,
+                " - %s%s (size: %u bytes)",
+                entry.path.c_str(),
+                entry.isDirectory ? "/" : "",
+                static_cast<uint32_t>(entry.size));
         }
     }
 
     std::vector<StorageEntry> gameEntries;
+
     if (listDirectory(GAMES_DIR, gameEntries, true))
     {
-        Log::info(Log::STORAGE_TAG, "Listing files under /games:");
-        for (const auto& entry : gameEntries)
+        Log::info(
+            Log::STORAGE_TAG,
+            "Listing files under /games:");
+
+        for (const auto &entry : gameEntries)
         {
-            Log::info(Log::STORAGE_TAG, " - %s%s (size: %u bytes)", entry.path.c_str(), entry.isDirectory ? "/" : "", entry.size);
+            Log::info(
+                Log::STORAGE_TAG,
+                " - %s%s (size: %u bytes)",
+                entry.path.c_str(),
+                entry.isDirectory ? "/" : "",
+                static_cast<uint32_t>(entry.size));
         }
     }
 }
 
-IFile* StorageSystem::open(const char* path)
+IFile *StorageSystem::open(const char *path)
 {
-    IFile* f = driver->open(path);
-    if (!f) Log::error(Log::STORAGE_TAG, "Failed to open file: %s", path);
-    else Log::debug(Log::STORAGE_TAG, "Opened file: %s", path);
-    return f;
+    IFile *file = driver->open(path);
+
+    if (!file)
+    {
+        Log::error(
+            Log::STORAGE_TAG,
+            "Failed to open file: %s",
+            path);
+    }
+    else
+    {
+        Log::debug(
+            Log::STORAGE_TAG,
+            "Opened file: %s",
+            path);
+    }
+
+    return file;
 }
 
-bool StorageSystem::readTextFile(const char* path, std::string& out)
+bool StorageSystem::readTextFile(
+    const char *path,
+    std::string &out)
 {
-    IFile* file = open(path);
+    IFile *file = open(path);
+
     if (!file)
         return false;
 
     out.clear();
+
     char buffer[256];
 
     while (file->available())
     {
-        int r = file->read(reinterpret_cast<uint8_t*>(buffer), sizeof(buffer));
-        if (r > 0)
-            out.append(buffer, r);
-        else
+        int r = file->read(
+            reinterpret_cast<uint8_t *>(buffer),
+            sizeof(buffer));
+
+        if (r <= 0)
             break;
+
+        out.append(buffer, r);
     }
 
     file->close();
     delete file;
+
     return true;
 }
 
-bool StorageSystem::writeTextFile(const char* path, const std::string& contents, bool overwrite)
+bool StorageSystem::removePath(const char *path)
 {
     if (!ready)
         return false;
 
-    SPIBusLock::Guard guard;
+    return driver->remove(path);
+}
 
-    if (!ensureParents(path))
+bool StorageSystem::movePath(
+    const char *sourcePath,
+    const char *destinationPath,
+    bool overwrite)
+{
+    if (!ready)
         return false;
 
-    if (overwrite && SD.exists(path))
-        SD.remove(path);
+    if (!sourcePath || !destinationPath)
+        return false;
 
-    File file = SD.open(path, FILE_WRITE);
-    if (!file)
+    if (!*sourcePath || !*destinationPath)
+        return false;
+
+    if (!driver->exists(sourcePath))
+        return false;
+
+    if (!driver->ensureParents(destinationPath))
+        return false;
+
+    if (overwrite &&
+        driver->exists(destinationPath))
     {
-        Log::error(Log::STORAGE_TAG, "Failed to open file for write: %s", path);
-        return false;
+        if (!driver->remove(destinationPath))
+            return false;
     }
 
-    size_t written = file.print(contents.c_str());
-    file.flush();
-    file.close();
-    return written == contents.size();
+    return driver->rename(
+        sourcePath,
+        destinationPath);
 }
 
-File StorageSystem::openNative(const char* path, bool write)
-{
-    if (!ready)
-        return File();
-
-    SPIBusLock::Guard guard;
-
-    if (write && !ensureParents(path))
-        return File();
-
-    if (write && SD.exists(path))
-        SD.remove(path);
-
-    return SD.open(path, write ? FILE_WRITE : FILE_READ);
-}
-
-bool StorageSystem::removePath(const char* path)
-{
-    if (!ready)
-        return false;
-
-    SPIBusLock::Guard guard;
-
-    return SD.remove(path);
-}
-
-bool StorageSystem::movePath(const char* sourcePath, const char* destinationPath, bool overwrite)
-{
-    if (!ready || !sourcePath || !destinationPath || !*sourcePath || !*destinationPath)
-        return false;
-
-    SPIBusLock::Guard guard;
-
-    if (!SD.exists(sourcePath))
-        return false;
-
-    if (!ensureParents(destinationPath))
-        return false;
-
-    if (overwrite && SD.exists(destinationPath) && !SD.remove(destinationPath))
-        return false;
-
-    return SD.rename(sourcePath, destinationPath);
-}
-
-bool StorageSystem::createDirectory(const char* path)
+bool StorageSystem::createDirectory(
+    const char *path)
 {
     if (!ready || !path || !*path)
         return false;
 
-    SPIBusLock::Guard guard;
-
-    if (SD.exists(path))
+    if (driver->exists(path))
         return true;
 
-    if (!ensureParents(path))
+    if (!driver->ensureParents(path))
         return false;
 
-    return SD.mkdir(path);
+    return driver->mkdir(path);
 }
 
-bool StorageSystem::exists(const char* path) const
+bool StorageSystem::exists(
+    const char *path) const
 {
     if (!ready || !path)
         return false;
 
-    SPIBusLock::Guard guard;
-    return SD.exists(path);
+    return driver->exists(path);
 }
 
-bool StorageSystem::listDirectory(const char* path, std::vector<StorageEntry>& out, bool recursive) const
+bool StorageSystem::listDirectory(
+    const char *path,
+    std::vector<StorageEntry> &out,
+    bool recursive) const
 {
     if (!ready)
         return false;
 
-    SPIBusLock::Guard guard;
+    std::vector<StorageEntry> localEntries;
 
-    File directory = SD.open(path);
-    if (!directory || !directory.isDirectory())
-        return false;
-
-    std::vector<std::string> childDirectories;
-
-    while (true)
+    if (!driver->listDirectory(
+            path,
+            localEntries))
     {
-        File entry = directory.openNextFile();
-        if (!entry)
-            break;
-
-        const bool isDir = entry.isDirectory();
-        const uint64_t size = entry.size();
-        const std::string entryBaseName = fileName(entry.name());
-
-        StorageEntry info;
-        info.path = std::string(path);
-        trimTrailingSlash(info.path);
-        info.path += "/";
-        info.path += entryBaseName;
-        info.name = entryBaseName;
-        info.isDirectory = isDir;
-        info.size = size;
-        out.push_back(info);
-
-        if (recursive && isDir)
-        {
-            if (entryBaseName != SYSTEM_VOLUME_INFO_DIR)
-            {
-                childDirectories.push_back(info.path);
-            }
-        }
-
-        entry.close();
+        return false;
     }
 
-    directory.close();
+    out.insert(
+        out.end(),
+        localEntries.begin(),
+        localEntries.end());
 
-    for (const auto& childPath : childDirectories)
+    if (!recursive)
+        return true;
+
+    for (const auto &entry : localEntries)
     {
-        if (!listDirectory(childPath.c_str(), out, true))
+        if (!entry.isDirectory)
+            continue;
+
+        if (entry.name ==
+            SYSTEM_VOLUME_INFO_DIR)
         {
-            Log::warn(Log::STORAGE_TAG, "Failed to list subdirectory: %s", childPath.c_str());
+            continue;
+        }
+
+        if (!listDirectory(
+                entry.path.c_str(),
+                out,
+                true))
+        {
+            Log::warn(
+                Log::STORAGE_TAG,
+                "Failed to list subdirectory: %s",
+                entry.path.c_str());
         }
     }
 
@@ -267,8 +265,7 @@ uint64_t StorageSystem::totalBytes() const
     if (!ready)
         return 0;
 
-    SPIBusLock::Guard guard;
-    return SD.totalBytes();
+    return driver->totalBytes();
 }
 
 uint64_t StorageSystem::usedBytes() const
@@ -276,54 +273,66 @@ uint64_t StorageSystem::usedBytes() const
     if (!ready)
         return 0;
 
-    SPIBusLock::Guard guard;
-    return SD.usedBytes();
+    return driver->usedBytes();
 }
 
 uint64_t StorageSystem::freeBytes() const
 {
-    uint64_t total = totalBytes();
-    uint64_t used = usedBytes();
-    return total > used ? total - used : 0;
+    const uint64_t total = totalBytes();
+    const uint64_t used = usedBytes();
+
+    return total > used
+               ? total - used
+               : 0;
 }
 
-bool StorageSystem::ensureParents(const char* path)
+bool StorageSystem::writeTextFile(
+    const char *path,
+    const std::string &contents,
+    bool overwrite)
 {
-    std::string parent = parentPath(path);
-    if (parent.empty() || parent == "/")
-        return true;
-
-    if (SD.exists(parent.c_str()))
-        return true;
-
-    if (!ensureParents(parent.c_str()))
+    if (!ready || !path)
         return false;
 
-    return SD.mkdir(parent.c_str());
+    if (!driver->ensureParents(path))
+        return false;
+
+    if (overwrite && driver->exists(path))
+    {
+        if (!driver->remove(path))
+            return false;
+    }
+
+    IFile *file =
+        driver->open(path, FileMode::Write);
+
+    if (!file)
+    {
+        Log::error(
+            Log::STORAGE_TAG,
+            "Failed to open file for write: %s",
+            path);
+
+        return false;
+    }
+
+    const size_t written =
+        file->write(
+            reinterpret_cast<const uint8_t *>(
+                contents.data()),
+            contents.size());
+
+    file->flush();
+    file->close();
+    delete file;
+
+    return written == contents.size();
 }
 
-std::string StorageSystem::parentPath(const char* path)
+File StorageSystem::openNative(
+    const char *path,
+    bool write)
 {
-    if (!path)
-        return {};
-
-    std::string value(path);
-    auto pos = value.find_last_of('/');
-    if (pos == std::string::npos || pos == 0)
-        return "/";
-
-    return value.substr(0, pos);
-}
-
-std::string StorageSystem::fileName(const char* path)
-{
-    if (!path)
-        return {};
-
-    std::string value(path);
-    auto pos = value.find_last_of('/');
-    if (pos == std::string::npos)
-        return value;
-
-    return value.substr(pos + 1);
+    return static_cast<ESP32SDCardDriver *>(driver)
+        ->openNative(path, write);
 }
