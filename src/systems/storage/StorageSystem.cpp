@@ -16,21 +16,24 @@ StorageSystem::StorageSystem()
 {
     auto &spi = SPIBusManager::bus();
     driver = new ESP32SDCardDriver(spi, SD_CS_PIN);
+    recovery = new StorageRecoverySystem(driver, SD_POWER_RELAY_PIN, true);
 }
 
 void StorageSystem::init(void *params)
 {
     Log::info(Log::STORAGE_TAG, "Initializing storage");
-
+ 
     if (!driver->init())
     {
         Log::error(Log::STORAGE_TAG, "SD init failed");
-        ready = false;
-        return;
+        if (recovery->recover(StorageFailureReason::MountFailed))
+        {
+            ready = false;
+            return;
+        }
     }
 
     ready = true;
-
     Log::info(Log::STORAGE_TAG, "Storage ready");
 
     listFiles();
@@ -98,10 +101,18 @@ IFile *StorageSystem::open(const char *path)
 
     if (!file)
     {
+        ioFailures++;
+
         Log::error(
             Log::STORAGE_TAG,
             "Failed to open file: %s",
             path);
+
+        if (ioFailures >= IO_FAILURE_THRESHOLD)
+        {
+            recovery->recover(StorageFailureReason::ConsecutiveIOFailures);
+        }
+        return nullptr;
     }
     else
     {
@@ -111,7 +122,33 @@ IFile *StorageSystem::open(const char *path)
             path);
     }
 
+    ioFailures = 0;
     return file;
+}
+
+bool StorageSystem::checkHealth()
+{
+    if (!exists(CORE_DIR))
+    {
+        recovery->recover(
+            StorageFailureReason::CorruptionDetected);
+
+        return false;
+    }
+
+    return true;
+}
+
+void StorageSystem::update()
+{
+    if (!HEALTH_CHECK_ENABLED)
+        return;
+
+    static uint32_t lastCheck = 0;
+    if (millis() - lastCheck < HEALTH_CHECK_INTERVAL_MS)
+        return;
+    lastCheck = millis();
+    checkHealth();
 }
 
 bool StorageSystem::readTextFile(

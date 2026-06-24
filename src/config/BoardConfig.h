@@ -90,6 +90,7 @@ GPIO       → LEDs, buttons, actuators
 */
 
 #define SD_CS_PIN            5   // SD card chip select
+#define SD_POWER_RELAY_PIN   3   // Relay to control SD card power (optional)
 
 
 
@@ -168,8 +169,6 @@ GAIN pin: (do not connect)
 
 #define GPIO_FREE_1          1
 #define GPIO_FREE_2          2
-#define GPIO_FREE_3          3
-#define GPIO_FREE_4          5
 #define GPIO_FREE_5          21
 #define GPIO_FREE_6          38
 #define GPIO_FREE_7          39
