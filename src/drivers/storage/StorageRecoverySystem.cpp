@@ -19,6 +19,13 @@ StorageRecoverySystem::StorageRecoverySystem(
       relayPin(relayPin),
       relayActiveHigh(relayActiveHigh)
 {
+}
+
+void StorageRecoverySystem::init()
+{
+    if(initialized)
+        return;
+
     pinMode(relayPin, OUTPUT);
 
     //
@@ -30,6 +37,7 @@ StorageRecoverySystem::StorageRecoverySystem(
 
     printLastFailure();
     store.clear();
+    initialized = true;
 }
 
 StorageRecoveryState StorageRecoverySystem::lastFailure()
@@ -58,6 +66,8 @@ void StorageRecoverySystem::printLastFailure()
 
 bool StorageRecoverySystem::recover(StorageFailureReason reason, bool restart)
 {
+    init();
+    
     store.save(reason);
 
     Log::error(

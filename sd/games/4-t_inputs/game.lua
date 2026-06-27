@@ -4,7 +4,7 @@
 local state = {
     initialized = false,
     lastLogTime = 0,
-    unlockCounter = 0
+    unlockCounter = 0,
 }
 
 --------------------------------------------------
@@ -66,12 +66,12 @@ function update(dt, paused)
     end
 
     if ch3 then
-        system.info("Channel 3 PRESSED")
+        system.info(string.format("Channel 3 PRESSED - %d/50", state.unlockCounter))
         state.unlockCounter = state.unlockCounter + 1
     end
 
 
-    if state.unlockCounter >= 5 then
+    if state.unlockCounter >= 50 then
         system.info("Framework test complete, unlocking game")
         scene.completeGame()
     end
@@ -85,7 +85,7 @@ function update(dt, paused)
     if state.lastLogTime >= 5.0 then
         state.lastLogTime = 0
 
-        system.info(string.format("Heartbeat - CH1=%s CH2=%s CH3=%s", tostring(ch1), tostring(ch2), tostring(ch3)))
+        system.info(string.format("Heartbeat - CH1=%s CH2=%s CH3=%s UNLOCK=%d/50", tostring(ch1), tostring(ch2), tostring(ch3), state.unlockCounter))
     end
 end
 

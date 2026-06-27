@@ -139,7 +139,7 @@ void SceneManager::update()
                     SystemEventBus::instance().getService(SystemEventBus::SERVICE_LUA));
                 if (luaSystem)
                 {
-                    luaSystem->setGameView(static_cast<GameView*>(&gameScene->getView()));
+                    luaSystem->setGameScene(gameScene);
                 }
             }
             changeScene(gameScene, req.transition);

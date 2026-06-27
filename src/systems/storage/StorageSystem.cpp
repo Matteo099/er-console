@@ -14,15 +14,16 @@ namespace
 
 StorageSystem::StorageSystem()
 {
-    auto &spi = SPIBusManager::bus();
-    driver = new ESP32SDCardDriver(spi, SD_CS_PIN);
-    recovery = new StorageRecoverySystem(driver, SD_POWER_RELAY_PIN, true);
 }
 
 void StorageSystem::init(void *params)
 {
     Log::info(Log::STORAGE_TAG, "Initializing storage");
- 
+
+    auto &spi = SPIBusManager::bus();
+    driver = new ESP32SDCardDriver(spi, SD_CS_PIN);
+    recovery = new StorageRecoverySystem(driver, SD_POWER_RELAY_PIN, true);
+
     if (!driver->init())
     {
         Log::error(Log::STORAGE_TAG, "SD init failed");

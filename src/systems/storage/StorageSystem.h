@@ -11,7 +11,7 @@
 
 #define IO_FAILURE_THRESHOLD 5
 #define HEALTH_CHECK_INTERVAL_MS 30000
-#define HEALTH_CHECK_ENABLED true
+#define HEALTH_CHECK_ENABLED 1
 
 class StorageSystem : public SystemService
 {

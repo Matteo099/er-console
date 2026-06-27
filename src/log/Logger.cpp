@@ -69,6 +69,9 @@ static void logInternal(esp_log_level_t level, const char *tag, const char *form
     snprintf(line, sizeof(line), "[%lu][%s][%s] %s", millis(), levelToString(level), tag, buffer);
     Serial.println(line);
 
+    if (!logMutex)
+        return;
+
     xSemaphoreTake(logMutex, portMAX_DELAY);
     recentLogs.push_back(std::string(line));
     if (recentLogs.size() > MAX_RECENT_LOG_LINES)

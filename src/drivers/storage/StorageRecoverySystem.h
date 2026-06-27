@@ -21,6 +21,7 @@ public:
     StorageRecoveryState lastFailure();
 
 private:
+    void init();
     bool softRecover();
     bool powerCycleStorage();
     void printLastFailure();
@@ -29,6 +30,7 @@ private:
         StorageFailureReason reason);
 
 private:
+    bool initialized = false;
     uint8_t relayPin;
     bool relayActiveHigh;
     SDCardDriver *driver;

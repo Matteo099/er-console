@@ -12,7 +12,7 @@ extern "C" {
 }
 
 // Forward declaration
-class GameView;
+class GameScene;
 
 class LuaSystem : public SystemService
 {
@@ -42,7 +42,7 @@ public:
     lua_State* getVM() { return L; }
 
     // API registration (for dependency injection)
-    void setGameView(GameView* view) { gameView = view; }
+    void setGameScene(GameScene* scene) { gameScene = scene; }
     void setStorageSystem(StorageSystem* sys) { storageSystem = sys; }
     void setAudioSystem(AudioSystem* sys) { audioSystem = sys; }
     void setInputSystem(InputSystem* sys) { inputSystem = sys; }
@@ -52,7 +52,7 @@ private:
     lua_State* L = nullptr;
 
     // Dependencies
-    GameView* gameView = nullptr;
+    GameScene* gameScene = nullptr;
     StorageSystem* storageSystem = nullptr;
     AudioSystem* audioSystem = nullptr;
     InputSystem* inputSystem = nullptr;

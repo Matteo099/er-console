@@ -93,6 +93,7 @@ void GameScene::completeGame()
     if (state == GameState::Finished)
         return;
 
+    Log::info(Log::GAME_TAG, "Game completed successfully");
     state = GameState::Finished;
 
     luaSystem->pause();
