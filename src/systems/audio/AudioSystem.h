@@ -10,11 +10,11 @@
 struct AudioCacheEntry
 {
     char path[AudioEvent::MAX_PATH_LENGTH];
-
     uint8_t *data = nullptr;
     size_t size = 0;
-
     uint32_t lastUsed = 0;
+
+    MemoryFile file;
 };
 
 class AudioSystem : public SystemService
@@ -31,12 +31,18 @@ public:
     void play(const char *path);
     void stop();
 
+    void playLoop(const char *path);
+    void stopLoop();
+
     void setVolume(uint8_t volume);
     uint8_t getVolume() const;
 
 private:
     AudioCacheEntry *findCache(const char *path);
     AudioCacheEntry *loadCache(const char *path);
+
+    bool looping = false;
+    AudioCacheEntry *loopEntry = nullptr;
 
     StorageSystem *storage = nullptr;
     AudioDriver *driver = nullptr;

@@ -20,6 +20,10 @@
 #define AUDIO_CLICK_FILE AUDIO_DIR "/fireball.wav"
 #define AUDIO_CLICK1_FILE AUDIO_DIR "/click1.wav"
 #define AUDIO_CLICK2_FILE AUDIO_DIR "/click2.wav"
+#define AUDIO_GAME_OVER_FILE AUDIO_DIR "/lose.wav"
+#define AUDIO_VICTORY_FILE AUDIO_DIR "/win.wav"
+#define AUDIO_TICKING_CLOCK_FILE AUDIO_DIR "/tickingclock.wav"
+
 
 // Image files
 #define IMG_LOGO_FILE IMAGES_DIR "/logo.png"

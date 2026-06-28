@@ -6,11 +6,29 @@
 class MemoryFile : public IFile
 {
 public:
-    MemoryFile(uint8_t *data, size_t size)
-        : data(data),
-          size(size),
-          pos(0)
+    MemoryFile() = default;
+
+    void assign(uint8_t *ptr, size_t len)
     {
+        data = ptr;
+        size = len;
+        pos = 0;
+    }
+
+    void reset()
+    {
+        pos = 0;
+    }
+
+
+    size_t position() const
+    {
+        return pos;
+    }
+
+    size_t length() const
+    {
+        return size;
     }
 
     int read(uint8_t *buffer, size_t len) override
@@ -67,7 +85,7 @@ public:
     }
 
 private:
-    uint8_t *data;
-    size_t size;
-    size_t pos;
+    uint8_t *data = nullptr;
+    size_t size = 0;
+    size_t pos = 0;
 };

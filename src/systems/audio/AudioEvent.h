@@ -5,7 +5,9 @@
 enum class AudioEventType {
     BEEP,
     PLAY_WAV,
+    PLAY_LOOP_WAV,
     STOP,
+    STOP_LOOP,
     SET_VOLUME
 };
 

@@ -47,7 +47,7 @@ void AudioSystem::init(void *params)
     }
 
     Log::info(Log::AUDIO_TAG, "Audio system initialized");
-    driver->playWav(storage->open(AUDIO_CLICK_FILE));
+    driver->startWav(storage->open(AUDIO_CLICK_FILE));
 }
 
 void AudioSystem::update()
@@ -56,7 +56,9 @@ void AudioSystem::update()
 
     while (true)
     {
-        if (xQueueReceive(SystemEventBus::audioQueue, &evt, portMAX_DELAY))
+        while (xQueueReceive(SystemEventBus::audioQueue,
+                             &evt,
+                             0))
         {
             switch (evt.type)
             {
@@ -67,9 +69,17 @@ void AudioSystem::update()
             case AudioEventType::PLAY_WAV:
                 play(evt.wav.path);
                 break;
+                
+            case AudioEventType::PLAY_LOOP_WAV:
+                playLoop(evt.wav.path);
+                break;
 
             case AudioEventType::STOP:
                 stop();
+                break;
+
+            case AudioEventType::STOP_LOOP:
+                stopLoop();
                 break;
 
             case AudioEventType::SET_VOLUME:
@@ -77,6 +87,17 @@ void AudioSystem::update()
                 break;
             }
         }
+
+        driver->update();
+
+        if (looping &&
+            !driver->isPlaying())
+        {
+            loopEntry->file.reset();
+            driver->startWav(&loopEntry->file);
+        }
+
+        vTaskDelay(1);
     }
 }
 
@@ -88,6 +109,9 @@ void AudioSystem::beep(uint16_t freq, uint16_t ms)
 
 void AudioSystem::play(const char *path)
 {
+    looping = false;
+    loopEntry = nullptr;
+
     if (!storage || !path)
         return;
 
@@ -105,8 +129,8 @@ void AudioSystem::play(const char *path)
         return;
     }
 
-    MemoryFile file(entry->data, entry->size);
-    driver->playWav(&file);
+    entry->file.reset();
+    driver->startWav(&entry->file);
 }
 
 void AudioSystem::stop()
@@ -116,6 +140,35 @@ void AudioSystem::stop()
 
     Log::debug(Log::AUDIO_TAG, "Stopping audio");
 
+    looping = false;
+    loopEntry = nullptr;
+
+    driver->stop();
+}
+
+void AudioSystem::playLoop(const char *path)
+{
+    if (!storage || !path)
+        return;
+
+    AudioCacheEntry *entry = findCache(path);
+
+    if (!entry)
+        entry = loadCache(path);
+
+    if (!entry)
+        return;
+
+    looping = true;
+    loopEntry = entry;
+
+    entry->file.reset();
+    driver->startWav(&entry->file);
+}
+
+void AudioSystem::stopLoop()
+{
+    looping = false;
     driver->stop();
 }
 
@@ -225,13 +278,14 @@ AudioCacheEntry *AudioSystem::loadCache(const char *path)
     }
 
     AudioCacheEntry &entry = cache[slot];
-    strncpy( entry.path, path, AudioEvent::MAX_PATH_LENGTH - 1);
+    strncpy(entry.path, path, AudioEvent::MAX_PATH_LENGTH - 1);
     entry.path[AudioEvent::MAX_PATH_LENGTH - 1] = '\0';
     entry.data = buffer;
     entry.size = length;
     entry.lastUsed = millis();
+    entry.file.assign(buffer, length);
 
-    Log::debug( Log::AUDIO_TAG, "Cached audio %s (%u bytes)", path, length);
+    Log::debug(Log::AUDIO_TAG, "Cached audio %s (%u bytes)", path, length);
 
     return &entry;
 }

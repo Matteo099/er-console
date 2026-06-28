@@ -93,6 +93,8 @@ private:
     lv_obj_t *startPauseLabel = nullptr;
     lv_obj_t *cancelBtn = nullptr;
 
+    bool tickingClockAudioStarted = false;
+
     /* Event callbacks */
     static void onStartPause(lv_event_t *e);
     static void onCancel(lv_event_t *e);

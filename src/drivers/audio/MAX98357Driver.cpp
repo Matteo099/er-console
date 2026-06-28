@@ -45,6 +45,40 @@ bool MAX98357Driver::init()
     return true;
 }
 
+void MAX98357Driver::update()
+{
+    if (!playing || !currentFile)
+        return;
+
+    if (!currentFile->available())
+    {
+        stop();
+        return;
+    }
+
+    size_t bytesRead =
+        currentFile->read(buffer, BUFFER_SIZE);
+
+    if (bytesRead == 0)
+    {
+        stop();
+        return;
+    }
+
+    applyVolume(
+        reinterpret_cast<int16_t *>(buffer),
+        bytesRead / sizeof(int16_t));
+
+    size_t written;
+
+    i2s_write(
+        I2S_PORT,
+        buffer,
+        bytesRead,
+        &written,
+        portMAX_DELAY);
+}
+
 void MAX98357Driver::playTone(uint16_t freq, uint16_t ms)
 {
     digitalWrite(I2S_SHUTDOWN_PIN, HIGH);
@@ -67,24 +101,21 @@ void MAX98357Driver::playTone(uint16_t freq, uint16_t ms)
     digitalWrite(I2S_SHUTDOWN_PIN, LOW);
 }
 
-void MAX98357Driver::playWav(IFile *file)
+bool MAX98357Driver::startWav(IFile *file)
 {
     if (!file)
-        return;
+        return false;
 
-    Log::debug(Log::DRIVER_TAG, "Playing WAV file");
-    file->seek(44); // WAV header
+    stop();
+
+    currentFile = file;
+    playing = true;
+
+    currentFile->seek(44);
 
     digitalWrite(I2S_SHUTDOWN_PIN, HIGH);
-    while (file->available())
-    {
-        size_t bytesRead = file->read(buffer, BUFFER_SIZE);
-        size_t bytesWritten;
-        i2s_write(I2S_PORT, buffer, bytesRead, &bytesWritten, portMAX_DELAY);
-    }
-    digitalWrite(I2S_SHUTDOWN_PIN, LOW);
 
-    // file->close(); // Caller is responsible for closing the file
+    return true;
 }
 
 void MAX98357Driver::applyVolume(int16_t *buffer, size_t samples)
@@ -111,5 +142,13 @@ void MAX98357Driver::applyVolume(int16_t *buffer, size_t samples)
 
 void MAX98357Driver::stop()
 {
+    if (!playing)
+        return;
+
+    playing = false;
+
     i2s_zero_dma_buffer(I2S_PORT);
+    digitalWrite(I2S_SHUTDOWN_PIN, LOW);
+
+    currentFile = nullptr;
 }

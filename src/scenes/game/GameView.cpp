@@ -70,6 +70,7 @@ void GameView::create()
     lastBlinkMs = 0;
     gameFinished = false;
     remainingSeconds = 0;
+    tickingClockAudioStarted = false;
 }
 
 void GameView::update()
@@ -79,6 +80,22 @@ void GameView::update()
 
     if (remainingSeconds > WARNING_THRESHOLD_SEC)
         return;
+
+    if (tickingClockAudioStarted == false)
+    {
+        AudioEvent evt{};
+        evt.type = AudioEventType::PLAY_LOOP_WAV;
+        strncpy(
+            evt.wav.path,
+            AUDIO_TICKING_CLOCK_FILE,
+            AudioEvent::MAX_PATH_LENGTH - 1);
+        evt.wav.path[AudioEvent::MAX_PATH_LENGTH - 1] = '\0';
+        xQueueSend(
+            SystemEventBus::audioQueue,
+            &evt,
+            portMAX_DELAY);
+        tickingClockAudioStarted = true;
+    }
 
     uint32_t now = lv_tick_get();
 
