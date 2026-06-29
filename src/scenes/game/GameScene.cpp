@@ -180,6 +180,7 @@ bool GameScene::loadGameScript()
 
     Log::info(Log::GAME_TAG, "Loading game script: %s", scriptPath.c_str());
 
+    luaSystem->setGameScene(this);
     if (!luaSystem->loadScript(scriptPath.c_str()))
     {
         Log::error(Log::GAME_TAG, "Failed to load game script: %s", scriptPath.c_str());

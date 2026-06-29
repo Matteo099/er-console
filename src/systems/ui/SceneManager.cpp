@@ -133,14 +133,6 @@ void SceneManager::update()
             {
                 GameInfo* gameInfoPtr = static_cast<GameInfo*>(req.params);
                 gameScene->setGameInfo(*gameInfoPtr);
-
-                // Also set the GameView's LuaSystem reference
-                LuaSystem* luaSystem = static_cast<LuaSystem*>(
-                    SystemEventBus::instance().getService(SystemEventBus::SERVICE_LUA));
-                if (luaSystem)
-                {
-                    luaSystem->setGameScene(gameScene);
-                }
             }
             changeScene(gameScene, req.transition);
             break;
