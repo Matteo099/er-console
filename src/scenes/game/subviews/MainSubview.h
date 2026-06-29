@@ -8,7 +8,7 @@
 class MainSubview
 {
 public:
-    void create(lv_obj_t* parent);
+    void create(lv_obj_t *parent);
     void destroy();
 
     void show();
@@ -26,20 +26,18 @@ public:
 
 private:
     EventCallback eventCallback;
-    
+
     static constexpr uint32_t WARNING_THRESHOLD_SEC = 60;
 
-    lv_obj_t* root = nullptr;
+    lv_obj_t *root = nullptr;
 
-    lv_obj_t* timerLabel = nullptr;
+    lv_obj_t *timerLabel = nullptr;
 
-    lv_obj_t* gameContentArea = nullptr;
+    lv_obj_t *startPauseBtn = nullptr;
+    lv_obj_t *startPauseIcon = nullptr;
+    lv_obj_t *startPauseLabel = nullptr;
 
-    lv_obj_t* startPauseBtn = nullptr;
-    lv_obj_t* startPauseIcon = nullptr;
-    lv_obj_t* startPauseLabel = nullptr;
-
-    lv_obj_t* cancelBtn = nullptr;
+    lv_obj_t *cancelBtn = nullptr;
 
     bool warningBlinkState = false;
     bool tickingClockAudioStarted = false;
@@ -47,6 +45,15 @@ private:
     uint32_t remainingSeconds = 0;
     uint32_t lastBlinkMs = 0;
 
-    static void onStartPause(lv_event_t* e);
-    static void onCancel(lv_event_t* e);
+    lv_obj_t *pauseOverlay = nullptr;
+    lv_obj_t *pauseIcon = nullptr;
+
+    bool paused = false;
+    bool pauseBlinkState = false;
+    uint32_t lastPauseBlinkMs = 0;
+
+    void updatePauseOverlay();
+
+    static void onStartPause(lv_event_t *e);
+    static void onCancel(lv_event_t *e);
 };
