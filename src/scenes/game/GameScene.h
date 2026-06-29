@@ -36,6 +36,22 @@ public:
     GameView *getGameView() { return &view; }
 
 private:
+    struct GameStatistics
+    {
+        uint32_t elapsedSeconds = 0;
+        uint32_t pausedSeconds = 0;
+
+        uint32_t hintsUsed = 0;
+        uint32_t puzzlesSolved = 0;
+
+        uint32_t startMs = 0;
+        uint32_t pauseStartMs = 0;
+
+        bool paused = false;
+    };
+
+    GameStatistics statistics;
+
     // Game identification
     GameInfo gameInfo;
 
@@ -56,6 +72,11 @@ private:
 
     // Internal helpers
     bool loadGameScript();
-    void updateLua();
     void stopGame();
+
+    void startTimer();
+    void pauseTimer();
+    void resumeTimer();
+
+    VictorySubview::GameStats getVictoryStats() const;
 };
