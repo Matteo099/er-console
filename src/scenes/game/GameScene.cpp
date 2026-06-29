@@ -74,17 +74,7 @@ void GameScene::onUpdate()
 
                 view.setRunning(false);
                 view.showGameOver();
-                AudioEvent evt{};
-                evt.type = AudioEventType::PLAY_WAV;
-                strncpy(
-                    evt.wav.path,
-                    AUDIO_GAME_OVER_FILE,
-                    AudioEvent::MAX_PATH_LENGTH - 1);
-                evt.wav.path[AudioEvent::MAX_PATH_LENGTH - 1] = '\0';
-                xQueueSend(
-                    SystemEventBus::audioQueue,
-                    &evt,
-                    portMAX_DELAY);
+                sendAudioEvent(AUDIO_GAME_OVER_FILE, AudioEventType::PLAY_WAV);
             }
         }
     }
@@ -112,18 +102,7 @@ void GameScene::completeGame()
 
     view.setRunning(false);
     view.showVictory();
-
-    AudioEvent evt{};
-    evt.type = AudioEventType::PLAY_WAV;
-    strncpy(
-        evt.wav.path,
-        AUDIO_VICTORY_FILE,
-        AudioEvent::MAX_PATH_LENGTH - 1);
-    evt.wav.path[AudioEvent::MAX_PATH_LENGTH - 1] = '\0';
-    xQueueSend(
-        SystemEventBus::audioQueue,
-        &evt,
-        portMAX_DELAY);
+    sendAudioEvent(AUDIO_VICTORY_FILE, AudioEventType::PLAY_WAV);
 }
 
 SceneRequest GameScene::getRequest() const

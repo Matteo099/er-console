@@ -29,11 +29,8 @@ public:
 
     void beep(uint16_t freq = 1000, uint16_t ms = 100);
 
-    void play(const char *path);
+    void play(const char *path, bool loop = false);
     void stop();
-
-    void playLoop(const char *path);
-    void stopLoop();
 
     void setVolume(uint8_t volume);
     uint8_t getVolume() const;

@@ -44,10 +44,7 @@ bool SampleScene::handleUIEvent(const UIEvent& event)
         const PlaySoundEvent& playEvent = static_cast<const PlaySoundEvent&>(event);
 
         Log::info(Log::SCENE_TAG, "Play sound!!!!!");
-        AudioEvent evt{};
-        evt.type = AudioEventType::PLAY_WAV;
-        std::snprintf(evt.wav.path, sizeof(evt.wav.path), "%s", playEvent.soundPath.c_str());
-        xQueueSend(SystemEventBus::audioQueue, &evt, portMAX_DELAY);
+        sendAudioEvent(playEvent.soundPath.c_str(), AudioEventType::PLAY_WAV);
 
         return true;  // Event handled
     }

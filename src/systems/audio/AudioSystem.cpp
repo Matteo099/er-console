@@ -71,15 +71,11 @@ void AudioSystem::update()
                 break;
                 
             case AudioEventType::PLAY_LOOP_WAV:
-                playLoop(evt.wav.path);
+                play(evt.wav.path, true);
                 break;
 
             case AudioEventType::STOP:
                 stop();
-                break;
-
-            case AudioEventType::STOP_LOOP:
-                stopLoop();
                 break;
 
             case AudioEventType::SET_VOLUME:
@@ -107,7 +103,7 @@ void AudioSystem::beep(uint16_t freq, uint16_t ms)
     driver->playTone(freq, ms);
 }
 
-void AudioSystem::play(const char *path)
+void AudioSystem::play(const char *path, bool loop)
 {
     looping = false;
     loopEntry = nullptr;
@@ -129,6 +125,12 @@ void AudioSystem::play(const char *path)
         return;
     }
 
+    if(loop)
+    {
+        looping = true;
+        loopEntry = entry;
+    }
+
     entry->file.reset();
     driver->startWav(&entry->file);
 }
@@ -143,32 +145,6 @@ void AudioSystem::stop()
     looping = false;
     loopEntry = nullptr;
 
-    driver->stop();
-}
-
-void AudioSystem::playLoop(const char *path)
-{
-    if (!storage || !path)
-        return;
-
-    AudioCacheEntry *entry = findCache(path);
-
-    if (!entry)
-        entry = loadCache(path);
-
-    if (!entry)
-        return;
-
-    looping = true;
-    loopEntry = entry;
-
-    entry->file.reset();
-    driver->startWav(&entry->file);
-}
-
-void AudioSystem::stopLoop()
-{
-    looping = false;
     driver->stop();
 }
 

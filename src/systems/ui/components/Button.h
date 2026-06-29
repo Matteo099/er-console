@@ -15,23 +15,7 @@ public:
     {
         (void)e;
 
-        AudioEvent evt{};
-
-        evt.type = AudioEventType::PLAY_WAV;
-
-        strncpy(
-            evt.wav.path,
-            AUDIO_CLICK1_FILE,
-            AudioEvent::MAX_PATH_LENGTH - 1
-        );
-
-        evt.wav.path[AudioEvent::MAX_PATH_LENGTH - 1] = '\0';
-
-        xQueueSend(
-            SystemEventBus::audioQueue,
-            &evt,
-            portMAX_DELAY
-        );
+        sendAudioEvent(AUDIO_CLICK1_FILE, AudioEventType::PLAY_WAV);
     }
 
     /**
