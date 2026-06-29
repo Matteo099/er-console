@@ -2,6 +2,7 @@
 
 #define CORE_DIR "/.core"
 #define GAMES_DIR "/games"
+#define LOGS_DIR "/logs"
 
 #define AUDIO_DIR CORE_DIR "/audio"
 #define CONFIG_DIR CORE_DIR "/config"

@@ -4,6 +4,7 @@
 #include <cstdarg>
 #include <deque>
 #include <string>
+#include "LogStorageWriter.h"
 
 static esp_log_level_t currentLevel = ESP_LOG_INFO;
 static std::deque<std::string> recentLogs;
@@ -68,6 +69,7 @@ static void logInternal(esp_log_level_t level, const char *tag, const char *form
     char line[320];
     snprintf(line, sizeof(line), "[%lu][%s][%s] %s", millis(), levelToString(level), tag, buffer);
     Serial.println(line);
+    LogStorageWriter::instance().write(line);
 
     if (!logMutex)
         return;

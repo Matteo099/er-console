@@ -3,6 +3,7 @@
 #include "core/SystemEventBus.h"
 #include "log/Logger.h"
 #include "drivers/bus/SPIBusManager.h"
+#include "log/LogStorageWriter.h"
 
 void xTaskPortal(void *params)
 {
@@ -103,6 +104,7 @@ void xTaskStorage(void *params)
 
     StorageSystem *storage = os->getStorageSystem();
     storage->init();
+    LogStorageWriter::instance().start(storage);
 
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_STORAGE_READY);
 
