@@ -181,7 +181,7 @@ bool GameScene::loadGameScript()
     }
 
     view.setLoadingMessage("Loading game script...");
-    std::string scriptPath = "/games/" + gameInfo.id + "/game.lua";
+    std::string scriptPath = getGameDataDirectory() + "/game.lua";
     remainingSec = gameInfo.durationMin * 60;
     view.setTime(remainingSec);
     luaSystem->setGameScene(this);

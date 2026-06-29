@@ -128,6 +128,12 @@ int GameSceneBindings::setGameObjects(lua_State *L)
                             if (lua_isstring(L, -1))
                             {
                                 std::string path = lua_tostring(L, -1);
+                                if (path.empty() || path[0] != '/')
+                                {
+                                    // Relative path, prepend game data directory
+                                    path = scene->getGameDataDirectory() + "/" + path;
+                                }
+
                                 int width = LV_SIZE_CONTENT;
                                 int height = LV_SIZE_CONTENT;
                                 lua_getfield(L, -1, "width");

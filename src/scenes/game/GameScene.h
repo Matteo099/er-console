@@ -35,6 +35,11 @@ public:
 
     GameView *getGameView() { return &view; }
 
+    std::string getGameDataDirectory() const
+    {
+        return std::string("/games/") + gameInfo.id;
+    }
+
 private:
     struct GameStatistics
     {
