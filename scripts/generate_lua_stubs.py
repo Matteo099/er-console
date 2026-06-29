@@ -35,7 +35,11 @@ LUA_PATTERN = re.compile(
 )
 
 DOC_PATTERN = re.compile(
-    r"//\s*@doc\s+(.+)"
+    r"//\s*@doc\s*(.*)"
+)
+
+COMMENT_LINE_PATTERN = re.compile(
+    r"//\s?(.*)"
 )
 
 PARAM_DOC_PATTERN = re.compile(
@@ -91,6 +95,8 @@ TYPE_MAP = {
     "string": "string",
 
     "void": "nil",
+    
+    "table": "table",
 }
 
 
@@ -135,27 +141,29 @@ for file in sorted(BINDINGS_DIR.glob("*Bindings.cpp")):
         start=1
     ):
 
+        raw = line.rstrip()
+
 
         # ---------------------------------------------------------
         # Enum start
         # ---------------------------------------------------------
 
-        enum_match = ENUM_PATTERN.search(line)
+        enum_match = ENUM_PATTERN.search(raw)
 
         if enum_match:
 
             current_enum = enum_match.group(1)
-
             enums[current_enum] = []
 
             continue
+
 
 
         # ---------------------------------------------------------
         # Enum values
         # ---------------------------------------------------------
 
-        value_match = VALUE_PATTERN.search(line)
+        value_match = VALUE_PATTERN.search(raw)
 
         if value_match and current_enum:
 
@@ -169,54 +177,80 @@ for file in sorted(BINDINGS_DIR.glob("*Bindings.cpp")):
             continue
 
 
+
         # ---------------------------------------------------------
-        # Docs
+        # Documentation block
         # ---------------------------------------------------------
 
-        match = DOC_PATTERN.search(line)
-
-        if match:
-
-            pending_doc = match.group(1).strip()
-            continue
+        comment = COMMENT_LINE_PATTERN.match(raw)
 
 
-        match = PARAM_DOC_PATTERN.search(line)
+        if comment:
 
-        if match:
-
-            pending_params[
-                match.group(1)
-            ] = match.group(2).strip()
-
-            continue
+            text = comment.group(1)
 
 
-        match = RETURN_DOC_PATTERN.search(line)
+            # new doc block
+            m = DOC_PATTERN.match(raw)
 
-        if match:
+            if m:
 
-            pending_return = match.group(1).strip()
+                pending_doc = m.group(1).strip()
 
-            continue
+                continue
 
 
-        match = EXAMPLE_PATTERN.search(line)
+            # doc continuation
+            if pending_doc is not None:
 
-        if match:
+                if text and not text.startswith("@"):
 
-            pending_examples.append(
-                match.group(1).strip()
-            )
+                    pending_doc += "\n" + text.strip()
 
-            continue
+                    continue
+
+
+
+            # param
+            m = PARAM_DOC_PATTERN.match(raw)
+
+            if m:
+
+                pending_params[m.group(1)] = m.group(2).strip()
+
+                continue
+
+
+
+            # return
+            m = RETURN_DOC_PATTERN.match(raw)
+
+            if m:
+
+                pending_return = m.group(1).strip()
+
+                continue
+
+
+
+            # example
+            m = EXAMPLE_PATTERN.match(raw)
+
+            if m:
+
+                pending_examples.append(
+                    m.group(1).strip()
+                )
+
+                continue
+
 
 
         # ---------------------------------------------------------
         # Lua API
         # ---------------------------------------------------------
 
-        match = LUA_PATTERN.search(line)
+        match = LUA_PATTERN.search(raw)
 
         if not match:
             continue
@@ -229,6 +263,7 @@ for file in sorted(BINDINGS_DIR.glob("*Bindings.cpp")):
         return_type = match.group(3)
 
 
+
         if "." not in full_name:
 
             print(
@@ -238,6 +273,7 @@ for file in sorted(BINDINGS_DIR.glob("*Bindings.cpp")):
             )
 
             continue
+
 
 
         parts = full_name.split(".")
@@ -374,10 +410,13 @@ with OUTPUT_FILE.open(
 
             if func["doc"]:
 
-                out.write(
-                    f"---{func['doc']}\n"
-                )
+                for doc_line in func["doc"].splitlines():
 
+                    out.write(
+                        f"--- {doc_line}\n"
+                    )
+
+                out.write("---\n")
 
             if func["examples"]:
 
