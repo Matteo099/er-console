@@ -46,7 +46,6 @@ private:
     LuaSystem *luaSystem = nullptr;
     InputSystem *inputSystem = nullptr;
     GameLoadState loadState = GameLoadState::Idle;
-    bool luaUpdateCalledThisFrame = false;
 
     // Game state
     GameState state = GameState::Ready;

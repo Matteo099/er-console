@@ -16,22 +16,6 @@ void GameView::create()
     screen = Screen::create();
     lv_obj_set_size(screen, LV_PCT(100), LV_PCT(100));
 
-    brandImg = BrandHeader::create(screen);
-
-    container = Container::create(screen, 220, 120, LV_ALIGN_CENTER, 0, 10);
-    Container::setFlex(container);
-
-    textLabel = Label::create(
-        container,
-        "EscapeOS\n\n"
-        "Open escape-room engine\n"
-        "for ESP32-based consoles.\n\n"
-        "© 2026",
-        &lv_font_roboto_mono_14,
-        LV_TEXT_ALIGN_CENTER,
-        220);
-    Label::setTextColor(textLabel, lv_color_hex(0xCCCCCC));
-
     resultLabel = Label::create(screen, "", &lv_font_roboto_mono_28, LV_TEXT_ALIGN_CENTER, 240);
     Align::setPosition(resultLabel, LV_ALIGN_CENTER, 0, 30);
     Label::setTextColor(resultLabel, lv_color_hex(0xFFFFFF));
@@ -64,11 +48,8 @@ void GameView::create()
     startPauseIcon = lv_obj_get_child(startPauseBtn, 0);
     startPauseLabel = lv_obj_get_child(startPauseBtn, 1);
 
-    infoBtn = nullptr;
-    settingsBtn = nullptr;
     warningBlinkState = false;
     lastBlinkMs = 0;
-    gameFinished = false;
     remainingSeconds = 0;
     tickingClockAudioStarted = false;
 }
@@ -109,14 +90,10 @@ void GameView::destroy()
 
     // Nullify all remaining pointers (defensive programming)
     // These are now safe to access even though objects are deleted
-    header = nullptr;
-    titleLabel = nullptr;
     timerLabel = nullptr;
     startPauseBtn = nullptr;
     startPauseLabel = nullptr;
     cancelBtn = nullptr;
-    infoBtn = nullptr;
-    settingsBtn = nullptr;
     loadingContainer = nullptr;
     loadingBar = nullptr;
     loadingLabel = nullptr;
@@ -126,11 +103,6 @@ void GameView::destroy()
 }
 
 /* ================= API ================= */
-
-void GameView::setGameTitle(const std::string &title)
-{
-    lv_label_set_text(titleLabel, title.c_str());
-}
 
 void GameView::setTime(uint32_t seconds)
 {
@@ -186,8 +158,6 @@ void GameView::showVictory()
 
 void GameView::setFinished(bool success)
 {
-    gameFinished = true;
-
     if (startPauseBtn)
         lv_obj_add_flag(startPauseBtn, LV_OBJ_FLAG_HIDDEN);
 
@@ -348,22 +318,4 @@ void GameView::onCancel(lv_event_t *e)
         return;
 
     view->emitEvent(ButtonClickedEvent("cancel"));
-}
-
-void GameView::onInfo(lv_event_t *e)
-{
-    auto *view = static_cast<GameView *>(lv_event_get_user_data(e));
-    if (!view)
-        return;
-
-    view->emitEvent(ButtonClickedEvent("info"));
-}
-
-void GameView::onSettings(lv_event_t *e)
-{
-    auto *view = static_cast<GameView *>(lv_event_get_user_data(e));
-    if (!view)
-        return;
-
-    view->emitEvent(ButtonClickedEvent("settings"));
 }

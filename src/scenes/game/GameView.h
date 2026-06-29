@@ -54,16 +54,6 @@ private:
     /* Root */
     lv_obj_t *screen = nullptr;
 
-    /* Header */
-    lv_obj_t *header = nullptr;
-    lv_obj_t *titleLabel = nullptr;
-    lv_obj_t *infoBtn = nullptr;
-    lv_obj_t *settingsBtn = nullptr;
-
-    lv_obj_t *brandImg = nullptr;
-    lv_obj_t *container = nullptr;
-    lv_obj_t *textLabel = nullptr;
-
     /* Timer */
     lv_obj_t *timerLabel = nullptr;
 
@@ -81,7 +71,6 @@ private:
     /* Timer warning */
     bool warningBlinkState = false;
     uint32_t lastBlinkMs = 0;
-    bool gameFinished = false;
     uint32_t remainingSeconds = 0;
 
     /* Game content area (for Lua-drawn content) */

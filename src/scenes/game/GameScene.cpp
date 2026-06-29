@@ -141,18 +141,6 @@ bool GameScene::handleUIEvent(const UIEvent &event)
         return true;
     }
 
-    if (clicked.buttonId == "info")
-    {
-        // TODO: implement info action
-        return true;
-    }
-
-    if (clicked.buttonId == "settings")
-    {
-        // TODO: navigate to settings from game scene if required
-        return true;
-    }
-
     return false;
 }
 
@@ -196,18 +184,6 @@ bool GameScene::loadGameScript()
     Log::info(Log::GAME_TAG, "Game script loaded successfully");
 
     return true;
-}
-
-void GameScene::updateLua()
-{
-    if (!luaSystem)
-        return;
-
-    // Call Lua update if game is running
-    if (state == GameState::Running)
-    {
-        luaSystem->update();
-    }
 }
 
 void GameScene::stopGame()
