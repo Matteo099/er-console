@@ -52,8 +52,9 @@ private:
     bool pauseBlinkState = false;
     uint32_t lastPauseBlinkMs = 0;
 
-    void updatePauseOverlay();
+    lv_obj_t *objectsBtn = nullptr;
 
+    static void onObjects(lv_event_t *e);
     static void onStartPause(lv_event_t *e);
     static void onCancel(lv_event_t *e);
 };

@@ -19,8 +19,19 @@ void MainSubview::create(lv_obj_t *parent)
     Label::setTextColor(pauseIcon, lv_color_hex(0xFFFF00));
     lv_obj_add_flag(pauseOverlay, LV_OBJ_FLAG_HIDDEN);
 
-    cancelBtn = Button::create(root, "Cancel", onCancel, this, 120, 44, LV_ALIGN_BOTTOM_LEFT, 20, -20, LV_SYMBOL_CLOSE);
-    startPauseBtn = Button::create(root, "Start", onStartPause, this, 120, 44, LV_ALIGN_BOTTOM_RIGHT, -20, -20, LV_SYMBOL_PLAY);
+    // Bottom row container
+    auto footer = lv_obj_create(root);
+    lv_obj_remove_style_all(footer);
+    lv_obj_set_size(footer, LV_PCT(100), 60);
+    lv_obj_align(footer, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_set_flex_flow(footer, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(footer, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);       
+    /* objects/info button*/
+    objectsBtn = Button::create(footer, nullptr, onObjects, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_BELL); 
+    /* cancel */
+    cancelBtn = Button::create(footer, nullptr, onCancel, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_CLOSE); 
+    /* start/pause */
+    startPauseBtn = Button::create(footer, nullptr, onStartPause, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);
     startPauseIcon = lv_obj_get_child(startPauseBtn, 0);
     startPauseLabel = lv_obj_get_child(startPauseBtn, 1);
 }
@@ -33,7 +44,7 @@ void MainSubview::destroy()
     startPauseBtn = nullptr;
     startPauseIcon = nullptr;
     startPauseLabel = nullptr;
-
+    objectsBtn = nullptr;
     cancelBtn = nullptr;
 
     pauseOverlay = nullptr;
@@ -149,4 +160,16 @@ void MainSubview::onCancel(lv_event_t *e)
 
     if (view->eventCallback)
         view->eventCallback("cancel");
+}
+
+void MainSubview::onObjects(lv_event_t *e)
+{
+    auto *view =
+        static_cast<MainSubview *>(lv_event_get_user_data(e));
+
+    if (!view)
+        return;
+
+    if (view->eventCallback)
+        view->eventCallback("objects");
 }

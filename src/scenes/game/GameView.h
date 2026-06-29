@@ -6,6 +6,7 @@
 #include "subviews/LoadingSubview.h"
 #include "subviews/VictorySubview.h"
 #include "subviews/FailSubview.h"
+#include "subviews/GameObjectSubview.h"
 
 #include <string>
 
@@ -28,8 +29,11 @@ public:
     void showLoading();
     void showVictory();
     void showFailure();
+    void showGameObject();
+
     void setLoadingMessage(const std::string &message);
     void setVictoryStats(const VictorySubview::GameStats &stats);
+    void setGameObjectData(const std::vector<GameObjectSubview::ObjectData> &data);
 
     /* Main game API */
     void setTime(uint32_t seconds);
@@ -47,4 +51,5 @@ private:
     LoadingSubview loadingSubview;
     VictorySubview victorySubview;
     FailSubview failSubview;
+    GameObjectSubview gameObjectSubview;
 };

@@ -78,6 +78,26 @@ void LuaConstantsBinding::registerTriggerMode(lua_State *L)
 }
 
 // ============================================================
+// Game object content types
+// ============================================================
+
+// @enum GameObjectContentType
+// @value TEXT  Text paragraph content
+// @value IMAGE Image content loaded from storage path
+void LuaConstantsBinding::registerGameObjectContentType(lua_State *L)
+{
+    lua_newtable(L);
+
+    lua_pushstring(L, "text");
+    lua_setfield(L, -2, "TEXT");
+
+    lua_pushstring(L, "image");
+    lua_setfield(L, -2, "IMAGE");
+
+    lua_setglobal(L, "GameObjectContentType");
+}
+
+// ============================================================
 // Main registration
 // ============================================================
 
@@ -86,4 +106,5 @@ void LuaConstantsBinding::registerAPI(lua_State *L)
     registerPinMode(L);
     registerDigitalValue(L);
     registerTriggerMode(L);
+    registerGameObjectContentType(L);
 }

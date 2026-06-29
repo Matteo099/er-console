@@ -11,4 +11,5 @@ private:
     void registerPinMode(lua_State *L);
     void registerDigitalValue(lua_State *L);
     void registerTriggerMode(lua_State *L);
+    void registerGameObjectContentType(lua_State *L);
 };

@@ -16,16 +16,18 @@ void GameView::create()
     loadingSubview.create(screen);
     victorySubview.create(screen);
     failSubview.create(screen);
+    gameObjectSubview.create(screen);
 
     auto callback =
         [this](const char *id)
-        {
-            emitEvent(ButtonClickedEvent(id));
-        };
+    {
+        emitEvent(ButtonClickedEvent(id));
+    };
 
     mainSubview.setEventCallback(callback);
     victorySubview.setEventCallback(callback);
     failSubview.setEventCallback(callback);
+    gameObjectSubview.setEventCallback(callback);
 
     setState(GameSubview::Loading);
 }
@@ -36,6 +38,7 @@ void GameView::destroy()
     loadingSubview.destroy();
     victorySubview.destroy();
     failSubview.destroy();
+    gameObjectSubview.destroy();
 
     screen = nullptr;
 }
@@ -51,6 +54,7 @@ void GameView::update()
     case GameSubview::Loading:
     case GameSubview::Victory:
     case GameSubview::Fail:
+    case GameSubview::GameObject:
         break;
     }
 }
@@ -63,6 +67,7 @@ void GameView::setState(GameSubview state)
     loadingSubview.hide();
     victorySubview.hide();
     failSubview.hide();
+    gameObjectSubview.hide();
 
     switch (state)
     {
@@ -80,6 +85,10 @@ void GameView::setState(GameSubview state)
 
     case GameSubview::Fail:
         failSubview.show();
+        break;
+
+    case GameSubview::GameObject:
+        gameObjectSubview.show();
         break;
     }
 }
@@ -104,6 +113,11 @@ void GameView::showFailure()
     setState(GameSubview::Fail);
 }
 
+void GameView::showGameObject()
+{
+    setState(GameSubview::GameObject);
+}
+
 void GameView::setTime(uint32_t seconds)
 {
     mainSubview.setTime(seconds);
@@ -122,4 +136,9 @@ void GameView::setLoadingMessage(const std::string &message)
 void GameView::setVictoryStats(const VictorySubview::GameStats &stats)
 {
     victorySubview.setStats(stats);
+}
+
+void GameView::setGameObjectData(const std::vector<GameObjectSubview::ObjectData> &data)
+{
+    gameObjectSubview.setObjects(data);
 }

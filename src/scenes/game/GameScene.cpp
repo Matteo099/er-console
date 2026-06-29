@@ -132,6 +132,16 @@ bool GameScene::handleUIEvent(const UIEvent &event)
         request = SceneRequest(SceneChange::GoToGameList, SceneTransition::SlideRight);
         return true;
     }
+    if (clicked.buttonId == "objects")
+    {
+        view.showGameObject();
+        return true;
+    }
+    if (clicked.buttonId == "back_main")
+    {
+        view.showMain();
+        return true;
+    }
 
     /* VictorySubview */
     if (clicked.buttonId == "complete")

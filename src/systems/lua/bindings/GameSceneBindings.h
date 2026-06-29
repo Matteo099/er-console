@@ -16,4 +16,5 @@ private:
     static GameScene *get(lua_State *L);
 
     static int completeGame(lua_State *L);
+    static int setGameObjects(lua_State *L);
 };

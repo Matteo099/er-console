@@ -9,5 +9,6 @@ enum class GameSubview
     Loading,
     Main,
     Victory,
-    Fail
+    Fail,
+    GameObject
 };
