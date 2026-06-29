@@ -39,6 +39,17 @@ TriggerMode = {
     CHANGE = 0x03,
 }
 
+---@class GameObjectContent
+---@field type GameObjectContentType
+---@field value string?
+---@field path string?
+---@field width integer?
+---@field height integer?
+
+---@class GameObject
+---@field title string
+---@field content GameObjectContent[]
+
 ---@class audio
 audio = {}
 
@@ -315,7 +326,7 @@ function scene.completeGame() end
 --- }
 --- })
 ---
----@param objects table Array of game objects.
+---@param objects GameObject Array of game objects.
 function scene.setGameObjects(objects) end
 
 ---@class system

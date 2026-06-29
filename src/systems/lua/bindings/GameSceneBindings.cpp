@@ -73,7 +73,7 @@ int GameSceneBindings::completeGame(lua_State *L)
 //     }
 // })
 //
-// @lua scene.setGameObjects(objects:table) -> void
+// @lua scene.setGameObjects(objects:GameObject[]) -> void
 int GameSceneBindings::setGameObjects(lua_State *L)
 {
     auto *scene = get(L);

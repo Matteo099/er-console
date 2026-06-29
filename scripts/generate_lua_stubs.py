@@ -95,7 +95,7 @@ TYPE_MAP = {
     "string": "string",
 
     "void": "nil",
-    
+
     "table": "table",
 }
 
@@ -108,6 +108,52 @@ api = {}
 
 enums = {}
 
+structs = {
+    "GameObjectContent": {
+        "type": "GameObjectContentType",
+        "value": "string?",
+        "path": "string?",
+        "width": "integer?",
+        "height": "integer?",
+    },
+
+    "GameObject": {
+        "title": "string",
+        "content": "GameObjectContent[]",
+    }
+}
+
+# =============================================================================
+# Functions
+# =============================================================================
+def lua_type_fnc(cpp_type):
+
+    cpp_type = cpp_type.strip()
+
+
+    if cpp_type.endswith("[]"):
+
+        base = cpp_type[:-2]
+
+        return lua_type_fnc(base) + "[]"
+
+
+    if cpp_type in TYPE_MAP:
+
+        return TYPE_MAP[cpp_type]
+
+
+    if cpp_type in enums:
+
+        return cpp_type
+
+
+    if cpp_type in structs:
+
+        return cpp_type
+
+
+    return "any"
 
 # =============================================================================
 # Parse
@@ -370,6 +416,23 @@ with OUTPUT_FILE.open(
             "}\n\n"
         )
 
+    # -------------------------------------------------------------------------
+    # STRUCTS
+    # -------------------------------------------------------------------------
+
+    for name, fields in structs.items():
+
+        out.write(
+            f"---@class {name}\n"
+        )
+
+        for field, typ in fields.items():
+
+            out.write(
+                f"---@field {field} {typ}\n"
+            )
+
+        out.write("\n")
 
     # -------------------------------------------------------------------------
     # APIs
@@ -457,19 +520,7 @@ with OUTPUT_FILE.open(
 
                     name = m.group(1)
                     typ = m.group(2)
-
-
-                    if typ in TYPE_MAP:
-
-                        lua_type = TYPE_MAP[typ]
-
-                    elif typ in enums:
-
-                        lua_type = typ
-
-                    else:
-
-                        lua_type = "any"
+                    lua_type = lua_type_fnc(typ)
 
 
 
