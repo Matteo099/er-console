@@ -4,6 +4,7 @@
 #include "systems/storage/StorageSystem.h"
 #include "drivers/audio/AudioDriver.h"
 #include "AudioEvent.h"
+#include "drivers/storage/MemoryFile.h"
 
 #define AUDIO_CACHE_SIZE 4
 
