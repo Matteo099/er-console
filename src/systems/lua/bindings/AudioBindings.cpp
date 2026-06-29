@@ -30,15 +30,19 @@ int AudioBindings::beep(lua_State *L)
 
 // @doc Play a wav audio file from storage
 // @param path Path to the audio file in storage
+// @param loop Optional. True to loop playback (default: false)
 // @example audio.play("beep.wav")
-// @lua audio.play(path:string) -> void
+// @example audio.play("music.wav", true)
+// @lua audio.play(path:string, loop:boolean=false) -> void
 int AudioBindings::play(lua_State *L)
 {
     auto *audio = get(L);
     if (!audio)
         return 0;
+
     const char *path = luaL_checkstring(L, 1);
-    audio->play(path);
+    bool loop = lua_toboolean(L, 2); // defaults to false if omitted or nil
+    audio->play(path, loop);
     return 0;
 }
 

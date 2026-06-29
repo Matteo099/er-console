@@ -54,8 +54,10 @@ function audio.getVolume() end
 ---
 --- Example:
 --- audio.play("beep.wav")
+--- audio.play("music.wav", true)
 ---@param path string Path to the audio file in storage
-function audio.play(path) end
+---@param loop any Optional. True to loop playback (default: false)
+function audio.play(path, loop) end
 
 ---Set the audio volume
 ---
