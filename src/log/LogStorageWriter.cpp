@@ -2,8 +2,8 @@
 
 #include <time.h>
 
-#include "systems/storage/StorageSystem.h"
 #include "config/Assets.h"
+#include "systems/storage/StorageSystem.h"
 
 LogStorageWriter &LogStorageWriter::instance()
 {
@@ -44,7 +44,6 @@ void LogStorageWriter::write(const char *line)
     if (!copy)
         return;
 
-    // non blocking
     if (xQueueSend(queue, &copy, 0) != pdTRUE)
     {
         free(copy);
@@ -53,10 +52,7 @@ void LogStorageWriter::write(const char *line)
 
 void LogStorageWriter::task(void *param)
 {
-    auto *self =
-        static_cast<LogStorageWriter *>(param);
-
-    self->run();
+    static_cast<LogStorageWriter *>(param)->run();
 }
 
 void LogStorageWriter::run()
@@ -68,47 +64,47 @@ void LogStorageWriter::run()
         if (xQueueReceive(
                 queue,
                 &line,
-                portMAX_DELAY) == pdTRUE)
+                portMAX_DELAY) != pdTRUE)
         {
-
-            if (!logFile)
-            {
-                if (!SD.exists(LOGS_DIR))
-                    SD.mkdir(LOGS_DIR);
-
-                char filename[64];
-
-                struct tm timeinfo;
-
-                if (getLocalTime(&timeinfo))
-                {
-                    strftime(
-                        filename,
-                        sizeof(filename),
-                        LOGS_DIR "/%Y-%m-%d_%H-%M-%S.log",
-                        &timeinfo);
-                }
-                else
-                {
-                    strcpy(
-                        filename,
-                        LOGS_DIR "/boot.log");
-                }
-
-                logFile = SD.open(
-                    filename,
-                    FILE_APPEND);
-            }
-
-            if (logFile)
-            {
-                logFile.println(line);
-
-                // optional batching
-                logFile.flush();
-            }
-
-            free(line);
+            continue;
         }
+
+        if (logFile == nullptr && storageSystem != nullptr)
+        {
+            storageSystem->createDirectory(LOGS_DIR);
+
+            storageSystem->cleanupDirectoryBySize(
+                LOGS_DIR,
+                MAX_LOG_FOLDER_SIZE,
+                TARGET_AFTER_CLEANUP);
+
+            char filename[64];
+
+            struct tm timeinfo;
+
+            if (getLocalTime(&timeinfo))
+            {
+                strftime(
+                    filename,
+                    sizeof(filename),
+                    LOGS_DIR "/%Y-%m-%d_%H-%M-%S.log",
+                    &timeinfo);
+            }
+            else
+            {
+                strcpy(
+                    filename,
+                    LOGS_DIR "/boot.log");
+            }
+
+            logFile = storageSystem->open(filename, FileMode::Append);
+        }
+
+        if (logFile != nullptr)
+        {
+            logFile->writeLine(line, true);
+        }
+
+        free(line);
     }
 }

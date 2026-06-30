@@ -8,8 +8,9 @@ class IFile
 public:
     virtual ~IFile() = default;
 
-    virtual int read(uint8_t* buffer, size_t len) = 0;
-    virtual size_t write(const uint8_t* buffer, size_t len) = 0;
+    virtual int read(uint8_t *buffer, size_t len) = 0;
+    virtual size_t write(const uint8_t *buffer, size_t len) = 0;
+    virtual bool writeLine(const char *text, bool flush = false) = 0;
 
     virtual bool seek(size_t pos) = 0;
     virtual bool available() = 0;

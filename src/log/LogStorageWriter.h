@@ -3,8 +3,17 @@
 #include <Arduino.h>
 #include <FS.h>
 #include <SD.h>
+
+#include <vector>
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
+
+#include "drivers/storage/IFile.h"
+
+
+static constexpr uint64_t MAX_LOG_FOLDER_SIZE = 10ULL * 1024 * 1024; // 10 MB
+static constexpr uint64_t TARGET_AFTER_CLEANUP = 9ULL * 1024 * 1024; // hysteresis
 
 class StorageSystem;
 
@@ -24,12 +33,13 @@ private:
 
     void run();
 
+
 private:
     QueueHandle_t queue = nullptr;
 
     StorageSystem *storageSystem = nullptr;
 
-    File logFile;
+    IFile *logFile = nullptr;
 
     bool initialized = false;
 };

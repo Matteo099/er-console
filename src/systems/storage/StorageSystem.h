@@ -22,7 +22,7 @@ public:
     bool isReady() const;
     void update() override;
 
-    virtual IFile *open(const char *path);
+    virtual IFile *open(const char *path, FileMode mode = FileMode::Read);
     bool readTextFile(const char *path, std::string &out);
     bool writeTextFile(const char *path, const std::string &contents, bool overwrite = true);
     File openNative(const char *path, bool write = false);
@@ -35,6 +35,12 @@ public:
     uint64_t usedBytes() const;
     uint64_t freeBytes() const;
     void listFiles() const;
+    bool createDirectoryIfMissing(const char *path);
+    uint64_t directorySize(const char *path) const;
+    bool cleanupDirectoryBySize(
+        const char *path,
+        uint64_t maxSize,
+        uint64_t targetSize);
 
 private:
     bool checkHealth();

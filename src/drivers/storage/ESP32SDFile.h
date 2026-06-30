@@ -39,6 +39,17 @@ public:
         return file.write(buffer, len);
     }
 
+    bool writeLine(const char *text, bool flush) override
+    {
+        SPIBusLock::Guard guard;
+        file.println(text);
+        
+        if (flush)
+            file.flush();
+
+        return true;
+    }
+
     void flush() override
     {
         SPIBusLock::Guard guard;

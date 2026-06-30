@@ -6,6 +6,9 @@
 #include "config/Assets.h"
 #include "log/Logger.h"
 
+#include <algorithm>
+#include <vector>
+
 namespace
 {
     static constexpr const char *SYSTEM_VOLUME_INFO_DIR =
@@ -96,9 +99,9 @@ void StorageSystem::listFiles() const
     }
 }
 
-IFile *StorageSystem::open(const char *path)
+IFile *StorageSystem::open(const char *path, FileMode mode)
 {
-    IFile *file = driver->open(path);
+    IFile *file = driver->open(path, mode);
 
     if (!file)
     {
@@ -373,4 +376,62 @@ File StorageSystem::openNative(
 {
     return static_cast<ESP32SDCardDriver *>(driver)
         ->openNative(path, write);
+}
+
+uint64_t StorageSystem::directorySize(const char *path) const
+{
+    std::vector<StorageEntry> entries;
+
+    if (!listDirectory(path, entries, true))
+        return 0;
+
+    uint64_t total = 0;
+
+    for (const auto &entry : entries)
+    {
+        if (!entry.isDirectory)
+            total += entry.size;
+    }
+
+    return total;
+}
+
+bool StorageSystem::cleanupDirectoryBySize(const char *path, uint64_t maxSize, uint64_t targetSize)
+{
+    if (!ready)
+        return false;
+
+    std::vector<StorageEntry> entries;
+    if (!listDirectory(path, entries, false))
+        return false;
+
+    uint64_t total = 0;
+    for (const auto &e : entries)
+    {
+        if (!e.isDirectory)
+            total += e.size;
+    }
+
+    if (total <= maxSize)
+        return true;
+
+    std::sort(entries.begin(), entries.end(), [](const StorageEntry &a, const StorageEntry &b)
+              { return a.name < b.name; });
+
+    for (const auto &entry : entries)
+    {
+        if (entry.isDirectory)
+            continue;
+            
+        if (total <= targetSize)
+            break;
+
+        Log::info(Log::STORAGE_TAG, "Removing %s", entry.path.c_str());
+        if (removePath(entry.path.c_str()))
+        {
+            total -= entry.size;
+        }
+    }
+
+    return true;
 }

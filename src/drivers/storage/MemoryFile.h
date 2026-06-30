@@ -20,7 +20,6 @@ public:
         pos = 0;
     }
 
-
     size_t position() const
     {
         return pos;
@@ -76,6 +75,13 @@ public:
         (void)buffer;
         (void)len;
 
+        return 0; // read-only
+    }
+
+    bool writeLine(const char *text, bool flush) override
+    {
+        (void)text;
+        (void)flush;
         return 0; // read-only
     }
 
