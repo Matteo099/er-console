@@ -1,51 +1,35 @@
 #pragma once
 
+#include <vector>
+
 #include "core/SystemService.h"
 #include "systems/storage/StorageSystem.h"
-#include "drivers/audio/AudioDriver.h"
-#include "AudioEvent.h"
-#include "drivers/storage/MemoryFile.h"
+#include "drivers/audio/MAX98357Driver.h"
 
-#define AUDIO_CACHE_SIZE 4
-
-struct AudioCacheEntry
-{
-    char path[AudioEvent::MAX_PATH_LENGTH];
-    uint8_t *data = nullptr;
-    size_t size = 0;
-    uint32_t lastUsed = 0;
-
-    MemoryFile file;
-};
+#include "AudioMixer.h"
+#include "AudioCacheEntry.h"
 
 class AudioSystem : public SystemService
 {
 public:
     AudioSystem();
     ~AudioSystem();
-
     void init(void *params = nullptr) override;
     void update() override;
 
-    void beep(uint16_t freq = 1000, uint16_t ms = 100);
-
-    void play(const char *path, bool loop = false);
-    void stop();
-
-    void setVolume(uint8_t volume);
-    uint8_t getVolume() const;
-
 private:
+    void play(const char *path, bool loop = false, uint8_t priority = 0);
+    void stop();
+    void stopAll();
+    void beep(uint16_t freq, uint16_t ms);
+    void setVolume(uint8_t volume);
     AudioCacheEntry *findCache(const char *path);
     AudioCacheEntry *loadCache(const char *path);
 
-    bool looping = false;
-    AudioCacheEntry *loopEntry = nullptr;
-
+private:
     StorageSystem *storage = nullptr;
-    AudioDriver *driver = nullptr;
-
-    AudioCacheEntry cache[AUDIO_CACHE_SIZE]{};
-
-    uint8_t volume = 80;
+    MAX98357Driver *driver = nullptr;
+    AudioMixer mixer;
+    std::vector<AudioCacheEntry> cache;
+    uint8_t volume = 100;
 };

@@ -3,21 +3,16 @@
 #include <cstring>
 
 #include "config/BoardConfig.h"
+#include "config/Assets.h"
+
 #include "core/SystemEventBus.h"
 #include "systems/audio/AudioEvent.h"
-#include "drivers/audio/MAX98357Driver.h"
-#include "log/Logger.h"
-#include "drivers/storage/MemoryFile.h"
 
-#include "config/Assets.h"
+#include "log/Logger.h"
 
 AudioSystem::AudioSystem()
 {
-    driver = new MAX98357Driver(
-        I2S_BCLK_PIN,  // BCLK
-        I2S_LRCLK_PIN, // LRCK
-        I2S_DOUT_PIN   // DOUT
-    );
+    driver = new MAX98357Driver(I2S_BCLK_PIN, I2S_LRCLK_PIN, I2S_DOUT_PIN);
 }
 
 AudioSystem::~AudioSystem()
@@ -27,145 +22,109 @@ AudioSystem::~AudioSystem()
         delete[] entry.data;
         entry.data = nullptr;
     }
+    delete driver;
 }
 
 void AudioSystem::init(void *params)
 {
-    StorageSystem *storage = static_cast<StorageSystem *>(params);
-
+    storage = static_cast<StorageSystem *>(params);
     if (!storage)
     {
-        Log::error(Log::AUDIO_TAG, "AudioSystem init failed: storage is null");
+        Log::error(Log::AUDIO_TAG, "Storage missing");
         return;
     }
-    this->storage = storage;
-
-    if (!driver->init())
+    if (!driver->init(AUDIO_SAMPLE_RATE))
     {
         Log::error(Log::AUDIO_TAG, "Audio driver init failed");
         return;
     }
-
-    Log::info(Log::AUDIO_TAG, "Audio system initialized");
-    driver->startWav(storage->open(AUDIO_CLICK_FILE));
+    mixer.init(driver);
+    mixer.setMasterVolume(1.0f);
+    Log::info(Log::AUDIO_TAG, "Audio system ready");
 }
 
 void AudioSystem::update()
 {
     AudioEvent evt;
-
-    while (true)
+    while (xQueueReceive(SystemEventBus::audioQueue, &evt, 0))
     {
-        while (xQueueReceive(SystemEventBus::audioQueue,
-                             &evt,
-                             0))
+        switch (evt.type)
         {
-            switch (evt.type)
-            {
-            case AudioEventType::BEEP:
-                beep(evt.beep.freq, evt.beep.ms);
-                break;
-
-            case AudioEventType::PLAY_WAV:
-                play(evt.wav.path);
-                break;
-                
-            case AudioEventType::PLAY_LOOP_WAV:
-                play(evt.wav.path, true);
-                break;
-
-            case AudioEventType::STOP:
-                stop();
-                break;
-
-            case AudioEventType::SET_VOLUME:
-                setVolume(evt.volume.volume);
-                break;
-            }
+        case AudioEventType::BEEP:
+            beep(evt.beep.freq, evt.beep.ms);
+            break;
+        case AudioEventType::PLAY_WAV:
+            play(evt.wav.path, false, 1);
+            break;
+        case AudioEventType::PLAY_LOOP_WAV:
+            play(evt.wav.path, true, 1);
+            break;
+        case AudioEventType::STOP:
+            stop();
+            break;
+        case AudioEventType::SET_VOLUME:
+            setVolume(evt.volume.volume);
+            break;
         }
-
-        driver->update();
-
-        if (looping &&
-            !driver->isPlaying())
-        {
-            loopEntry->file.reset();
-            driver->startWav(&loopEntry->file);
-        }
-
-        vTaskDelay(1);
     }
+
+    //
+    // The mixer owns the audio pipeline now
+    //
+
+    mixer.update();
+
+    vTaskDelay(1);
 }
 
-void AudioSystem::beep(uint16_t freq, uint16_t ms)
+void AudioSystem::play(const char *path, bool loop, uint8_t priority)
 {
-    Log::debug(Log::AUDIO_TAG, "Playing beep freq=%d ms=%d", freq, ms);
-    driver->playTone(freq, ms);
-}
-
-void AudioSystem::play(const char *path, bool loop)
-{
-    looping = false;
-    loopEntry = nullptr;
-
-    if (!storage || !path)
+    if (!path)
         return;
-
-    Log::info(Log::AUDIO_TAG, "Playing wav: %s", path);
     AudioCacheEntry *entry = findCache(path);
-
     if (!entry)
     {
         entry = loadCache(path);
     }
-
     if (!entry)
     {
         Log::error(Log::AUDIO_TAG, "Failed loading %s", path);
         return;
     }
-
-    if(loop)
-    {
-        looping = true;
-        loopEntry = entry;
-    }
-
-    entry->file.reset();
-    driver->startWav(&entry->file);
+    mixer.play(&entry->file, loop, priority, 1.0f);
 }
 
 void AudioSystem::stop()
 {
-    if (!driver)
-        return;
+    mixer.stopAll();
+}
 
-    Log::debug(Log::AUDIO_TAG, "Stopping audio");
+void AudioSystem::stopAll()
+{
+    mixer.stopAll();
+}
 
-    looping = false;
-    loopEntry = nullptr;
+void AudioSystem::beep(uint16_t freq, uint16_t ms)
+{
+    //
+    // Temporary:
+    // later ToneAudioSource
+    //
 
-    driver->stop();
+    Log::debug(
+        Log::AUDIO_TAG,
+        "beep %d Hz %d ms",
+        freq,
+        ms);
 }
 
 void AudioSystem::setVolume(uint8_t volume)
 {
-    if (!driver)
-        return;
-
     if (volume > 100)
         volume = 100;
 
     this->volume = volume;
-
-    Log::info(Log::AUDIO_TAG, "Setting volume to %d", volume);
-
-    driver->setVolume(volume);
-}
-
-uint8_t AudioSystem::getVolume() const
-{
-    return volume;
+    mixer.setMasterVolume(volume / 100.0f);
 }
 
 AudioCacheEntry *AudioSystem::findCache(const char *path)
