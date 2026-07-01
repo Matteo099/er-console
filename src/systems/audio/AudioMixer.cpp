@@ -239,7 +239,15 @@ void AudioMixer::update()
     }
 
     clipOutput();
-    driver->write(outputBuffer, BUFFER_SAMPLES);
+    if (hasAudio)
+    {
+        driver->setEnabled(true);
+        driver->write(outputBuffer, BUFFER_SAMPLES);
+    }
+    else
+    {
+        driver->setEnabled(false);
+    }
 }
 
 void AudioMixer::mixVoice(AudioVoice &voice)
