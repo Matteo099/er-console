@@ -11,7 +11,7 @@ public:
     bool write(const int16_t *samples, size_t sampleCount) override;
     void clear() override;
     void setEnabled(bool enabled) override;
-    bool enabled() const
+    bool enabled() const override
     {
         return amplifierEnabled;
     }

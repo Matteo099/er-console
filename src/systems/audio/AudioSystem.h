@@ -16,9 +16,13 @@ public:
     ~AudioSystem() override;
     void init(void *params = nullptr) override;
     void update() override;
-    int play(const char *path, bool loop = false, uint8_t priority = 0);
-    void stop(int voice);
+    bool play(AudioHandle &handle, const char *path, bool loop = false, uint8_t priority = 0);
     void stopAll();
+    void stop(AudioHandle handle);
+    void pause(AudioHandle handle);
+    void resume(AudioHandle handle);
+    bool isPlaying(AudioHandle handle) const;
+
     void beep(uint16_t freq, uint16_t ms);
     void setVolume(uint8_t volume);
     uint8_t getVolume() const { return volume; }

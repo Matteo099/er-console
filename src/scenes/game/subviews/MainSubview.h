@@ -4,6 +4,7 @@
 #include <string>
 #include <cstdint>
 #include "../GameSubview.h"
+#include "systems/audio/AudioHandle.h"
 
 class MainSubview
 {
@@ -41,6 +42,7 @@ private:
 
     bool warningBlinkState = false;
     bool tickingClockAudioStarted = false;
+    AudioHandle tickingAudioHandle;
 
     uint32_t remainingSeconds = 0;
     uint32_t lastBlinkMs = 0;

@@ -16,9 +16,7 @@ bool AudioCache::init(StorageSystem *storage)
         return false;
 
     this->storage = storage;
-
     clear();
-
     return true;
 }
 
@@ -28,7 +26,6 @@ void AudioCache::clear()
     {
         releaseEntry(entry, true);
     }
-
     counter = 0;
 }
 
@@ -85,7 +82,6 @@ AudioCacheEntry *AudioCache::allocateSlot()
     //
     // First look for an unused slot.
     //
-
     for (auto &entry : entries)
     {
         if (!entry.valid())
@@ -97,11 +93,8 @@ AudioCacheEntry *AudioCache::allocateSlot()
     // Entries currently in use cannot
     // be evicted.
     //
-
     AudioCacheEntry *candidate = nullptr;
-
     uint32_t oldest = UINT32_MAX;
-
     for (auto &entry : entries)
     {
         if (entry.refCount != 0)
@@ -116,10 +109,7 @@ AudioCacheEntry *AudioCache::allocateSlot()
 
     if (!candidate)
     {
-        Log::warn(
-            Log::AUDIO_TAG,
-            "Audio cache full (all entries locked)");
-
+        Log::warn(Log::AUDIO_TAG, "Audio cache full (all entries locked)");
         return nullptr;
     }
 
@@ -160,19 +150,12 @@ AudioCacheEntry *AudioCache::load(const char *path)
     // Determine PCM size
     //
     size_t pcmSize = 0;
-
     uint8_t temp[1024];
-
     while (file->available())
     {
-        int read =
-            file->read(
-                temp,
-                sizeof(temp));
-
+        int read = file->read(temp, sizeof(temp));
         if (read <= 0)
             break;
-
         pcmSize += read;
     }
 
@@ -197,38 +180,27 @@ AudioCacheEntry *AudioCache::load(const char *path)
     if (!file->seek(44))
     {
         delete[] buffer;
-
         file->close();
         delete file;
-
         return nullptr;
     }
 
     size_t offset = 0;
 
-    while (offset < pcmSize &&
-           file->available())
+    while (offset < pcmSize && file->available())
     {
-        int read =
-            file->read(
-                buffer + offset,
-                pcmSize - offset);
-
+        int read = file->read(buffer + offset, pcmSize - offset);
         if (read <= 0)
             break;
-
         offset += read;
     }
 
     file->close();
     delete file;
-
     if (offset != pcmSize)
     {
         delete[] buffer;
-
         releaseEntry(*entry, true);
-
         return nullptr;
     }
 
@@ -251,8 +223,7 @@ AudioCacheEntry *AudioCache::load(const char *path)
     return entry;
 }
 
-void AudioCache::retain(
-    MemoryAudioSource *source)
+void AudioCache::retain(MemoryAudioSource *source)
 {
     if (!source)
         return;
@@ -267,8 +238,7 @@ void AudioCache::retain(
     }
 }
 
-void AudioCache::release(
-    MemoryAudioSource *source)
+void AudioCache::release(MemoryAudioSource *source)
 {
     if (!source)
         return;
@@ -291,6 +261,7 @@ void AudioCache::releaseEntry(AudioCacheEntry &entry, bool force)
     {
         return;
     }
+
     delete[] entry.data;
     entry.data = nullptr;
     entry.size = 0;

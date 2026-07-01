@@ -11,4 +11,5 @@ public:
     virtual bool write(const int16_t *samples, size_t sampleCount) = 0;
     virtual void clear() = 0;
     virtual void setEnabled(bool enabled) = 0;
+    virtual bool enabled() const = 0;
 };

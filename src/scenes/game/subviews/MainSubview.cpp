@@ -25,11 +25,11 @@ void MainSubview::create(lv_obj_t *parent)
     lv_obj_set_size(footer, LV_PCT(100), 60);
     lv_obj_align(footer, LV_ALIGN_BOTTOM_MID, 0, -10);
     lv_obj_set_flex_flow(footer, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(footer, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);       
+    lv_obj_set_flex_align(footer, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     /* objects/info button*/
-    objectsBtn = Button::create(footer, nullptr, onObjects, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_BELL); 
+    objectsBtn = Button::create(footer, nullptr, onObjects, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_BELL);
     /* cancel */
-    cancelBtn = Button::create(footer, nullptr, onCancel, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_CLOSE); 
+    cancelBtn = Button::create(footer, nullptr, onCancel, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_CLOSE);
     /* start/pause */
     startPauseBtn = Button::create(footer, nullptr, onStartPause, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);
     startPauseIcon = lv_obj_get_child(startPauseBtn, 0);
@@ -78,7 +78,7 @@ void MainSubview::update()
         }
         if (!tickingClockAudioStarted)
         {
-            sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::PLAY_LOOP_WAV);
+            tickingAudioHandle = playAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::PLAY, true);
             tickingClockAudioStarted = true;
         }
     }
@@ -114,6 +114,18 @@ void MainSubview::setTime(uint32_t seconds)
 
 void MainSubview::setRunning(bool running)
 {
+    if (tickingAudioHandle.valid())
+    {
+        if (running)
+        {
+            resumeAudioEvent(tickingAudioHandle);
+        }
+        else
+        {
+            pauseAudioEvent(tickingAudioHandle);
+        }
+    }
+
     if (startPauseIcon)
     {
         lv_label_set_text(startPauseIcon, running ? LV_SYMBOL_PAUSE : LV_SYMBOL_PLAY);

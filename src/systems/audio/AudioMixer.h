@@ -6,6 +6,7 @@
 #include "drivers/audio/MAX98357Driver.h"
 #include "systems/audio/AudioVoice.h"
 #include "systems/audio/AudioSource.h"
+#include "systems/audio/AudioHandle.h"
 
 class AudioMixer
 {
@@ -24,7 +25,8 @@ public:
      *
      * @return Voice index, or -1 if no voice available.
      */
-    int play(
+    bool play(
+        AudioHandle handle,
         AudioSource *source,
         bool loop,
         uint8_t priority,
@@ -32,19 +34,19 @@ public:
         AudioVoice::InterruptMode mode,
         AudioCache *cache);
 
-    void stop(int voice);
+    void stop(AudioHandle handle);
 
     void stopAll();
 
-    void pause(int voice);
+    void pause(AudioHandle handle);
 
-    void resume(int voice);
+    void resume(AudioHandle handle);
 
     void update();
 
     void setMasterVolume(float volume);
     float masterVolume() const;
-    bool isPlaying(int voice) const;
+    bool isPlaying(AudioHandle handle) const;
 
 private:
     int allocateVoice(uint8_t priority);
@@ -53,6 +55,9 @@ private:
     void interruptVoices(int interrupterIndex);
     void resumeVoices(int interrupterIndex);
     bool isVoiceActive(int index) const;
+
+    int findVoice(AudioHandle handle) const;
+    AudioVoice *findVoicePtr(AudioHandle handle);
 
 private:
     MAX98357Driver *driver = nullptr;

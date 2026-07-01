@@ -27,7 +27,8 @@ bool AudioMixer::init(MAX98357Driver *drv)
     return true;
 }
 
-int AudioMixer::play(
+bool AudioMixer::play(
+    AudioHandle handle,
     AudioSource *source,
     bool loop,
     uint8_t priority,
@@ -36,12 +37,12 @@ int AudioMixer::play(
     AudioCache *cache)
 {
     if (!driver || !source)
-        return -1;
+        return false;
 
     int index = allocateVoice(priority);
 
     if (index < 0)
-        return -1;
+        return false;
 
     AudioVoice &voice = voices[index];
 
@@ -60,6 +61,7 @@ int AudioMixer::play(
     else if (volume > 1.0f)
         volume = 1.0f;
 
+    voice.handle = handle;
     voice.source = source;
     voice.cache = cache;
     voice.loop = loop;
@@ -88,21 +90,20 @@ int AudioMixer::play(
     //
     interruptVoices(index);
     voice.playId = ++playCounter;
-    return index;
+    return true;
 }
 
-void AudioMixer::stop(int index)
+void AudioMixer::stop(AudioHandle handle)
 {
-    if (index < 0 || index >= MAX_VOICES)
-    {
+    int index = findVoice(handle);
+
+    if (index < 0)
         return;
-    }
 
     AudioVoice &voice = voices[index];
-    if (!voice.active())
-        return;
 
     resumeVoices(index);
+
     voice.reset();
 }
 
@@ -114,33 +115,29 @@ void AudioMixer::stopAll()
     }
 }
 
-void AudioMixer::pause(int index)
+void AudioMixer::pause(AudioHandle handle)
 {
-    if (index < 0 || index >= MAX_VOICES)
-    {
-        return;
-    }
+    AudioVoice *voice = findVoicePtr(handle);
 
-    AudioVoice &voice = voices[index];
-    if (voice.state == AudioVoice::State::Playing)
-    {
-        voice.state = AudioVoice::State::Paused;
-    }
+    if (!voice)
+        return;
+
+    if (voice->state == AudioVoice::State::Playing)
+        voice->state = AudioVoice::State::Paused;
 }
 
-void AudioMixer::resume(int index)
+void AudioMixer::resume(AudioHandle handle)
 {
-    if (index < 0 || index >= MAX_VOICES)
-    {
-        return;
-    }
+    AudioVoice *voice = findVoicePtr(handle);
 
-    AudioVoice &voice = voices[index];
-    if (voice.state == AudioVoice::State::Paused)
-    {
-        voice.state = AudioVoice::State::Playing;
-        voice.interruptedBy = -1;
-    }
+    if (!voice)
+        return;
+
+    if (voice->state != AudioVoice::State::Paused)
+        return;
+
+    voice->state = AudioVoice::State::Playing;
+    voice->interruptedBy = 255;
 }
 
 void AudioMixer::setMasterVolume(float volume)
@@ -158,14 +155,15 @@ float AudioMixer::masterVolume() const
     return masterGain;
 }
 
-bool AudioMixer::isPlaying(int index) const
+bool AudioMixer::isPlaying(AudioHandle handle) const
 {
-    if (index < 0 || index >= MAX_VOICES)
-    {
-        return false;
-    }
+    int index = findVoice(handle);
 
-    return voices[index].state == AudioVoice::State::Playing;
+    if (index < 0)
+        return false;
+
+    return voices[index].state ==
+           AudioVoice::State::Playing;
 }
 
 int AudioMixer::allocateVoice(uint8_t priority)
@@ -406,4 +404,31 @@ void AudioMixer::resumeVoices(int interrupterIndex)
         voice.state = AudioVoice::State::Playing;
         voice.interruptedBy = -1;
     }
+}
+
+int AudioMixer::findVoice(AudioHandle handle) const
+{
+    if (!handle.valid())
+        return -1;
+
+    for (int i = 0; i < MAX_VOICES; ++i)
+    {
+        if (!voices[i].active())
+            continue;
+
+        if (voices[i].handle == handle)
+            return i;
+    }
+
+    return -1;
+}
+
+AudioVoice *AudioMixer::findVoicePtr(AudioHandle handle)
+{
+    int index = findVoice(handle);
+
+    if (index < 0)
+        return nullptr;
+
+    return &voices[index];
 }

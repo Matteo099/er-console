@@ -90,7 +90,7 @@ void GameScene::completeGame()
     view.setRunning(false);
     view.setVictoryStats(getVictoryStats());
     view.showVictory();
-    sendAudioEvent(AUDIO_VICTORY_FILE, AudioEventType::PLAY_WAV);
+    playAudioEvent(AUDIO_VICTORY_FILE, AudioEventType::PLAY);
 }
 
 SceneRequest GameScene::getRequest() const

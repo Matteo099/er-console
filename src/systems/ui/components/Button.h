@@ -15,7 +15,7 @@ public:
     {
         (void)e;
 
-        sendAudioEvent(AUDIO_CLICK1_FILE, AudioEventType::PLAY_WAV);
+        playAudioEvent(AUDIO_CLICK1_FILE, AudioEventType::PLAY);
     }
 
     /**

@@ -57,13 +57,23 @@ void AudioSystem::update()
     {
         switch (event.type)
         {
-        case AudioEventType::PLAY_WAV:
-            play(event.wav.path, false, 1);
-            break;
-        case AudioEventType::PLAY_LOOP_WAV:
-            play(event.wav.path, true, 1);
+        case AudioEventType::PLAY:
+            play(
+                event.handle,
+                event.wav.path,
+                event.wav.loop,
+                event.wav.priority);
             break;
         case AudioEventType::STOP:
+            stop(event.handle);
+            break;
+        case AudioEventType::PAUSE:
+            pause(event.handle);
+            break;
+        case AudioEventType::RESUME:
+            resume(event.handle);
+            break;
+        case AudioEventType::STOP_ALL:
             stopAll();
             break;
         case AudioEventType::SET_VOLUME:
@@ -78,35 +88,50 @@ void AudioSystem::update()
     vTaskDelay(1);
 }
 
-int AudioSystem::play(const char *path, bool loop, uint8_t priority)
+bool AudioSystem::play(AudioHandle &handle, const char *path, bool loop, uint8_t priority)
 {
     if (!path || !storage)
-        return -1;
+        return false;
+
     MemoryAudioSource *source = cache.get(path);
     if (!source)
     {
-        Log::error(Log::AUDIO_TAG, "Failed loading %s", path);
-        return -1;
+        Log::error(Log::AUDIO_TAG, "Unable to load %s", path);
+        return false;
     }
-    cache.retain(source);
-    int voice = mixer.play(source, loop, priority, 1.0f, AudioVoice::InterruptMode::PauseResume, &cache);
-    if (voice < 0)
+
+    if (!handle.valid())
     {
-        cache.release(source);
-        return -1;
+        createAudioHandle(handle);
+        Log::debug(Log::AUDIO_TAG, "Created new handle %u", handle.id);
     }
-    Log::debug(Log::AUDIO_TAG, "Playing %s voice=%d", path, voice);
-    return voice;
+
+    return mixer.play(handle, source, loop, priority, 1.0f, AudioVoice::InterruptMode::PauseResume, &cache);
 }
 
-void AudioSystem::stop(int voice)
+void AudioSystem::stop(AudioHandle handle)
 {
-    mixer.stop(voice);
+    mixer.stop(handle);
 }
 
 void AudioSystem::stopAll()
 {
     mixer.stopAll();
+}
+
+void AudioSystem::pause(AudioHandle handle)
+{
+    mixer.pause(handle);
+}
+
+void AudioSystem::resume(AudioHandle handle)
+{
+    mixer.resume(handle);
+}
+
+bool AudioSystem::isPlaying(AudioHandle handle) const
+{
+    return mixer.isPlaying(handle);
 }
 
 void AudioSystem::beep(uint16_t freq, uint16_t ms)

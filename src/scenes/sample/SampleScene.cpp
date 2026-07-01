@@ -44,7 +44,7 @@ bool SampleScene::handleUIEvent(const UIEvent& event)
         const PlaySoundEvent& playEvent = static_cast<const PlaySoundEvent&>(event);
 
         Log::info(Log::SCENE_TAG, "Play sound!!!!!");
-        sendAudioEvent(playEvent.soundPath.c_str(), AudioEventType::PLAY_WAV);
+        playAudioEvent(playEvent.soundPath.c_str(), AudioEventType::PLAY);
 
         return true;  // Event handled
     }
