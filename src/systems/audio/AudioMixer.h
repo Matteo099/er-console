@@ -15,6 +15,7 @@ public:
 
 public:
     AudioMixer() = default;
+    ~AudioMixer();
 
     bool init(MAX98357Driver *driver);
 
@@ -25,9 +26,11 @@ public:
      */
     int play(
         AudioSource *source,
-        bool loop = false,
-        uint8_t priority = 0,
-        float volume = 1.0f);
+        bool loop,
+        uint8_t priority,
+        float volume,
+        AudioVoice::InterruptMode mode,
+        AudioCache *cache);
 
     void stop(int voice);
 
@@ -40,17 +43,16 @@ public:
     void update();
 
     void setMasterVolume(float volume);
-
     float masterVolume() const;
-
     bool isPlaying(int voice) const;
 
 private:
     int allocateVoice(uint8_t priority);
-
     void mixVoice(AudioVoice &voice);
-
     void clipOutput();
+    void interruptVoices(int interrupterIndex);
+    void resumeVoices(int interrupterIndex);
+    bool isVoiceActive(int index) const;
 
 private:
     MAX98357Driver *driver = nullptr;

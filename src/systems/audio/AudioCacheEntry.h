@@ -1,19 +1,29 @@
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
-#include "AudioEvent.h"
+
 #include "MemoryAudioSource.h"
 
-#define AUDIO_CACHE_SIZE 4
+#ifndef AUDIO_MAX_PATH
+#define AUDIO_MAX_PATH 128
+#endif
 
 struct AudioCacheEntry
 {
-    char path[AudioEvent::MAX_PATH_LENGTH];
+    char path[AUDIO_MAX_PATH]{};
+
     uint8_t *data = nullptr;
+
     size_t size = 0;
-    uint32_t lastUsed = 0;
 
-    MemoryAudioSource file;
+    uint32_t accessCounter = 0;
+
+    uint16_t refCount = 0;
+
+    MemoryAudioSource source;
+
+    bool valid() const
+    {
+        return data != nullptr;
+    }
 };
-

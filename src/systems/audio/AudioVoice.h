@@ -3,11 +3,11 @@
 #include <cstdint>
 
 class AudioSource;
+class AudioCache;
 
 class AudioVoice
 {
 public:
-
     enum class State
     {
         Stopped,
@@ -15,8 +15,13 @@ public:
         Paused
     };
 
-public:
+    enum class InterruptMode
+    {
+        Stop,
+        PauseResume
+    };
 
+public:
     void reset();
 
     bool active() const
@@ -25,8 +30,9 @@ public:
     }
 
 public:
+    AudioSource *source = nullptr;
 
-    AudioSource* source = nullptr;
+    AudioCache *cache = nullptr;
 
     State state = State::Stopped;
 
@@ -36,11 +42,20 @@ public:
 
     float volume = 1.0f;
 
-    // fade
+    uint32_t playId = 0;
+    
+    //
+    // fade support
+    //
 
     float gain = 1.0f;
 
     float targetGain = 1.0f;
 
     float gainStep = 0.0f;
+
+    InterruptMode interruptMode =
+        InterruptMode::Stop;
+
+    uint8_t interruptedBy = 255;
 };
