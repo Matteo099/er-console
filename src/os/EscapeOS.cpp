@@ -4,6 +4,7 @@
 #include "log/Logger.h"
 #include "drivers/bus/SPIBusManager.h"
 #include "log/LogStorageWriter.h"
+#include "config/Console.h"
 
 void xTaskPortal(void *params)
 {
@@ -104,7 +105,9 @@ void xTaskStorage(void *params)
 
     StorageSystem *storage = os->getStorageSystem();
     storage->init();
+#if LOG_STORAGE_ENABLED
     LogStorageWriter::instance().start(storage);
+#endif
 
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_STORAGE_READY);
 
@@ -197,7 +200,7 @@ void xTaskLua(void *params)
     lua->setStorageSystem(os->getStorageSystem());
     lua->setInputSystem(os->getInputSystem());
     lua->setAudioSystem(os->getAudioSystem());
-    
+
     lua->init();
 
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_LUA_READY);
@@ -224,7 +227,7 @@ void EscapeOS::init()
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_AUDIO, &audioSystem);
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_LUA, &luaSystem);
     running = true;
-    
+
     createTasks();
 }
 
