@@ -5,6 +5,7 @@
 #include "systems/ui/components/SceneLayout.h"
 #include "systems/ui/components/Align.h"
 #include "systems/ui/components/ImageView.h"
+#include "systems/ui/components/Container.h"
 #include "log/Logger.h"
 
 namespace
@@ -16,9 +17,13 @@ void GameObjectSubview::create(lv_obj_t *parent)
 {
     Log::info(TAG, "Creating game object subview");
 
-    auto layout = SceneLayout::create(parent);
+    root = Container::create(
+        parent,
+        LV_PCT(100),
+        LV_PCT(100));
 
-    root = parent;
+    auto layout = SceneLayout::create(root);
+
     header = layout.top;
     body = layout.body;
     footer = layout.footer;

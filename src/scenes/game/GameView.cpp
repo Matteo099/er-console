@@ -137,6 +137,11 @@ void GameView::setState(GameSubview state)
         gameObjectSubview.show();
         break;
     }
+
+    Log::info(
+        "GameView",
+        "screen hidden=%d",
+        lv_obj_has_flag(screen, LV_OBJ_FLAG_HIDDEN));
 }
 
 void GameView::showMain()
