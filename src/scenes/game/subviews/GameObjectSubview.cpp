@@ -97,6 +97,7 @@ void GameObjectSubview::create(lv_obj_t *parent)
 
     pageLabel = lv_label_create(footerRow);
 
+    rebuild();
     hide();
 
     Log::info(TAG, "Game object subview created");
@@ -115,8 +116,26 @@ void GameObjectSubview::rebuild()
     if (objects.empty())
     {
         Log::debug(TAG, "No objects to display");
+
+        lv_label_set_text(titleLabel, "Objects");
+        lv_label_set_text(pageLabel, "0 / 0");
+
+        lv_obj_add_state(prevBtn, LV_STATE_DISABLED);
+        lv_obj_add_state(nextBtn, LV_STATE_DISABLED);
+
+        auto *label = lv_label_create(content);
+        lv_label_set_text(label, "There are no objects to display.");
+        lv_obj_set_width(label, LV_PCT(100));
+        lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
+        lv_obj_set_style_text_font(label, &lv_font_roboto_mono_16, 0);
+        lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
+        lv_obj_center(label);
+
         return;
     }
+
+    lv_obj_clear_state(prevBtn, LV_STATE_DISABLED);
+    lv_obj_clear_state(nextBtn, LV_STATE_DISABLED);
 
     auto &object = objects[currentIndex];
 

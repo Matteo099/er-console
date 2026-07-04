@@ -1,6 +1,13 @@
 #include "GameSceneBindings.h"
 
 #include "scenes/game/GameScene.h"
+#include "log/Logger.h"
+
+struct PendingGameObjects
+{
+    GameScene *scene;
+    std::vector<GameObjectSubview::ObjectData> objects;
+};
 
 GameSceneBindings::GameSceneBindings(GameScene *scene) : scene(scene) {}
 
@@ -19,10 +26,21 @@ int GameSceneBindings::completeGame(lua_State *L)
 {
     auto *scene = get(L);
 
-    if (!scene)
-        return 0;
+    Log::info("GameSceneBindings", "Lua script requested game completion");
 
-    scene->completeGame();
+    if (!scene)
+    {
+        Log::warn("GameSceneBindings", "completeGame called but GameScene is null");
+        return 0;
+    }
+
+    Log::info("GameSceneBindings", "Calling GameScene::completeGame()");
+    lv_async_call(
+        [](void *p)
+        {
+            static_cast<GameScene *>(p)->completeGame();
+        },
+        scene);
 
     return 0;
 }
@@ -158,13 +176,29 @@ int GameSceneBindings::setGameObjects(lua_State *L)
         lua_pop(L, 1);
     }
 
-    scene->getGameView()->setGameObjectData(objects);
+    auto *payload = new PendingGameObjects{
+        scene,
+        std::move(objects)};
+
+    lv_async_call(
+        [](void *p)
+        {
+            auto *data = static_cast<PendingGameObjects *>(p);
+
+            data->scene->getGameView()->setGameObjectData(data->objects);
+
+            delete data;
+        },
+        payload);
 
     return 0;
 }
 
 void GameSceneBindings::registerAPI(lua_State *L)
 {
+    lua_pushlightuserdata(L, scene);
+    lua_setfield(L, LUA_REGISTRYINDEX, GAME_SCENE_PTR_KEY);
+
     lua_newtable(L);
 
     lua_pushcfunction(L, completeGame);

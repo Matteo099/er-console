@@ -21,11 +21,17 @@ void MainSubview::create(lv_obj_t *parent)
     timerLabel = Label::create(root, "00:00:00", &lv_font_roboto_mono_48, LV_TEXT_ALIGN_CENTER);
     Align::setPosition(timerLabel, LV_ALIGN_CENTER, 0, -40);
 
-    pauseOverlay = Container::create(root, 90, 70, LV_ALIGN_CENTER, 0, -40);
-    lv_obj_set_style_bg_opa(pauseOverlay, LV_OPA_TRANSP, 0);
+    // pauseOverlay = Container::create(root, 90, 70, LV_ALIGN_CENTER, 0, -40);
+    // lv_obj_set_style_bg_opa(pauseOverlay, LV_OPA_TRANSP, 0);
+    // pauseIcon = Label::create(pauseOverlay, LV_SYMBOL_PAUSE, &lv_font_roboto_mono_28, LV_TEXT_ALIGN_CENTER);
+    // Align::setPosition(pauseIcon, LV_ALIGN_CENTER, 0, 0);
+    // Label::setTextColor(pauseIcon, lv_color_hex(0xFFFF00));
+    // lv_obj_add_flag(pauseOverlay, LV_OBJ_FLAG_HIDDEN);
 
-    pauseIcon = Label::create(pauseOverlay, LV_SYMBOL_PAUSE, &lv_font_roboto_mono_28, LV_TEXT_ALIGN_CENTER);
-    Align::setPosition(pauseIcon, LV_ALIGN_CENTER, 0, 0);
+    pauseOverlay = Container::create(root, LV_PCT(100), LV_PCT(100), LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_bg_opa(pauseOverlay, LV_OPA_TRANSP, 0);
+    pauseIcon = Label::create(pauseOverlay, LV_SYMBOL_PAUSE, &lv_font_montserrat_48, LV_TEXT_ALIGN_CENTER);
+    Align::setPosition(pauseIcon, LV_ALIGN_CENTER, 0, 10);
     Label::setTextColor(pauseIcon, lv_color_hex(0xFFFF00));
     lv_obj_add_flag(pauseOverlay, LV_OBJ_FLAG_HIDDEN);
 
@@ -40,9 +46,6 @@ void MainSubview::create(lv_obj_t *parent)
         LV_FLEX_ALIGN_CENTER,
         LV_FLEX_ALIGN_CENTER);
 
-    objectsBtn = Button::create(
-        footer, nullptr, onObjects, this,
-        44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_BELL);
 
     cancelBtn = Button::create(
         footer, nullptr, onCancel, this,
@@ -51,6 +54,10 @@ void MainSubview::create(lv_obj_t *parent)
     startPauseBtn = Button::create(
         footer, nullptr, onStartPause, this,
         44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);
+        
+    objectsBtn = Button::create(
+        footer, nullptr, onObjects, this,
+        44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_BELL);
 
     startPauseIcon = lv_obj_get_child(startPauseBtn, 0);
     startPauseLabel = lv_obj_get_child(startPauseBtn, 1);
