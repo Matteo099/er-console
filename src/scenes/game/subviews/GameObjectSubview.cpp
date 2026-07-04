@@ -5,16 +5,37 @@
 #include "systems/ui/components/SceneLayout.h"
 #include "systems/ui/components/Align.h"
 #include "systems/ui/components/ImageView.h"
+#include "log/Logger.h"
+
+namespace
+{
+    constexpr const char *TAG = "GameObjectSubview";
+}
 
 void GameObjectSubview::create(lv_obj_t *parent)
 {
+    Log::info(TAG, "Creating game object subview");
+
     auto layout = SceneLayout::create(parent);
+
     root = parent;
     header = layout.top;
     body = layout.body;
     footer = layout.footer;
-    titleLabel = Label::create(header, "", &lv_font_roboto_mono_20, LV_TEXT_ALIGN_CENTER, LV_PCT(100));
-    Align::setPosition(titleLabel, LV_ALIGN_CENTER, 0, 0);
+
+    titleLabel = Label::create(
+        header,
+        "",
+        &lv_font_roboto_mono_20,
+        LV_TEXT_ALIGN_CENTER,
+        LV_PCT(100));
+
+    Align::setPosition(
+        titleLabel,
+        LV_ALIGN_CENTER,
+        0,
+        0);
+
     content = lv_obj_create(body);
     lv_obj_set_size(content, LV_PCT(100), LV_PCT(100));
     lv_obj_remove_style_all(content);
@@ -22,28 +43,85 @@ void GameObjectSubview::create(lv_obj_t *parent)
     lv_obj_set_scroll_dir(content, LV_DIR_VER);
     lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_all(content, 10, 0);
+
     auto footerRow = lv_obj_create(footer);
     lv_obj_remove_style_all(footerRow);
     lv_obj_set_size(footerRow, LV_PCT(100), LV_PCT(100));
     lv_obj_set_flex_flow(footerRow, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(footerRow, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    prevBtn = Button::create(footerRow, nullptr, onPrev, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_LEFT);
-    closeBtn = Button::create(footerRow, nullptr, onClose, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_CLOSE);
-    nextBtn = Button::create(footerRow, nullptr, onNext, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_RIGHT);
+    lv_obj_set_flex_align(
+        footerRow,
+        LV_FLEX_ALIGN_SPACE_EVENLY,
+        LV_FLEX_ALIGN_CENTER,
+        LV_FLEX_ALIGN_CENTER);
+
+    prevBtn = Button::create(
+        footerRow,
+        nullptr,
+        onPrev,
+        this,
+        44,
+        44,
+        LV_ALIGN_CENTER,
+        0,
+        0,
+        LV_SYMBOL_LEFT);
+
+    closeBtn = Button::create(
+        footerRow,
+        nullptr,
+        onClose,
+        this,
+        44,
+        44,
+        LV_ALIGN_CENTER,
+        0,
+        0,
+        LV_SYMBOL_CLOSE);
+
+    nextBtn = Button::create(
+        footerRow,
+        nullptr,
+        onNext,
+        this,
+        44,
+        44,
+        LV_ALIGN_CENTER,
+        0,
+        0,
+        LV_SYMBOL_RIGHT);
+
     pageLabel = lv_label_create(footerRow);
+
     hide();
+
+    Log::info(TAG, "Game object subview created");
 }
 
 void GameObjectSubview::rebuild()
 {
     if (!content)
+    {
+        Log::warn(TAG, "rebuild() called with null content");
         return;
+    }
 
     lv_obj_clean(content);
+
     if (objects.empty())
+    {
+        Log::debug(TAG, "No objects to display");
         return;
+    }
 
     auto &object = objects[currentIndex];
+
+    Log::debug(
+        TAG,
+        "Displaying object %lu/%lu: %s",
+        static_cast<unsigned long>(currentIndex + 1),
+        static_cast<unsigned long>(objects.size()),
+        object.title.c_str());
+
     lv_label_set_text(titleLabel, object.title.c_str());
 
     for (auto &block : object.content)
@@ -59,69 +137,129 @@ void GameObjectSubview::rebuild()
             lv_obj_set_style_text_font(label, &lv_font_roboto_mono_16, 0);
             break;
         }
+
         case ContentType::Image:
         {
-            lv_obj_t *img = ImageView::create(content, block.imagePath.c_str(), LV_ALIGN_CENTER);
+            lv_obj_t *img =
+                ImageView::create(
+                    content,
+                    block.imagePath.c_str(),
+                    LV_ALIGN_CENTER);
+
             if (!img)
-                break;
-            if (block.width != LV_SIZE_CONTENT || block.height != LV_SIZE_CONTENT)
             {
-                lv_obj_set_size(img, block.width, block.height);
+                Log::warn(TAG, "Failed to create image: %s", block.imagePath.c_str());
+                break;
             }
+
+            if (block.width != LV_SIZE_CONTENT ||
+                block.height != LV_SIZE_CONTENT)
+            {
+                lv_obj_set_size(
+                    img,
+                    block.width,
+                    block.height);
+            }
+
             break;
         }
         }
     }
+
     char page[32];
-    snprintf(page, sizeof(page), "%lu / %lu", currentIndex + 1, objects.size());
+    snprintf(
+        page,
+        sizeof(page),
+        "%lu / %lu",
+        static_cast<unsigned long>(currentIndex + 1),
+        static_cast<unsigned long>(objects.size()));
+
     lv_label_set_text(pageLabel, page);
 }
 
 void GameObjectSubview::setObjects(const std::vector<ObjectData> &data)
 {
+    Log::info(
+        TAG,
+        "Loaded %u game objects",
+        static_cast<unsigned>(data.size()));
+
     objects = data;
     currentIndex = 0;
+
     rebuild();
 }
 
-void GameObjectSubview::setCurrent(
-    uint32_t index)
+void GameObjectSubview::setCurrent(uint32_t index)
 {
     if (objects.empty())
     {
+        Log::warn(TAG, "setCurrent() called with no objects");
         currentIndex = 0;
         return;
     }
 
-    currentIndex =
-        index % objects.size();
+    currentIndex = index % objects.size();
+
+    Log::debug(
+        TAG,
+        "Current object set to %lu",
+        static_cast<unsigned long>(currentIndex + 1));
 
     rebuild();
-
     resetScroll();
 }
 
 void GameObjectSubview::onPrev(lv_event_t *e)
 {
-    auto *self = static_cast<GameObjectSubview *>(lv_event_get_user_data(e));
-    if (!self || self->objects.empty())
+    auto *self =
+        static_cast<GameObjectSubview *>(
+            lv_event_get_user_data(e));
+
+    if (!self)
+    {
+        Log::warn(TAG, "Previous callback received null view");
         return;
+    }
+
+    if (self->objects.empty())
+        return;
+
     if (self->currentIndex == 0)
         self->currentIndex = self->objects.size() - 1;
     else
         self->currentIndex--;
+
+    Log::debug(TAG, "Previous button clicked");
+
     self->rebuild();
+
     if (self->callback)
         self->callback("prev");
 }
 
 void GameObjectSubview::onNext(lv_event_t *e)
 {
-    auto *self = static_cast<GameObjectSubview *>(lv_event_get_user_data(e));
-    if (!self || self->objects.empty())
+    auto *self =
+        static_cast<GameObjectSubview *>(
+            lv_event_get_user_data(e));
+
+    if (!self)
+    {
+        Log::warn(TAG, "Next callback received null view");
         return;
-    self->currentIndex = (self->currentIndex + 1) % self->objects.size();
+    }
+
+    if (self->objects.empty())
+        return;
+
+    self->currentIndex =
+        (self->currentIndex + 1) % self->objects.size();
+
+    Log::debug(TAG, "Next button clicked");
+
     self->rebuild();
+
     if (self->callback)
         self->callback("next");
 }
@@ -129,10 +267,16 @@ void GameObjectSubview::onNext(lv_event_t *e)
 void GameObjectSubview::onClose(lv_event_t *e)
 {
     auto *self =
-        static_cast<GameObjectSubview *>(lv_event_get_user_data(e));
+        static_cast<GameObjectSubview *>(
+            lv_event_get_user_data(e));
 
     if (!self)
+    {
+        Log::warn(TAG, "Close callback received null view");
         return;
+    }
+
+    Log::debug(TAG, "Close button clicked");
 
     if (self->callback)
         self->callback("back_main");
@@ -140,6 +284,8 @@ void GameObjectSubview::onClose(lv_event_t *e)
 
 void GameObjectSubview::destroy()
 {
+    Log::info(TAG, "Destroying game object subview");
+
     root = nullptr;
     header = nullptr;
     body = nullptr;
@@ -150,31 +296,52 @@ void GameObjectSubview::destroy()
     nextBtn = nullptr;
     closeBtn = nullptr;
     pageLabel = nullptr;
+
     objects.clear();
     currentIndex = 0;
+
+    Log::info(TAG, "Game object subview destroyed");
 }
 
 void GameObjectSubview::show()
 {
+    Log::debug(TAG, "Showing game object subview");
+
     if (root)
         lv_obj_clear_flag(root, LV_OBJ_FLAG_HIDDEN);
 }
 
 void GameObjectSubview::hide()
 {
+    Log::debug(TAG, "Hiding game object subview");
+
     if (root)
         lv_obj_add_flag(root, LV_OBJ_FLAG_HIDDEN);
 }
 
-void GameObjectSubview::update() {}
+void GameObjectSubview::update()
+{
+}
 
-void GameObjectSubview::setEventCallback(EventCallback cb) { callback = std::move(cb); }
+void GameObjectSubview::setEventCallback(EventCallback cb)
+{
+    Log::debug(TAG, "Event callback registered");
+    callback = std::move(cb);
+}
 
 void GameObjectSubview::next()
 {
     if (objects.empty())
         return;
-    currentIndex = (currentIndex + 1) % objects.size();
+
+    currentIndex =
+        (currentIndex + 1) % objects.size();
+
+    Log::debug(
+        TAG,
+        "next() -> object %lu",
+        static_cast<unsigned long>(currentIndex + 1));
+
     rebuild();
     resetScroll();
 }
@@ -183,10 +350,17 @@ void GameObjectSubview::previous()
 {
     if (objects.empty())
         return;
+
     if (currentIndex == 0)
         currentIndex = objects.size() - 1;
     else
         currentIndex--;
+
+    Log::debug(
+        TAG,
+        "previous() -> object %lu",
+        static_cast<unsigned long>(currentIndex + 1));
+
     rebuild();
     resetScroll();
 }
@@ -194,12 +368,18 @@ void GameObjectSubview::previous()
 void GameObjectSubview::resetScroll()
 {
     if (!content)
+    {
+        Log::warn(TAG, "resetScroll() called with null content");
         return;
+    }
+
     lv_obj_scroll_to(content, 0, 0, LV_ANIM_OFF);
 }
+
 const GameObjectSubview::ObjectData *GameObjectSubview::getCurrent() const
 {
     if (objects.empty())
         return nullptr;
+
     return &objects[currentIndex];
 }
