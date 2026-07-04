@@ -4,6 +4,7 @@
 #include "systems/ui/components/Container.h"
 #include "systems/ui/components/Label.h"
 #include "systems/ui/components/Align.h"
+#include "systems/ui/components/SceneLayout.h"
 #include "log/Logger.h"
 
 #include <cstdio>
@@ -19,28 +20,33 @@ void VictorySubview::create(lv_obj_t *parent)
 
     root = Container::create(parent, LV_PCT(100), LV_PCT(100));
 
+    // Use SceneLayout instead of manual positioning
+    auto layout = SceneLayout::create(root);
+
+    lv_obj_t *header = layout.top;
+    lv_obj_t *body   = layout.body;
+    lv_obj_t *footer = layout.footer;
+
+    // ----------------------------
+    // HEADER (Title)
+    // ----------------------------
     titleLabel = Label::create(
-        root,
+        header,
         "YOU WIN!",
         &lv_font_roboto_mono_28,
         LV_TEXT_ALIGN_CENTER,
-        240);
+        LV_PCT(100));
 
     Label::setTextColor(titleLabel, lv_color_hex(0x00FF00));
+    Align::setPosition(titleLabel, LV_ALIGN_CENTER, 0, 0);
 
-    Align::setPosition(
-        titleLabel,
-        LV_ALIGN_TOP_MID,
-        0,
-        25);
-
+    // ----------------------------
+    // BODY (Stats)
+    // ----------------------------
     statsContainer = Container::create(
-        root,
-        240,
-        150,
-        LV_ALIGN_CENTER,
-        0,
-        -10);
+        body,
+        LV_PCT(100),
+        LV_PCT(100));
 
     lv_obj_set_flex_flow(statsContainer, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(
@@ -49,21 +55,31 @@ void VictorySubview::create(lv_obj_t *parent)
         LV_FLEX_ALIGN_CENTER,
         LV_FLEX_ALIGN_CENTER);
 
-    elapsedRow = StatisticRow::create(statsContainer, "Elapsed");
-    pausedRow = StatisticRow::create(statsContainer, "Paused");
-    hintsRow = StatisticRow::create(statsContainer, "Hints");
-    solvedRow = StatisticRow::create(statsContainer, "Solved");
+    lv_obj_set_style_pad_all(statsContainer, 5, 0);
+    // lv_obj_set_style_pad_row(statsContainer, 5, 0);
 
+    lv_obj_add_flag(statsContainer, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(statsContainer, LV_DIR_VER);
+    lv_obj_set_scrollbar_mode(statsContainer, LV_SCROLLBAR_MODE_AUTO);
+
+    elapsedRow = StatisticRow::create(statsContainer, "Elapsed");
+    pausedRow  = StatisticRow::create(statsContainer, "Paused");
+    hintsRow   = StatisticRow::create(statsContainer, "Hints");
+    solvedRow  = StatisticRow::create(statsContainer, "Solved");
+
+    // ----------------------------
+    // FOOTER (Button)
+    // ----------------------------
     completeBtn = Button::create(
-        root,
+        footer,
         "Complete",
         onComplete,
         this,
         150,
         44,
-        LV_ALIGN_BOTTOM_MID,
+        LV_ALIGN_CENTER,
         0,
-        -20,
+        0,
         LV_SYMBOL_OK);
 
     hide();

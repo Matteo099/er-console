@@ -237,7 +237,7 @@ void EscapeOS::createTasks()
     xTaskCreatePinnedToCore(
         xTaskRainbowLed,
         "RainbowLedTask",
-        6144,
+        4096,
         this,
         configMAX_PRIORITIES - 2,
         nullptr,
@@ -267,7 +267,7 @@ void EscapeOS::createTasks()
     xTaskCreatePinnedToCore(
         xTaskStorage,
         "StorageTask",
-        8192,
+        4096,
         this,
         2,
         nullptr,
@@ -277,7 +277,7 @@ void EscapeOS::createTasks()
     xTaskCreatePinnedToCore(
         xTaskNetwork,
         "NetworkTask",
-        6144,
+        8192,
         this,
         2,
         nullptr,
@@ -297,7 +297,7 @@ void EscapeOS::createTasks()
     xTaskCreatePinnedToCore(
         xTaskInput,
         "InputTask",
-        4096,
+        8192,
         this,
         3,
         nullptr,
@@ -307,7 +307,7 @@ void EscapeOS::createTasks()
     xTaskCreatePinnedToCore(
         xTaskAudio,
         "AudioTask",
-        4096,
+        8192,
         this,
         2,
         nullptr,

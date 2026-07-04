@@ -16,7 +16,7 @@ public:
 
         const uint16_t zoom = static_cast<uint16_t>((static_cast<uint32_t>(scalePercent) * 256U + 50U) / 100U);
 
-        lv_obj_t* image = ImageView::create(parent, IMG_BRAND_FILE, LV_ALIGN_TOP_MID, 0, 12, zoom);
+        lv_obj_t* image = ImageView::create(parent, IMG_BRAND_NEGATIVE_FILE, LV_ALIGN_TOP_MID, 0, 12, zoom);
 
         lv_coord_t availableWidth = lv_obj_get_width(parent);
         if (availableWidth <= 0)

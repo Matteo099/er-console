@@ -41,13 +41,19 @@ void GameObjectSubview::create(lv_obj_t *parent)
         0,
         0);
 
-    content = lv_obj_create(body);
-    lv_obj_set_size(content, LV_PCT(100), LV_PCT(100));
+    content = lv_obj_create(layout.body);
     lv_obj_remove_style_all(content);
-    lv_obj_add_flag(content, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_scroll_dir(content, LV_DIR_VER);
+    lv_obj_set_size(content, LV_PCT(100), LV_PCT(100));
     lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_all(content, 10, 0);
+    lv_obj_set_flex_align(
+        content,
+        LV_FLEX_ALIGN_START,
+        LV_FLEX_ALIGN_START,
+        LV_FLEX_ALIGN_START);
+    lv_obj_set_style_pad_all(content, 6, 0);
+    lv_obj_set_style_pad_row(content, 8, 0);
+    lv_obj_set_scroll_dir(content, LV_DIR_VER);
+    lv_obj_add_flag(content, LV_OBJ_FLAG_SCROLLABLE);
 
     auto footerRow = lv_obj_create(footer);
     lv_obj_remove_style_all(footerRow);

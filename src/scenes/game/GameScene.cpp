@@ -63,6 +63,7 @@ void GameScene::onUpdate()
             if (remainingSec == 0)
             {
                 state = GameState::Finished;
+                sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::STOP);
                 luaSystem->pause();
                 view.setRunning(false);
                 view.showFailure();

@@ -140,7 +140,10 @@ void GameListScene::loadGames()
     StorageSystem *storageSystem = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
 
     if (!storageSystem || !storageSystem->isReady())
+    {
+        Log::error(Log::SCENE_TAG, "Storage system is not ready");
         return;
+    }
 
     std::vector<StorageEntry> entries;
     if (!storageSystem->listDirectory(GAMES_DIR, entries, false))

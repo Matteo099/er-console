@@ -21,13 +21,6 @@ void MainSubview::create(lv_obj_t *parent)
     timerLabel = Label::create(root, "00:00:00", &lv_font_roboto_mono_48, LV_TEXT_ALIGN_CENTER);
     Align::setPosition(timerLabel, LV_ALIGN_CENTER, 0, -40);
 
-    // pauseOverlay = Container::create(root, 90, 70, LV_ALIGN_CENTER, 0, -40);
-    // lv_obj_set_style_bg_opa(pauseOverlay, LV_OPA_TRANSP, 0);
-    // pauseIcon = Label::create(pauseOverlay, LV_SYMBOL_PAUSE, &lv_font_roboto_mono_28, LV_TEXT_ALIGN_CENTER);
-    // Align::setPosition(pauseIcon, LV_ALIGN_CENTER, 0, 0);
-    // Label::setTextColor(pauseIcon, lv_color_hex(0xFFFF00));
-    // lv_obj_add_flag(pauseOverlay, LV_OBJ_FLAG_HIDDEN);
-
     pauseOverlay = Container::create(root, LV_PCT(100), LV_PCT(100), LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_bg_opa(pauseOverlay, LV_OPA_TRANSP, 0);
     pauseIcon = Label::create(pauseOverlay, LV_SYMBOL_PAUSE, &lv_font_montserrat_48, LV_TEXT_ALIGN_CENTER);
@@ -46,7 +39,6 @@ void MainSubview::create(lv_obj_t *parent)
         LV_FLEX_ALIGN_CENTER,
         LV_FLEX_ALIGN_CENTER);
 
-
     cancelBtn = Button::create(
         footer, nullptr, onCancel, this,
         44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_CLOSE);
@@ -54,7 +46,7 @@ void MainSubview::create(lv_obj_t *parent)
     startPauseBtn = Button::create(
         footer, nullptr, onStartPause, this,
         44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);
-        
+
     objectsBtn = Button::create(
         footer, nullptr, onObjects, this,
         44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_BELL);
@@ -116,14 +108,10 @@ void MainSubview::update()
                 0);
         }
 
-        if (!tickingClockAudioStarted)
+        if (!tickingClockAudioStarted && !paused)
         {
             Log::info(TAG, "Starting ticking clock warning audio");
-
-            sendAudioEvent(
-                AUDIO_TICKING_CLOCK_FILE,
-                AudioEventType::PLAY_LOOP_WAV);
-
+            sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::PLAY_LOOP_WAV);
             tickingClockAudioStarted = true;
         }
     }
@@ -138,6 +126,13 @@ void MainSubview::update()
                 pauseIcon,
                 pauseBlinkState ? LV_OPA_COVER : LV_OPA_30,
                 0);
+        }
+
+        if (tickingClockAudioStarted)
+        {
+            Log::info(TAG, "Stopping ticking clock warning audio");
+            sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::STOP);
+            tickingClockAudioStarted = false;
         }
     }
 }

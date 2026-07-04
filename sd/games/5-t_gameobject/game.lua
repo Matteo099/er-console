@@ -36,13 +36,34 @@ function init()
             content = {
                 {
                     type = GameObjectContentType.TEXT,
-                    value = "Hello world!"
+                    value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean molestie arcu non luctus sagittis. In turpis ligula, gravida mollis rutrum ut, convallis ut tortor. Praesent libero lacus, iaculis sed consectetur sed, porta eu mi."
                 },
                 {
                     type = GameObjectContentType.IMAGE,
                     path = "images/map.png",
                     width = 50,
                     height = 50
+                },
+                {
+                    type = GameObjectContentType.TEXT,
+                    value = "Donec commodo felis sed mauris accumsan, et tristique turpis consectetur. Mauris suscipit purus vel aliquam porta. Suspendisse vel est dignissim, tristique nulla ut, pellentesque dui. Cras pharetra risus enim, vel commodo metus blandit in. Ut faucibus nisl id quam tincidunt porttitor. Sed diam urna, maximus a augue eu, viverra placerat justo. Donec id elit orci. Morbi molestie condimentum fermentum."
+                },
+                {
+                    type = GameObjectContentType.IMAGE,
+                    path = "images/map.png",
+                    width = 100,
+                    height = 100
+                },
+            }
+        },
+        {
+            title = "Tavola",
+            content = {
+                {
+                    type = GameObjectContentType.IMAGE,
+                    path = "images/tavola.png",
+                    width = 250,
+                    height = 166
                 }
             }
         }
