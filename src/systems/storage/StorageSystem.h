@@ -8,6 +8,7 @@
 #include "drivers/storage/IFile.h"
 #include "drivers/storage/StorageEntry.h"
 #include "drivers/storage/StorageRecoverySystem.h"
+#include "config/Console.h"
 
 #define IO_FAILURE_THRESHOLD 5
 #define HEALTH_CHECK_INTERVAL_MS 30000
@@ -47,7 +48,9 @@ private:
 
 private:
     SDCardDriver *driver;
+#if RECOVERY_STORAGE_SYSTEM_ENABLED
     StorageRecoverySystem *recovery;
+#endif
     bool ready = false;
     int ioFailures = 0;
 };

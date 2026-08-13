@@ -2,6 +2,7 @@
 #include "log/Logger.h"
 #include "drivers/bus/SPIBusLock.h"
 #include "ESP32SDFile.h"
+#include <cstring>
 
 namespace
 {
@@ -37,7 +38,7 @@ bool ESP32SDCardDriver::init()
     SPIBusLock::Guard guard;
 
     Log::info(Log::DRIVER_TAG, "Initializing SD Card (CS=%d)", cs);
-    isMounted = SD.begin(cs, spi);
+    isMounted = SD.begin(cs, spi, 1000000U, "/sd");
     return isMounted;
 }
 
@@ -159,7 +160,23 @@ bool ESP32SDCardDriver::listDirectory(
 
         const bool isDir = entry.isDirectory();
 
-        info.path = entry.name();
+        std::string name = fileName(entry.name());
+
+        info.name = name;
+
+        if (std::strcmp(path, "/") == 0)
+        {
+            info.path = "/" + name;
+        }
+        else
+        {
+            info.path = std::string(path);
+
+            if (!info.path.empty() && info.path.back() != '/')
+                info.path += '/';
+
+            info.path += name;
+        }
         info.name = fileName(entry.name());
         info.isDirectory = isDir;
         info.size = entry.size();

@@ -42,12 +42,13 @@ public:
     bool writeLine(const char *text, bool flush) override
     {
         SPIBusLock::Guard guard;
-        file.println(text);
-        
+
+        size_t written = file.println(text);
+
         if (flush)
             file.flush();
 
-        return true;
+        return written > 0;
     }
 
     void flush() override

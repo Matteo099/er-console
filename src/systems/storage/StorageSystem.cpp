@@ -25,16 +25,23 @@ void StorageSystem::init(void *params)
 
     auto &spi = SPIBusManager::bus();
     driver = new ESP32SDCardDriver(spi, SD_CS_PIN);
+#if RECOVERY_STORAGE_SYSTEM_ENABLED
     recovery = new StorageRecoverySystem(driver, SD_POWER_RELAY_PIN, true);
+#endif
 
     if (!driver->init())
     {
         Log::error(Log::STORAGE_TAG, "SD init failed");
-        if (recovery->recover(StorageFailureReason::MountFailed))
+#if RECOVERY_STORAGE_SYSTEM_ENABLED
+        if (!recovery->recover(StorageFailureReason::MountFailed))
         {
             ready = false;
             return;
         }
+#else
+        ready = false;
+        return;
+#endif
     }
 
     ready = true;
@@ -111,11 +118,12 @@ IFile *StorageSystem::open(const char *path, FileMode mode)
             Log::STORAGE_TAG,
             "Failed to open file: %s",
             path);
-
+#if RECOVERY_STORAGE_SYSTEM_ENABLED
         if (ioFailures >= IO_FAILURE_THRESHOLD)
         {
             recovery->recover(StorageFailureReason::ConsecutiveIOFailures);
         }
+#endif
         return nullptr;
     }
     else
@@ -134,9 +142,10 @@ bool StorageSystem::checkHealth()
 {
     if (!exists(CORE_DIR))
     {
+#if RECOVERY_STORAGE_SYSTEM_ENABLED
         recovery->recover(
             StorageFailureReason::CorruptionDetected);
-
+#endif
         return false;
     }
 
@@ -422,7 +431,7 @@ bool StorageSystem::cleanupDirectoryBySize(const char *path, uint64_t maxSize, u
     {
         if (entry.isDirectory)
             continue;
-            
+
         if (total <= targetSize)
             break;
 
