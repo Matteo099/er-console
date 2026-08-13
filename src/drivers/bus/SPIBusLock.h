@@ -4,36 +4,33 @@
 
 class SPIBusLock
 {
-
 public:
     class Guard
     {
-
     public:
         Guard()
+            : mutex(SPIBusManager::mutex())
         {
-            auto m = SPIBusManager::mutex();
-
-            if (m)
+            if (mutex)
             {
                 xSemaphoreTake(
-                    m,
+                    mutex,
                     portMAX_DELAY);
             }
         }
 
         ~Guard()
         {
-            auto m = SPIBusManager::mutex();
-
-            if (m)
+            if (mutex)
             {
-                xSemaphoreGive(m);
+                xSemaphoreGive(mutex);
             }
         }
 
         Guard(const Guard &) = delete;
-
         Guard &operator=(const Guard &) = delete;
+
+    private:
+        SemaphoreHandle_t mutex;
     };
 };

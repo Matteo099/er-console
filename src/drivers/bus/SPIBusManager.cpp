@@ -1,6 +1,6 @@
 #include "SPIBusManager.h"
 
-SPIClass SPIBusManager::spi = SPI;
+SPIClass SPIBusManager::spi = HSPI;
 
 SemaphoreHandle_t SPIBusManager::busMutex = nullptr;
 

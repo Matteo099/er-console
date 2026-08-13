@@ -38,7 +38,7 @@ bool ESP32SDCardDriver::init()
     SPIBusLock::Guard guard;
 
     Log::info(Log::DRIVER_TAG, "Initializing SD Card (CS=%d)", cs);
-    isMounted = SD.begin(cs, spi, 1000000U, "/sd");
+    isMounted = SD.begin(cs, spi, 4000000U, "/sd");
     return isMounted;
 }
 
