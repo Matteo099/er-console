@@ -1,574 +1,192 @@
 #include <Arduino.h>
-#include <SPI.h>
 
 #include "config/BoardConfig.h"
-#include "drivers/storage/ESP32SDCardDriver.h"
-#include "drivers/display/TFTDisplay.h"
 #include "log/Logger.h"
 
-// ============================================================
-// HARDWARE
-// ============================================================
-
-SPIClass sdSpi(HSPI);
-
-ESP32SDCardDriver sd(
-    sdSpi,
-    SD_CS_PIN);
-
-TFTDisplay tft;
+#include "drivers/display/TFTDisplay.h"
+#include "systems/ui/lvgl/LVGLContext.h"
 
 // ============================================================
-// FREERTOS EVENTS
+// GLOBAL OBJECTS
 // ============================================================
 
-static EventGroupHandle_t sdEvents = nullptr;
-
-static constexpr EventBits_t SD_READY_BIT = BIT0;
-static constexpr EventBits_t TFT_READY_BIT = BIT1;
+static TFTDisplay display;
+static LVGLContext lvgl;
 
 // ============================================================
-// SD TEST STATISTICS
+// TFT / LVGL TEST UI
 // ============================================================
 
-static uint32_t testNumber = 0;
-static uint32_t passCount = 0;
-static uint32_t failCount = 0;
-
-// ============================================================
-// TFT STATE
-// ============================================================
-
-static volatile bool aliveReadOK = false;
-
-// ============================================================
-// CREATE HELLO FILE
-// ============================================================
-
-static bool createHelloFile()
-{
-    IFile *file =
-        sd.open("/hello.txt", FileMode::Write);
-
-    if (!file)
-    {
-        Log::error(
-            Log::DRIVER_TAG,
-            "Failed to create /hello.txt");
-
-        return false;
-    }
-
-    const char *text =
-        "Hello from ESP32SDCardDriver\n";
-
-    const size_t expectedLength = strlen(text);
-
-    size_t written = file->write(
-        reinterpret_cast<const uint8_t *>(text),
-        expectedLength);
-
-    if (written != expectedLength)
-    {
-        Log::error(
-            Log::DRIVER_TAG,
-            "Failed to write hello file: expected=%u written=%u",
-            (unsigned)expectedLength,
-            (unsigned)written);
-
-        delete file;
-        return false;
-    }
-
-    file->flush();
-
-    delete file;
-
-    return true;
-}
-
-// ============================================================
-// SD STRESS TASK
-// ============================================================
-
-static void sdTask(void *parameter)
+static void createTestUI()
 {
     Log::info(
-        Log::DRIVER_TAG,
-        "========================================");
-
-    Log::info(
-        Log::DRIVER_TAG,
-        "SD TASK STARTED");
-
-    Log::info(
-        Log::DRIVER_TAG,
-        "========================================");
+        Log::DISPLAY_TAG,
+        "Creating LVGL test UI");
 
     // --------------------------------------------------------
-    // Initialize driver
+    // Active screen
     // --------------------------------------------------------
 
-    Log::info(
-        Log::DRIVER_TAG,
-        "Initializing SD driver...");
+    lv_obj_t *screen = lv_screen_active();
 
-    if (!sd.init())
-    {
-        Log::error(
-            Log::DRIVER_TAG,
-            "SD DRIVER INIT FAILED");
-
-        vTaskDelete(nullptr);
-        return;
-    }
-
-    if (!createHelloFile())
-    {
-        Log::error(
-            Log::DRIVER_TAG,
-            "Failed to create hello file");
-
-        vTaskDelete(nullptr);
-        return;
-    }
-
-    Log::info(
-        Log::DRIVER_TAG,
-        "SD DRIVER INIT OK");
-
-    xEventGroupSetBits(
-        sdEvents,
-        SD_READY_BIT);
-
-    Log::info(
-        Log::DRIVER_TAG,
-        "Mounted = %d",
-        sd.mounted());
-
-    Log::info(
-        Log::DRIVER_TAG,
-        "Total = %llu MB",
-        sd.totalBytes() / (1024ULL * 1024ULL));
-
-    Log::info(
-        Log::DRIVER_TAG,
-        "Used = %llu MB",
-        sd.usedBytes() / (1024ULL * 1024ULL));
+    // Dark background
+    lv_obj_set_style_bg_color(
+        screen,
+        lv_color_hex(0x101010),
+        LV_PART_MAIN);
 
     // --------------------------------------------------------
-    // Stress loop
+    // Title
     // --------------------------------------------------------
 
-    Log::info(
-        Log::DRIVER_TAG,
-        "========================================");
+    lv_obj_t *title =
+        lv_label_create(screen);
 
-    Log::info(
-        Log::DRIVER_TAG,
-        "STARTING SD DRIVER STRESS LOOP");
+    lv_label_set_text(
+        title,
+        "ESP32 TFT TEST");
 
-    Log::info(
-        Log::DRIVER_TAG,
-        "========================================");
+    lv_obj_set_style_text_color(
+        title,
+        lv_color_hex(0xFFFFFF),
+        LV_PART_MAIN);
 
-    while (true)
-    {
-        ++testNumber;
+    lv_obj_set_style_text_font(
+        title,
+        &lv_font_montserrat_24,
+        LV_PART_MAIN);
 
-        char path[64];
-        char expected[128];
+    lv_obj_align(
+        title,
+        LV_ALIGN_TOP_MID,
+        0,
+        20);
 
-        snprintf(
-            path,
-            sizeof(path),
-            "/driver_%06lu.txt",
-            (unsigned long)testNumber);
+    // --------------------------------------------------------
+    // Information label
+    // --------------------------------------------------------
 
-        snprintf(
-            expected,
-            sizeof(expected),
-            "ESP32SDCardDriver test #%lu",
-            (unsigned long)testNumber);
+    lv_obj_t *info =
+        lv_label_create(screen);
 
-        Log::info(
-            Log::DRIVER_TAG,
-            "TEST #%lu: %s",
-            (unsigned long)testNumber,
-            path);
+    lv_label_set_text(
+        info,
+        "ILI9341 + LovyanGFX + LVGL");
 
-        // ----------------------------------------------------
-        // WRITE
-        // ----------------------------------------------------
+    lv_obj_set_style_text_color(
+        info,
+        lv_color_hex(0xCCCCCC),
+        LV_PART_MAIN);
 
-        IFile *file =
-            sd.open(path, FileMode::Write);
+    lv_obj_align(
+        info,
+        LV_ALIGN_TOP_MID,
+        0,
+        60);
 
-        if (!file)
+    // --------------------------------------------------------
+    // Button
+    // --------------------------------------------------------
+
+    lv_obj_t *button =
+        lv_button_create(screen);
+
+    lv_obj_set_size(
+        button,
+        180,
+        60);
+
+    lv_obj_align(
+        button,
+        LV_ALIGN_CENTER,
+        0,
+        20);
+
+    // Button label
+    lv_obj_t *buttonLabel =
+        lv_label_create(button);
+
+    lv_label_set_text(
+        buttonLabel,
+        "TOUCH TEST");
+
+    lv_obj_center(buttonLabel);
+
+    // --------------------------------------------------------
+    // Button event
+    // --------------------------------------------------------
+
+    lv_obj_add_event_cb(
+        button,
+        [](lv_event_t *e)
         {
-            ++failCount;
-
-            Log::error(
-                Log::DRIVER_TAG,
-                "OPEN WRITE FAILED: %s",
-                path);
-
-            vTaskDelay(pdMS_TO_TICKS(100));
-            continue;
-        }
-
-        const size_t expectedLength =
-            strlen(expected);
-
-        size_t written = file->write(
-            reinterpret_cast<const uint8_t *>(expected),
-            expectedLength);
-
-        if (written != expectedLength)
-        {
-            ++failCount;
-
-            Log::error(
-                Log::DRIVER_TAG,
-                "WRITE FAILED: expected=%u written=%u",
-                (unsigned)expectedLength,
-                (unsigned)written);
-
-            delete file;
-
-            vTaskDelay(pdMS_TO_TICKS(100));
-            continue;
-        }
-
-        file->flush();
-
-        delete file;
-
-        // ----------------------------------------------------
-        // READ / VERIFY
-        // ----------------------------------------------------
-
-        IFile *readFile =
-            sd.open(path, FileMode::Read);
-
-        if (!readFile)
-        {
-            ++failCount;
-
-            Log::error(
-                Log::DRIVER_TAG,
-                "OPEN READ FAILED: %s",
-                path);
-
-            vTaskDelay(pdMS_TO_TICKS(100));
-            continue;
-        }
-
-        char buffer[128] = {};
-
-        size_t readBytes = readFile->read(
-            reinterpret_cast<uint8_t *>(buffer),
-            sizeof(buffer) - 1);
-
-        delete readFile;
-
-        if (readBytes != expectedLength)
-        {
-            ++failCount;
-
-            Log::error(
-                Log::DRIVER_TAG,
-                "READ SIZE FAILED: expected=%u read=%u",
-                (unsigned)expectedLength,
-                (unsigned)readBytes);
-
-            vTaskDelay(pdMS_TO_TICKS(100));
-            continue;
-        }
-
-        if (memcmp(
-                buffer,
-                expected,
-                expectedLength) != 0)
-        {
-            ++failCount;
-
-            Log::error(
-                Log::DRIVER_TAG,
-                "READ VERIFY FAILED: %s",
-                path);
-
-            Log::error(
-                Log::DRIVER_TAG,
-                "Expected: '%s'",
-                expected);
-
-            Log::error(
-                Log::DRIVER_TAG,
-                "Received: '%s'",
-                buffer);
-
-            vTaskDelay(pdMS_TO_TICKS(100));
-            continue;
-        }
-
-        // ----------------------------------------------------
-        // PASS
-        // ----------------------------------------------------
-
-        ++passCount;
-
-        Log::info(
-            Log::DRIVER_TAG,
-            "PASS #%lu pass=%lu fail=%lu",
-            (unsigned long)testNumber,
-            (unsigned long)passCount,
-            (unsigned long)failCount);
-
-        vTaskDelay(pdMS_TO_TICKS(100));
-    }
-}
-
-// ============================================================
-// ALIVE / CONCURRENT READ TASK
-// ============================================================
-
-static void aliveTask(void *parameter)
-{
-    constexpr const char *TEST_FILE =
-        "/hello.txt";
-
-    while (true)
-    {
-        EventBits_t bits =
-            xEventGroupWaitBits(
-                sdEvents,
-                SD_READY_BIT,
-                pdFALSE,
-                pdTRUE,
-                pdMS_TO_TICKS(5000));
-
-        if ((bits & SD_READY_BIT) == 0)
-        {
-            aliveReadOK = false;
-
-            Log::error(
-                Log::DRIVER_TAG,
-                "[ALIVE] SD driver not ready");
-
-            continue;
-        }
-
-        Log::info(
-            Log::DRIVER_TAG,
-            "[ALIVE] I'm alive - reading %s",
-            TEST_FILE);
-
-        // ----------------------------------------------------
-        // Check driver state
-        // ----------------------------------------------------
-
-        if (!sd.mounted())
-        {
-            aliveReadOK = false;
-
-            Log::error(
-                Log::DRIVER_TAG,
-                "[ALIVE] SD is not mounted");
-
-            vTaskDelay(
-                pdMS_TO_TICKS(5000));
-
-            continue;
-        }
-
-        // ----------------------------------------------------
-        // Open file
-        // ----------------------------------------------------
-
-        IFile *file =
-            sd.open(
-                TEST_FILE,
-                FileMode::Read);
-
-        if (!file)
-        {
-            aliveReadOK = false;
-
-            Log::error(
-                Log::DRIVER_TAG,
-                "[ALIVE] OPEN FAILED: %s",
-                TEST_FILE);
-
-            vTaskDelay(
-                pdMS_TO_TICKS(5000));
-
-            continue;
-        }
-
-        // ----------------------------------------------------
-        // Read file
-        // ----------------------------------------------------
-
-        char buffer[128] = {};
-
-        size_t n = file->read(
-            reinterpret_cast<uint8_t *>(buffer),
-            sizeof(buffer) - 1);
-
-        delete file;
-
-        // ----------------------------------------------------
-        // Verify
-        // ----------------------------------------------------
-
-        const char *expected =
-            "Hello from ESP32SDCardDriver\n";
-
-        const size_t expectedLength =
-            strlen(expected);
-
-        if (n != expectedLength ||
-            memcmp(
-                buffer,
-                expected,
-                expectedLength) != 0)
-        {
-            aliveReadOK = false;
-
-            Log::error(
-                Log::DRIVER_TAG,
-                "[ALIVE] VERIFY FAILED");
-
-            Log::error(
-                Log::DRIVER_TAG,
-                "[ALIVE] Read %u bytes: '%s'",
-                (unsigned)n,
-                buffer);
-        }
-        else
-        {
-            aliveReadOK = true;
+            LV_UNUSED(e);
 
             Log::info(
-                Log::DRIVER_TAG,
-                "[ALIVE] Read %u bytes: '%s'",
-                (unsigned)n,
-                buffer);
-        }
+                Log::DISPLAY_TAG,
+                "TFT TEST BUTTON CLICKED");
 
-        vTaskDelay(
-            pdMS_TO_TICKS(5000));
-    }
+            Serial.println(
+                "TFT TEST BUTTON CLICKED");
+        },
+        LV_EVENT_CLICKED,
+        nullptr);
+
+    // --------------------------------------------------------
+    // Status label
+    // --------------------------------------------------------
+
+    lv_obj_t *status =
+        lv_label_create(screen);
+
+    lv_label_set_text(
+        status,
+        "Display initialized");
+
+    lv_obj_set_style_text_color(
+        status,
+        lv_color_hex(0x00FF00),
+        LV_PART_MAIN);
+
+    lv_obj_align(
+        status,
+        LV_ALIGN_BOTTOM_MID,
+        0,
+        -20);
+
+    Log::info(
+        Log::DISPLAY_TAG,
+        "LVGL test UI created");
 }
 
 // ============================================================
-// TFT TASK
+// LVGL TASK
 // ============================================================
 
-static void tftTask(void *parameter)
+static void lvglTask(void *parameter)
 {
-    Log::info(
-        Log::DISPLAY_TAG,
-        "========================================");
-
-    Log::info(
-        Log::DISPLAY_TAG,
-        "TFT TASK STARTED");
+    LV_UNUSED(parameter);
 
     Log::info(
         Log::DISPLAY_TAG,
         "========================================");
 
-    // --------------------------------------------------------
-    // Initialize TFT
-    // --------------------------------------------------------
+    Log::info(
+        Log::DISPLAY_TAG,
+        "LVGL TASK STARTED");
 
     Log::info(
         Log::DISPLAY_TAG,
-        "Initializing TFT...");
-
-    tft.init();
-
-    Log::info(
-        Log::DISPLAY_TAG,
-        "TFT INIT OK");
-
-    Log::info(
-        Log::DISPLAY_TAG,
-        "TFT resolution: %dx%d",
-        tft.width(),
-        tft.height());
-
-    xEventGroupSetBits(
-        sdEvents,
-        TFT_READY_BIT);
-
-    // --------------------------------------------------------
-    // TFT update loop
-    // --------------------------------------------------------
+        "========================================");
 
     while (true)
     {
-        // ----------------------------------------------------
-        // Wait for SD
-        // ----------------------------------------------------
+        // Process LVGL timers, input and rendering
+        lvgl.update();
 
-        EventBits_t bits =
-            xEventGroupGetBits(sdEvents);
-
-        bool sdReady =
-            (bits & SD_READY_BIT) != 0;
-
-        // ----------------------------------------------------
-        // Gather current state
-        // ----------------------------------------------------
-
-        bool mounted =
-            sd.mounted();
-
-        uint32_t currentTest =
-            testNumber;
-
-        uint32_t currentPass =
-            passCount;
-
-        uint32_t currentFail =
-            failCount;
-
-        bool aliveOK =
-            aliveReadOK;
-
-        // ----------------------------------------------------
-        // Display
-        // ----------------------------------------------------
-
-        //
-        // NOTE:
-        // We deliberately keep this simple and use the
-        // underlying LovyanGFX instance through the TFT
-        // driver's current public API only where available.
-        //
-        // The existing TFTDisplay abstraction does not expose
-        // text drawing, so the task currently verifies TFT
-        // initialization and keeps the task alive.
-        //
-        // The next step can expose a small drawText()/clear()
-        // API from TFTDisplay.
-        //
-
-        Log::info(
-            Log::DISPLAY_TAG,
-            "[TFT] SD=%s mounted=%s test=%lu pass=%lu fail=%lu alive=%s",
-            sdReady ? "READY" : "NOT_READY",
-            mounted ? "YES" : "NO",
-            (unsigned long)currentTest,
-            (unsigned long)currentPass,
-            (unsigned long)currentFail,
-            aliveOK ? "OK" : "FAIL");
-
+        // Give the CPU to other FreeRTOS tasks
         vTaskDelay(
-            pdMS_TO_TICKS(1000));
+            pdMS_TO_TICKS(5));
     }
 }
 
@@ -578,32 +196,31 @@ static void tftTask(void *parameter)
 
 void setup()
 {
+    // --------------------------------------------------------
+    // Serial / Logger
+    // --------------------------------------------------------
+
     Log::init(
         Log::Level::DEBUG);
 
     Log::info(
-        Log::DRIVER_TAG,
+        Log::DISPLAY_TAG,
         "========================================");
 
     Log::info(
-        Log::DRIVER_TAG,
-        "ESP32 SD + TFT FREERTOS TEST");
+        Log::DISPLAY_TAG,
+        "ESP32 TFT + LVGL TEST");
 
     Log::info(
-        Log::DRIVER_TAG,
+        Log::DISPLAY_TAG,
         "========================================");
 
     // --------------------------------------------------------
-    // Deselect all SPI devices
+    // Deselect SPI devices
+    //
+    // TFT, SD and touch share the SPI bus.
+    // Keep all chip-select lines inactive during startup.
     // --------------------------------------------------------
-
-    pinMode(
-        SD_CS_PIN,
-        OUTPUT);
-
-    digitalWrite(
-        SD_CS_PIN,
-        HIGH);
 
     pinMode(
         TFT_CS_PIN,
@@ -621,48 +238,72 @@ void setup()
         TOUCH_CS_PIN,
         HIGH);
 
-    // --------------------------------------------------------
-    // Initialize SD SPI
-    // --------------------------------------------------------
+    pinMode(
+        SD_CS_PIN,
+        OUTPUT);
 
-    sdSpi.begin(
-        SPI3_SCLK_PIN,
-        SPI3_MISO_PIN,
-        SPI3_MOSI_PIN,
-        SD_CS_PIN);
+    digitalWrite(
+        SD_CS_PIN,
+        HIGH);
 
     Log::info(
-        Log::DRIVER_TAG,
-        "SD SPI: SCK=%d MISO=%d MOSI=%d CS=%d",
-        SPI3_SCLK_PIN,
-        SPI3_MISO_PIN,
-        SPI3_MOSI_PIN,
-        SD_CS_PIN);
+        Log::DISPLAY_TAG,
+        "SPI chip-select lines initialized");
 
     // --------------------------------------------------------
-    // Create event group
+    // Display
     // --------------------------------------------------------
 
-    sdEvents =
-        xEventGroupCreate();
+    Log::info(
+        Log::DISPLAY_TAG,
+        "Initializing TFT display...");
 
-    if (!sdEvents)
-    {
-        Log::error(
-            Log::DRIVER_TAG,
-            "FAILED TO CREATE SD EVENT GROUP");
+    display.init();
 
-        return;
-    }
+    Log::info(
+        Log::DISPLAY_TAG,
+        "TFT display initialized");
+
+    Log::info(
+        Log::DISPLAY_TAG,
+        "TFT resolution: %dx%d",
+        display.width(),
+        display.height());
 
     // --------------------------------------------------------
-    // SD task
+    // LVGL
+    // --------------------------------------------------------
+
+    Log::info(
+        Log::DISPLAY_TAG,
+        "Initializing LVGL...");
+
+    lvgl.init(
+        &display,
+        &display);
+
+    Log::info(
+        Log::DISPLAY_TAG,
+        "LVGL initialized");
+
+    // --------------------------------------------------------
+    // Create simple UI
+    //
+    // No Scene
+    // No View
+    // No SceneManager
+    // --------------------------------------------------------
+
+    createTestUI();
+
+    // --------------------------------------------------------
+    // Start LVGL task
     // --------------------------------------------------------
 
     BaseType_t result =
         xTaskCreate(
-            sdTask,
-            "SD Task",
+            lvglTask,
+            "LVGL Task",
             8192,
             nullptr,
             2,
@@ -671,75 +312,27 @@ void setup()
     if (result != pdPASS)
     {
         Log::error(
-            Log::DRIVER_TAG,
-            "FAILED TO CREATE SD TASK");
-
-        return;
-    }
-
-    // --------------------------------------------------------
-    // Alive/read task
-    // --------------------------------------------------------
-
-    result =
-        xTaskCreate(
-            aliveTask,
-            "Alive Task",
-            4096,
-            nullptr,
-            1,
-            nullptr);
-
-    if (result != pdPASS)
-    {
-        Log::error(
-            Log::DRIVER_TAG,
-            "FAILED TO CREATE ALIVE TASK");
-
-        return;
-    }
-
-    // --------------------------------------------------------
-    // TFT task
-    // --------------------------------------------------------
-
-    result =
-        xTaskCreate(
-            tftTask,
-            "TFT Task",
-            8192,
-            nullptr,
-            1,
-            nullptr);
-
-    if (result != pdPASS)
-    {
-        Log::error(
             Log::DISPLAY_TAG,
-            "FAILED TO CREATE TFT TASK");
+            "FAILED TO CREATE LVGL TASK");
 
         return;
     }
 
-    // --------------------------------------------------------
-    // Done
-    // --------------------------------------------------------
+    Log::info(
+        Log::DISPLAY_TAG,
+        "LVGL task started");
 
     Log::info(
-        Log::DRIVER_TAG,
-        "FreeRTOS tasks started");
+        Log::DISPLAY_TAG,
+        "========================================");
 
     Log::info(
-        Log::DRIVER_TAG,
-        "SD Task     : priority 2");
+        Log::DISPLAY_TAG,
+        "TFT TEST READY");
 
     Log::info(
-        Log::DRIVER_TAG,
-        "Alive Task  : priority 1");
-
-    Log::info(
-        Log::DRIVER_TAG,
-        "TFT Task    : priority 1");
+        Log::DISPLAY_TAG,
+        "========================================");
 }
 
 // ============================================================
@@ -748,6 +341,10 @@ void setup()
 
 void loop()
 {
+    // Everything is handled by the LVGL FreeRTOS task.
+    //
+    // Arduino loop does not need to do anything.
+
     vTaskDelay(
         portMAX_DELAY);
 }
