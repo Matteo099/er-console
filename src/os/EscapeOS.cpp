@@ -5,6 +5,7 @@
 #include "drivers/bus/SPIBusManager.h"
 #include "log/LogStorageWriter.h"
 #include "config/Console.h"
+#include "config/BoardConfig.h"
 
 void xTaskPortal(void *params)
 {
@@ -217,7 +218,19 @@ void EscapeOS::init()
     Log::init(Log::Level::DEBUG);
     Log::info(Log::OS_TAG, "EscapeOS initializing...");
 
-    SPIBusManager::init();
+    // Deselect all SPI peripherals before starting either SPI host.
+    pinMode(SD_CS_PIN, OUTPUT);
+    digitalWrite(SD_CS_PIN, HIGH);
+    pinMode(TFT_CS_PIN, OUTPUT);
+    digitalWrite(TFT_CS_PIN, HIGH);
+    pinMode(TOUCH_CS_PIN, OUTPUT);
+    digitalWrite(TOUCH_CS_PIN, HIGH);
+
+    if (!SPIBusManager::init())
+    {
+        Log::error(Log::OS_TAG, "SPI bus initialization failed");
+        return;
+    }
 
     SystemEventBus::init();
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_STORAGE, &storageSystem);

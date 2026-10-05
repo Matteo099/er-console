@@ -2,6 +2,7 @@
 #define TFT_BUS_CONFIGURATOR_H
 
 #include <LovyanGFX.hpp>
+#include "config/BoardConfig.h"
 
 class TFTBusConfigurator {
 public:
@@ -16,10 +17,10 @@ public:
     cfg.dma_channel = SPI_DMA_CH_AUTO;
 
     // TFT pins
-    cfg.pin_sclk = 12; // TFT SCLK (shared)
-    cfg.pin_mosi = 11; // TFT MOSI (shared)
-    cfg.pin_miso = 13; // TFT MISO (shared)
-    cfg.pin_dc = 9;    // TFT D/C
+    cfg.pin_sclk = SPI1_SCLK_PIN; // TFT SCLK (shared with touch)
+    cfg.pin_mosi = SPI1_MOSI_PIN; // TFT MOSI (shared with touch)
+    cfg.pin_miso = SPI1_MISO_PIN; // TFT MISO (shared with touch)
+    cfg.pin_dc = TFT_DC_PIN;      // TFT D/C
 
     bus_instance.config(cfg);
     panel_instance.setBus(&bus_instance);
