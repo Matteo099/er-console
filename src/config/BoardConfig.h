@@ -89,9 +89,9 @@ GPIO       → LEDs, buttons, actuators
    ================================================================
 */
 
-#define SPI3_MISO_PIN        41  // MISO pin for SPI3 (SD card)
-#define SPI3_SCLK_PIN        38  // SCLK pin for SPI3 (SD card)
-#define SPI3_MOSI_PIN        1   // MOSI pin for SPI3 (SD card)
+#define SPI3_MISO_PIN        20  // MISO pin for SPI3 (SD card)
+#define SPI3_SCLK_PIN        21  // SCLK pin for SPI3 (SD card)
+#define SPI3_MOSI_PIN        47   // MOSI pin for SPI3 (SD card)
 #define SD_CS_PIN            5   // SD card chip select
 #define SD_POWER_RELAY_PIN   3   // Relay to control SD card power (optional)
 

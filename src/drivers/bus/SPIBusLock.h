@@ -13,7 +13,7 @@ public:
         {
             if (mutex)
             {
-                xSemaphoreTake(
+                xSemaphoreTakeRecursive(
                     mutex,
                     portMAX_DELAY);
             }
@@ -23,7 +23,7 @@ public:
         {
             if (mutex)
             {
-                xSemaphoreGive(mutex);
+                xSemaphoreGiveRecursive(mutex);
             }
         }
 

@@ -108,9 +108,16 @@ void LogStorageWriter::flushBuffer()
     if (!ensureLogFile())
         return;
 
-    logFile->write(
-        reinterpret_cast<const uint8_t *>(writeBuffer),
-        writeBufferUsed);
+    size_t written = 0;
+    while (written < writeBufferUsed)
+    {
+        const size_t chunk = logFile->write(
+            reinterpret_cast<const uint8_t *>(writeBuffer) + written,
+            writeBufferUsed - written);
+        if (chunk == 0)
+            break;
+        written += chunk;
+    }
 
     logFile->flush();
 

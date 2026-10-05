@@ -366,11 +366,15 @@ bool StorageSystem::writeTextFile(
         return false;
     }
 
-    const size_t written =
-        file->write(
-            reinterpret_cast<const uint8_t *>(
-                contents.data()),
-            contents.size());
+    size_t written = 0;
+    const auto *data = reinterpret_cast<const uint8_t *>(contents.data());
+    while (written < contents.size())
+    {
+        const size_t chunk = file->write(data + written, contents.size() - written);
+        if (chunk == 0)
+            break;
+        written += chunk;
+    }
 
     file->flush();
     file->close();
