@@ -41,6 +41,9 @@ static LVGLContext lvgl;
 // ============================================================
 
 static constexpr const char *TEST_FILE = "/tft_sd_test.txt";
+static constexpr const char *SD_STRESS_FILE = "/sd_stress.bin";
+static constexpr size_t SD_STRESS_SIZE = 100 * 1024;
+static constexpr size_t SD_STRESS_BLOCK = 4096;
 
 static constexpr uint32_t TEST_INTERVAL_MS = 5000;
 
@@ -74,6 +77,8 @@ static lv_obj_t *readStatusLabel = nullptr;
 static lv_obj_t *lastLineLabel = nullptr;
 static lv_obj_t *statisticsLabel = nullptr;
 static lv_obj_t *buttonStatusLabel = nullptr;
+static lv_obj_t *displayLoadBar = nullptr;
+static uint32_t displayFrames = 0;
 
 // ============================================================
 // HELPERS
@@ -89,6 +94,190 @@ static void updateLastLine(const char *line)
         strncpy(lastReadLine, line, sizeof(lastReadLine) - 1);
         lastReadLine[sizeof(lastReadLine) - 1] = '\0';
         xSemaphoreGive(stateMutex);
+    }
+}
+
+// ============================================================
+// SD STRESS TASK
+// ============================================================
+
+static void sdStressTask(void *parameter)
+{
+    LV_UNUSED(parameter);
+
+    uint8_t *buffer = static_cast<uint8_t *>(malloc(SD_STRESS_SIZE));
+    uint8_t *verifyBlock = static_cast<uint8_t *>(malloc(SD_STRESS_BLOCK));
+
+    if (!buffer || !verifyBlock)
+    {
+        free(buffer);
+        free(verifyBlock);
+        Log::error(Log::DRIVER_TAG, "[SD STRESS] RAM allocation failed");
+        sdReady = false;
+        vTaskDelete(nullptr);
+        return;
+    }
+
+    Log::info(Log::DRIVER_TAG, "[SD STRESS] STARTED: %u KB file, %u KB blocks",
+              (unsigned)(SD_STRESS_SIZE / 1024),
+              (unsigned)(SD_STRESS_BLOCK / 1024));
+
+    uint32_t cycle = 0;
+
+    while (true)
+    {
+        if (!sdReady)
+        {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            continue;
+        }
+
+        ++cycle;
+        bool readOk = true;
+        bool writeOk = true;
+        size_t totalRead = 0;
+
+        // Keep the complete read/modify/write/verify sequence atomic from
+        // the filesystem point of view. The recursive bus mutex also covers
+        // the locks taken internally by ESP32SDCardDriver and ESP32SDFile.
+        {
+            SPIBusLock::Guard guard;
+
+            IFile *file = sd.open(SD_STRESS_FILE, FileMode::Read);
+            if (!file)
+            {
+                // First cycle: create a known deterministic 100 KB file.
+                memset(buffer, 0xA5, SD_STRESS_SIZE);
+            }
+            else
+            {
+                while (totalRead < SD_STRESS_SIZE)
+                {
+                    size_t requested = min(SD_STRESS_BLOCK, SD_STRESS_SIZE - totalRead);
+                    int n = file->read(buffer + totalRead, requested);
+                    if (n <= 0)
+                        break;
+                    totalRead += static_cast<size_t>(n);
+                }
+                file->close();
+                delete file;
+                readOk = (totalRead == SD_STRESS_SIZE);
+            }
+
+            if (!readOk)
+            {
+                ++sdReadFail;
+                updateLastLine("STRESS READ FAILED");
+                Log::error(Log::DRIVER_TAG, "[SD STRESS] READ FAILED cycle=%lu bytes=%u",
+                           (unsigned long)cycle, (unsigned)totalRead);
+            }
+            else
+            {
+                ++sdReadSuccess;
+            }
+
+            // Modify several locations in the 100 KB image.
+            for (size_t i = 0; i < 512; i += 16)
+            {
+                size_t index = (static_cast<size_t>(cycle) * 7919 + i * 37) % SD_STRESS_SIZE;
+                buffer[index] ^= static_cast<uint8_t>(cycle + i);
+            }
+
+            // Rewrite the complete file in 4 KB chunks.
+            sd.remove(SD_STRESS_FILE);
+            file = sd.open(SD_STRESS_FILE, FileMode::Write);
+            if (!file)
+            {
+                writeOk = false;
+            }
+            else
+            {
+                size_t totalWritten = 0;
+                while (totalWritten < SD_STRESS_SIZE)
+                {
+                    size_t requested = min(SD_STRESS_BLOCK, SD_STRESS_SIZE - totalWritten);
+                    size_t n = file->write(buffer + totalWritten, requested);
+                    if (n == 0)
+                        break;
+                    totalWritten += n;
+                }
+                file->flush();
+                file->close();
+                delete file;
+                writeOk = (totalWritten == SD_STRESS_SIZE);
+
+                if (!writeOk)
+                {
+                    Log::error(Log::DRIVER_TAG, "[SD STRESS] WRITE SHORT cycle=%lu bytes=%u/%u",
+                               (unsigned long)cycle,
+                               (unsigned)totalWritten,
+                               (unsigned)SD_STRESS_SIZE);
+                }
+            }
+
+            if (!writeOk)
+            {
+                ++sdWriteFail;
+                updateLastLine("STRESS WRITE FAILED");
+                Log::error(Log::DRIVER_TAG, "[SD STRESS] WRITE FAILED cycle=%lu",
+                           (unsigned long)cycle);
+            }
+            // Read the saved file again and compare every block.
+            if (writeOk)
+            {
+                file = sd.open(SD_STRESS_FILE, FileMode::Read);
+                size_t verified = 0;
+                while (file && verified < SD_STRESS_SIZE)
+                {
+                    size_t requested = min(SD_STRESS_BLOCK, SD_STRESS_SIZE - verified);
+                    size_t blockRead = 0;
+                    while (blockRead < requested)
+                    {
+                        int n = file->read(verifyBlock + blockRead, requested - blockRead);
+                        if (n <= 0)
+                            break;
+                        blockRead += static_cast<size_t>(n);
+                    }
+
+                    if (blockRead != requested ||
+                        memcmp(verifyBlock, buffer + verified, requested) != 0)
+                    {
+                        writeOk = false;
+                        break;
+                    }
+                    verified += requested;
+                }
+                if (file)
+                {
+                    file->close();
+                    delete file;
+                }
+
+                if (!writeOk)
+                {
+                    ++sdWriteFail;
+                    updateLastLine("STRESS VERIFY FAILED");
+                    Log::error(Log::DRIVER_TAG, "[SD STRESS] VERIFY FAILED cycle=%lu",
+                               (unsigned long)cycle);
+                }
+            }
+
+            if (readOk && writeOk)
+            {
+                ++sdWriteSuccess;
+                char status[128];
+                snprintf(status, sizeof(status), "STRESS cycle %lu OK - 100 KB", (unsigned long)cycle);
+                updateLastLine(status);
+                Log::info(Log::DRIVER_TAG, "[SD STRESS] cycle=%lu OK", (unsigned long)cycle);
+            }
+        }
+
+        lastReadOK = readOk;
+        lastWriteOK = writeOk;
+
+        // Short pause: enough to let the TFT task render and the touch
+        // controller be sampled between two SD stress cycles.
+        vTaskDelay(pdMS_TO_TICKS(250));
     }
 }
 
@@ -335,7 +524,7 @@ static void createTFTUI()
     // Title
     // --------------------------------------------------------
     lv_obj_t *title = lv_label_create(screen);
-    lv_label_set_text(title, "SD + TFT TEST");
+    lv_label_set_text(title, "SD + TFT STRESS");
     lv_obj_set_style_text_color(title, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
     lv_obj_set_style_text_font(title, &lv_font_montserrat_24, LV_PART_MAIN);
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 8);
@@ -376,6 +565,15 @@ static void createTFTUI()
     lv_label_set_text(statisticsLabel, "WRITE  OK: 0  FAIL: 0\n"
                                        "READ   OK: 0  FAIL: 0");
     lv_obj_align(statisticsLabel, LV_ALIGN_TOP_LEFT, 10, 160);
+
+    displayLoadBar = lv_bar_create(screen);
+    lv_obj_set_size(displayLoadBar, 210, 16);
+    lv_obj_align(displayLoadBar, LV_ALIGN_TOP_LEFT, 10, 205);
+    lv_bar_set_range(displayLoadBar, 0, 100);
+
+    lv_obj_t *displayLoadLabel = lv_label_create(screen);
+    lv_label_set_text(displayLoadLabel, "TFT continuous refresh");
+    lv_obj_align(displayLoadLabel, LV_ALIGN_TOP_LEFT, 10, 225);
 
     // --------------------------------------------------------
     // TEST BUTTON
@@ -463,6 +661,10 @@ static void tftTask(void *parameter)
                      (unsigned long)sdWriteSuccess, (unsigned long)sdWriteFail, (unsigned long)sdReadSuccess, (unsigned long)sdReadFail);
             lv_label_set_text(statisticsLabel, text);
         }
+
+        ++displayFrames;
+        if (displayLoadBar)
+            lv_bar_set_value(displayLoadBar, (displayFrames / 2) % 101, LV_ANIM_OFF);
 
         // ----------------------------------------------------
         // LVGL tick / processing interval
@@ -560,21 +762,12 @@ void setup()
     }
 
     // ========================================================
-    // CREATE SD WRITE TASK
+    // CREATE SD STRESS TASK
     // ========================================================
-    BaseType_t result = xTaskCreate(sdWriteTask, "SD Write", 8192, nullptr, 2, nullptr);
+    BaseType_t result = xTaskCreate(sdStressTask, "SD Stress", 12288, nullptr, 2, nullptr);
     if (result != pdPASS)
     {
-        Log::error(Log::DRIVER_TAG, "FAILED TO CREATE SD WRITE TASK");
-    }
-
-    // ========================================================
-    // CREATE SD READ TASK
-    // ========================================================
-    result = xTaskCreate(sdReadTask, "SD Read", 8192, nullptr, 2, nullptr);
-    if (result != pdPASS)
-    {
-        Log::error(Log::DRIVER_TAG, "FAILED TO CREATE SD READ TASK");
+        Log::error(Log::DRIVER_TAG, "FAILED TO CREATE SD STRESS TASK");
     }
 
     // ========================================================
