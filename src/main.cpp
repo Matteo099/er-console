@@ -1,3 +1,25 @@
+/*
+Dopo l’avvio puoi inviare questi caratteri dal monitor seriale:
+
+1 → FULL
+2 → ENDURANCE
+3 → RANDOM READ
+4 → FILESYSTEM
+5 → DISPLAY ONLY
+P → pausa test SD
+R → ritorna a FULL
+
+Modalità disponibili:
+- FULL: lettura, modifica, scrittura e verifica del file da 100 KB;
+- ENDURANCE: stesso test con pausa ridotta a 50 ms;
+- RANDOM READ: 128 seek/letture casuali per ciclo;
+- FILESYSTEM: crea, scrive, legge, verifica e cancella 8 file da 8 KB;
+- DISPLAY ONLY: sospende la SD e mantiene il refresh TFT/touch;
+- PAUSED: sospende le operazioni SD.
+*/
+
+
+
 #include <Arduino.h>
 #include <SPI.h>
 
@@ -44,6 +66,20 @@ static constexpr const char *TEST_FILE = "/tft_sd_test.txt";
 static constexpr const char *SD_STRESS_FILE = "/sd_stress.bin";
 static constexpr size_t SD_STRESS_SIZE = 100 * 1024;
 static constexpr size_t SD_STRESS_BLOCK = 4096;
+static constexpr size_t FS_STRESS_FILE_SIZE = 8 * 1024;
+static constexpr uint8_t FS_STRESS_FILE_COUNT = 8;
+
+enum class StressMode : uint8_t
+{
+    FullCombined,
+    Endurance,
+    RandomRead,
+    Filesystem,
+    DisplayOnly,
+    Paused
+};
+
+static volatile StressMode stressMode = StressMode::FullCombined;
 
 static constexpr uint32_t TEST_INTERVAL_MS = 5000;
 
@@ -97,6 +133,150 @@ static void updateLastLine(const char *line)
     }
 }
 
+static const char *stressModeName(StressMode mode)
+{
+    switch (mode)
+    {
+    case StressMode::FullCombined:
+        return "FULL";
+    case StressMode::Endurance:
+        return "ENDURANCE";
+    case StressMode::RandomRead:
+        return "RANDOM READ";
+    case StressMode::Filesystem:
+        return "FILESYSTEM";
+    case StressMode::DisplayOnly:
+        return "DISPLAY";
+    case StressMode::Paused:
+        return "PAUSED";
+    }
+    return "UNKNOWN";
+}
+
+static void selectStressMode(StressMode mode)
+{
+    stressMode = mode;
+    char status[64];
+    snprintf(status, sizeof(status), "MODE: %s", stressModeName(mode));
+    updateLastLine(status);
+    Log::info(Log::DRIVER_TAG, "[STRESS] mode=%s", stressModeName(mode));
+}
+
+static void processStressCommands()
+{
+    while (Serial.available() > 0)
+    {
+        char command = static_cast<char>(Serial.read());
+        switch (command)
+        {
+        case '1':
+            selectStressMode(StressMode::FullCombined);
+            break;
+        case '2':
+            selectStressMode(StressMode::Endurance);
+            break;
+        case '3':
+            selectStressMode(StressMode::RandomRead);
+            break;
+        case '4':
+            selectStressMode(StressMode::Filesystem);
+            break;
+        case '5':
+            selectStressMode(StressMode::DisplayOnly);
+            break;
+        case 'p':
+        case 'P':
+            selectStressMode(StressMode::Paused);
+            break;
+        case 'r':
+        case 'R':
+            selectStressMode(StressMode::FullCombined);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+static bool writeExactFile(const char *path, const uint8_t *data, size_t length)
+{
+    if (!sd.remove(path) && sd.exists(path))
+        return false;
+
+    IFile *file = sd.open(path, FileMode::Write);
+    if (!file)
+        return false;
+
+    size_t written = 0;
+    while (written < length)
+    {
+        size_t n = file->write(data + written, length - written);
+        if (n == 0)
+            break;
+        written += n;
+    }
+
+    file->flush();
+    file->close();
+    delete file;
+    return written == length;
+}
+
+static bool readExactFile(const char *path, uint8_t *data, size_t length)
+{
+    IFile *file = sd.open(path, FileMode::Read);
+    if (!file)
+        return false;
+
+    size_t read = 0;
+    while (read < length)
+    {
+        int n = file->read(data + read, length - read);
+        if (n <= 0)
+            break;
+        read += static_cast<size_t>(n);
+    }
+
+    file->close();
+    delete file;
+    return read == length;
+}
+
+static bool runRandomReadCycle(uint32_t cycle, uint8_t *verifyBlock)
+{
+    IFile *file = sd.open(SD_STRESS_FILE, FileMode::Read);
+    if (!file)
+        return false;
+
+    uint32_t random = cycle * 1664525UL + 1013904223UL;
+    bool ok = true;
+    for (uint16_t i = 0; i < 128 && ok; ++i)
+    {
+        random = random * 1664525UL + 1013904223UL;
+        size_t offset = random % (SD_STRESS_SIZE - 512);
+        if (!file->seek(offset))
+        {
+            ok = false;
+            break;
+        }
+
+        size_t received = 0;
+        while (received < 512)
+        {
+            int n = file->read(verifyBlock + received, 512 - received);
+            if (n <= 0)
+                break;
+            received += static_cast<size_t>(n);
+        }
+        if (received != 512)
+            ok = false;
+    }
+
+    file->close();
+    delete file;
+    return ok;
+}
+
 // ============================================================
 // SD STRESS TASK
 // ============================================================
@@ -107,11 +287,13 @@ static void sdStressTask(void *parameter)
 
     uint8_t *buffer = static_cast<uint8_t *>(malloc(SD_STRESS_SIZE));
     uint8_t *verifyBlock = static_cast<uint8_t *>(malloc(SD_STRESS_BLOCK));
+    uint8_t *fsBuffer = static_cast<uint8_t *>(malloc(FS_STRESS_FILE_SIZE));
 
-    if (!buffer || !verifyBlock)
+    if (!buffer || !verifyBlock || !fsBuffer)
     {
         free(buffer);
         free(verifyBlock);
+        free(fsBuffer);
         Log::error(Log::DRIVER_TAG, "[SD STRESS] RAM allocation failed");
         sdReady = false;
         vTaskDelete(nullptr);
@@ -126,13 +308,93 @@ static void sdStressTask(void *parameter)
 
     while (true)
     {
-        if (!sdReady)
+        StressMode mode = stressMode;
+        if (!sdReady || mode == StressMode::DisplayOnly || mode == StressMode::Paused)
         {
             vTaskDelay(pdMS_TO_TICKS(1000));
             continue;
         }
 
         ++cycle;
+
+        if (mode == StressMode::RandomRead)
+        {
+            bool ok;
+            {
+                SPIBusLock::Guard guard;
+                ok = runRandomReadCycle(cycle, verifyBlock);
+            }
+
+            if (ok)
+            {
+                ++sdReadSuccess;
+                Log::info(Log::DRIVER_TAG, "[SD RANDOM] cycle=%lu OK (128 seeks)", (unsigned long)cycle);
+            }
+            else
+            {
+                ++sdReadFail;
+                updateLastLine("RANDOM READ FAILED");
+                Log::error(Log::DRIVER_TAG, "[SD RANDOM] cycle=%lu FAILED", (unsigned long)cycle);
+            }
+            vTaskDelay(pdMS_TO_TICKS(250));
+            continue;
+        }
+
+        if (mode == StressMode::Filesystem)
+        {
+            bool ok = true;
+            {
+                SPIBusLock::Guard guard;
+                for (uint8_t fileIndex = 0; fileIndex < FS_STRESS_FILE_COUNT && ok; ++fileIndex)
+                {
+                    char path[32];
+                    snprintf(path, sizeof(path), "/fs_stress_%02u.bin", (unsigned)fileIndex);
+                    uint8_t pattern = static_cast<uint8_t>(cycle + fileIndex * 17);
+
+                    memset(fsBuffer, pattern, FS_STRESS_FILE_SIZE);
+                    if (!writeExactFile(path, fsBuffer, FS_STRESS_FILE_SIZE))
+                    {
+                        ok = false;
+                        break;
+                    }
+
+                    memset(fsBuffer, 0, FS_STRESS_FILE_SIZE);
+                    if (!readExactFile(path, fsBuffer, FS_STRESS_FILE_SIZE))
+                    {
+                        ok = false;
+                        break;
+                    }
+
+                    for (size_t i = 0; i < FS_STRESS_FILE_SIZE; ++i)
+                    {
+                        if (fsBuffer[i] != pattern)
+                        {
+                            ok = false;
+                            break;
+                        }
+                    }
+                    sd.remove(path);
+                }
+            }
+
+            if (ok)
+            {
+                ++sdReadSuccess;
+                ++sdWriteSuccess;
+                Log::info(Log::DRIVER_TAG, "[SD FS] cycle=%lu OK (%u files)",
+                          (unsigned long)cycle, (unsigned)FS_STRESS_FILE_COUNT);
+            }
+            else
+            {
+                ++sdReadFail;
+                ++sdWriteFail;
+                updateLastLine("FILESYSTEM TEST FAILED");
+                Log::error(Log::DRIVER_TAG, "[SD FS] cycle=%lu FAILED", (unsigned long)cycle);
+            }
+            vTaskDelay(pdMS_TO_TICKS(250));
+            continue;
+        }
+
         bool readOk = true;
         bool writeOk = true;
         size_t totalRead = 0;
@@ -277,7 +539,7 @@ static void sdStressTask(void *parameter)
 
         // Short pause: enough to let the TFT task render and the touch
         // controller be sampled between two SD stress cycles.
-        vTaskDelay(pdMS_TO_TICKS(250));
+        vTaskDelay(pdMS_TO_TICKS(mode == StressMode::Endurance ? 50 : 250));
     }
 }
 
@@ -611,6 +873,8 @@ static void tftTask(void *parameter)
 
     while (true)
     {
+        processStressCommands();
+
         // ----------------------------------------------------
         // Update LVGL
         // ----------------------------------------------------
@@ -785,6 +1049,7 @@ void setup()
     Log::info(Log::DRIVER_TAG, "========================================");
     Log::info(Log::DRIVER_TAG, "ALL TEST TASKS STARTED");
     Log::info(Log::DRIVER_TAG, "========================================");
+    Log::info(Log::DRIVER_TAG, "Stress commands: 1=FULL 2=ENDURANCE 3=RANDOM 4=FILESYSTEM 5=DISPLAY P=PAUSE R=RESUME");
 }
 
 // ============================================================
