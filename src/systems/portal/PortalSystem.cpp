@@ -9,6 +9,7 @@
 #include "core/SystemEventBus.h"
 #include "log/Logger.h"
 #include "systems/input/InputSystem.h"
+#include "drivers/bus/SPIBusLock.h"
 
 namespace
 {
@@ -55,6 +56,13 @@ PortalSystem::PortalSystem()
 void PortalSystem::init(void *params)
 {
     Log::info(Log::PORTAL_TAG, "Initializing portal system");
+
+#ifdef ER_DISABLE_WIFI
+    running = false;
+    started = false;
+    Log::warn(Log::PORTAL_TAG, "Portal disabled by build flag (SD diagnostic)");
+    return;
+#endif
 
     storageSystem = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
     networkSystem = static_cast<NetworkSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
@@ -164,6 +172,8 @@ void PortalSystem::serveStaticOrFallback()
 
 void PortalSystem::serveFile(const String &path, bool fallbackToIndex)
 {
+    SPIBusLock::Guard guard;
+
     if (!service.storage())
     {
         server.send(500, "text/plain", "Storage unavailable");

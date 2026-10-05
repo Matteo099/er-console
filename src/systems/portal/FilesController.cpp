@@ -1,6 +1,7 @@
 #include "FilesController.h"
 
 #include <ArduinoJson.h>
+#include "drivers/bus/SPIBusLock.h"
 
 FilesController::FilesController(PortalService& service)
     : service(service)
@@ -88,6 +89,8 @@ void FilesController::moveFile(WebServer& server)
 
 void FilesController::downloadFile(WebServer& server)
 {
+    SPIBusLock::Guard guard;
+
     if (!server.hasArg("path"))
     {
         server.send(400, "application/json", "{\"error\":\"missing_path\"}");
@@ -136,16 +139,19 @@ void FilesController::uploadFile(WebServer& server)
 
     if (upload.status == UPLOAD_FILE_START)
     {
+        SPIBusLock::Guard guard;
         uploadPath = normalizePath(server.hasArg("path") ? server.arg("path") : String("/.core/upload.bin"));
         uploadTarget = service.openUploadTarget(uploadPath.c_str(), true);
     }
     else if (upload.status == UPLOAD_FILE_WRITE)
     {
+        SPIBusLock::Guard guard;
         if (uploadTarget)
             uploadTarget.write(upload.buf, upload.currentSize);
     }
     else if (upload.status == UPLOAD_FILE_END)
     {
+        SPIBusLock::Guard guard;
         if (uploadTarget)
         {
             uploadTarget.flush();
@@ -156,6 +162,7 @@ void FilesController::uploadFile(WebServer& server)
     }
     else if (upload.status == UPLOAD_FILE_ABORTED)
     {
+        SPIBusLock::Guard guard;
         if (uploadTarget)
             uploadTarget.close();
         uploadTarget = File();

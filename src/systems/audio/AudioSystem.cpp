@@ -8,6 +8,7 @@
 #include "drivers/audio/MAX98357Driver.h"
 #include "log/Logger.h"
 #include "drivers/storage/MemoryFile.h"
+#include "drivers/bus/SPIBusLock.h"
 
 #include "config/Assets.h"
 
@@ -187,6 +188,8 @@ AudioCacheEntry *AudioSystem::findCache(const char *path)
 
 AudioCacheEntry *AudioSystem::loadCache(const char *path)
 {
+    SPIBusLock::Guard guard;
+
     IFile *file = storage->open(path);
 
     if (!file)

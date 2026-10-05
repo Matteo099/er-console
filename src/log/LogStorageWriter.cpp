@@ -4,6 +4,7 @@
 
 #include "config/Assets.h"
 #include "systems/storage/StorageSystem.h"
+#include "drivers/bus/SPIBusLock.h"
 
 LogStorageWriter &LogStorageWriter::instance()
 {
@@ -104,6 +105,8 @@ void LogStorageWriter::flushBuffer()
 {
     if (writeBufferUsed == 0)
         return;
+
+    SPIBusLock::Guard guard;
 
     if (!ensureLogFile())
         return;

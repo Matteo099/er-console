@@ -35,6 +35,14 @@ void NetworkSystem::init(void *params)
 {
     Log::info(Log::NETWORK_TAG, "Initializing network system");
 
+#ifdef ER_DISABLE_WIFI
+    WiFi.mode(WIFI_OFF);
+    status.state = State::Idle;
+    status.message = "Wi-Fi disabled for SD diagnostic";
+    initialized = true;
+    Log::warn(Log::NETWORK_TAG, "Wi-Fi disabled by build flag (SD diagnostic)");
+    return;
+#else
     WiFi.mode(WIFI_AP_STA);
     WiFi.disconnect(true, true);
 
@@ -43,6 +51,7 @@ void NetworkSystem::init(void *params)
     reloadFromStorage(storage);
 
     initialized = true;
+#endif
 }
 
 void NetworkSystem::update()
@@ -55,6 +64,11 @@ void NetworkSystem::update()
 
 bool NetworkSystem::connect()
 {
+#ifdef ER_DISABLE_WIFI
+    Log::warn(Log::NETWORK_TAG, "Wi-Fi connect ignored: disabled by build flag");
+    setState(State::Error, "Wi-Fi disabled");
+    return false;
+#else
     if (ssid.empty())
     {
         setState(State::Error, "Missing Wi-Fi credentials");
@@ -73,6 +87,7 @@ bool NetworkSystem::connect()
     connectStartMs = millis();
     setState(State::Connecting, "Connecting...");
     return true;
+#endif
 }
 
 bool NetworkSystem::reloadFromStorage(StorageSystem* storage)

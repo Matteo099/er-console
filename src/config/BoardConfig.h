@@ -190,7 +190,7 @@ GAIN pin: (do not connect)
 
 #define DEFAULT_SPI_CLOCK    40000000   // 40 MHz SPI for TFT
 #define TOUCH_SPI_CLOCK      2500000    // 2.5 MHz for touch controller
-#define SD_SPI_CLOCK         20000000   // 20 MHz for SD card
+#define SD_SPI_CLOCK         1000000    // Conservative clock for the tested SD module/wiring
 
 
 

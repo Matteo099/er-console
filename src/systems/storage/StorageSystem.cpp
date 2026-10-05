@@ -2,6 +2,7 @@
 
 #include "drivers/storage/ESP32SDCardDriver.h"
 #include "drivers/bus/SPIBusManager.h"
+#include "drivers/bus/SPIBusLock.h"
 #include "config/BoardConfig.h"
 #include "config/Assets.h"
 #include "log/Logger.h"
@@ -59,6 +60,8 @@ void StorageSystem::listFiles() const
 {
     if (!ready)
         return;
+
+    SPIBusLock::Guard guard;
 
     Log::info(
         Log::STORAGE_TAG,
@@ -168,6 +171,8 @@ bool StorageSystem::readTextFile(
     const char *path,
     std::string &out)
 {
+    SPIBusLock::Guard guard;
+
     IFile *file = open(path);
 
     if (!file)
@@ -208,6 +213,8 @@ bool StorageSystem::movePath(
     const char *destinationPath,
     bool overwrite)
 {
+    SPIBusLock::Guard guard;
+
     if (!ready)
         return false;
 
@@ -238,6 +245,8 @@ bool StorageSystem::movePath(
 bool StorageSystem::createDirectory(
     const char *path)
 {
+    SPIBusLock::Guard guard;
+
     if (!ready || !path || !*path)
         return false;
 
@@ -264,6 +273,8 @@ bool StorageSystem::listDirectory(
     std::vector<StorageEntry> &out,
     bool recursive) const
 {
+    SPIBusLock::Guard guard;
+
     if (!ready)
         return false;
 
@@ -341,6 +352,8 @@ bool StorageSystem::writeTextFile(
     const std::string &contents,
     bool overwrite)
 {
+    SPIBusLock::Guard guard;
+
     if (!ready || !path)
         return false;
 
@@ -393,6 +406,8 @@ File StorageSystem::openNative(
 
 uint64_t StorageSystem::directorySize(const char *path) const
 {
+    SPIBusLock::Guard guard;
+
     std::vector<StorageEntry> entries;
 
     if (!listDirectory(path, entries, true))
@@ -411,6 +426,8 @@ uint64_t StorageSystem::directorySize(const char *path) const
 
 bool StorageSystem::cleanupDirectoryBySize(const char *path, uint64_t maxSize, uint64_t targetSize)
 {
+    SPIBusLock::Guard guard;
+
     if (!ready)
         return false;
 

@@ -1,6 +1,7 @@
 #include "ESP32SDCardDriver.h"
 #include "log/Logger.h"
 #include "drivers/bus/SPIBusLock.h"
+#include "config/BoardConfig.h"
 #include "ESP32SDFile.h"
 #include <cstring>
 
@@ -38,7 +39,8 @@ bool ESP32SDCardDriver::init()
     SPIBusLock::Guard guard;
 
     Log::info(Log::DRIVER_TAG, "Initializing SD Card (CS=%d)", cs);
-    isMounted = SD.begin(cs, spi, 4000000U, "/sd");
+    Log::info(Log::DRIVER_TAG, "SD SPI clock: %lu Hz", (unsigned long)SD_SPI_CLOCK);
+    isMounted = SD.begin(cs, spi, SD_SPI_CLOCK, "/sd");
     return isMounted;
 }
 
