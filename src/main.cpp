@@ -27,7 +27,9 @@
 // GLOBAL OBJECTS
 // ============================================================
 
-SPIClass sdSpi(HSPI);
+// The SD card has its own SPI host on the ESP32-S3.  Use the bus manager's
+// instance so that every SD-side user shares the same peripheral and lock.
+SPIClass &sdSpi = SPIBusManager::bus();
 
 ESP32SDCardDriver sd(sdSpi, SD_CS_PIN);
 
@@ -128,47 +130,47 @@ static void sdWriteTask(void *parameter)
          *
          * We use the driver rather than SD.open().
          *
-         * FileMode::Write is assumed to provide write access.
+         * FileMode::Append preserves the previous test lines.
          */
 
-        SPIBusLock::Guard guard;
-        IFile *file = sd.open(TEST_FILE, FileMode::Write);
-        if (!file)
         {
-            ++sdWriteFail;
-            lastWriteOK = false;
-            Log::error(Log::DRIVER_TAG, "[SD WRITE] OPEN FAILED: %s", TEST_FILE);
-            vTaskDelay(pdMS_TO_TICKS(TEST_INTERVAL_MS));
-            continue;
-        }
+            SPIBusLock::Guard guard;
+            IFile *file = sd.open(TEST_FILE, FileMode::Append);
+            if (!file)
+            {
+                ++sdWriteFail;
+                lastWriteOK = false;
+                Log::error(Log::DRIVER_TAG, "[SD WRITE] OPEN FAILED: %s", TEST_FILE);
+                continue;
+            }
 
         // ----------------------------------------------------
         // Append line
         // ----------------------------------------------------
 
-        char lineWithNewline[132];
-        snprintf(lineWithNewline, sizeof(lineWithNewline), "%s\n", line);
-        const size_t length = strlen(lineWithNewline);
-        size_t written = file->write(reinterpret_cast<const uint8_t *>(lineWithNewline), length);
-        if (written != length)
-        {
-            ++sdWriteFail;
-            lastWriteOK = false;
-            Log::error(Log::DRIVER_TAG, "[SD WRITE] WRITE FAILED expected=%u written=%u", (unsigned)length, (unsigned)written);
-            delete file;
-            vTaskDelay(pdMS_TO_TICKS(TEST_INTERVAL_MS));
-            continue;
-        }
+            char lineWithNewline[132];
+            snprintf(lineWithNewline, sizeof(lineWithNewline), "%s\n", line);
+            const size_t length = strlen(lineWithNewline);
+            size_t written = file->write(reinterpret_cast<const uint8_t *>(lineWithNewline), length);
+            if (written != length)
+            {
+                ++sdWriteFail;
+                lastWriteOK = false;
+                Log::error(Log::DRIVER_TAG, "[SD WRITE] WRITE FAILED expected=%u written=%u", (unsigned)length, (unsigned)written);
+                delete file;
+                continue;
+            }
 
         // ----------------------------------------------------
         // Flush / close
         // ----------------------------------------------------
 
-        file->flush();
-        delete file;
-        ++sdWriteSuccess;
-        lastWriteOK = true;
-        Log::info(Log::DRIVER_TAG, "[SD WRITE] SUCCESS #%lu", (unsigned long)sdWriteSuccess);
+            file->flush();
+            delete file;
+            ++sdWriteSuccess;
+            lastWriteOK = true;
+            Log::info(Log::DRIVER_TAG, "[SD WRITE] SUCCESS #%lu", (unsigned long)sdWriteSuccess);
+        }
 
         // ----------------------------------------------------
         // Wait
@@ -203,17 +205,17 @@ static void sdReadTask(void *parameter)
         // Open file
         // ----------------------------------------------------
 
-        SPIBusLock::Guard guard;
-        IFile *file = sd.open(TEST_FILE, FileMode::Read);
-        if (!file)
         {
-            ++sdReadFail;
-            lastReadOK = false;
-            updateLastLine("READ FAILED: open");
-            Log::error(Log::DRIVER_TAG, "[SD READ] OPEN FAILED");
-            vTaskDelay(pdMS_TO_TICKS(TEST_INTERVAL_MS));
-            continue;
-        }
+            SPIBusLock::Guard guard;
+            IFile *file = sd.open(TEST_FILE, FileMode::Read);
+            if (!file)
+            {
+                ++sdReadFail;
+                lastReadOK = false;
+                updateLastLine("READ FAILED: open");
+                Log::error(Log::DRIVER_TAG, "[SD READ] OPEN FAILED");
+                continue;
+            }
 
         // ----------------------------------------------------
         // Read complete file
@@ -221,75 +223,74 @@ static void sdReadTask(void *parameter)
         // For this test the file is intentionally small.
         // ----------------------------------------------------
 
-        char buffer[1024];
+            char buffer[1024];
 
-        memset(buffer, 0, sizeof(buffer));
+            memset(buffer, 0, sizeof(buffer));
 
-        size_t totalRead = 0;
+            size_t totalRead = 0;
 
-        while (totalRead < sizeof(buffer) - 1)
-        {
-            size_t n = file->read(reinterpret_cast<uint8_t *>(buffer + totalRead), sizeof(buffer) - totalRead - 1);
-            if (n == 0)
-                break;
-            totalRead += n;
-        }
+            while (totalRead < sizeof(buffer) - 1)
+            {
+                size_t n = file->read(reinterpret_cast<uint8_t *>(buffer + totalRead), sizeof(buffer) - totalRead - 1);
+                if (n == 0)
+                    break;
+                totalRead += n;
+            }
 
-        delete file;
+            delete file;
 
-        if (totalRead == 0)
-        {
-            ++sdReadFail;
-            lastReadOK = false;
-            updateLastLine("READ FAILED: empty file");
-            Log::error(Log::DRIVER_TAG, "[SD READ] Empty file");
-            vTaskDelay(pdMS_TO_TICKS(TEST_INTERVAL_MS));
-            continue;
-        }
+            if (totalRead == 0)
+            {
+                ++sdReadFail;
+                lastReadOK = false;
+                updateLastLine("READ FAILED: empty file");
+                Log::error(Log::DRIVER_TAG, "[SD READ] Empty file");
+                continue;
+            }
 
-        buffer[totalRead] = '\0';
+            buffer[totalRead] = '\0';
 
         // ----------------------------------------------------
         // Find last line
         // ----------------------------------------------------
-        char *lastLine = buffer;
-        for (size_t i = 0; i < totalRead; ++i)
-        {
-            if (buffer[i] == '\n')
+            char *lastLine = buffer;
+            for (size_t i = 0; i < totalRead; ++i)
             {
-                if (i + 1 < totalRead)
+                if (buffer[i] == '\n')
                 {
-                    lastLine = &buffer[i + 1];
+                    if (i + 1 < totalRead)
+                    {
+                        lastLine = &buffer[i + 1];
+                    }
                 }
             }
-        }
 
         // ----------------------------------------------------
         // Remove trailing newline
         // ----------------------------------------------------
-        size_t lastLength = strlen(lastLine);
-        while (lastLength > 0 && (lastLine[lastLength - 1] == '\n' || lastLine[lastLength - 1] == '\r'))
-        {
-            lastLine[lastLength - 1] = '\0';
-            --lastLength;
-        }
-        if (strlen(lastLine) == 0)
-        {
-            ++sdReadFail;
-            lastReadOK = false;
-            updateLastLine("READ FAILED: invalid line");
-            Log::error(Log::DRIVER_TAG, "[SD READ] Last line empty");
-            vTaskDelay(pdMS_TO_TICKS(TEST_INTERVAL_MS));
-            continue;
-        }
+            size_t lastLength = strlen(lastLine);
+            while (lastLength > 0 && (lastLine[lastLength - 1] == '\n' || lastLine[lastLength - 1] == '\r'))
+            {
+                lastLine[lastLength - 1] = '\0';
+                --lastLength;
+            }
+            if (strlen(lastLine) == 0)
+            {
+                ++sdReadFail;
+                lastReadOK = false;
+                updateLastLine("READ FAILED: invalid line");
+                Log::error(Log::DRIVER_TAG, "[SD READ] Last line empty");
+                continue;
+            }
 
         // ----------------------------------------------------
         // Success
         // ----------------------------------------------------
-        ++sdReadSuccess;
-        lastReadOK = true;
-        updateLastLine(lastLine);
-        Log::info(Log::DRIVER_TAG, "[SD READ] SUCCESS: '%s'", lastLine);
+            ++sdReadSuccess;
+            lastReadOK = true;
+            updateLastLine(lastLine);
+            Log::info(Log::DRIVER_TAG, "[SD READ] SUCCESS: '%s'", lastLine);
+        }
 
         // ----------------------------------------------------
         // Wait
@@ -500,7 +501,11 @@ void setup()
     // SPI for SD
     // --------------------------------------------------------
 
-    sdSpi.begin(SPI3_SCLK_PIN, SPI3_MISO_PIN, SPI3_MOSI_PIN, SD_CS_PIN);
+    if (!SPIBusManager::init(SPI3_SCLK_PIN, SPI3_MISO_PIN, SPI3_MOSI_PIN))
+    {
+        Log::error(Log::DRIVER_TAG, "FAILED TO INITIALIZE SD SPI BUS");
+        return;
+    }
     Log::info(Log::DRIVER_TAG, "SD SPI initialized: SCK=%d MISO=%d MOSI=%d CS=%d", SPI3_SCLK_PIN, SPI3_MISO_PIN, SPI3_MOSI_PIN, SD_CS_PIN);
 
     // --------------------------------------------------------

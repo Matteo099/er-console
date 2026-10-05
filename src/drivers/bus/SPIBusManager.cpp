@@ -12,7 +12,10 @@ bool SPIBusManager::init(int sclkPin, int misoPin, int mosiPin)
     {
         return true;
     }
-    busMutex = xSemaphoreCreateMutex();
+    // The SD driver can call methods which acquire the bus lock again
+    // while the caller is holding it for a complete filesystem operation.
+    // Use a recursive mutex so that this is safe and does not deadlock.
+    busMutex = xSemaphoreCreateRecursiveMutex();
     if (!busMutex)
     {
         return false;
