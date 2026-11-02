@@ -6,6 +6,7 @@
 #include "FilesController.h"
 #include "StatusController.h"
 #include "config/Assets.h"
+#include "config/Console.h"
 #include "core/SystemEventBus.h"
 #include "log/Logger.h"
 #include "systems/input/InputSystem.h"
@@ -57,10 +58,10 @@ void PortalSystem::init(void *params)
 {
     Log::info(Log::PORTAL_TAG, "Initializing portal system");
 
-#ifdef ER_DISABLE_WIFI
+#if !WIFI_ENABLED || !PORTAL_ENABLED
     running = false;
     started = false;
-    Log::warn(Log::PORTAL_TAG, "Portal disabled by build flag (SD diagnostic)");
+    Log::warn(Log::PORTAL_TAG, "Portal disabled in Console.h (requires Wi-Fi and portal enabled)");
     return;
 #endif
 

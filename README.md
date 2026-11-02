@@ -1,5 +1,29 @@
 # EscapeRoom Console
 
+## Diagnostica microSD / TFT / touch
+
+Le opzioni di isolamento sono in [`src/config/Console.h`](src/config/Console.h):
+
+```cpp
+#define WIFI_ENABLED 0
+#define PORTAL_ENABLED 0
+#define SD_INIT_BEFORE_DISPLAY 1
+#define SD_READ_DIAGNOSTICS_ENABLED 1
+```
+
+Wi-Fi e portale sono attualmente disabilitati in entrambe le build. Per
+riattivarli impostare i primi due flag a `1`; con Wi-Fi disabilitato anche il
+portale rimane spento. Il precedente `ER_DISABLE_WIFI` della sola build debug
+e' stato sostituito da queste opzioni.
+
+La prova diagnostica attuale inizializza SD prima del display e verifica le
+letture. Per ripristinare l'ordine di boot normale impostare
+`SD_INIT_BEFORE_DISPLAY=0`. L'ambiente predefinito PlatformIO e' quello debug,
+cosi' upload e monitor senza selezione esplicita usano lo stesso ELF.
+
+Per il confronto dei bus e la procedura A/B vedere
+[`docs/SD_DIAGNOSTICS.md`](docs/SD_DIAGNOSTICS.md).
+
 # 1️⃣ Stack software – visione d’insieme
 
 Il tuo stack è corretto e lo formalizziamo così:

@@ -48,8 +48,70 @@ void StorageSystem::init(void *params)
     ready = true;
     Log::info(Log::STORAGE_TAG, "Storage ready");
 
+#if SD_READ_DIAGNOSTICS_ENABLED
+    runReadDiagnostics("storage init");
+#endif
     listFiles();
 }
+
+#if SD_READ_DIAGNOSTICS_ENABLED
+void StorageSystem::runReadDiagnostics(const char *phase) const
+{
+    SPIBusLock::Guard guard;
+    if (!ready)
+    {
+        Log::warn(Log::STORAGE_TAG, "SD diagnostic (%s): skipped, mount failed", phase);
+        return;
+    }
+
+    const char *paths[] = {IMG_BRAND_NEGATIVE_FILE, IMG_LOGO_FILE};
+    uint8_t buffer[512];
+    for (const char *path : paths)
+    {
+        uint32_t firstHash = 0;
+        size_t firstSize = 0;
+        for (unsigned pass = 0; pass < 2; ++pass)
+        {
+            File file = SD.open(path, FILE_READ);
+            if (!file || file.isDirectory())
+            {
+                Log::warn(Log::STORAGE_TAG, "SD diagnostic (%s): cannot open %s", phase, path);
+                break;
+            }
+
+            const size_t expected = file.size();
+            size_t total = 0;
+            uint32_t hash = 2166136261u; // FNV-1a, streaming comparison (no image decoding)
+            while (total < expected)
+            {
+                const size_t remaining = expected - total;
+                const size_t chunk = remaining < sizeof(buffer) ? remaining : sizeof(buffer);
+                const size_t count = file.read(buffer, chunk);
+                if (count == 0 || count > chunk)
+                    break;
+                for (size_t i = 0; i < count; ++i)
+                    hash = (hash ^ buffer[i]) * 16777619u;
+                total += count;
+            }
+            file.close();
+
+            Log::info(Log::STORAGE_TAG,
+                      "SD diagnostic (%s): %s pass=%u bytes=%u/%u fnv1a=%08lx",
+                      phase, path, pass + 1, (unsigned)total, (unsigned)expected,
+                      (unsigned long)hash);
+            if (total != expected)
+            {
+                Log::error(Log::STORAGE_TAG, "SD diagnostic: incomplete read of %s", path);
+                break;
+            }
+            if (pass && (firstHash != hash || firstSize != expected))
+                Log::error(Log::STORAGE_TAG, "SD diagnostic: inconsistent repeated reads of %s", path);
+            firstHash = hash;
+            firstSize = expected;
+        }
+    }
+}
+#endif
 
 bool StorageSystem::isReady() const
 {
@@ -181,6 +243,7 @@ bool StorageSystem::readTextFile(
     out.clear();
 
     char buffer[256];
+    bool complete = true;
 
     while (file->available())
     {
@@ -189,7 +252,12 @@ bool StorageSystem::readTextFile(
             sizeof(buffer));
 
         if (r <= 0)
+        {
+            Log::error(Log::STORAGE_TAG, "SD read failed before EOF: %s (%u bytes read)",
+                       path, (unsigned)out.size());
+            complete = false;
             break;
+        }
 
         out.append(buffer, r);
     }
@@ -197,7 +265,9 @@ bool StorageSystem::readTextFile(
     file->close();
     delete file;
 
-    return true;
+    if (!complete)
+        out.clear();
+    return complete;
 }
 
 bool StorageSystem::removePath(const char *path)
@@ -280,6 +350,10 @@ bool StorageSystem::listDirectory(
 
     std::vector<StorageEntry> localEntries;
 
+#if SD_READ_DIAGNOSTICS_ENABLED
+    Log::debug(Log::STORAGE_TAG, "Listing directory: %s (minimum free stack=%u)",
+               path, (unsigned)uxTaskGetStackHighWaterMark(nullptr));
+#endif
     if (!driver->listDirectory(
             path,
             localEntries))

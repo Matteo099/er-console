@@ -20,11 +20,13 @@ void xTaskPortal(void *params)
     PortalSystem *portal = os->getPortalSystem();
     portal->init();
 
+#if WIFI_ENABLED && PORTAL_ENABLED
     while (os->isRunning())
     {
         portal->update();
         vTaskDelay(pdMS_TO_TICKS(10));
     }
+#endif
 
     vTaskDelete(nullptr);
 }
@@ -82,6 +84,9 @@ void xTaskUI(void *params)
     UIManager *ui = os->getUIManager();
     ui->init();
 
+#if SD_INIT_BEFORE_DISPLAY && SD_READ_DIAGNOSTICS_ENABLED
+    os->getStorageSystem()->runReadDiagnostics("after display init");
+#endif
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_UI_READY);
 
     while (os->isRunning())
@@ -106,6 +111,10 @@ void xTaskStorage(void *params)
 
     StorageSystem *storage = os->getStorageSystem();
     storage->init();
+#if SD_READ_DIAGNOSTICS_ENABLED
+    Log::info(Log::STORAGE_TAG, "Storage task minimum free stack: %u bytes",
+              (unsigned)uxTaskGetStackHighWaterMark(nullptr));
+#endif
 #if LOG_STORAGE_ENABLED
     LogStorageWriter::instance().start(storage);
 #endif
@@ -132,11 +141,13 @@ void xTaskNetwork(void *params)
 
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_NETWORK_READY);
 
+#if WIFI_ENABLED
     while (os->isRunning())
     {
         network->update();
         vTaskDelay(pdMS_TO_TICKS(100));
     }
+#endif
 
     vTaskDelete(nullptr);
 }
@@ -217,6 +228,9 @@ void EscapeOS::init()
 {
     Log::init(Log::Level::DEBUG);
     Log::info(Log::OS_TAG, "EscapeOS initializing...");
+    Log::info(Log::OS_TAG, "Firmware built: %s %s", __DATE__, __TIME__);
+    Log::info(Log::OS_TAG, "Config: WIFI=%d PORTAL=%d SD_BEFORE_DISPLAY=%d SD_READ_CHECKS=%d",
+              WIFI_ENABLED, PORTAL_ENABLED, SD_INIT_BEFORE_DISPLAY, SD_READ_DIAGNOSTICS_ENABLED);
 
     // Deselect all SPI peripherals before starting either SPI host.
     pinMode(SD_CS_PIN, OUTPUT);
@@ -280,7 +294,7 @@ void EscapeOS::createTasks()
     xTaskCreatePinnedToCore(
         xTaskStorage,
         "StorageTask",
-        4096,
+        8192,
         this,
         2,
         nullptr,

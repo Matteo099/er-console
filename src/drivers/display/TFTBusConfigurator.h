@@ -8,7 +8,7 @@ class TFTBusConfigurator {
 public:
   void configure(lgfx::Bus_SPI& bus_instance, lgfx::Panel_ILI9341& panel_instance) {
     auto cfg = bus_instance.config();
-    cfg.spi_host = SPI2_HOST; // ESP32-S3 VSPI/HSPI choice
+    cfg.spi_host = SPI2_HOST; // TFT + touch; SD uses the separate SPI3 host
     cfg.spi_mode = 0;
     cfg.freq_write = 20000000; // 20 MHz TFT SPI
     cfg.freq_read = 10000000;  // 10 MHz TFT read

@@ -40,7 +40,11 @@ bool ESP32SDCardDriver::init()
 
     Log::info(Log::DRIVER_TAG, "Initializing SD Card (CS=%d)", cs);
     Log::info(Log::DRIVER_TAG, "SD SPI clock: %lu Hz", (unsigned long)SD_SPI_CLOCK);
-    isMounted = SD.begin(cs, spi, SD_SPI_CLOCK, "/sd");
+    // Keep the verified clock for filesystem reads too, not only card initialization.
+    isMounted = SD.begin(cs, spi, SD_SPI_CLOCK, "/sd", 5, false);
+    if (!isMounted)
+        Log::error(Log::DRIVER_TAG, "SD mount failed on SPI3: SCK=%d MISO=%d MOSI=%d CS=%d",
+                   SPI3_SCLK_PIN, SPI3_MISO_PIN, SPI3_MOSI_PIN, cs);
     return isMounted;
 }
 

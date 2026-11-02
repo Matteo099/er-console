@@ -1,11 +1,21 @@
 #include "LVGLImageProvider.h"
 #include "drivers/bus/SPIBusLock.h"
 #include "log/Logger.h"
+#include "core/SystemEventBus.h"
+#include "systems/storage/StorageSystem.h"
 #include <SD.h>
 
 static void* fs_open(lv_fs_drv_t*, const char* path, lv_fs_mode_t mode)
 {
     SPIBusLock::Guard guard;
+
+    if (!SystemEventBus::systemEvents ||
+        !(xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY))
+        return nullptr;
+    auto *storage = static_cast<StorageSystem *>(
+        SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+    if (!storage || !storage->isReady())
+        return nullptr;
 
     Log::debug(Log::DISPLAY_TAG, "LVGL loading image: %s", path);
     const bool write = (mode & LV_FS_MODE_WR) != 0;
@@ -42,11 +52,23 @@ static lv_fs_res_t fs_read(
     if (!file_p || !buf || !br)
         return LV_FS_RES_INV_PARAM;
 
+    *br = 0;
     File* f = static_cast<File*>(file_p);
     if (!(*f))
         return LV_FS_RES_NOT_EX;
 
-    *br = f->read((uint8_t*)buf, btr);
+    const size_t size = f->size();
+    const size_t pos = f->position();
+    const size_t remaining = pos < size ? size - pos : 0;
+    const size_t expected = btr < remaining ? btr : remaining;
+    const size_t actual = expected ? f->read((uint8_t*)buf, expected) : 0;
+    if (actual != expected)
+    {
+        Log::error(Log::DISPLAY_TAG, "SD short read: offset=%u expected=%u actual=%u",
+                   (unsigned)pos, (unsigned)expected, (unsigned)actual);
+        return LV_FS_RES_FS_ERR;
+    }
+    *br = actual;
     return LV_FS_RES_OK;
 }
 

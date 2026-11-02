@@ -40,8 +40,8 @@ Not all pins are safe for general use. Some are used for boot mode or USB functi
 
 PERIPHERAL BUS OVERVIEW
 
-SPI BUS 1  → TFT display + Touch controller
-SPI BUS 2  → MicroSD card
+SPI2 HOST  → TFT display + Touch controller (SPI1_* pin macros below)
+SPI3 HOST  → MicroSD card (Arduino HSPI)
 I2S BUS    → Audio amplifier (MAX98357A)
 I2C BUS    → Sensors / small displays
 GPIO       → LEDs, buttons, actuators
@@ -89,7 +89,7 @@ GPIO       → LEDs, buttons, actuators
    ================================================================
 */
 
-#define SPI3_MISO_PIN        20  // MISO pin for SPI3 (SD card)
+#define SPI3_MISO_PIN        20  // MISO for SD; also native USB D+, use USB-UART for diagnostics
 #define SPI3_SCLK_PIN        21  // SCLK pin for SPI3 (SD card)
 #define SPI3_MOSI_PIN        47   // MOSI pin for SPI3 (SD card)
 #define SD_CS_PIN            5   // SD card chip select
@@ -172,13 +172,13 @@ GAIN pin: (do not connect)
 
 #define GPIO_FREE_1          1
 #define GPIO_FREE_2          2
-#define GPIO_FREE_5          21
+#define GPIO_FREE_5          21  // Reserved by SD SCLK; not available while SD is used
 #define GPIO_FREE_6          38
 #define GPIO_FREE_7          39
 #define GPIO_FREE_8          40
 #define GPIO_FREE_9          41
 #define GPIO_FREE_10         42
-#define GPIO_FREE_11         47
+#define GPIO_FREE_11         47  // Reserved by SD MOSI; not available while SD is used
 #define GPIO_MIN_PIN         0
 #define GPIO_MAX_PIN         48
 
@@ -190,7 +190,7 @@ GAIN pin: (do not connect)
 
 #define DEFAULT_SPI_CLOCK    40000000   // 40 MHz SPI for TFT
 #define TOUCH_SPI_CLOCK      2500000    // 2.5 MHz for touch controller
-#define SD_SPI_CLOCK         1000000    // Conservative clock for the tested SD module/wiring
+#define SD_SPI_CLOCK         400000     // Verified read clock in the standalone SPI3 probe
 
 
 

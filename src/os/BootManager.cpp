@@ -3,6 +3,7 @@
 #include "os/BootEvent.h"
 #include "core/SystemEventBus.h"
 #include "log/Logger.h"
+#include "config/Console.h"
 
 void BootManager::run()
 {
@@ -22,6 +23,14 @@ void BootManager::run()
                         portMAX_DELAY);
     vTaskDelay(pdMS_TO_TICKS(delayMs / 10));
 
+    // Keep the usual visual boot unless explicitly testing SD without TFT/touch.
+#if SD_INIT_BEFORE_DISPLAY
+    Log::warn(Log::BOOT_TAG, "SD diagnostic: mounting before display/touch initialization");
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_STORAGE_INIT_REQ);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_STORAGE_READY, pdFALSE, pdTRUE, portMAX_DELAY);
+#endif
+
     // ---- DISPLAY / UI ----
     emitStep(BootStep::DISPLAY_INIT, "Initializing display");
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_UI_INIT_REQ);
@@ -34,12 +43,14 @@ void BootManager::run()
 
     // ---- STORAGE ----
     emitStep(BootStep::STORAGE_INIT, "Initializing storage");
+#if !SD_INIT_BEFORE_DISPLAY
     xEventGroupSetBits(SystemEventBus::systemEvents, EVT_STORAGE_INIT_REQ);
     xEventGroupWaitBits(SystemEventBus::systemEvents,
                         EVT_STORAGE_READY,
                         pdFALSE,
                         pdTRUE,
                         portMAX_DELAY);
+#endif
     vTaskDelay(pdMS_TO_TICKS(delayMs));
 
     // ---- NETWORK ----

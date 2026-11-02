@@ -5,6 +5,7 @@
 #include "core/SystemEventBus.h"
 #include "scenes/menu/MainMenuScene.h"
 #include "systems/ui/lvgl/LVGLImageProvider.h"
+#include "systems/storage/StorageSystem.h"
 
 void BootScene::onEnter()
 {
@@ -16,8 +17,11 @@ void BootScene::onEnter()
 void BootScene::onUpdate()
 {
     // ---- Late-load images when storage is ready ----
-    if (!imagesLoaded &&
-        (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY))
+    const bool storageInitFinished =
+        xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY;
+    auto *storage = static_cast<StorageSystem *>(
+        SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+    if (!imagesLoaded && storageInitFinished && storage && storage->isReady())
     {
         Log::debug(Log::SCENE_TAG, "images can now be loaded - initializing LVGL image provider and loading boot images");
         LVGLImageProvider::init(); // now SD is available

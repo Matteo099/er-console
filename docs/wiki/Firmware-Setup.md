@@ -10,7 +10,8 @@
 
 The default environment is:
 
-- `env:esp32-s3-devkitc-1-n16r8v`
+- `env:esp32-s3-devkitc-1-n16r8v-debug` (inherits the base environment
+  `env:esp32-s3-devkitc-1-n16r8v`)
 - Framework: Arduino
 - MCU: ESP32-S3
 - Flash: 16MB
@@ -41,7 +42,7 @@ pio run -t upload
 ## Serial Monitor
 
 ```bash
-pio device monitor -b 115200
+pio device monitor -e esp32-s3-devkitc-1-n16r8v-debug -p COM3 -b 115200
 ```
 
 ## Notes on Build Scripts

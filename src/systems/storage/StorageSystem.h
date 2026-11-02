@@ -36,6 +36,9 @@ public:
     uint64_t usedBytes() const;
     uint64_t freeBytes() const;
     void listFiles() const;
+#if SD_READ_DIAGNOSTICS_ENABLED
+    void runReadDiagnostics(const char *phase) const;
+#endif
     bool createDirectoryIfMissing(const char *path);
     uint64_t directorySize(const char *path) const;
     bool cleanupDirectoryBySize(

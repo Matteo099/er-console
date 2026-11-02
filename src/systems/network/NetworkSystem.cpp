@@ -4,6 +4,7 @@
 #include <sstream>
 #include <algorithm>
 #include "config/Assets.h"
+#include "config/Console.h"
 
 namespace
 {
@@ -35,16 +36,17 @@ void NetworkSystem::init(void *params)
 {
     Log::info(Log::NETWORK_TAG, "Initializing network system");
 
-#ifdef ER_DISABLE_WIFI
+#if !WIFI_ENABLED
     WiFi.mode(WIFI_OFF);
     status.state = State::Idle;
-    status.message = "Wi-Fi disabled for SD diagnostic";
+    status.message = "Wi-Fi disabled in Console.h";
     initialized = true;
-    Log::warn(Log::NETWORK_TAG, "Wi-Fi disabled by build flag (SD diagnostic)");
+    Log::warn(Log::NETWORK_TAG, "Wi-Fi disabled in Console.h");
     return;
 #else
-    WiFi.mode(WIFI_AP_STA);
-    WiFi.disconnect(true, true);
+    // PortalSystem owns the AP; a disabled portal must not leave an AP active.
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect(false, true);
 
     StorageSystem *storage = static_cast<StorageSystem *>(params);
 
@@ -56,6 +58,9 @@ void NetworkSystem::init(void *params)
 
 void NetworkSystem::update()
 {
+#if !WIFI_ENABLED
+    return;
+#endif
     if (!initialized)
         return;
 
@@ -64,8 +69,8 @@ void NetworkSystem::update()
 
 bool NetworkSystem::connect()
 {
-#ifdef ER_DISABLE_WIFI
-    Log::warn(Log::NETWORK_TAG, "Wi-Fi connect ignored: disabled by build flag");
+#if !WIFI_ENABLED
+    Log::warn(Log::NETWORK_TAG, "Wi-Fi connect ignored: disabled in Console.h");
     setState(State::Error, "Wi-Fi disabled");
     return false;
 #else
@@ -92,6 +97,10 @@ bool NetworkSystem::connect()
 
 bool NetworkSystem::reloadFromStorage(StorageSystem* storage)
 {
+#if !WIFI_ENABLED
+    setState(State::Idle, "Wi-Fi disabled in Console.h");
+    return false;
+#endif
     DeviceConfig config = configRepository.defaultConfig();
     bool loaded = storage && storage->isReady() && configRepository.load(storage, config);
 
@@ -127,6 +136,10 @@ void NetworkSystem::setCredentials(const std::string& newSsid, const std::string
 
 void NetworkSystem::disconnect()
 {
+#if !WIFI_ENABLED
+    setState(State::Idle, "Wi-Fi disabled in Console.h");
+    return;
+#endif
     if (WiFi.status() == WL_CONNECTED)
     {
         WiFi.disconnect(true, true);
