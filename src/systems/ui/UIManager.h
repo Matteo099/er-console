@@ -11,6 +11,8 @@ private:
     TFTDisplay display;
     LVGLContext lvgl;
     SceneManager scenes;
+    bool preferencesLoaded = false;
+    void loadPreferences();
 
 public:
     void init(void *params = nullptr) override;

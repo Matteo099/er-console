@@ -2,6 +2,22 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <nvs.h>
+
+namespace
+{
+    void loadUiPreferences(DeviceConfig &config)
+    {
+        nvs_handle_t handle;
+        if (nvs_open("console-ui", NVS_READONLY, &handle) != ESP_OK) return;
+        char theme[32];
+        size_t length = sizeof(theme);
+        if (nvs_get_str(handle, "theme", theme, &length) == ESP_OK) config.ui.theme = theme;
+        uint8_t sound = config.audio.enabled ? 1 : 0;
+        if (nvs_get_u8(handle, "sound", &sound) == ESP_OK) config.audio.enabled = sound != 0;
+        nvs_close(handle);
+    }
+}
 
 DeviceConfig DeviceConfigRepository::defaultConfig() const
 {
@@ -10,17 +26,17 @@ DeviceConfig DeviceConfigRepository::defaultConfig() const
 
 bool DeviceConfigRepository::load(StorageSystem* storage, DeviceConfig& config) const
 {
-    if (!storage || !storage->isReady())
-        return false;
-
-    std::string json;
-    if (!storage->readTextFile(DEVICE_CONFIG_FILE, json))
+    config = defaultConfig();
+    bool loaded = false;
+    if (storage && storage->isReady())
     {
-        config = defaultConfig();
-        return false;
+        std::string json;
+        if (storage->readTextFile(DEVICE_CONFIG_FILE, json)) loaded = parseJson(json, config);
     }
-
-    return parseJson(json, config);
+    // Local display preferences remain usable without SD. All callers, including
+    // the portal, see the same effective UI configuration through this repository.
+    loadUiPreferences(config);
+    return loaded;
 }
 
 bool DeviceConfigRepository::save(StorageSystem* storage, const DeviceConfig& config) const
@@ -28,7 +44,19 @@ bool DeviceConfigRepository::save(StorageSystem* storage, const DeviceConfig& co
     if (!storage || !storage->isReady())
         return false;
 
-    return storage->writeTextFile(DEVICE_CONFIG_FILE, toJson(config), true);
+    if (!storage->writeTextFile(DEVICE_CONFIG_FILE, toJson(config), true)) return false;
+    return saveUiPreferences(config.ui.theme, config.audio.enabled);
+}
+
+bool DeviceConfigRepository::saveUiPreferences(const std::string &theme, bool soundEnabled) const
+{
+    nvs_handle_t handle;
+    if (nvs_open("console-ui", NVS_READWRITE, &handle) != ESP_OK) return false;
+    esp_err_t result = nvs_set_str(handle, "theme", theme.c_str());
+    if (result == ESP_OK) result = nvs_set_u8(handle, "sound", soundEnabled ? 1 : 0);
+    if (result == ESP_OK) result = nvs_commit(handle);
+    nvs_close(handle);
+    return result == ESP_OK;
 }
 
 std::string DeviceConfigRepository::toJson(const DeviceConfig& config) const

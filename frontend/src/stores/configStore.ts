@@ -20,7 +20,7 @@ const defaultConfig = (): DeviceConfig => ({
     dateFormat: 'YYYY-MM-DD',
   },
   ui: {
-    theme: 'dark',
+    theme: 'mint',
     compactMode: false,
   },
 })
@@ -41,6 +41,8 @@ const normalizeConfig = (value?: Partial<DeviceConfig> | null): DeviceConfig => 
     ui: {
       ...defaults.ui,
       ...value?.ui,
+      // The TFT maps legacy light/dark values to the default pastel palette.
+      theme: value?.ui?.theme === 'sky' || value?.ui?.theme === 'coral' ? value.ui.theme : 'mint',
     },
   }
 }

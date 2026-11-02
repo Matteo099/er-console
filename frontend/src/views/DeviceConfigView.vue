@@ -40,7 +40,11 @@
             />
             <v-select
               v-model="config.ui.theme"
-              :items="['dark', 'light']"
+              :items="[
+                { title: 'Menta', value: 'mint' },
+                { title: 'Cielo', value: 'sky' },
+                { title: 'Corallo', value: 'coral' },
+              ]"
               :label="t('erConsole.config.labels.uiTheme')"
               name="ui-theme"
               autocomplete="off"

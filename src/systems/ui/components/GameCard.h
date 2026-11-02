@@ -1,149 +1,44 @@
 #pragma once
-
 #include <lvgl.h>
 #include <string>
+#include "Container.h"
+#include "Label.h"
 
 class GameCard
 {
 public:
     struct GameData
     {
-        std::string title;
-        std::string description;
-        std::string author;
-        int difficulty;
-        int durationMin;
+        std::string title, description, author;
+        int difficulty, durationMin;
     };
-
-private:
-    static lv_obj_t *createRow(lv_obj_t *parent)
-    {
-        lv_obj_t *row = lv_obj_create(parent);
-        if (!row)
-            return nullptr;
-
-        lv_obj_remove_style_all(row);
-
-        lv_obj_set_width(row, LV_PCT(100));
-        lv_obj_set_height(row, LV_SIZE_CONTENT);
-
-        lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
-        lv_obj_set_flex_align(
-            row,
-            LV_FLEX_ALIGN_START,
-            LV_FLEX_ALIGN_CENTER,
-            LV_FLEX_ALIGN_CENTER);
-
-        lv_obj_set_style_pad_gap(row, 6, 0);
-        lv_obj_set_style_pad_top(row, 4, 0);
-        lv_obj_set_style_pad_bottom(row, 4, 0);
-
-        return row;
-    }
-
-    static lv_obj_t *icon(lv_obj_t *parent, const char *symbol)
-    {
-        lv_obj_t *l = lv_label_create(parent);
-        if (!l)
-            return nullptr;
-
-        lv_label_set_text(l, symbol ? symbol : "");
-        lv_obj_set_style_text_color(l, lv_color_black(), 0);
-        return l;
-    }
-
-    static lv_obj_t *text(lv_obj_t *parent, const char *str, const lv_font_t *font)
-    {
-        lv_obj_t *l = lv_label_create(parent);
-        if (!l)
-            return nullptr;
-
-        lv_label_set_text(l, str ? str : "");
-        lv_obj_set_style_text_color(l, lv_color_black(), 0);
-
-        if (font)
-            lv_obj_set_style_text_font(l, font, 0);
-
-        return l;
-    }
-
-    static lv_obj_t *divider(lv_obj_t *parent)
-    {
-        lv_obj_t *line = lv_obj_create(parent);
-        if (!line)
-            return nullptr;
-
-        lv_obj_remove_style_all(line);
-
-        lv_obj_set_width(line, LV_PCT(100));
-        lv_obj_set_height(line, 1);
-
-        lv_obj_set_style_bg_color(line, lv_color_hex(0x444444), 0);
-        lv_obj_set_style_bg_opa(line, LV_OPA_COVER, 0);
-
-        return line;
-    }
-
-public:
     static lv_obj_t *create(lv_obj_t *parent, const GameData &data)
     {
-        if (!parent)
-            return nullptr;
-
-        lv_obj_t *card = lv_obj_create(parent);
-        if (!card)
-            return nullptr;
-
-        lv_obj_remove_style_all(card);
-
-        lv_obj_set_width(card, LV_PCT(100));
-        lv_obj_set_height(card, LV_SIZE_CONTENT);
-
-        lv_obj_set_style_radius(card, 12, 0);
-        lv_obj_set_style_pad_all(card, 12, 0);
-        lv_obj_set_style_bg_opa(card, LV_OPA_COVER, 0);
-        lv_obj_set_style_border_width(card, 0, 0);
-
-        lv_obj_set_flex_flow(card, LV_FLEX_FLOW_COLUMN);
-        lv_obj_set_flex_align(
-            card,
-            LV_FLEX_ALIGN_START,
-            LV_FLEX_ALIGN_CENTER,
-            LV_FLEX_ALIGN_CENTER);
-
-        // Title
-        lv_obj_t *title = text(card, data.title.c_str(), &lv_font_roboto_mono_20);
-        lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, 0);
-        lv_obj_set_width(title, LV_PCT(100));
-        lv_obj_set_style_pad_bottom(title, 6, 0);
-
-        // Description
-        lv_obj_t *desc = text(card, data.description.c_str(), &lv_font_roboto_mono_12);
-        lv_obj_set_style_text_align(desc, LV_TEXT_ALIGN_CENTER, 0);
-        lv_obj_set_width(desc, LV_PCT(100));
-        lv_obj_set_style_pad_bottom(desc, 8, 0);
-
-        divider(card);
-
-        char buf[64];
-
-        // Difficulty
-        lv_obj_t *diffRow = createRow(card);
-        icon(diffRow, LV_SYMBOL_SETTINGS);
-        snprintf(buf, sizeof(buf), "Difficulty: %d/5", data.difficulty);
-        text(diffRow, buf, &lv_font_roboto_mono_14);
-
-        // Duration
-        lv_obj_t *durationRow = createRow(card);
-        icon(durationRow, LV_SYMBOL_REFRESH);
-        snprintf(buf, sizeof(buf), "%d minutes", data.durationMin);
-        text(durationRow, buf, &lv_font_roboto_mono_14);
-
-        // Author
-        lv_obj_t *authorRow = createRow(card);
-        icon(authorRow, LV_SYMBOL_DIRECTORY);
-        text(authorRow, data.author.c_str(), &lv_font_roboto_mono_14);
-
+        auto *card = Container::create(parent, LV_PCT(100), LV_SIZE_CONTENT, LV_ALIGN_TOP_MID);
+        UITheme::card(card);
+        Container::setFlex(card, LV_FLEX_FLOW_COLUMN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+        lv_obj_set_style_pad_row(card, 9, 0);
+        Label::create(card, data.title.c_str(), &lv_font_montserrat_20, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
+        if (!data.description.empty())
+        {
+            auto *description = Label::create(card, data.description.c_str(), &lv_font_montserrat_12,
+                                               LV_TEXT_ALIGN_LEFT, LV_PCT(100));
+            UITheme::muted(description);
+        }
+        char detail[80];
+        const int difficulty = data.difficulty < 1 ? 1 : data.difficulty > 5 ? 5 : data.difficulty;
+        if (data.durationMin > 0)
+            lv_snprintf(detail, sizeof(detail), LV_SYMBOL_REFRESH " %d min     Livello %d/5", data.durationMin, difficulty);
+        else
+            lv_snprintf(detail, sizeof(detail), "Durata libera     Livello %d/5", difficulty);
+        auto *meta = Label::create(card, detail, &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
+        UITheme::accent(meta);
+        if (!data.author.empty())
+        {
+            auto *author = Label::create(card, data.author.c_str(), &lv_font_montserrat_12,
+                                         LV_TEXT_ALIGN_LEFT, LV_PCT(100));
+            UITheme::muted(author);
+        }
         return card;
     }
 };

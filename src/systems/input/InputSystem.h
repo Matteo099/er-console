@@ -37,6 +37,7 @@ public:
     void update() override;
     void shutdown();
 
+    bool hasPower() const { return powerInitialized; }
     PowerSystem *power();
     RFIDSystem *rfid();
     OLEDSystem *oled();

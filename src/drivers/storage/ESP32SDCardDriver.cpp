@@ -207,6 +207,13 @@ uint64_t ESP32SDCardDriver::totalBytes() const
     return SD.totalBytes();
 }
 
+uint64_t ESP32SDCardDriver::capacityBytes() const
+{
+    if (!isMounted) return 0;
+    SPIBusLock::Guard guard;
+    return SD.cardSize(); // Cached CSD capacity; no FAT free-cluster scan.
+}
+
 uint64_t ESP32SDCardDriver::usedBytes() const
 {
     if (!isMounted)

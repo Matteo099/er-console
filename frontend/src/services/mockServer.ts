@@ -44,7 +44,7 @@ const defaultConfig = (): DeviceConfig => ({
     dateFormat: 'YYYY-MM-DD',
   },
   ui: {
-    theme: 'dark',
+    theme: 'mint',
     compactMode: false,
   },
 })

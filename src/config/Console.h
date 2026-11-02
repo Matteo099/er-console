@@ -19,5 +19,15 @@
 
 // Read boot images twice and compare byte counts/checksums; no writes to SD.
 #ifndef SD_READ_DIAGNOSTICS_ENABLED
-#define SD_READ_DIAGNOSTICS_ENABLED 1
+#define SD_READ_DIAGNOSTICS_ENABLED 0
+#endif
+
+// Expensive directory dumps are separate from normal boot.
+#ifndef STORAGE_BOOT_LIST_ENABLED
+#define STORAGE_BOOT_LIST_ENABLED 0
+#endif
+
+// Development-only serial UI inspection/navigation.
+#ifndef UI_DIAGNOSTICS_ENABLED
+#define UI_DIAGNOSTICS_ENABLED 0
 #endif

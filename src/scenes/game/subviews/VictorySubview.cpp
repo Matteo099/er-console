@@ -32,12 +32,12 @@ void VictorySubview::create(lv_obj_t *parent)
     // ----------------------------
     titleLabel = Label::create(
         header,
-        "YOU WIN!",
+        "Ce l'hai fatta!",
         &lv_font_roboto_mono_28,
         LV_TEXT_ALIGN_CENTER,
         LV_PCT(100));
 
-    Label::setTextColor(titleLabel, lv_color_hex(0x00FF00));
+    UITheme::accent(titleLabel);
     Align::setPosition(titleLabel, LV_ALIGN_CENTER, 0, 0);
 
     // ----------------------------
@@ -62,17 +62,17 @@ void VictorySubview::create(lv_obj_t *parent)
     lv_obj_set_scroll_dir(statsContainer, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(statsContainer, LV_SCROLLBAR_MODE_AUTO);
 
-    elapsedRow = StatisticRow::create(statsContainer, "Elapsed");
-    pausedRow  = StatisticRow::create(statsContainer, "Paused");
-    hintsRow   = StatisticRow::create(statsContainer, "Hints");
-    solvedRow  = StatisticRow::create(statsContainer, "Solved");
+    elapsedRow = StatisticRow::create(statsContainer, "Tempo giocato");
+    pausedRow  = StatisticRow::create(statsContainer, "Pausa");
+    hintsRow   = StatisticRow::create(statsContainer, "Indizi");
+    solvedRow  = StatisticRow::create(statsContainer, "Obiettivi");
 
     // ----------------------------
     // FOOTER (Button)
     // ----------------------------
     completeBtn = Button::create(
         footer,
-        "Complete",
+        "Continua",
         onComplete,
         this,
         150,

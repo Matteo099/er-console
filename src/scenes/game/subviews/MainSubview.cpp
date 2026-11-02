@@ -23,9 +23,9 @@ void MainSubview::create(lv_obj_t *parent)
 
     pauseOverlay = Container::create(root, LV_PCT(100), LV_PCT(100), LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_bg_opa(pauseOverlay, LV_OPA_TRANSP, 0);
-    pauseIcon = Label::create(pauseOverlay, LV_SYMBOL_PAUSE, &lv_font_montserrat_48, LV_TEXT_ALIGN_CENTER);
+    pauseIcon = Label::create(pauseOverlay, LV_SYMBOL_PAUSE " In pausa", &lv_font_montserrat_16, LV_TEXT_ALIGN_CENTER);
     Align::setPosition(pauseIcon, LV_ALIGN_CENTER, 0, 10);
-    Label::setTextColor(pauseIcon, lv_color_hex(0xFFFF00));
+    UITheme::accent(pauseIcon);
     lv_obj_add_flag(pauseOverlay, LV_OBJ_FLAG_HIDDEN);
 
     auto footer = lv_obj_create(root);
@@ -44,15 +44,18 @@ void MainSubview::create(lv_obj_t *parent)
         44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_CLOSE);
 
     startPauseBtn = Button::create(
-        footer, nullptr, onStartPause, this,
-        44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);
+        footer, "Avvia", onStartPause, this,
+        140, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);
 
     objectsBtn = Button::create(
         footer, nullptr, onObjects, this,
-        44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_BELL);
+        44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_LIST);
 
     startPauseIcon = lv_obj_get_child(startPauseBtn, 0);
     startPauseLabel = lv_obj_get_child(startPauseBtn, 1);
+    UITheme::secondary(cancelBtn);
+    UITheme::secondary(objectsBtn);
+    setObjectsAvailable(false);
 
     Log::info(TAG, "Main subview created");
 }
@@ -104,7 +107,7 @@ void MainSubview::update()
             warningBlinkState = !warningBlinkState;
             lv_obj_set_style_text_color(
                 timerLabel,
-                warningBlinkState ? lv_color_hex(0xFF0000) : lv_color_hex(0xFFFFFF),
+                warningBlinkState ? lv_color_hex(0xA44848) : lv_color_hex(UITheme::palette().ink),
                 0);
         }
 
@@ -118,16 +121,6 @@ void MainSubview::update()
 
     if (paused)
     {
-        if (now - lastPauseBlinkMs >= 500)
-        {
-            lastPauseBlinkMs = now;
-            pauseBlinkState = !pauseBlinkState;
-            lv_obj_set_style_opa(
-                pauseIcon,
-                pauseBlinkState ? LV_OPA_COVER : LV_OPA_30,
-                0);
-        }
-
         if (tickingClockAudioStarted)
         {
             Log::info(TAG, "Stopping ticking clock warning audio");
@@ -171,7 +164,7 @@ void MainSubview::setRunning(bool running)
     {
         lv_label_set_text(
             startPauseLabel,
-            running ? "Pause" : "Start");
+            running ? "Pausa" : "Avvia");
     }
 
     paused = !running;
@@ -181,7 +174,6 @@ void MainSubview::setRunning(bool running)
         if (paused)
         {
             lv_obj_clear_flag(pauseOverlay, LV_OBJ_FLAG_HIDDEN);
-            pauseBlinkState = true;
             lv_obj_set_style_opa(pauseIcon, LV_OPA_COVER, 0);
         }
         else
@@ -189,6 +181,11 @@ void MainSubview::setRunning(bool running)
             lv_obj_add_flag(pauseOverlay, LV_OBJ_FLAG_HIDDEN);
         }
     }
+}
+
+void MainSubview::setObjectsAvailable(bool available)
+{
+    if (objectsBtn) lv_obj_set_flag(objectsBtn, LV_OBJ_FLAG_HIDDEN, !available);
 }
 
 void MainSubview::onStartPause(lv_event_t *e)

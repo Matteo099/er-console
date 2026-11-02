@@ -37,4 +37,5 @@ private:
     std::string portalUrl;
     std::string qrData;
     bool qrVisible = false;
+    lv_obj_t *qrOverlay = nullptr;
 };

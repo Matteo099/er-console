@@ -24,7 +24,7 @@ void MonitorScene::onEnter()
 
 void MonitorScene::onUpdate()
 {
-    refreshTelemetry();
+    if (millis() - lastRefreshMs >= 1000) refreshTelemetry();
     view.update();
 }
 
@@ -55,22 +55,24 @@ bool MonitorScene::handleUIEvent(const UIEvent &event)
 
 void MonitorScene::refreshTelemetry()
 {
+    lastRefreshMs = millis();
     //
     // Power
     //
-    if (!input)
+    if (!input || !input->hasPower())
     {
-        view.setPower(0, 0, 0);
+        view.setPowerAvailable(false);
     }
     else
     {
         const auto power = input->power();
         if (!power || !power->isSupported())
         {
-            view.setPower(0, 0, 0);
+            view.setPowerAvailable(false);
         }
         else
         {
+            view.setPowerAvailable(true);
             view.setPower(power->getMetrics().loadVoltageV, power->getMetrics().currentMa, power->getMetrics().powerMw);
         }
     }
@@ -120,32 +122,9 @@ void MonitorScene::refreshTelemetry()
     //
     if (!storage || !storage->isReady())
     {
-        view.setSdStorage(0, 0);
+        view.setSdCapacity(0);
         return;
     }
 
-    const uint64_t totalBytes = storage->totalBytes();
-    const uint64_t usedBytes = storage->usedBytes();
-    view.setSdStorage(static_cast<uint32_t>(usedBytes / (1024ULL * 1024ULL)), static_cast<uint32_t>(totalBytes / (1024ULL * 1024ULL)));
-}
-
-const char *MonitorScene::formatBytes(uint64_t bytes)
-{
-    static char buffer[32];
-    const char *units[] = {"B", "KB", "MB", "GB"};
-    double value = static_cast<double>(bytes);
-    int unit = 0;
-
-    while (value >= 1024.0 && unit < 3)
-    {
-        value /= 1024.0;
-        ++unit;
-    }
-
-    if (unit == 0)
-        std::snprintf(buffer, sizeof(buffer), "%llu %s", static_cast<unsigned long long>(bytes), units[unit]);
-    else
-        std::snprintf(buffer, sizeof(buffer), "%.2f %s", value, units[unit]);
-
-    return buffer;
+    view.setSdCapacity(static_cast<uint32_t>(storage->capacityBytes() / (1024ULL * 1024ULL)));
 }

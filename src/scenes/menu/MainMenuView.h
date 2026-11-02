@@ -21,6 +21,7 @@ public:
     void destroy() override;
 
     lv_obj_t *getScreen() override { return screen; }
+    void setStorageReady(bool ready);
 
 private:
     lv_obj_t *screen = nullptr;
@@ -30,6 +31,7 @@ private:
     lv_obj_t *btnNewGame = nullptr;
     lv_obj_t *btnSettings = nullptr;
     lv_obj_t *btnAbout = nullptr;
+    lv_obj_t *statusLabel = nullptr;
 
     MainMenuAction pendingAction = MainMenuAction::None;
 

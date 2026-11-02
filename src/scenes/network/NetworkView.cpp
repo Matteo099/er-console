@@ -1,7 +1,5 @@
 #include "NetworkView.h"
-#include "log/Logger.h"
 #include "systems/ui/UIEvents.h"
-#include "systems/ui/components/Align.h"
 #include "systems/ui/components/BackButton.h"
 #include "systems/ui/components/BrandHeader.h"
 #include "systems/ui/components/Button.h"
@@ -9,159 +7,103 @@
 #include "systems/ui/components/Label.h"
 #include "systems/ui/components/SceneLayout.h"
 #include "systems/ui/components/Screen.h"
+#include "config/Console.h"
 
 void NetworkView::create()
 {
-    Log::debug(Log::UI_TAG, "Creating NetworkView");
-
     screen = Screen::create();
     auto layout = SceneLayout::create(screen);
-    brandImg = BrandHeader::create(layout.top);
-
-    container = Container::create(layout.body, 240, 200, LV_ALIGN_TOP_MID, 0, 0);
+    brandImg = BrandHeader::create(layout.top, 100, "Rete e connessioni");
+    container = Container::create(layout.body, LV_PCT(100), LV_SIZE_CONTENT, LV_ALIGN_TOP_MID);
     Container::setFlex(container);
-
-    statusCard = Container::create(container, 220, 92, LV_ALIGN_TOP_MID, 0, 0);
-    Container::setFlex(statusCard);
-    lv_obj_set_style_bg_opa(statusCard, LV_OPA_20, 0);
-    lv_obj_set_style_bg_color(statusCard, lv_color_hex(0x0F172A), 0);
-    lv_obj_set_style_border_width(statusCard, 1, 0);
-    lv_obj_set_style_border_color(statusCard, lv_color_hex(0x1F2937), 0);
-
-    lv_obj_t* heading = Label::create(
-        statusCard,
-        "Network status",
-        &lv_font_roboto_mono_18,
-        LV_TEXT_ALIGN_CENTER,
-        220);
-    lv_obj_set_style_text_color(heading, lv_color_hex(0x7DD3FC), 0);
-
-    statusLabel = Label::create(
-        statusCard,
-        "Status: Unknown",
-        &lv_font_roboto_mono_14,
-        LV_TEXT_ALIGN_CENTER,
-        220);
-
-    ssidLabel = Label::create(
-        statusCard,
-        "SSID: —",
-        &lv_font_roboto_mono_14,
-        LV_TEXT_ALIGN_CENTER,
-        220);
-
-    ipLabel = Label::create(
-        statusCard,
-        "IP: —",
-        &lv_font_roboto_mono_14,
-        LV_TEXT_ALIGN_CENTER,
-        220);
-
-    portalCard = Container::create(container, 220, 88, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_set_style_pad_row(container, 8, 0);
+#if WIFI_ENABLED
+    statusCard = Container::create(container, LV_PCT(100), LV_SIZE_CONTENT);
+    UITheme::card(statusCard);
+    Container::setFlex(statusCard, LV_FLEX_FLOW_COLUMN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_style_pad_row(statusCard, 7, 0);
+    auto *title = Label::create(statusCard, LV_SYMBOL_WIFI " WI-FI", &lv_font_montserrat_12);
+    UITheme::accent(title);
+    statusLabel = Label::create(statusCard, "In attesa", &lv_font_montserrat_16, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
+    ssidLabel = Label::create(statusCard, "", &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
+    ipLabel = Label::create(statusCard, "", &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
+    UITheme::muted(ssidLabel);
+    UITheme::muted(ipLabel);
+#else
+    Label::create(container, "Connessioni non abilitate", &lv_font_montserrat_16);
+#endif
+#if WIFI_ENABLED && PORTAL_ENABLED
+    portalCard = Container::create(container, LV_PCT(100), LV_SIZE_CONTENT);
+    UITheme::card(portalCard);
     Container::setFlex(portalCard);
-    lv_obj_set_style_bg_opa(portalCard, LV_OPA_20, 0);
-    lv_obj_set_style_bg_color(portalCard, lv_color_hex(0x111827), 0);
-    lv_obj_set_style_border_width(portalCard, 1, 0);
-    lv_obj_set_style_border_color(portalCard, lv_color_hex(0x1F2937), 0);
-
-    portalLabel = Label::create(
-        portalCard,
-        "Scan to open setup portal",
-        &lv_font_roboto_mono_14,
-        LV_TEXT_ALIGN_CENTER,
-        220);
-
-    qrCode = lv_qrcode_create(portalCard);
-    lv_qrcode_set_size(qrCode, 72);
-    lv_qrcode_set_dark_color(qrCode, lv_color_hex(0x0B3D2E));
+    portalLabel = Label::create(portalCard, "", &lv_font_montserrat_12);
+    UITheme::muted(portalLabel);
+    btnPortal = Button::create(portalCard, "Collega un dispositivo", onPortalClicked, this,
+                               LV_PCT(100), 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_WIFI);
+    lv_obj_add_flag(portalCard, LV_OBJ_FLAG_HIDDEN);
+    qrOverlay = lv_obj_create(screen);
+    lv_obj_set_size(qrOverlay, LV_PCT(100), LV_PCT(100));
+    lv_obj_center(qrOverlay);
+    UITheme::screen(qrOverlay);
+    lv_obj_clear_flag(qrOverlay, LV_OBJ_FLAG_SCROLLABLE);
+    auto *heading = Label::create(qrOverlay, "Connetti alla console", &lv_font_montserrat_16);
+    lv_obj_align(heading, LV_ALIGN_TOP_LEFT, 0, 0);
+    Button::create(qrOverlay, nullptr, onPortalClicked, this, 44, 44, LV_ALIGN_TOP_RIGHT, 8, -10, LV_SYMBOL_CLOSE);
+    qrCode = lv_qrcode_create(qrOverlay);
+    lv_qrcode_set_size(qrCode, 116);
+    lv_qrcode_set_dark_color(qrCode, lv_color_hex(0x25342F));
     lv_qrcode_set_light_color(qrCode, lv_color_white());
     lv_qrcode_set_quiet_zone(qrCode, true);
-    lv_obj_add_flag(qrCode, LV_OBJ_FLAG_HIDDEN);
-
-    qrHelp = Label::create(
-        portalCard,
-        "Use the button to show the QR code",
-        &lv_font_roboto_mono_12,
-        LV_TEXT_ALIGN_CENTER,
-        220);
-
-    btnPortal = Button::create(container, "Edit Wi-Fi / QR", onPortalClicked, this, 180, 40, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_SETTINGS);
+    lv_obj_align(qrCode, LV_ALIGN_CENTER, 0, 0);
+    qrHelp = Label::create(qrOverlay, "Inquadra il codice con il telefono", &lv_font_montserrat_12,
+                           LV_TEXT_ALIGN_CENTER, LV_PCT(100));
+    UITheme::muted(qrHelp);
+    lv_obj_align(qrHelp, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_add_flag(qrOverlay, LV_OBJ_FLAG_HIDDEN);
+#endif
     btnBack = BackButton::create(layout.footer, onBackClicked, this);
 }
-
-void NetworkView::update()
-{
-    // UI is largely static; updates come from the scene
-}
-
+void NetworkView::update() {}
 void NetworkView::destroy()
 {
-    screen = nullptr;
-
-    brandImg = nullptr;
-    container = nullptr;
-    statusLabel = nullptr;
-    ssidLabel = nullptr;
-    ipLabel = nullptr;
-    portalLabel = nullptr;
-    portalCard = nullptr;
-    qrCode = nullptr;
-    qrHelp = nullptr;
-    btnPortal = nullptr;
-    btnBack = nullptr;
-    portalUrl.clear();
-    qrData.clear();
-    qrVisible = false;
+    screen = brandImg = container = statusCard = statusLabel = ssidLabel = ipLabel = nullptr;
+    portalLabel = portalCard = qrCode = qrHelp = btnPortal = btnBack = qrOverlay = nullptr;
+    portalUrl.clear(); qrData.clear(); qrVisible = false;
 }
-
-void NetworkView::setStatus(const std::string &statusText, const std::string &ssid, const std::string &ip)
+void NetworkView::setStatus(const std::string &status, const std::string &ssid, const std::string &ip)
 {
-    if (statusLabel)
-        lv_label_set_text(statusLabel, statusText.c_str());
-    if (ssidLabel)
-        lv_label_set_text(ssidLabel, ssid.empty() ? "SSID: —" : (std::string("SSID: ") + ssid).c_str());
-    if (ipLabel)
-        lv_label_set_text(ipLabel, ip.empty() ? "IP: —" : (std::string("IP: ") + ip).c_str());
+    Label::setText(statusLabel, status.c_str());
+    Label::setText(ssidLabel, ssid.empty() ? "Nessuna rete selezionata" : ssid.c_str());
+    Label::setText(ipLabel, ip.empty() ? "" : ip.c_str());
 }
-
-void NetworkView::setPortalInfo(const std::string& url, const std::string& data)
+void NetworkView::setPortalInfo(const std::string &url, const std::string &data)
 {
-    portalUrl = url;
-    qrData = data;
-
-    if (portalLabel)
-        lv_label_set_text(portalLabel, portalUrl.empty() ? "Portal unavailable" : portalUrl.c_str());
-
-    if (qrCode && !qrData.empty())
-        lv_qrcode_set_data(qrCode, qrData.c_str());
+    if (url == portalUrl && data == qrData) return;
+    portalUrl = url; qrData = data;
+    const bool available = !portalUrl.empty() && !qrData.empty();
+    if (portalCard) lv_obj_set_flag(portalCard, LV_OBJ_FLAG_HIDDEN, !available);
+    Label::setText(portalLabel, portalUrl.c_str());
+    if (available && qrCode) lv_qrcode_set_data(qrCode, qrData.c_str());
+    if (!available && qrOverlay)
+    {
+        lv_obj_add_flag(qrOverlay, LV_OBJ_FLAG_HIDDEN);
+        qrVisible = false;
+    }
 }
-
 void NetworkView::toggleQrOverlay()
 {
+    if (!qrOverlay || qrData.empty()) return;
     qrVisible = !qrVisible;
-    if (!qrCode)
-        return;
-
-    if (qrVisible)
-        lv_obj_clear_flag(qrCode, LV_OBJ_FLAG_HIDDEN);
-    else
-        lv_obj_add_flag(qrCode, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_flag(qrOverlay, LV_OBJ_FLAG_HIDDEN, !qrVisible);
+    if (qrVisible) lv_obj_move_foreground(qrOverlay);
 }
-
 void NetworkView::onPortalClicked(lv_event_t *e)
 {
     auto *view = static_cast<NetworkView *>(lv_event_get_user_data(e));
-    if (!view)
-        return;
-
-    view->emitEvent(ButtonClickedEvent("portal_qr"));
+    if (view) view->emitEvent(ButtonClickedEvent("portal_qr"));
 }
-
 void NetworkView::onBackClicked(lv_event_t *e)
 {
     auto *view = static_cast<NetworkView *>(lv_event_get_user_data(e));
-    if (!view)
-        return;
-
-    view->emitEvent(ButtonClickedEvent("back"));
+    if (view) view->emitEvent(ButtonClickedEvent("back"));
 }

@@ -212,8 +212,46 @@ Il cambiamento decisivo osservato e' la riaccensione, non il trasporto byte/bloc
 o una specifica frequenza. Il risultato e' compatibile con uno stato della SD
 che non viene ripristinato dal solo reset ESP32; non identifica da solo il
 meccanismo che porta a quello stato. Un riavvio tramite RTS e un upload non
-tolgono alimentazione alla microSD. Il clock operativo resta a 400 kHz durante
-la verifica del firmware completo.
+tolgono alimentazione alla microSD. In questa fase il clock operativo e' stato
+mantenuto a 400 kHz; la successiva verifica a 4 MHz e' descritta sotto.
+
+### Revisione UI e prestazioni
+
+Il clock SD e' ora 4 MHz (`SD_SPI_CLOCK`); I2C resta a 400 kHz e non regola la
+velocita' della SD. Con il firmware completo, display/touch e servizi attivi,
+sono state misurate due letture integrali consecutive di ciascuna immagine:
+
+| File | Byte | FNV-1a | Prima, 400 kHz | Ora, 4 MHz |
+| --- | --- | --- | --- | --- |
+| `brand_negative.png` | 10534 | `526cf1e2` | 326 ms | 26 ms |
+| `logo.png` | 5057 | `61684d7f` | 209 ms | 13 ms |
+
+La revisione evita inoltre il dump ricorsivo della scheda a ogni avvio,
+i controlli ripetuti delle immagini nel percorso normale e le letture di PNG
+per header e boot. La cache LVGL conserva le immagini decodificate; il monitor
+mostra la capacita' fisica gia' nota, senza ricalcolare ogni frame lo spazio FAT.
+
+Durante un primo test di cambi tema ripetuti sono ricomparsi errori CMD13
+riscrivendo il documento di configurazione sulla SD. Questo limite delle
+scritture non e' risolto dall'aumento del clock. Tema e suoni ora vengono
+salvati in NVS, senza riscrivere la SD per ogni cambio. Il successivo test di
+navigazione, temi, audio e immagini non ha prodotto errori di lettura SD;
+anche il ripristino delle preferenze dopo un reset e' stato verificato.
+Questo non certifica tutte le possibili operazioni di scrittura del portale
+o degli script Lua. Log locali: `.pio/ui-previews/review-session.log` e
+`.pio/ui-previews/persistence.log`.
+
+La build finale, caricata su COM3 con la diagnostica UI disabilitata, monta
+la SD a 567 ms ed entra nel menu a 1632 ms dall'avvio. Nei 12 secondi acquisiti
+non risultano errori SD o decoder LVGL. Log: `.pio/ui-final-boot.log`;
+build e upload: `.pio/ui-final-upload.log`. Il confronto precedente con dump
+ricorsivo e controlli attivi arrivava al menu a circa 12 secondi: il guadagno
+complessivo comprende anche la rimozione di quel lavoro diagnostico.
+
+La configurazione normale mantiene `SD_INIT_BEFORE_DISPLAY=1` e disabilita
+`SD_READ_DIAGNOSTICS_ENABLED`, `STORAGE_BOOT_LIST_ENABLED` e
+`UI_DIAGNOSTICS_ENABLED`. Per comandi di ispezione e schermate vedere
+[UI_THEME.md](UI_THEME.md).
 
 ### Riprodurre il test minimale
 

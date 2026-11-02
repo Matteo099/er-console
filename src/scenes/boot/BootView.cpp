@@ -1,95 +1,44 @@
 #include "BootView.h"
-#include "log/Logger.h"
-#include "config/Assets.h"
-
 #include "systems/ui/components/BrandHeader.h"
-#include "systems/ui/components/ImageView.h"
 #include "systems/ui/components/Label.h"
-#include "systems/ui/components/ProgressBar.h"
 #include "systems/ui/components/SceneLayout.h"
 #include "systems/ui/components/Screen.h"
-#include "systems/ui/components/Align.h"
-#include "systems/ui/components/Spinner.h"
 
 void BootView::create()
 {
-    createTextOnly();
-    loadImages();
-}
-
-void BootView::createTextOnly()
-{
     screen = Screen::create();
-
-    auto layout = SceneLayout::create(screen, 70, 100);
+    auto layout = SceneLayout::create(screen, 44, 64, false);
     topRow = layout.top;
     middleRow = layout.body;
     bottomRow = layout.footer;
-
-    statusLabel = Label::create(bottomRow, "Starting...", &lv_font_roboto_mono_14, LV_TEXT_ALIGN_CENTER);
-    Label::setTextColor(statusLabel, lv_color_hex(0xCCCCCC));
-    Align::setPosition(statusLabel, LV_ALIGN_CENTER, 0, 20);
-
-    progressBar = ProgressBar::create(bottomRow);
-    Align::alignTo(progressBar, statusLabel, LV_ALIGN_OUT_TOP_MID, 0, -12);
-
-    brandImg = nullptr;
-    logoImg = nullptr;
-
-    currentProgress = 0;
-    currentLabel = nullptr;
-}
-
-void BootView::loadImages()
-{
-    if (!screen)
-        return;
-
-    Log::debug(Log::SCENE_TAG, "Loading boot images into view");
-
-    if (!topRow)
-        return;
-
     brandImg = BrandHeader::create(topRow);
-    logoImg = ImageView::create(middleRow, IMG_LOGO_FILE, LV_ALIGN_CENTER, 0, 0);
-
-    // Start spinning animation on logo
-    Spinner::start(logoImg, 600);  // 600ms per rotation
+    auto *title = Label::create(middleRow, "Si parte.", &lv_font_montserrat_28, LV_TEXT_ALIGN_CENTER);
+    lv_obj_align(title, LV_ALIGN_CENTER, 0, -15);
+    auto *hint = Label::create(middleRow, "Prepariamo la tua avventura", &lv_font_montserrat_12);
+    UITheme::muted(hint);
+    lv_obj_align(hint, LV_ALIGN_CENTER, 0, 19);
+    progressBar = lv_bar_create(bottomRow);
+    lv_obj_set_size(progressBar, LV_PCT(86), 8);
+    lv_obj_align(progressBar, LV_ALIGN_TOP_MID, 0, 8);
+    statusLabel = Label::create(bottomRow, "Avvio...", &lv_font_montserrat_12,
+                                LV_TEXT_ALIGN_CENTER, LV_PCT(95));
+    UITheme::muted(statusLabel);
+    lv_obj_align(statusLabel, LV_ALIGN_BOTTOM_MID, 0, -16);
 }
-
-void BootView::setProgress(uint8_t progress, const char *label)
+void BootView::setProgress(uint8_t progress, const char *)
 {
-    currentProgress = progress;
-    currentLabel = label;
+    if (!screen) return;
+    lv_bar_set_value(progressBar, progress, LV_ANIM_OFF);
+    const char *step = progress >= 100 ? "Tutto pronto" : progress >= 87 ? "Scenari" :
+                       progress >= 75 ? "Dispositivi" : progress >= 62 ? "Audio" :
+                       progress >= 50 ? "Connessioni" : progress >= 37 ? "microSD" :
+                       progress >= 25 ? "Interfaccia" : "Preparazione";
+    char text[64];
+    lv_snprintf(text, sizeof(text), "%s  %u%%", step, progress);
+    Label::setText(statusLabel, text);
 }
-
-void BootView::update()
-{
-    if (!screen)
-        return;
-
-    if (progressBar)
-    {
-        ProgressBar::setValue(progressBar, currentProgress, LV_ANIM_ON);
-    }
-
-    if (statusLabel && currentLabel)
-    {
-        lv_label_set_text(statusLabel, currentLabel);
-    }
-}
-
+void BootView::update() {}
 void BootView::destroy()
 {
-    screen = nullptr;
-
-    // Nullify remaining pointers
-    topRow = nullptr;
-    bottomRow = nullptr;
-    brandImg = nullptr;
-    logoImg = nullptr;
-    statusLabel = nullptr;
-    progressBar = nullptr;
-    currentLabel = nullptr;
-    currentProgress = 0;
+    screen = topRow = middleRow = bottomRow = brandImg = statusLabel = progressBar = nullptr;
 }

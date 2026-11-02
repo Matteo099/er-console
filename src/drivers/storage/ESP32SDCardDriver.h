@@ -19,6 +19,7 @@ public:
     bool mkdir(const char *path) override;
     bool listDirectory(const char *path, std::vector<StorageEntry> &out) const override;
     uint64_t totalBytes() const override;
+    uint64_t capacityBytes() const override;
     uint64_t usedBytes() const override;
     bool ensureParents(const char *path) override;
 

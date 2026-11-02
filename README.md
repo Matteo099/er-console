@@ -8,7 +8,9 @@ Le opzioni di isolamento sono in [`src/config/Console.h`](src/config/Console.h):
 #define WIFI_ENABLED 0
 #define PORTAL_ENABLED 0
 #define SD_INIT_BEFORE_DISPLAY 1
-#define SD_READ_DIAGNOSTICS_ENABLED 1
+#define SD_READ_DIAGNOSTICS_ENABLED 0
+#define STORAGE_BOOT_LIST_ENABLED 0
+#define UI_DIAGNOSTICS_ENABLED 0
 ```
 
 Wi-Fi e portale sono attualmente disabilitati in entrambe le build. Per
@@ -16,13 +18,23 @@ riattivarli impostare i primi due flag a `1`; con Wi-Fi disabilitato anche il
 portale rimane spento. Il precedente `ER_DISABLE_WIFI` della sola build debug
 e' stato sostituito da queste opzioni.
 
-La prova diagnostica attuale inizializza SD prima del display e verifica le
-letture. Per ripristinare l'ordine di boot normale impostare
+La configurazione attuale inizializza SD prima del display. I controlli ripetuti
+dei file e la scansione ricorsiva al boot sono opt-in, per evitare attese inutili.
+Per ripristinare l'ordine di boot precedente impostare
 `SD_INIT_BEFORE_DISPLAY=0`. L'ambiente predefinito PlatformIO e' quello debug,
 cosi' upload e monitor senza selezione esplicita usano lo stesso ELF.
 
 Per il confronto dei bus e la procedura A/B vedere
 [`docs/SD_DIAGNOSTICS.md`](docs/SD_DIAGNOSTICS.md).
+
+## Interfaccia TFT
+
+La UI usa tre temi pastello, **Menta**, **Cielo** e **Corallo**, selezionabili da
+Impostazioni > Aspetto. Tema e suoni vengono conservati nella memoria interna.
+I controlli di rete e portale compaiono solo quando i servizi sono abilitati.
+
+Architettura, palette, configurazione e acquisizione delle schermate:
+[`docs/UI_THEME.md`](docs/UI_THEME.md).
 
 # 1️⃣ Stack software – visione d’insieme
 

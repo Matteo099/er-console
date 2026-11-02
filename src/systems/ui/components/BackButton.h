@@ -11,6 +11,8 @@ public:
         lv_event_cb_t callback,
         void* userData)
     {
-        return Button::create(parent, "Back", callback, userData, 90, 36, LV_ALIGN_BOTTOM_MID, 0, -12, LV_SYMBOL_LEFT);
+        auto *button = Button::create(parent, "Indietro", callback, userData, 132, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_LEFT);
+        UITheme::secondary(button);
+        return button;
     }
 };

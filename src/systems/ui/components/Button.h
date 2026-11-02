@@ -1,91 +1,48 @@
 #pragma once
-
-#include <cstring>
 #include <lvgl.h>
-
-#include "core/SystemEventBus.h"
+#include "systems/ui/UITheme.h"
+#include "systems/ui/UIFeedback.h"
 #include "systems/audio/AudioEvent.h"
 #include "config/Assets.h"
 
 class Button
 {
 public:
-
-    static void playClick(lv_event_t *e)
+    static void playClick(lv_event_t *)
     {
-        (void)e;
-
-        sendAudioEvent(AUDIO_CLICK1_FILE, AudioEventType::PLAY_WAV);
+        if (UIFeedback::soundEnabled())
+            sendAudioEvent(AUDIO_CLICK1_FILE, AudioEventType::PLAY_WAV);
     }
 
-    /**
-     * @brief Create a button with optional icon and label
-     * @param parent Parent object
-     * @param label Button text
-     * @param callback Click callback
-     * @param userData User data for callback
-     * @param width Button width
-     * @param height Button height
-     * @param align Button alignment
-     * @param x X offset
-     * @param y Y offset
-     * @param icon Optional LVGL symbol (e.g., LV_SYMBOL_PLAY). Pass nullptr for text-only
-     */
-    static lv_obj_t *create(
-        lv_obj_t *parent,
-        const char *label,
-        lv_event_cb_t callback,
-        void *userData,
-        lv_coord_t width = 200,
-        lv_coord_t height = 42,
-        lv_align_t align = LV_ALIGN_CENTER,
-        lv_coord_t x = 0,
-        lv_coord_t y = 0,
-        const char *icon = nullptr)
+    static lv_obj_t *create(lv_obj_t *parent, const char *text, lv_event_cb_t callback,
+                           void *data, lv_coord_t width = 200, lv_coord_t height = 44,
+                           lv_align_t align = LV_ALIGN_CENTER, lv_coord_t x = 0,
+                           lv_coord_t y = 0, const char *icon = nullptr)
     {
-        lv_obj_t *btn = lv_btn_create(parent);
-
-        lv_obj_add_event_cb(btn, callback, LV_EVENT_CLICKED, userData);
-        lv_obj_add_event_cb(btn, playClick, LV_EVENT_CLICKED, nullptr);
-
-        lv_obj_set_style_radius(btn, 8, 0);
-        lv_obj_set_style_border_width(btn, 0, 0);
-        lv_obj_set_style_outline_width(btn, 0, 0);
-        lv_obj_set_style_shadow_width(btn, 0, 0);
-        lv_obj_set_style_pad_gap(btn, 4, 0);
-
-        lv_obj_set_flex_flow(btn, LV_FLEX_FLOW_ROW);
-        lv_obj_set_flex_align(btn,
-                              LV_FLEX_ALIGN_CENTER,
-                              LV_FLEX_ALIGN_CENTER,
-                              LV_FLEX_ALIGN_CENTER);
-
-        // ❗ KEY FIX:
-        // If width is small → assume flex usage → ignore align()
-        if (width <= 60)
-        {
-            lv_obj_set_size(btn, LV_SIZE_CONTENT, height);
-        }
-        else
-        {
-            lv_obj_set_size(btn, width, height);
-            lv_obj_align(btn, align, x, y);
-        }
-
+        auto *button = lv_button_create(parent);
+        lv_obj_set_size(button, width, height < 44 ? 44 : height);
+        lv_obj_align(button, align, x, y);
+        lv_obj_set_flex_flow(button, LV_FLEX_FLOW_ROW);
+        lv_obj_set_flex_align(button, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_style_pad_gap(button, 8, 0);
+        lv_obj_clear_flag(button, LV_OBJ_FLAG_SCROLLABLE);
+        if (callback) lv_obj_add_event_cb(button, callback, LV_EVENT_CLICKED, data);
+        lv_obj_add_event_cb(button, playClick, LV_EVENT_CLICKED, nullptr);
         if (icon)
         {
-            lv_obj_t *icon_label = lv_label_create(btn);
-            lv_label_set_text(icon_label, icon);
-            lv_obj_set_style_text_font(icon_label, &lv_font_roboto_mono_18, 0);
+            auto *label = lv_label_create(button);
+            lv_label_set_text(label, icon);
+            lv_obj_set_style_text_font(label, UITheme::font(&lv_font_montserrat_18), 0);
         }
-
-        if (label)
+        if (text)
         {
-            lv_obj_t *lbl = lv_label_create(btn);
-            lv_label_set_text(lbl, label);
-            lv_obj_set_style_text_font(lbl, &lv_font_roboto_mono_14, 0);
+            auto *label = lv_label_create(button);
+            lv_label_set_text(label, text);
+            lv_obj_set_style_text_font(label, UITheme::font(&lv_font_montserrat_14), 0);
+            lv_label_set_long_mode(label, LV_LABEL_LONG_DOT);
+            lv_obj_set_flex_grow(label, 1);
+            lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
         }
-
-        return btn;
+        return button;
     }
 };

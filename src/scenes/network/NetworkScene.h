@@ -14,6 +14,8 @@ public:
     bool handleUIEvent(const UIEvent& event) override;
 
 private:
+    uint32_t lastRefreshMs = 0;
+    bool portalDataReady = false;
     void refreshNetworkStatus();
 
 private:

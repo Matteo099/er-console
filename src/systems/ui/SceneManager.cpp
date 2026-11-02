@@ -9,6 +9,7 @@
 #include "scenes/network/NetworkScene.h"
 #include "scenes/game/GameScene.h"
 #include "core/SystemEventBus.h"
+#include "config/Console.h"
 
 static lv_scr_load_anim_t toLvgl(SceneTransition t)
 {
@@ -80,7 +81,7 @@ void SceneManager::changeScene(Scene* next, SceneTransition transition)
     lv_scr_load_anim(
         current->getView().getScreen(),
         toLvgl(transition),
-        300,
+        140,
         0,
         true);
 
@@ -122,7 +123,9 @@ void SceneManager::update()
             break;
 
         case SceneChange::GoToNetwork:
+#if WIFI_ENABLED
             changeScene(new NetworkScene(), req.transition);
+#endif
             break;
 
         case SceneChange::GoToGame:

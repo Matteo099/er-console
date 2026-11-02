@@ -19,7 +19,7 @@ export interface LocaleConfig {
 }
 
 export interface UIConfig {
-  theme: 'light' | 'dark'
+  theme: 'mint' | 'sky' | 'coral'
   compactMode: boolean
 }
 

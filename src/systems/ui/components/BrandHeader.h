@@ -1,45 +1,34 @@
 #pragma once
-
 #include <lvgl.h>
-#include "ImageView.h"
-#include "config/Assets.h"
+#include "systems/ui/UITheme.h"
 
+// Vector/text chrome renders immediately without reading SD assets.
 class BrandHeader
 {
 public:
-    static lv_obj_t* create(lv_obj_t* parent, uint8_t scalePercent = 100)
+    static lv_obj_t *create(lv_obj_t *parent, uint8_t = 100, const char *title = "EscapeOS")
     {
-        if (scalePercent == 0)
-            scalePercent = 1;
-        else if (scalePercent > 100)
-            scalePercent = 100;
-
-        const uint16_t zoom = static_cast<uint16_t>((static_cast<uint32_t>(scalePercent) * 256U + 50U) / 100U);
-
-        lv_obj_t* image = ImageView::create(parent, IMG_BRAND_NEGATIVE_FILE, LV_ALIGN_TOP_MID, 0, 12, zoom);
-
-        lv_coord_t availableWidth = lv_obj_get_width(parent);
-        if (availableWidth <= 0)
-        {
-            lv_display_t* display = lv_obj_get_display(parent);
-            if (!display)
-                display = lv_display_get_default();
-
-            if (display)
-                availableWidth = lv_display_get_horizontal_resolution(display);
-        }
-
-        if (availableWidth > 24)
-            availableWidth -= 24;
-
-        const lv_coord_t parentWidth = availableWidth;
-        const lv_coord_t imageWidth = lv_obj_get_width(image);
-        if (parentWidth > 0 && imageWidth > parentWidth)
-        {
-            const uint16_t fitZoom = static_cast<uint16_t>((static_cast<int32_t>(parentWidth) * 256U) / imageWidth);
-            lv_img_set_zoom(image, fitZoom > 0 ? fitZoom : 1);
-        }
-
-        return image;
+        auto *row = lv_obj_create(parent);
+        lv_obj_remove_style_all(row);
+        lv_obj_set_size(row, LV_PCT(100), LV_PCT(100));
+        lv_obj_set_style_pad_hor(row, 12, 0);
+        lv_obj_set_style_pad_gap(row, 9, 0);
+        lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+        lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        auto *mark = lv_obj_create(row);
+        lv_obj_remove_style_all(mark);
+        UITheme::soft(mark);
+        lv_obj_set_size(mark, 30, 28);
+        lv_obj_set_style_radius(mark, 9, 0);
+        auto *initials = lv_label_create(mark);
+        lv_label_set_text(initials, "ER");
+        lv_obj_set_style_text_font(initials, &lv_font_montserrat_12, 0);
+        UITheme::accent(initials);
+        lv_obj_center(initials);
+        auto *label = lv_label_create(row);
+        lv_label_set_text(label, title);
+        lv_obj_set_style_text_font(label, &lv_font_montserrat_16, 0);
+        lv_obj_set_flex_grow(label, 1);
+        return row;
     }
 };

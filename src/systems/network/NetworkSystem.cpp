@@ -228,6 +228,7 @@ void NetworkSystem::refreshStatus()
 
 void NetworkSystem::setState(State newState, const std::string &message)
 {
+    status.ssid = ssid;
     status.state = newState;
     status.message = message;
     if (newState != State::Connected)

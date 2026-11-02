@@ -4,6 +4,8 @@
 #include "core/SystemEventBus.h"
 #include "systems/network/NetworkSystem.h"
 #include "systems/portal/PortalSystem.h"
+#include "config/Console.h"
+#include <Arduino.h>
 
 void NetworkScene::onEnter()
 {
@@ -18,7 +20,7 @@ void NetworkScene::onEnter()
 
 void NetworkScene::onUpdate()
 {
-    if (network)
+    if (network && millis() - lastRefreshMs >= 1000)
         refreshNetworkStatus();
 
     view.update();
@@ -58,39 +60,46 @@ bool NetworkScene::handleUIEvent(const UIEvent& event)
 
 void NetworkScene::refreshNetworkStatus()
 {
+    lastRefreshMs = millis();
     if (!network)
     {
-        view.setStatus("Network service unavailable", "—", "—");
+        view.setStatus("Servizio rete non disponibile", "", "");
         return;
     }
 
     const auto& status = network->getStatus();
-    std::string label = "Status: ";
+    std::string label;
     switch (status.state)
     {
     case NetworkSystem::State::Connected:
-        label += "Connected";
+        label = "Connessa";
         break;
     case NetworkSystem::State::Connecting:
-        label += "Connecting...";
+        label = "Connessione in corso...";
         break;
     case NetworkSystem::State::Disconnected:
-        label += "Disconnected";
+        label = "Non connessa";
         break;
     case NetworkSystem::State::Error:
-        label += "Error";
+        label = "Connessione non riuscita";
         break;
     default:
-        label += "Idle";
+        label = "In attesa";
         break;
     }
 
-    if (!status.message.empty())
-        label += " - " + status.message;
-
-    std::string portalUrl = portal ? portal->portalUrl() : std::string("http://192.168.4.1/");
-    std::string qrData = portal ? portal->wifiQrPayload() : std::string("WIFI:S:ER-Console-Setup;T:nopass;P:;H:false;;");
-
     view.setStatus(label, status.ssid, status.ip);
-    view.setPortalInfo(portalUrl, qrData);
+#if WIFI_ENABLED && PORTAL_ENABLED
+    const bool running = portal && portal->isRunning();
+    if (running && !portalDataReady)
+    {
+        view.setPortalInfo(portal->portalUrl(), portal->wifiQrPayload());
+        portalDataReady = true;
+    }
+    else if (!running)
+    {
+        view.setPortalInfo("", "");
+        portalDataReady = false;
+    }
+#endif
 }

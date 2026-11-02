@@ -140,7 +140,7 @@ GAIN pin: (do not connect)
 #define I2C_SDA_PIN          14
 #define I2C_SCL_PIN          15
 
-#define I2C_FREQUENCY        400000   // 400kHz fast I2C
+#define I2C_FREQUENCY        400000    // 400 kHz I2C; unrelated to the SD SPI clock
 
 
 
@@ -190,7 +190,7 @@ GAIN pin: (do not connect)
 
 #define DEFAULT_SPI_CLOCK    40000000   // 40 MHz SPI for TFT
 #define TOUCH_SPI_CLOCK      2500000    // 2.5 MHz for touch controller
-#define SD_SPI_CLOCK         400000     // Verified read clock in the standalone SPI3 probe
+#define SD_SPI_CLOCK         4000000    // 4 MHz SD SPI; verified separately from I2C
 
 
 

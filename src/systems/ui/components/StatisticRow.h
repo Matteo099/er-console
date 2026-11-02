@@ -25,8 +25,8 @@ public:
         parts.value = Label::create(parts.container, value, &lv_font_roboto_mono_14, LV_TEXT_ALIGN_RIGHT, LV_SIZE_CONTENT);
         lv_obj_set_flex_flow(parts.container, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(parts.container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-        Label::setTextColor(parts.title, lv_color_hex(0xAAAAAA));
-        Label::setTextColor(parts.value, lv_color_hex(0xFFFFFF));
+        UITheme::muted(parts.title);
+        UITheme::accent(parts.value);
         return parts;
     }
 

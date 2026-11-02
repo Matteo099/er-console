@@ -3,6 +3,7 @@
 #include "SettingsAction.h"
 #include "systems/ui/View.h"
 #include <string>
+#include "systems/ui/UITheme.h"
 
 class SettingsView : public View
 {
@@ -15,6 +16,8 @@ public:
     
     void setSoundEnabled(bool enabled);
     void setWiFiStatus(const std::string& status);
+    void setTheme(UIThemeId theme);
+    void setPreferenceStatus(const char *text);
 
 private:
     lv_obj_t *screen = nullptr;
@@ -28,6 +31,12 @@ private:
     lv_obj_t* lblSound = nullptr;
     lv_obj_t* iconSound = nullptr;
     lv_obj_t* btnBack = nullptr;
+    lv_obj_t* themePanel = nullptr;
+    lv_obj_t* systemPanel = nullptr;
+    lv_obj_t* themeButtons[3]{};
+    lv_obj_t* tabAppearance = nullptr;
+    lv_obj_t* tabSystem = nullptr;
+    lv_obj_t* preferenceLabel = nullptr;
 
     SettingsAction pendingAction = SettingsAction::None;
 
@@ -35,4 +44,6 @@ private:
     static void onMonitorClicked(lv_event_t* e);
     static void onSoundClicked(lv_event_t* e);
     static void onBackClicked(lv_event_t* e);
+    static void onThemeClicked(lv_event_t* e);
+    static void onTabClicked(lv_event_t* e);
 };

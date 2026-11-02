@@ -1,6 +1,7 @@
 #include "LVGLContext.h"
 #include "log/Logger.h"
 #include <Arduino.h>
+#include "systems/ui/UITheme.h"
 
 static const uint32_t LVGL_TICK_PERIOD_MS = 5;
 
@@ -10,7 +11,7 @@ TouchController *LVGLContext::s_touch = nullptr;
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
-static lv_color_t buf[SCREEN_WIDTH * 40];
+static uint16_t buf[SCREEN_WIDTH * 40]; // RGB565; lv_color_t in LVGL 9 is RGB888
 static lv_draw_buf_t draw_buf;
 
 uint32_t my_tick(void)
@@ -31,6 +32,8 @@ void LVGLContext::init(DisplayDriver *displayDrv, TouchController *touchDrv)
     Log::info(Log::DISPLAY_TAG, "Initializing LVGL Context");
 
     lv_init();
+    lv_image_cache_resize(psramFound() ? 1024 * 1024 : 128 * 1024, true);
+    lv_image_header_cache_resize(16, true);
     lv_tick_set_cb(my_tick);
 
     // Draw buffer
@@ -39,12 +42,13 @@ void LVGLContext::init(DisplayDriver *displayDrv, TouchController *touchDrv)
         SCREEN_WIDTH,
         40,
         LV_COLOR_FORMAT_RGB565,
-        SCREEN_WIDTH * sizeof(lv_color_t),
+        SCREEN_WIDTH * sizeof(uint16_t),
         buf,
         sizeof(buf));
 
     // Display
     lv_display_t *disp = lv_display_create(SCREEN_WIDTH, SCREEN_HEIGHT);
+    lv_display_set_color_format(disp, LV_COLOR_FORMAT_RGB565);
     lv_display_set_flush_cb(disp, flush_cb);
     lv_display_set_draw_buffers(disp, &draw_buf, NULL);
 
@@ -54,13 +58,7 @@ void LVGLContext::init(DisplayDriver *displayDrv, TouchController *touchDrv)
     lv_indev_set_read_cb(indev, touch_read_cb);
 
     // Theme
-    lv_theme_t *theme = lv_theme_default_init(
-        disp, // your display
-        lv_palette_main(LV_PALETTE_GREEN),
-        lv_palette_main(LV_PALETTE_BLUE),
-        true, // dark mode
-        LV_FONT_DEFAULT);
-    lv_disp_set_theme(disp, theme);
+    UITheme::init(disp);
 
     Log::info(Log::DISPLAY_TAG, "LVGL Context initialization complete");
 }

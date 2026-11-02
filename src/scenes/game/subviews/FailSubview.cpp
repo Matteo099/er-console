@@ -23,14 +23,14 @@ void FailSubview::create(lv_obj_t *parent)
     titleLabel =
         Label::create(
             root,
-            "YOU LOSE!",
+            "Tempo scaduto",
             &lv_font_roboto_mono_28,
             LV_TEXT_ALIGN_CENTER,
             240);
 
     Label::setTextColor(
         titleLabel,
-        lv_color_hex(0xFF0000));
+        lv_color_hex(0xA44848));
 
     Align::setPosition(
         titleLabel,
@@ -41,7 +41,7 @@ void FailSubview::create(lv_obj_t *parent)
     retryBtn =
         Button::create(
             root,
-            "Retry",
+            "Riprova",
             onRetry,
             this,
             140,
@@ -54,7 +54,7 @@ void FailSubview::create(lv_obj_t *parent)
     backBtn =
         Button::create(
             root,
-            "Back",
+            "Indietro",
             onBack,
             this,
             140,

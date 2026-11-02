@@ -1,7 +1,5 @@
 #include "AboutView.h"
-#include "log/Logger.h"
 #include "config/Environment.h"
-
 #include "systems/ui/UIEvents.h"
 #include "systems/ui/components/BackButton.h"
 #include "systems/ui/components/BrandHeader.h"
@@ -12,61 +10,27 @@
 
 void AboutView::create()
 {
-    Log::debug(Log::UI_TAG, "Creating AboutView");
-
     screen = Screen::create();
     auto layout = SceneLayout::create(screen);
-    brandImg = BrandHeader::create(layout.top);
-
-    container = Container::create(layout.body, 240, LV_SIZE_CONTENT, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_set_style_pad_all(container, 20, 0);
-    Container::setFlex(container);
-
-    textLabel = Label::create(
-        container,
-        "EscapeOS\n\n"
-        "Portable escape-room platform\n\n"
-        "Version " FW_VERSION "\n"
-        "Build: " FW_BUILD_DATE "\n"
-        "Commit: " FW_GIT_HASH "\n\n",
-        &lv_font_roboto_mono_14,
-        LV_TEXT_ALIGN_CENTER,
-        LV_PCT(100));
-    if (FW_DEV_MODE == 1)
-    {
-        Label::setTextColor(textLabel, lv_color_hex(0xFF5555));
-    }
-    else
-    {
-        Label::setTextColor(textLabel, lv_color_hex(0xCCCCCC));
-    }
-
+    brandImg = BrandHeader::create(layout.top, 100, "Informazioni");
+    container = Container::create(layout.body, LV_PCT(100), LV_SIZE_CONTENT, LV_ALIGN_TOP_MID);
+    Container::setFlex(container, LV_FLEX_FLOW_COLUMN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    UITheme::card(container);
+    lv_obj_set_style_pad_row(container, 8, 0);
+    Label::create(container, "EscapeOS", &lv_font_montserrat_20);
+    textLabel = Label::create(container, "Scenari interattivi, tutti da vivere.", &lv_font_montserrat_12,
+                              LV_TEXT_ALIGN_LEFT, LV_PCT(100));
+    UITheme::muted(textLabel);
+    Label::create(container, "Firmware " FW_VERSION, &lv_font_montserrat_14);
+    auto *build = Label::create(container, "Build " FW_BUILD_DATE "\nRevisione " FW_GIT_HASH,
+                                &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
+    UITheme::muted(build);
     btnBack = BackButton::create(layout.footer, onBackClicked, this);
 }
-
-void AboutView::update()
-{
-    // Static screen — nothing animated for now
-}
-
-void AboutView::destroy()
-{
-    screen = nullptr;
-
-    // Nullify remaining pointers
-    brandImg = nullptr;
-    container = nullptr;
-    textLabel = nullptr;
-    btnBack = nullptr;
-
-    pendingAction = AboutAction::None;
-}
-
+void AboutView::update() {}
+void AboutView::destroy() { screen = brandImg = container = textLabel = btnBack = nullptr; }
 void AboutView::onBackClicked(lv_event_t *e)
 {
     auto *view = static_cast<AboutView *>(lv_event_get_user_data(e));
-    if (!view)
-        return;
-
-    view->emitEvent(ButtonClickedEvent("back"));
+    if (view) view->emitEvent(ButtonClickedEvent("back"));
 }

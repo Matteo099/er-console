@@ -51,7 +51,9 @@ void StorageSystem::init(void *params)
 #if SD_READ_DIAGNOSTICS_ENABLED
     runReadDiagnostics("storage init");
 #endif
+#if STORAGE_BOOT_LIST_ENABLED
     listFiles();
+#endif
 }
 
 #if SD_READ_DIAGNOSTICS_ENABLED
@@ -401,6 +403,11 @@ uint64_t StorageSystem::totalBytes() const
         return 0;
 
     return driver->totalBytes();
+}
+
+uint64_t StorageSystem::capacityBytes() const
+{
+    return ready ? driver->capacityBytes() : 0;
 }
 
 uint64_t StorageSystem::usedBytes() const

@@ -209,4 +209,5 @@ void GameView::setGameObjectData(const std::vector<GameObjectSubview::ObjectData
 {
     Log::info(TAG, "Received %u game objects", static_cast<unsigned>(data.size()));
     gameObjectSubview.setObjects(data);
+    mainSubview.setObjectsAvailable(!data.empty());
 }

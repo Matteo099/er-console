@@ -2,6 +2,7 @@
 
 #include "systems/ui/Scene.h"
 #include "scenes/settings/SettingsView.h"
+#include "services/DeviceConfigRepository.h"
 
 class SettingsScene : public Scene
 {
@@ -22,4 +23,11 @@ private:
     // ---- Settings state (logic-owned) ----
     bool soundEnabled = true;
     class NetworkSystem* network = nullptr;
+    StorageSystem *storage = nullptr;
+    DeviceConfig config;
+    DeviceConfigRepository repository;
+    bool dirty = false;
+    uint32_t changedAt = 0;
+    void applyAudioPreference();
+    void savePreferences();
 };

@@ -7,6 +7,12 @@
 #include "systems/storage/StorageSystem.h"
 #include "systems/ui/lvgl/LVGLImageProvider.h"
 #include "config/BoardConfig.h"
+#include "services/DeviceConfigRepository.h"
+#include "systems/ui/UITheme.h"
+#include "systems/ui/UIFeedback.h"
+#include "systems/audio/AudioEvent.h"
+#include "systems/ui/UIDiagnostics.h"
+#include "core/SystemEventBus.h"
 
 void UIManager::init(void *params)
 {
@@ -17,6 +23,7 @@ void UIManager::init(void *params)
 
     // 2. Initialize LVGL core 
     lvgl.init(&display, &display);
+    loadPreferences();
 
     // Register LVGL filesystem access before any scene tries to load images
     LVGLImageProvider::init();
@@ -33,8 +40,27 @@ void UIManager::init(void *params)
 
 void UIManager::update()
 {
+    if (!preferencesLoaded && (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY))
+        loadPreferences();
     // Advance LVGL timers & rendering
     lvgl.update();
     // Advance scene logic (non-blocking)
     scenes.update();
+    UIDiagnostics::update(scenes);
+}
+
+void UIManager::loadPreferences()
+{
+    auto *storage = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+    DeviceConfigRepository repository;
+    DeviceConfig config;
+    repository.load(storage, config);
+    UITheme::select(UITheme::fromName(config.ui.theme.c_str()));
+    UIFeedback::setSoundEnabled(config.audio.enabled);
+    AudioEvent event{};
+    event.type = AudioEventType::SET_VOLUME;
+    event.volume.volume = config.audio.enabled ? config.audio.volume : 0;
+    xQueueSend(SystemEventBus::audioQueue, &event, 0);
+    preferencesLoaded = (storage && storage->isReady()) ||
+        (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY);
 }

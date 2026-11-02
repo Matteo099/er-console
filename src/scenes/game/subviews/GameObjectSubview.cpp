@@ -31,7 +31,7 @@ void GameObjectSubview::create(lv_obj_t *parent)
     titleLabel = Label::create(
         header,
         "",
-        &lv_font_roboto_mono_20,
+        &lv_font_montserrat_16,
         LV_TEXT_ALIGN_CENTER,
         LV_PCT(100));
 
@@ -40,6 +40,7 @@ void GameObjectSubview::create(lv_obj_t *parent)
         LV_ALIGN_CENTER,
         0,
         0);
+    lv_label_set_long_mode(titleLabel, LV_LABEL_LONG_DOT);
 
     content = lv_obj_create(layout.body);
     lv_obj_remove_style_all(content);
@@ -48,8 +49,8 @@ void GameObjectSubview::create(lv_obj_t *parent)
     lv_obj_set_flex_align(
         content,
         LV_FLEX_ALIGN_START,
-        LV_FLEX_ALIGN_START,
-        LV_FLEX_ALIGN_START);
+        LV_FLEX_ALIGN_CENTER,
+        LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_all(content, 6, 0);
     lv_obj_set_style_pad_row(content, 8, 0);
     lv_obj_set_scroll_dir(content, LV_DIR_VER);
@@ -123,25 +124,25 @@ void GameObjectSubview::rebuild()
     {
         Log::debug(TAG, "No objects to display");
 
-        lv_label_set_text(titleLabel, "Objects");
+        lv_label_set_text(titleLabel, "Oggetti e indizi");
         lv_label_set_text(pageLabel, "0 / 0");
 
         lv_obj_add_state(prevBtn, LV_STATE_DISABLED);
         lv_obj_add_state(nextBtn, LV_STATE_DISABLED);
 
         auto *label = lv_label_create(content);
-        lv_label_set_text(label, "There are no objects to display.");
+        lv_label_set_text(label, "Gli indizi raccolti appariranno qui.");
         lv_obj_set_width(label, LV_PCT(100));
         lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
-        lv_obj_set_style_text_font(label, &lv_font_roboto_mono_16, 0);
+        lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_center(label);
 
         return;
     }
 
-    lv_obj_clear_state(prevBtn, LV_STATE_DISABLED);
-    lv_obj_clear_state(nextBtn, LV_STATE_DISABLED);
+    lv_obj_set_state(prevBtn, LV_STATE_DISABLED, objects.size() < 2);
+    lv_obj_set_state(nextBtn, LV_STATE_DISABLED, objects.size() < 2);
 
     auto &object = objects[currentIndex];
 
@@ -164,7 +165,7 @@ void GameObjectSubview::rebuild()
             lv_label_set_text(label, block.text.c_str());
             lv_obj_set_width(label, LV_PCT(100));
             lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
-            lv_obj_set_style_text_font(label, &lv_font_roboto_mono_16, 0);
+            lv_obj_set_style_text_font(label, UITheme::font(&lv_font_montserrat_14), 0);
             break;
         }
 
@@ -182,13 +183,18 @@ void GameObjectSubview::rebuild()
                 break;
             }
 
-            if (block.width != LV_SIZE_CONTENT ||
-                block.height != LV_SIZE_CONTENT)
+            lv_obj_update_layout(img);
+            const int32_t naturalWidth = lv_obj_get_width(img);
+            const int32_t naturalHeight = lv_obj_get_height(img);
+            const int32_t available = lv_obj_get_content_width(content);
+            if (naturalWidth > 0 && available > 0)
             {
-                lv_obj_set_size(
-                    img,
-                    block.width,
-                    block.height);
+                lv_obj_set_width(img, block.width == LV_SIZE_CONTENT ?
+                    (naturalWidth < available ? naturalWidth : available) : block.width);
+                lv_obj_update_layout(img);
+                lv_obj_set_height(img, block.height == LV_SIZE_CONTENT ?
+                    naturalHeight * lv_obj_get_width(img) / naturalWidth : block.height);
+                lv_image_set_inner_align(img, LV_IMAGE_ALIGN_CONTAIN);
             }
 
             break;

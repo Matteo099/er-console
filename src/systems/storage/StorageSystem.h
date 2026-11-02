@@ -33,6 +33,7 @@ public:
     bool exists(const char *path) const;
     bool listDirectory(const char *path, std::vector<StorageEntry> &out, bool recursive = false) const;
     uint64_t totalBytes() const;
+    uint64_t capacityBytes() const;
     uint64_t usedBytes() const;
     uint64_t freeBytes() const;
     void listFiles() const;

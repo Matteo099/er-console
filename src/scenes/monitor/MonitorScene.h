@@ -17,11 +17,11 @@ public:
 
 private:
     void refreshTelemetry();
-    static const char* formatBytes(uint64_t bytes);
 
 private:
     MonitorView view;
     SceneRequest request = SceneRequest();
     class InputSystem* input = nullptr;
     class StorageSystem* storage = nullptr;
+    uint32_t lastRefreshMs = 0;
 };

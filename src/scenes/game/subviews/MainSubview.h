@@ -19,6 +19,7 @@ public:
     /* Game state */
     void setTime(uint32_t seconds);
     void setRunning(bool running);
+    void setObjectsAvailable(bool available);
     void setEventCallback(EventCallback callback)
     {
         eventCallback = std::move(callback);
@@ -49,8 +50,6 @@ private:
     lv_obj_t *pauseIcon = nullptr;
 
     bool paused = false;
-    bool pauseBlinkState = false;
-    uint32_t lastPauseBlinkMs = 0;
 
     lv_obj_t *objectsBtn = nullptr;
 

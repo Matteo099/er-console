@@ -32,7 +32,7 @@ void LoadingSubview::create(lv_obj_t *parent)
     messageLabel =
         Label::create(
             root,
-            "Loading...",
+            "Caricamento...",
             &lv_font_roboto_mono_16,
             LV_TEXT_ALIGN_CENTER,
             220);

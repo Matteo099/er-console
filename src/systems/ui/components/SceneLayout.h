@@ -14,8 +14,8 @@ public:
 
     static Parts create(
         lv_obj_t* screen,
-        lv_coord_t topHeight = 60,
-        lv_coord_t footerHeight = 56,
+        lv_coord_t topHeight = 44,
+        lv_coord_t footerHeight = 48,
         bool bodyScrollable = true)
     {
         Parts parts;
@@ -30,6 +30,8 @@ public:
 
         parts.top = createRow(screen, topHeight, false);
         parts.body = createRow(screen, 0, bodyScrollable);
+        lv_obj_set_style_pad_hor(parts.body, 10, 0);
+        lv_obj_set_style_pad_ver(parts.body, 6, 0);
         lv_obj_set_flex_grow(parts.body, 1);
         parts.footer = createRow(screen, footerHeight, false);
 
