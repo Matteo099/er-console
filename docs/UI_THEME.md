@@ -88,3 +88,6 @@ Ripristinare `UI_DIAGNOSTICS_ENABLED=0` e ricaricare al termine delle prove.
 Il flag e' disabilitato nella configurazione normale; in release i comandi
 sono comunque esclusi. Per la storia delle anomalie SD e i limiti delle
 verifiche vedere [SD_DIAGNOSTICS.md](SD_DIAGNOSTICS.md).
+
+Per la prova di regressione monitor CPU + salvataggi NVS vedere
+[UI_STABILITY.md](UI_STABILITY.md) e `scripts/ui_stability.py`.

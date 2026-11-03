@@ -232,8 +232,9 @@ per header e boot. La cache LVGL conserva le immagini decodificate; il monitor
 mostra la capacita' fisica gia' nota, senza ricalcolare ogni frame lo spazio FAT.
 
 Durante un primo test di cambi tema ripetuti sono ricomparsi errori CMD13
-riscrivendo il documento di configurazione sulla SD. Questo limite delle
-scritture non e' risolto dall'aumento del clock. Tema e suoni ora vengono
+nel percorso che leggeva e riscriveva la configurazione sulla SD. CMD13 e'
+un controllo di stato: da solo non identifica un errore di scrittura.
+L'aumento del clock non dimostra la risoluzione del problema. Tema e suoni vengono
 salvati in NVS, senza riscrivere la SD per ogni cambio. Il successivo test di
 navigazione, temi, audio e immagini non ha prodotto errori di lettura SD;
 anche il ripristino delle preferenze dopo un reset e' stato verificato.
@@ -252,6 +253,21 @@ La configurazione normale mantiene `SD_INIT_BEFORE_DISPLAY=1` e disabilita
 `SD_READ_DIAGNOSTICS_ENABLED`, `STORAGE_BOOT_LIST_ENABLED` e
 `UI_DIAGNOSTICS_ENABLED`. Per comandi di ispezione e schermate vedere
 [UI_THEME.md](UI_THEME.md).
+
+### Ricomparsa errori di lettura e panic del 3 novembre 2026
+
+La nuova acquisizione mostra errori CMD17 (`0x11`, lettura di un blocco) e
+CMD13 (`0x0d`, stato scheda) gia' durante l'avvio e prima di aprire Risorse.
+Il problema e' stato riprodotto anche leggendo `config.json` al boot del
+firmware precedente, senza modifiche, a 4 MHz:
+`.pio/crash-before-fix-boot.log`. I precedenti checksum e tempi corretti erano
+verifiche puntuali; non certificano la stabilita' nel tempo della SD.
+
+Il successivo panic `Cache disabled but cached memory region accessed` ha una
+causa software distinta nel monitor CPU, riprodotta con un cambio tema dopo
+aver aperto Risorse. La correzione IRAM/DRAM non modifica il trasporto SPI,
+la frequenza o il cablaggio e non va interpretata come soluzione degli
+errori SD. Analisi e prova di regressione: [UI_STABILITY.md](UI_STABILITY.md).
 
 ### Riprodurre il test minimale
 

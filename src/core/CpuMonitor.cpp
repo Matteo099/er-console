@@ -1,12 +1,15 @@
 #include "CpuMonitor.h"
+#include "esp_attr.h"
 #include "esp_freertos_hooks.h"
 #include "esp_timer.h"
 
 // ------------------------------
 // Static storage
 // ------------------------------
-volatile uint32_t CpuMonitor::tickCount[2] = {0, 0};
-volatile uint32_t CpuMonitor::idleCount[2] = {0, 0};
+// Tick hooks also run during flash/NVS operations with the cache disabled.
+// Their instructions and every datum they access must stay in internal RAM.
+DRAM_ATTR volatile uint32_t CpuMonitor::tickCount[2] = {0, 0};
+DRAM_ATTR volatile uint32_t CpuMonitor::idleCount[2] = {0, 0};
 
 uint8_t CpuMonitor::cpuUsage[2] = {0, 0};
 int64_t  CpuMonitor::lastUpdateMs = 0;
@@ -15,24 +18,24 @@ bool CpuMonitor::initialized = false;
 // ------------------------------
 // FreeRTOS hooks
 // ------------------------------
-static bool idleHook0()
+static bool IRAM_ATTR idleHook0()
 {
     CpuMonitor::idleCount[0]++;
     return true;
 }
 
-static bool idleHook1()
+static bool IRAM_ATTR idleHook1()
 {
     CpuMonitor::idleCount[1]++;
     return true;
 }
 
-static void tickHook0()
+static void IRAM_ATTR tickHook0()
 {
     CpuMonitor::tickCount[0]++;
 }
 
-static void tickHook1()
+static void IRAM_ATTR tickHook1()
 {
     CpuMonitor::tickCount[1]++;
 }
