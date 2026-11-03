@@ -17,7 +17,7 @@ void AboutView::create()
     Container::setFlex(container, LV_FLEX_FLOW_COLUMN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     UITheme::card(container);
     lv_obj_set_style_pad_row(container, 8, 0);
-    Label::create(container, "EscapeOS", &lv_font_montserrat_20);
+    Label::create(container, CONSOLE_TITLE, &lv_font_montserrat_20);
     textLabel = Label::create(container, "Scenari interattivi, tutti da vivere.", &lv_font_montserrat_12,
                               LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     UITheme::muted(textLabel);

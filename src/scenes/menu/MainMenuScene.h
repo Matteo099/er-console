@@ -16,6 +16,8 @@ public:
     bool handleUIEvent(const UIEvent& event) override;
 
 private:
+    void refreshStatus();
+    uint32_t lastStatusMs = 0;
     MainMenuView view;
     SceneRequest request = SceneRequest();
 };

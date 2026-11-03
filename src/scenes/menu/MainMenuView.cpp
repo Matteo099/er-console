@@ -14,7 +14,11 @@ void MainMenuView::create()
     auto layout = SceneLayout::create(screen, 44, 0, false);
     brandImg = BrandHeader::create(layout.top);
     statusLabel = Label::create(brandImg, "SD", &lv_font_montserrat_12);
-    UITheme::muted(statusLabel);
+    UITheme::accent(statusLabel);
+#if WIFI_ENABLED
+    wifiLabel = Label::create(brandImg, LV_SYMBOL_WIFI " --", &lv_font_montserrat_12);
+    UITheme::accent(wifiLabel);
+#endif
 
     menuContainer = Container::create(layout.body, LV_PCT(100), LV_PCT(100), LV_ALIGN_TOP_MID);
     Container::setFlex(menuContainer, LV_FLEX_FLOW_COLUMN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
@@ -53,13 +57,30 @@ void MainMenuView::setStorageReady(bool ready)
     if (!btnNewGame) return;
     if (ready) lv_obj_remove_state(btnNewGame, LV_STATE_DISABLED);
     else lv_obj_add_state(btnNewGame, LV_STATE_DISABLED);
-    Label::setText(statusLabel, ready ? LV_SYMBOL_DRIVE " SD pronta" : LV_SYMBOL_WARNING " SD assente");
+    Label::setText(statusLabel, ready ? LV_SYMBOL_DRIVE " SD" : LV_SYMBOL_WARNING " SD");
+    lv_obj_set_style_opa(statusLabel, ready ? LV_OPA_COVER : LV_OPA_50, 0);
+}
+
+void MainMenuView::setWiFiState(WiFiState state)
+{
+    if (!wifiLabel) return;
+    const char *text = LV_SYMBOL_WIFI " --";
+    switch (state)
+    {
+    case WiFiState::Connected: text = LV_SYMBOL_WIFI " OK"; break;
+    case WiFiState::AccessPoint: text = LV_SYMBOL_WIFI " AP"; break;
+    case WiFiState::Connecting: text = LV_SYMBOL_REFRESH " ..."; break;
+    case WiFiState::Error: text = LV_SYMBOL_WIFI " !"; break;
+    case WiFiState::Disconnected: break;
+    }
+    Label::setText(wifiLabel, text);
+    lv_obj_set_style_opa(wifiLabel, state == WiFiState::Disconnected ? LV_OPA_50 : LV_OPA_COVER, 0);
 }
 
 void MainMenuView::update() {}
 void MainMenuView::destroy()
 {
-    screen = brandImg = menuContainer = statusLabel = nullptr;
+    screen = brandImg = menuContainer = statusLabel = wifiLabel = nullptr;
     btnNewGame = btnSettings = btnAbout = nullptr;
 }
 void MainMenuView::onButtonClicked(lv_event_t *e)

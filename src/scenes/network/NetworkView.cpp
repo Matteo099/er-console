@@ -36,32 +36,51 @@ void NetworkView::create()
     portalCard = Container::create(container, LV_PCT(100), LV_SIZE_CONTENT);
     UITheme::card(portalCard);
     Container::setFlex(portalCard);
+    auto *portalTitle = Label::create(portalCard, "RETE DELLA CONSOLE", &lv_font_montserrat_12);
+    UITheme::accent(portalTitle);
     portalLabel = Label::create(portalCard, "", &lv_font_montserrat_12);
     UITheme::muted(portalLabel);
-    btnPortal = Button::create(portalCard, "Collega un dispositivo", onPortalClicked, this,
-                               LV_PCT(100), 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_WIFI);
     lv_obj_add_flag(portalCard, LV_OBJ_FLAG_HIDDEN);
     qrOverlay = lv_obj_create(screen);
+    lv_obj_remove_style_all(qrOverlay);
+    // A modal must not become a fourth row in the screen's column layout.
+    lv_obj_add_flag(qrOverlay, LV_OBJ_FLAG_FLOATING);
     lv_obj_set_size(qrOverlay, LV_PCT(100), LV_PCT(100));
-    lv_obj_center(qrOverlay);
+    lv_obj_set_pos(qrOverlay, 0, 0);
     UITheme::screen(qrOverlay);
     lv_obj_clear_flag(qrOverlay, LV_OBJ_FLAG_SCROLLABLE);
-    auto *heading = Label::create(qrOverlay, "Connetti alla console", &lv_font_montserrat_16);
-    lv_obj_align(heading, LV_ALIGN_TOP_LEFT, 0, 0);
-    Button::create(qrOverlay, nullptr, onPortalClicked, this, 44, 44, LV_ALIGN_TOP_RIGHT, 8, -10, LV_SYMBOL_CLOSE);
-    qrCode = lv_qrcode_create(qrOverlay);
-    lv_qrcode_set_size(qrCode, 116);
+    auto modal = SceneLayout::create(qrOverlay, 44, 40, false);
+    auto *heading = Label::create(modal.top, "Collega il telefono", &lv_font_montserrat_16);
+    lv_obj_align(heading, LV_ALIGN_LEFT_MID, 12, 0);
+    Button::create(modal.top, nullptr, onPortalClicked, this, 44, 44, LV_ALIGN_RIGHT_MID, -8, 0, LV_SYMBOL_CLOSE);
+    auto *frame = lv_obj_create(modal.body);
+    lv_obj_remove_style_all(frame);
+    lv_obj_set_size(frame, 144, 144);
+    lv_obj_set_style_bg_color(frame, lv_color_white(), 0);
+    lv_obj_set_style_bg_opa(frame, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(frame, 8, 0);
+    lv_obj_center(frame);
+    qrCode = lv_qrcode_create(frame);
+    lv_qrcode_set_size(qrCode, 128);
     lv_qrcode_set_dark_color(qrCode, lv_color_hex(0x25342F));
     lv_qrcode_set_light_color(qrCode, lv_color_white());
     lv_qrcode_set_quiet_zone(qrCode, true);
-    lv_obj_align(qrCode, LV_ALIGN_CENTER, 0, 0);
-    qrHelp = Label::create(qrOverlay, "Inquadra il codice con il telefono", &lv_font_montserrat_12,
+    lv_obj_center(qrCode);
+    qrHelp = Label::create(modal.footer, "Inquadra il QR per collegarti", &lv_font_montserrat_12,
                            LV_TEXT_ALIGN_CENTER, LV_PCT(100));
     UITheme::muted(qrHelp);
-    lv_obj_align(qrHelp, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_center(qrHelp);
     lv_obj_add_flag(qrOverlay, LV_OBJ_FLAG_HIDDEN);
 #endif
     btnBack = BackButton::create(layout.footer, onBackClicked, this);
+#if WIFI_ENABLED && PORTAL_ENABLED
+    lv_obj_set_flex_flow(layout.footer, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(layout.footer, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(layout.footer, 8, 0);
+    btnPortal = Button::create(layout.footer, "QR Wi-Fi", onPortalClicked, this, 156, 44,
+                               LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_WIFI);
+    lv_obj_add_flag(btnPortal, LV_OBJ_FLAG_HIDDEN);
+#endif
 }
 void NetworkView::update() {}
 void NetworkView::destroy()
@@ -75,6 +94,7 @@ void NetworkView::setStatus(const std::string &status, const std::string &ssid, 
     Label::setText(statusLabel, status.c_str());
     Label::setText(ssidLabel, ssid.empty() ? "Nessuna rete selezionata" : ssid.c_str());
     Label::setText(ipLabel, ip.empty() ? "" : ip.c_str());
+    if (ipLabel) lv_obj_set_flag(ipLabel, LV_OBJ_FLAG_HIDDEN, ip.empty());
 }
 void NetworkView::setPortalInfo(const std::string &url, const std::string &data)
 {
@@ -82,8 +102,15 @@ void NetworkView::setPortalInfo(const std::string &url, const std::string &data)
     portalUrl = url; qrData = data;
     const bool available = !portalUrl.empty() && !qrData.empty();
     if (portalCard) lv_obj_set_flag(portalCard, LV_OBJ_FLAG_HIDDEN, !available);
+    if (btnPortal) lv_obj_set_flag(btnPortal, LV_OBJ_FLAG_HIDDEN, !available);
     Label::setText(portalLabel, portalUrl.c_str());
-    if (available && qrCode) lv_qrcode_set_data(qrCode, qrData.c_str());
+    if (available && qrCode)
+    {
+        const bool rendered = lv_qrcode_update(qrCode, qrData.data(), qrData.size()) == LV_RESULT_OK;
+        lv_obj_set_flag(qrCode, LV_OBJ_FLAG_HIDDEN, !rendered);
+        const std::string help = rendered ? "Scansiona il QR, poi apri\n" + portalUrl : "QR non disponibile. Apri\n" + portalUrl;
+        Label::setText(qrHelp, help.c_str());
+    }
     if (!available && qrOverlay)
     {
         lv_obj_add_flag(qrOverlay, LV_OBJ_FLAG_HIDDEN);

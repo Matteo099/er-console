@@ -37,7 +37,7 @@
 
     <v-app-bar>
       <v-app-bar-nav-icon @click="toggleNav" />
-      <v-app-bar-title />
+      <v-app-bar-title>Escaperiom</v-app-bar-title>
       <v-spacer />
 
 
@@ -111,7 +111,7 @@ const drawer = ref(true)
 const rail = ref(false)
 const refreshing = ref(false)
 const appVersion = import.meta.env.VITE_APP_VERSION || 'dev'
-const logoImage = new URL('@/assets/images/logo.png', import.meta.url).href
+const logoImage = new URL('@/assets/images/limanulab.svg', import.meta.url).href
 const brandPositiveImage = new URL('@/assets/images/brand.png', import.meta.url).href
 const brandNegativeImage = new URL('@/assets/images/brand_negative.png', import.meta.url).href
 const flagEn = new URL('@/assets/images/en.svg', import.meta.url).href

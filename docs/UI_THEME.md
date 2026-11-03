@@ -28,15 +28,34 @@ gli accenti Latin-1. Il timer mantiene il font numerico monospace grande.
 La dipendenza dal descrittore privato del tema LVGL 9.4 e' isolata in
 `UITheme.cpp`: verificarla prima di aggiornare la versione di LVGL.
 
+Il titolo prodotto e' centralizzato in `src/config/Branding.h`: **Escaperiom**.
+`LimanulabLogo` ridisegna la lucciola originale con forme piatte e colori del
+tema, direttamente nelle callback di disegno LVGL. Non legge immagini dalla
+SD. Il portale web usa la stessa geometria in
+`frontend/src/assets/images/limanulab.svg` e mostra il medesimo titolo.
+
+La Home aggiorna gli indicatori ogni 500 ms: SD montata/assente; Wi-Fi `OK`
+connesso a una rete, `AP` rete locale del portale disponibile, `...` connessione
+in corso, `--` disconnesso e `!` errore. `AP` non indica accesso a Internet.
+L'indicatore Wi-Fi viene escluso con `WIFI_ENABLED=0`.
+
+Il QR contiene il nome dell'access point effettivamente avviato, senza
+rileggere la configurazione SD; i caratteri riservati dell'SSID vengono
+escapati. Nome prodotto e marchio non cambiano il nome della rete gia'
+configurato sul dispositivo.
+
 ## Schermate e disponibilita'
 
-- Home: stato microSD, accesso al catalogo, impostazioni e informazioni.
+- Home: stato microSD e Wi-Fi, accesso al catalogo, impostazioni e informazioni.
   Il pulsante Gioca e' disabilitato quando il filesystem non e' disponibile.
 - Impostazioni: Aspetto per i temi; Sistema per suoni, risorse e rete.
   Il collegamento Wi-Fi esiste solo con `WIFI_ENABLED=1`.
 - Rete: stato connessione; accesso al portale e QR solo con entrambi i flag
   `WIFI_ENABLED` e `PORTAL_ENABLED` attivi e con il portale effettivamente avviato.
   Un servizio disabilitato non produce URL o QR dimostrativi.
+  Il pulsante QR Wi-Fi resta nella barra inferiore; la finestra QR e' un
+  overlay `LV_OBJ_FLAG_FLOATING`, escluso dal layout della schermata e dallo
+  scorrimento. La cornice bianca conserva lo spazio libero attorno ai moduli.
 - Risorse: aggiornamento ogni secondo, capacita' fisica SD gia' nota al driver
   (senza scansione dello spazio libero), RAM/PSRAM, CPU e uptime. La sezione
   alimentazione compare solo se il relativo sensore e' disponibile.
@@ -83,6 +102,17 @@ Non richiede Pillow. Sono disponibili `ui home`, `ui settings`, `ui games`,
 e `ui sdcheck`. Quest'ultimo confronta due letture integrali per immagine,
 dimensioni, tempi e checksum FNV-1a. Le anteprime `ui game|victory|fail|objects`
 mostrano le sole View senza avviare Lua o comandare gli attuatori.
+
+Con Wi-Fi abilitato e' disponibile anche `ui network`. Le schermate del QR
+nei tre temi sono state catturate dal TFT e decodificate con ZXing-C++,
+verificando che restituiscano lo stesso payload Wi-Fi completo. Acquisizioni
+locali: `.pio/wifi-previews/`; log: `.pio/wifi-previews/review.log`.
+
+Per aggiornare anche nome e logo del portale web eseguire `npm run build`
+dalla cartella `frontend` e copiare il contenuto di `sd/.core/portal` nella
+cartella `/.core/portal` della microSD. Il solo upload del firmware non
+aggiorna quei file. La build web e il controllo TypeScript sono stati
+eseguiti; il PC di verifica non era collegato all'access point del dispositivo.
 
 Ripristinare `UI_DIAGNOSTICS_ENABLED=0` e ricaricare al termine delle prove.
 Il flag e' disabilitato nella configurazione normale; in release i comandi

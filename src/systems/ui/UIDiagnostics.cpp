@@ -11,6 +11,7 @@
 #include "scenes/gamelist/GameListScene.h"
 #include "scenes/monitor/MonitorScene.h"
 #include "scenes/about/AboutScene.h"
+#include "scenes/network/NetworkScene.h"
 #include "scenes/game/GameView.h"
 #include "core/SystemEventBus.h"
 #include "systems/storage/StorageSystem.h"
@@ -170,6 +171,9 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui games") scenes.changeScene(new GameListScene(), SceneTransition::None);
         else if (command == "ui monitor") scenes.changeScene(new MonitorScene(), SceneTransition::None);
         else if (command == "ui about") scenes.changeScene(new AboutScene(), SceneTransition::None);
+#if WIFI_ENABLED
+        else if (command == "ui network") scenes.changeScene(new NetworkScene(), SceneTransition::None);
+#endif
         else if (command == "ui game") scenes.changeScene(new GamePreview(0), SceneTransition::None);
         else if (command == "ui victory") scenes.changeScene(new GamePreview(1), SceneTransition::None);
         else if (command == "ui fail") scenes.changeScene(new GamePreview(2), SceneTransition::None);

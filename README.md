@@ -5,16 +5,16 @@
 Le opzioni di isolamento sono in [`src/config/Console.h`](src/config/Console.h):
 
 ```cpp
-#define WIFI_ENABLED 0
-#define PORTAL_ENABLED 0
+#define WIFI_ENABLED 1
+#define PORTAL_ENABLED 1
 #define SD_INIT_BEFORE_DISPLAY 1
 #define SD_READ_DIAGNOSTICS_ENABLED 0
 #define STORAGE_BOOT_LIST_ENABLED 0
 #define UI_DIAGNOSTICS_ENABLED 0
 ```
 
-Wi-Fi e portale sono attualmente disabilitati in entrambe le build. Per
-riattivarli impostare i primi due flag a `1`; con Wi-Fi disabilitato anche il
+Wi-Fi e portale sono attualmente abilitati. Per isolarli durante le prove SD
+impostare i primi due flag a `0`; con Wi-Fi disabilitato anche il
 portale rimane spento. Il precedente `ER_DISABLE_WIFI` della sola build debug
 e' stato sostituito da queste opzioni.
 

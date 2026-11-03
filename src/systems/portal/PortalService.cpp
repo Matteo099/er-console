@@ -222,6 +222,14 @@ std::string PortalService::portalSsid() const
 
 std::string PortalService::wifiQrPayload() const
 {
-    std::string payload = "WIFI:S:" + portalSsid() + ";T:nopass;P:;H:false;;";
-    return payload;
+    // Encode the AP actually running, not a fresh (possibly failed) SD config read.
+    const String ssid = WiFi.softAPSSID();
+    if (ssid.isEmpty()) return {};
+    std::string escaped;
+    for (const char value : std::string(ssid.c_str()))
+    {
+        if (value == '\\' || value == ';' || value == ',' || value == ':' || value == '"') escaped += '\\';
+        escaped += value;
+    }
+    return "WIFI:T:nopass;S:" + escaped + ";H:false;;";
 }
