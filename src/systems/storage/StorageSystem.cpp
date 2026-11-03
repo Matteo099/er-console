@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <cerrno>
 
 namespace
 {
@@ -46,6 +47,7 @@ void StorageSystem::init(void *params)
     }
 
     ready = true;
+    noteIOSuccess();
     Log::info(Log::STORAGE_TAG, "Storage ready");
 
 #if SD_READ_DIAGNOSTICS_ENABLED
@@ -175,11 +177,14 @@ void StorageSystem::listFiles() const
 
 IFile *StorageSystem::open(const char *path, FileMode mode)
 {
+    if (!ready || !driver || !path) return nullptr;
+    errno = 0;
     IFile *file = driver->open(path, mode);
 
     if (!file)
     {
-        ioFailures++;
+        // Missing optional assets are different from low-level I/O failures.
+        if (errno != ENOENT && errno != ENOTDIR) noteIOFailure();
 
         Log::error(
             Log::STORAGE_TAG,
@@ -201,9 +206,19 @@ IFile *StorageSystem::open(const char *path, FileMode mode)
             path);
     }
 
-    ioFailures = 0;
     return file;
 }
+
+StorageSystem::Health StorageSystem::health() const
+{
+    if (!ready) return Health::Unavailable;
+    const auto failures = ioFailures.load(std::memory_order_relaxed);
+    return failures >= IO_FAILURE_THRESHOLD ? Health::Error :
+           failures ? Health::Degraded : Health::Ready;
+}
+
+void StorageSystem::noteIOFailure() const { ioFailures.fetch_add(1, std::memory_order_relaxed); }
+void StorageSystem::noteIOSuccess() const { ioFailures.store(0, std::memory_order_relaxed); }
 
 bool StorageSystem::checkHealth()
 {
@@ -268,7 +283,11 @@ bool StorageSystem::readTextFile(
     delete file;
 
     if (!complete)
+    {
+        noteIOFailure();
         out.clear();
+    }
+    else if (!out.empty()) noteIOSuccess();
     return complete;
 }
 
@@ -447,8 +466,7 @@ bool StorageSystem::writeTextFile(
             return false;
     }
 
-    IFile *file =
-        driver->open(path, FileMode::Write);
+    IFile *file = open(path, FileMode::Write);
 
     if (!file)
     {
@@ -474,15 +492,20 @@ bool StorageSystem::writeTextFile(
     file->close();
     delete file;
 
-    return written == contents.size();
+    const bool complete = written == contents.size();
+    if (!complete) noteIOFailure();
+    return complete;
 }
 
 File StorageSystem::openNative(
     const char *path,
     bool write)
 {
-    return static_cast<ESP32SDCardDriver *>(driver)
-        ->openNative(path, write);
+    if (!ready || !driver || !path) return File();
+    errno = 0;
+    File file = static_cast<ESP32SDCardDriver *>(driver)->openNative(path, write);
+    if (!file && errno != ENOENT && errno != ENOTDIR) noteIOFailure();
+    return file;
 }
 
 uint64_t StorageSystem::directorySize(const char *path) const

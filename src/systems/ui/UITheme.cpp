@@ -121,6 +121,11 @@ void UITheme::select(UIThemeId id)
     lv_obj_report_style_change(nullptr);
 }
 UIThemeId UITheme::current() { return active; }
+lv_color_t UITheme::statusColor(UIStatusTone tone)
+{
+    return lv_color_hex(tone == UIStatusTone::Good ? 0x28734D :
+                        tone == UIStatusTone::Warning ? 0x986815 : 0xAB4149);
+}
 const UITheme::Palette &UITheme::palette() { return palette(active); }
 const UITheme::Palette &UITheme::palette(UIThemeId id) { return palettes[static_cast<unsigned>(id) % 3]; }
 UIThemeId UITheme::fromName(const char *value)

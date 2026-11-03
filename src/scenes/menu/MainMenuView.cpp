@@ -13,11 +13,9 @@ void MainMenuView::create()
     screen = Screen::create();
     auto layout = SceneLayout::create(screen, 44, 0, false);
     brandImg = BrandHeader::create(layout.top);
-    statusLabel = Label::create(brandImg, "SD", &lv_font_montserrat_12);
-    UITheme::accent(statusLabel);
+    sdBadge = StatusBadge::create(brandImg, LV_SYMBOL_DRIVE, "SD");
 #if WIFI_ENABLED
-    wifiLabel = Label::create(brandImg, LV_SYMBOL_WIFI " --", &lv_font_montserrat_12);
-    UITheme::accent(wifiLabel);
+    wifiBadge = StatusBadge::create(brandImg, LV_SYMBOL_WIFI, "OFF");
 #endif
 
     menuContainer = Container::create(layout.body, LV_PCT(100), LV_PCT(100), LV_ALIGN_TOP_MID);
@@ -52,35 +50,38 @@ void MainMenuView::create()
     UITheme::secondary(btnAbout);
 }
 
-void MainMenuView::setStorageReady(bool ready)
+void MainMenuView::setStorageState(StorageState state)
 {
     if (!btnNewGame) return;
-    if (ready) lv_obj_remove_state(btnNewGame, LV_STATE_DISABLED);
-    else lv_obj_add_state(btnNewGame, LV_STATE_DISABLED);
-    Label::setText(statusLabel, ready ? LV_SYMBOL_DRIVE " SD" : LV_SYMBOL_WARNING " SD");
-    lv_obj_set_style_opa(statusLabel, ready ? LV_OPA_COVER : LV_OPA_50, 0);
+    const bool unavailable = state == StorageState::Unavailable || state == StorageState::Error;
+    lv_obj_set_state(btnNewGame, LV_STATE_DISABLED, unavailable);
+    const auto tone = state == StorageState::Ready ? UIStatusTone::Good :
+                      state == StorageState::Degraded ? UIStatusTone::Warning : UIStatusTone::Error;
+    StatusBadge::set(sdBadge, tone, unavailable, state == StorageState::Degraded ? "SD!" : "SD");
 }
 
 void MainMenuView::setWiFiState(WiFiState state)
 {
-    if (!wifiLabel) return;
-    const char *text = LV_SYMBOL_WIFI " --";
+    const char *text = "OFF";
+    auto tone = UIStatusTone::Error;
+    bool unavailable = true;
     switch (state)
     {
-    case WiFiState::Connected: text = LV_SYMBOL_WIFI " OK"; break;
-    case WiFiState::AccessPoint: text = LV_SYMBOL_WIFI " AP"; break;
-    case WiFiState::Connecting: text = LV_SYMBOL_REFRESH " ..."; break;
-    case WiFiState::Error: text = LV_SYMBOL_WIFI " !"; break;
+    case WiFiState::Connected: text = "OK"; tone = UIStatusTone::Good; unavailable = false; break;
+    case WiFiState::AccessPoint: text = "AP"; tone = UIStatusTone::Good; unavailable = false; break;
+    case WiFiState::Connecting: text = "..."; tone = UIStatusTone::Warning; unavailable = false; break;
+    case WiFiState::Error: text = "!"; break;
     case WiFiState::Disconnected: break;
     }
-    Label::setText(wifiLabel, text);
-    lv_obj_set_style_opa(wifiLabel, state == WiFiState::Disconnected ? LV_OPA_50 : LV_OPA_COVER, 0);
+    StatusBadge::set(wifiBadge, tone, unavailable, text);
 }
 
 void MainMenuView::update() {}
 void MainMenuView::destroy()
 {
-    screen = brandImg = menuContainer = statusLabel = wifiLabel = nullptr;
+    screen = brandImg = menuContainer = nullptr;
+    sdBadge = StatusBadge::Parts{};
+    wifiBadge = StatusBadge::Parts{};
     btnNewGame = btnSettings = btnAbout = nullptr;
 }
 void MainMenuView::onButtonClicked(lv_event_t *e)

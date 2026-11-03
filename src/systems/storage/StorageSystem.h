@@ -3,6 +3,7 @@
 #include <SD.h>
 #include <vector>
 #include <string>
+#include <atomic>
 #include "core/SystemService.h"
 #include "drivers/storage/SDCardDriver.h"
 #include "drivers/storage/IFile.h"
@@ -17,10 +18,14 @@
 class StorageSystem : public SystemService
 {
 public:
+    enum class Health { Unavailable, Ready, Degraded, Error };
     StorageSystem();
 
     void init(void *params = nullptr) override;
     bool isReady() const;
+    Health health() const;
+    void noteIOFailure() const;
+    void noteIOSuccess() const;
     void update() override;
 
     virtual IFile *open(const char *path, FileMode mode = FileMode::Read);
@@ -51,10 +56,10 @@ private:
     bool checkHealth();
 
 private:
-    SDCardDriver *driver;
+    SDCardDriver *driver = nullptr;
 #if RECOVERY_STORAGE_SYSTEM_ENABLED
     StorageRecoverySystem *recovery;
 #endif
     bool ready = false;
-    int ioFailures = 0;
+    mutable std::atomic<uint32_t> ioFailures{0};
 };

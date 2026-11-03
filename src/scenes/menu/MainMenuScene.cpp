@@ -20,7 +20,18 @@ void MainMenuScene::refreshStatus()
 {
     lastStatusMs = millis();
     auto *storage = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
-    view.setStorageReady(storage && storage->isReady());
+    auto sd = MainMenuView::StorageState::Unavailable;
+    if (storage)
+    {
+        switch (storage->health())
+        {
+        case StorageSystem::Health::Ready: sd = MainMenuView::StorageState::Ready; break;
+        case StorageSystem::Health::Degraded: sd = MainMenuView::StorageState::Degraded; break;
+        case StorageSystem::Health::Error: sd = MainMenuView::StorageState::Error; break;
+        case StorageSystem::Health::Unavailable: break;
+        }
+    }
+    view.setStorageState(sd);
 #if WIFI_ENABLED
     auto *network = static_cast<NetworkSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
     auto *portal = static_cast<PortalSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_PORTAL));

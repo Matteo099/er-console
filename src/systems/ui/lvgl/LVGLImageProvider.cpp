@@ -5,6 +5,11 @@
 #include "systems/storage/StorageSystem.h"
 #include <SD.h>
 
+static StorageSystem *storageService()
+{
+    return static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+}
+
 static void* fs_open(lv_fs_drv_t*, const char* path, lv_fs_mode_t mode)
 {
     SPIBusLock::Guard guard;
@@ -19,7 +24,7 @@ static void* fs_open(lv_fs_drv_t*, const char* path, lv_fs_mode_t mode)
 
     Log::debug(Log::DISPLAY_TAG, "LVGL loading image: %s", path);
     const bool write = (mode & LV_FS_MODE_WR) != 0;
-    File file = SD.open(path, write ? FILE_WRITE : FILE_READ);
+    File file = storage->openNative(path, write);
     if (!file)
     {
         Log::warn(Log::DISPLAY_TAG, "LVGL image open failed: %s", path);
@@ -64,11 +69,14 @@ static lv_fs_res_t fs_read(
     const size_t actual = expected ? f->read((uint8_t*)buf, expected) : 0;
     if (actual != expected)
     {
+        if (auto *storage = storageService()) storage->noteIOFailure();
         Log::error(Log::DISPLAY_TAG, "SD short read: offset=%u expected=%u actual=%u",
                    (unsigned)pos, (unsigned)expected, (unsigned)actual);
         return LV_FS_RES_FS_ERR;
     }
     *br = actual;
+    if (actual && pos + actual == size)
+        if (auto *storage = storageService()) storage->noteIOSuccess();
     return LV_FS_RES_OK;
 }
 

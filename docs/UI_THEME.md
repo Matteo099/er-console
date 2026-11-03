@@ -34,9 +34,25 @@ tema, direttamente nelle callback di disegno LVGL. Non legge immagini dalla
 SD. Il portale web usa la stessa geometria in
 `frontend/src/assets/images/limanulab.svg` e mostra il medesimo titolo.
 
-La Home aggiorna gli indicatori ogni 500 ms: SD montata/assente; Wi-Fi `OK`
-connesso a una rete, `AP` rete locale del portale disponibile, `...` connessione
-in corso, `--` disconnesso e `!` errore. `AP` non indica accesso a Internet.
+La Home aggiorna gli indicatori ogni 500 ms. I colori semantici restano
+gli stessi nei tre temi: verde per disponibile, giallo per attesa/degrado,
+rosso con una X sovrapposta all'icona per indisponibile/errore.
+
+- SD: verde dopo il montaggio o una lettura completa riuscita; gialla `SD!`
+  dopo un errore I/O osservato; rossa con X se non montata o dopo cinque
+  errori senza una lettura completa riuscita. Una semplice apertura di file
+  non azzera gli errori. La mancanza di un file opzionale (`ENOENT`/`ENOTDIR`)
+  non viene classificata automaticamente come guasto della scheda.
+- Wi-Fi: verde `OK` se connesso, verde `AP` per la rete locale del portale,
+  giallo `...` durante la connessione, rosso con X `OFF` se disconnesso e
+  rosso con X `!` in errore. `AP` non indica accesso a Internet.
+
+Lo stato SD usa gli esiti osservati nei percorsi di testo, cache audio e
+immagini LVGL; non effettua scansioni o letture periodiche dal thread UI.
+Non e' un sensore di rimozione: senza una nuova operazione I/O lo stato
+resta quello dell'ultima verifica. Un audio letto parzialmente non entra
+in cache come file valido.
+
 L'indicatore Wi-Fi viene escluso con `WIFI_ENABLED=0`.
 
 Il QR contiene il nome dell'access point effettivamente avviato, senza
@@ -107,6 +123,19 @@ Con Wi-Fi abilitato e' disponibile anche `ui network`. Le schermate del QR
 nei tre temi sono state catturate dal TFT e decodificate con ZXing-C++,
 verificando che restituiscano lo stesso payload Wi-Fi completo. Acquisizioni
 locali: `.pio/wifi-previews/`; log: `.pio/wifi-previews/review.log`.
+
+Le anteprime `ui indicators ready|warning|error|off` mostrano i diversi stati
+di colore e la X senza scollegare la SD, cambiare Wi-Fi o alterare lo stato
+dei servizi. Per tornare ai dati effettivi usare `ui home`. Le anteprime sono
+escluse dalla build normale insieme agli altri comandi diagnostici.
+I quattro stati sono stati acquisiti e verificati nei tre temi, incluso il
+blocco di Gioca per SD indisponibile/errore. Schermate e log locali:
+`.pio/status-previews/`. I test del QR continuano a decodificare il payload
+Wi-Fi completo. ELF e BIN della build finale: `.pio/wifi-symbols/final.*`.
+Upload e ultimo avvio: `.pio/status-final-upload.log` e
+`.pio/status-final-boot.log`, con Wi-Fi e portale attivi e nessun panic.
+L'ultimo avvio contiene ancora errori SD CMD17/CMD13: gli indicatori mostrano
+gli esiti I/O osservati, senza pretendere di risolvere il guasto di lettura.
 
 Per aggiornare anche nome e logo del portale web eseguire `npm run build`
 dalla cartella `frontend` e copiare il contenuto di `sd/.core/portal` nella

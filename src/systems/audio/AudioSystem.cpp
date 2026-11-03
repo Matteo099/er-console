@@ -200,13 +200,17 @@ AudioCacheEntry *AudioSystem::loadCache(const char *path)
     size_t length = 0;
     uint8_t *buffer = new uint8_t[capacity];
     uint8_t temp[CHUNK];
+    bool complete = true;
 
     while (file->available())
     {
         int read = file->read(temp, CHUNK);
 
         if (read <= 0)
+        {
+            complete = false;
             break;
+        }
 
         if (length + read > capacity)
         {
@@ -228,6 +232,14 @@ AudioCacheEntry *AudioSystem::loadCache(const char *path)
 
     file->close();
     delete file;
+
+    if (!complete || length == 0)
+    {
+        storage->noteIOFailure();
+        delete[] buffer;
+        return nullptr; // Never cache a partial or unreadable file as valid audio.
+    }
+    storage->noteIOSuccess();
 
     int slot = -1;
     for (int i = 0; i < AUDIO_CACHE_SIZE; i++)

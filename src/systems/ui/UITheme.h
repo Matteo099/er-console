@@ -2,6 +2,7 @@
 #include <lvgl.h>
 
 enum class UIThemeId : uint8_t { Mint, Sky, Coral };
+enum class UIStatusTone : uint8_t { Good, Warning, Error };
 
 // Views compose semantic styles; scenes choose and persist preferences.
 class UITheme
@@ -16,6 +17,7 @@ public:
     static const char *title(UIThemeId id);
     static const Palette &palette(UIThemeId id);
     static const Palette &palette();
+    static lv_color_t statusColor(UIStatusTone tone);
     static const lv_font_t *font(const lv_font_t *requested);
     static void screen(lv_obj_t *obj);
     static void card(lv_obj_t *obj);

@@ -20,6 +20,28 @@
 
 namespace
 {
+    // Display-only states: no card removal, Wi-Fi disconnect or fake backend health.
+    class IndicatorPreview : public Scene
+    {
+        MainMenuView view;
+        unsigned mode;
+    public:
+        explicit IndicatorPreview(unsigned value) : mode(value) {}
+        void onEnter() override
+        {
+            view.create();
+            view.setStorageState(mode == 0 ? MainMenuView::StorageState::Ready :
+                                 mode == 1 ? MainMenuView::StorageState::Degraded :
+                                 mode == 2 ? MainMenuView::StorageState::Error : MainMenuView::StorageState::Unavailable);
+            view.setWiFiState(mode == 0 ? MainMenuView::WiFiState::Connected :
+                              mode == 1 ? MainMenuView::WiFiState::Connecting :
+                              mode == 2 ? MainMenuView::WiFiState::Error : MainMenuView::WiFiState::Disconnected);
+        }
+        void onUpdate() override { view.update(); }
+        void onExit() override { view.destroy(); }
+        View &getView() override { return view; }
+    };
+
     // Preview game views without executing Lua, touching relays or starting a game.
     class GamePreview : public Scene
     {
@@ -178,6 +200,10 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui victory") scenes.changeScene(new GamePreview(1), SceneTransition::None);
         else if (command == "ui fail") scenes.changeScene(new GamePreview(2), SceneTransition::None);
         else if (command == "ui objects") scenes.changeScene(new GamePreview(3), SceneTransition::None);
+        else if (command == "ui indicators ready") scenes.changeScene(new IndicatorPreview(0), SceneTransition::None);
+        else if (command == "ui indicators warning") scenes.changeScene(new IndicatorPreview(1), SceneTransition::None);
+        else if (command == "ui indicators error") scenes.changeScene(new IndicatorPreview(2), SceneTransition::None);
+        else if (command == "ui indicators off") scenes.changeScene(new IndicatorPreview(3), SceneTransition::None);
         else if (command == "ui snapshot") snapshot();
         else if (command == "ui tree") tree(lv_screen_active());
         else if (command == "ui sdcheck") checkStorage();

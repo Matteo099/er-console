@@ -3,6 +3,7 @@
 #include "MainMenuAction.h"
 #include "systems/ui/View.h"
 #include <lvgl.h>
+#include "systems/ui/components/StatusBadge.h"
 
 /**
  * @brief Main menu view
@@ -17,12 +18,13 @@ class MainMenuView : public View
 {
 public:
     enum class WiFiState { Disconnected, Connecting, Connected, AccessPoint, Error };
+    enum class StorageState { Unavailable, Ready, Degraded, Error };
     void create() override;
     void update() override;
     void destroy() override;
 
     lv_obj_t *getScreen() override { return screen; }
-    void setStorageReady(bool ready);
+    void setStorageState(StorageState state);
     void setWiFiState(WiFiState state);
 
 private:
@@ -33,8 +35,8 @@ private:
     lv_obj_t *btnNewGame = nullptr;
     lv_obj_t *btnSettings = nullptr;
     lv_obj_t *btnAbout = nullptr;
-    lv_obj_t *statusLabel = nullptr;
-    lv_obj_t *wifiLabel = nullptr;
+    StatusBadge::Parts sdBadge;
+    StatusBadge::Parts wifiBadge;
 
     MainMenuAction pendingAction = MainMenuAction::None;
 
