@@ -3,12 +3,6 @@
 #include "scenes/game/GameScene.h"
 #include "log/Logger.h"
 
-struct PendingGameObjects
-{
-    GameScene *scene;
-    std::vector<GameObjectSubview::ObjectData> objects;
-};
-
 GameSceneBindings::GameSceneBindings(GameScene *scene) : scene(scene) {}
 
 GameScene *GameSceneBindings::get(lua_State *L)
@@ -34,13 +28,7 @@ int GameSceneBindings::completeGame(lua_State *L)
         return 0;
     }
 
-    Log::info("GameSceneBindings", "Calling GameScene::completeGame()");
-    lv_async_call(
-        [](void *p)
-        {
-            static_cast<GameScene *>(p)->completeGame();
-        },
-        scene);
+    scene->requestCompletion(); // Consumed by GameScene on the UI task.
 
     return 0;
 }
@@ -176,20 +164,7 @@ int GameSceneBindings::setGameObjects(lua_State *L)
         lua_pop(L, 1);
     }
 
-    auto *payload = new PendingGameObjects{
-        scene,
-        std::move(objects)};
-
-    lv_async_call(
-        [](void *p)
-        {
-            auto *data = static_cast<PendingGameObjects *>(p);
-
-            data->scene->getGameView()->setGameObjectData(data->objects);
-
-            delete data;
-        },
-        payload);
+    scene->postGameObjects(std::move(objects));
 
     return 0;
 }

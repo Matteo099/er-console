@@ -1,5 +1,6 @@
 #pragma once
 #include <lvgl.h>
+#include "systems/ui/UITheme.h"
 
 // ESCAPERIOM logo, drawn entirely in code (no image assets, no heap).
 // Design space: mark = 120x120, lockup = 760x160. Everything scales to the object size.
@@ -24,8 +25,7 @@ public:
 private:
     enum : intptr_t { MODE_MARK = 0, MODE_LOCKUP = 1, FLAG_DARK = 2 };
 
-    static constexpr uint32_t NAVY = 0x111827, TEAL = 0x14B8A6, CYAN = 0x38BDF8, OFFWHITE = 0xF8FAFC;
-    static constexpr int SW = 12;               // wordmark stroke (design units)
+    static constexpr int SW = 11;               // wordmark stroke (design units)
     static constexpr int T = 56, M = 80, B = 104, W = 34; // letter top / middle / bottom / width
 
     static lv_obj_t *make(lv_obj_t *parent, int w, int h, intptr_t flags)
@@ -45,6 +45,7 @@ private:
         lv_area_t b;
         int designW;
         int w;
+        uint32_t mark, core, ink;
         int ox, oy; // design-space offset applied to emblem
 
         int X(int v) const { return b.x1 + v * w / designW; }
@@ -81,18 +82,18 @@ private:
     {
         const int x = c.ox, y = c.oy;
         // outer walls, open top-right corner (exit)
-        c.rect(x + 0,   y + 0,   x + 75,  y + 10,  TEAL);
-        c.rect(x + 0,   y + 0,   x + 10,  y + 120, TEAL);
-        c.rect(x + 0,   y + 110, x + 120, y + 120, TEAL);
-        c.rect(x + 110, y + 55,  x + 120, y + 120, TEAL);
+        c.rect(x + 0,   y + 0,   x + 75,  y + 10,  c.mark);
+        c.rect(x + 0,   y + 0,   x + 10,  y + 120, c.mark);
+        c.rect(x + 0,   y + 110, x + 120, y + 120, c.mark);
+        c.rect(x + 110, y + 55,  x + 120, y + 120, c.mark);
         // inner ring, offset opening
-        c.rect(x + 80,  y + 55,  x + 90,  y + 90,  TEAL);
-        c.rect(x + 30,  y + 80,  x + 90,  y + 90,  TEAL);
-        c.rect(x + 30,  y + 30,  x + 40,  y + 90,  TEAL);
-        c.rect(x + 30,  y + 30,  x + 65,  y + 40,  TEAL);
+        c.rect(x + 80,  y + 55,  x + 90,  y + 90,  c.mark);
+        c.rect(x + 30,  y + 80,  x + 90,  y + 90,  c.mark);
+        c.rect(x + 30,  y + 30,  x + 40,  y + 90,  c.mark);
+        c.rect(x + 30,  y + 30,  x + 65,  y + 40,  c.mark);
         // modular connector + puzzle core
-        c.rect(x + 55,  y + 80,  x + 65,  y + 110, TEAL);
-        c.rect(x + 50,  y + 50,  x + 70,  y + 70,  CYAN);
+        c.rect(x + 55,  y + 80,  x + 65,  y + 110, c.mark);
+        c.rect(x + 50,  y + 50,  x + 70,  y + 70,  c.core);
     }
 
     static void wordmark(const Ctx &c, uint32_t ink)
@@ -129,7 +130,7 @@ private:
         x0 = 612;
         c.V(x0, T - 6, B + 6, ink); c.V(x0 + W, T - 6, B + 6, ink);
         c.H(x0, x0 + W, T, ink); c.H(x0, x0 + W, B, ink);
-        c.rect(623, 74, 635, 86, CYAN);
+        c.rect(623, 74, 635, 86, c.core);
         // M
         x0 = 669;
         c.V(x0, T - 6, B + 6, ink); c.V(x0 + 44, T - 6, B + 6, ink);
@@ -151,7 +152,11 @@ private:
         c.ox = lockup ? 40 : 0;
         c.oy = lockup ? 20 : 0;
 
+        const auto &palette = UITheme::palette();
+        c.mark = dark ? palette.accent : palette.strong;
+        c.core = dark ? palette.strong : palette.accent;
+        c.ink = dark ? 0xF8FAFC : palette.ink;
         emblem(c);
-        if (lockup) wordmark(c, dark ? OFFWHITE : NAVY);
+        if (lockup) wordmark(c, c.ink);
     }
 };

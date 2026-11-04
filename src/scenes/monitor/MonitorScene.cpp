@@ -18,6 +18,7 @@ void MonitorScene::onEnter()
 
     input = static_cast<InputSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
     storage = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+    if (storage) storage->requestSpaceUsage();
 
     refreshTelemetry();
 }
@@ -44,9 +45,15 @@ bool MonitorScene::handleUIEvent(const UIEvent &event)
         return false;
 
     const auto &clicked = static_cast<const ButtonClickedEvent &>(event);
+    if (clicked.buttonId == "refresh_sd")
+    {
+        if (storage) storage->requestSpaceUsage();
+        view.setSdUsagePending(false);
+        return true;
+    }
     if (clicked.buttonId == "back")
     {
-        request = SceneRequest(SceneChange::GoToSettings, SceneTransition::SlideRight);
+        request = SceneRequest(SceneChange::GoToSettingsSystem, SceneTransition::SlideRight);
         return true;
     }
 
@@ -127,4 +134,7 @@ void MonitorScene::refreshTelemetry()
     }
 
     view.setSdCapacity(static_cast<uint32_t>(storage->capacityBytes() / (1024ULL * 1024ULL)));
+    const auto usage = storage->spaceUsage();
+    if (usage.state == StorageSystem::SpaceUsage::State::Ready) view.setSdUsage(usage.total, usage.used);
+    else view.setSdUsagePending(usage.state == StorageSystem::SpaceUsage::State::Failed);
 }

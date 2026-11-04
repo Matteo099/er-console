@@ -28,5 +28,6 @@ public:
     virtual uint64_t totalBytes() const = 0;
     virtual uint64_t capacityBytes() const = 0;
     virtual uint64_t usedBytes() const = 0;
+    virtual bool readSpaceUsage(uint64_t &total, uint64_t &used) const = 0;
     virtual bool ensureParents(const char *path) = 0;
 };

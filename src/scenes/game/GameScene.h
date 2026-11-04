@@ -6,6 +6,8 @@
 #include "GameState.h"
 #include <string>
 #include "GameInfo.h"
+#include <atomic>
+#include "core/TaskMutex.h"
 
 enum class GameLoadState
 {
@@ -32,6 +34,8 @@ public:
     void setGameInfo(const GameInfo &info) { gameInfo = info; }
 
     void completeGame();
+    void requestCompletion() { completionPending.store(true); }
+    void postGameObjects(std::vector<GameObjectSubview::ObjectData> objects);
 
     GameView *getGameView() { return &view; }
 
@@ -72,12 +76,21 @@ private:
     GameState state = GameState::Ready;
     uint32_t remainingSec = 3600;
     uint32_t lastTickMs = 0;
+    bool loadRequested = false;
+    uint32_t loadRequestedAt = 0;
+    bool exitConfirmationOpen = false;
+    bool resumeAfterConfirmation = false;
+    std::atomic<bool> completionPending{false};
+    TaskMutex pendingMutex;
+    bool objectsPending = false;
+    std::vector<GameObjectSubview::ObjectData> pendingObjects;
 
     SceneRequest request = SceneRequest();
 
     // Internal helpers
     bool loadGameScript();
     void stopGame();
+    void failLoad(const char *message);
 
     void startTimer();
     void pauseTimer();

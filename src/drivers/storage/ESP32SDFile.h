@@ -9,6 +9,12 @@ class ESP32SDFile : public IFile
 public:
     explicit ESP32SDFile(File f) : file(f) {}
 
+    size_t length() const override
+    {
+        SPIBusLock::Guard guard;
+        return file.size();
+    }
+
     int read(uint8_t *buffer, size_t len) override
     {
         SPIBusLock::Guard guard;

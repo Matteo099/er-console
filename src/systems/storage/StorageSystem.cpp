@@ -224,6 +224,7 @@ bool StorageSystem::checkHealth()
 {
     if (!exists(CORE_DIR))
     {
+        noteIOFailure();
 #if RECOVERY_STORAGE_SYSTEM_ENABLED
         recovery->recover(
             StorageFailureReason::CorruptionDetected);
@@ -248,25 +249,32 @@ void StorageSystem::update()
 
 bool StorageSystem::readTextFile(
     const char *path,
-    std::string &out)
+    std::string &out,
+    bool required)
 {
     SPIBusLock::Guard guard;
 
     IFile *file = open(path);
 
     if (!file)
+    {
+        // Arduino may translate a failed stat after a disk error to ENOENT.
+        // A required game file that cannot be read must still degrade its status.
+        if (required && (errno == ENOENT || errno == ENOTDIR)) noteIOFailure();
         return false;
+    }
 
     out.clear();
+    const size_t expected = file->length();
 
     char buffer[256];
     bool complete = true;
 
-    while (file->available())
+    while (out.size() < expected)
     {
         int r = file->read(
             reinterpret_cast<uint8_t *>(buffer),
-            sizeof(buffer));
+            std::min(sizeof(buffer), expected - out.size()));
 
         if (r <= 0)
         {
@@ -379,6 +387,7 @@ bool StorageSystem::listDirectory(
             path,
             localEntries))
     {
+        if (errno != ENOENT && errno != ENOTDIR) noteIOFailure();
         return false;
     }
 
@@ -427,6 +436,44 @@ uint64_t StorageSystem::totalBytes() const
 uint64_t StorageSystem::capacityBytes() const
 {
     return ready ? driver->capacityBytes() : 0;
+}
+
+StorageSystem::SpaceUsage StorageSystem::spaceUsage() const
+{
+    portENTER_CRITICAL(&spaceMutex);
+    const auto result = cachedSpace;
+    portEXIT_CRITICAL(&spaceMutex);
+    return result;
+}
+
+void StorageSystem::requestSpaceUsage()
+{
+    portENTER_CRITICAL(&spaceMutex);
+    if (cachedSpace.state == SpaceUsage::State::Loading) { portEXIT_CRITICAL(&spaceMutex); return; }
+    cachedSpace.state = ready ? SpaceUsage::State::Loading : SpaceUsage::State::Failed;
+    portEXIT_CRITICAL(&spaceMutex);
+    if (!ready) return;
+    if (xTaskCreate(spaceUsageTask, "sdSpace", 4096, this, 1, nullptr) != pdPASS)
+    {
+        portENTER_CRITICAL(&spaceMutex);
+        cachedSpace.state = SpaceUsage::State::Failed;
+        portEXIT_CRITICAL(&spaceMutex);
+    }
+}
+
+void StorageSystem::spaceUsageTask(void *context)
+{
+    auto *storage = static_cast<StorageSystem *>(context);
+    SpaceUsage result;
+    const bool ok = storage->driver && storage->driver->readSpaceUsage(result.total, result.used);
+    result.state = ok ? SpaceUsage::State::Ready : SpaceUsage::State::Failed;
+    if (!ok) storage->noteIOFailure();
+    portENTER_CRITICAL(&storage->spaceMutex);
+    storage->cachedSpace = result;
+    portEXIT_CRITICAL(&storage->spaceMutex);
+    Log::info(Log::STORAGE_TAG, "Space usage: %s, used=%llu total=%llu", ok ? "ready" : "failed",
+              (unsigned long long)result.used, (unsigned long long)result.total);
+    vTaskDelete(nullptr);
 }
 
 uint64_t StorageSystem::usedBytes() const

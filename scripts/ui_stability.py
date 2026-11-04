@@ -37,6 +37,7 @@ class StabilityProbe(Probe):
                 if match:
                     x1, y1, x2, y2, disabled = map(int, match.groups()[:5])
                     moving |= x1 < 0 or x2 > 320
+                    moving |= not match[6].strip()  # Incomplete serial row during verbose Lua logs.
                     if not disabled and 0 <= (y1 + y2) // 2 < 240:
                         result.append((match[6], (x1 + x2) // 2, (y1 + y2) // 2))
             if not moving:
@@ -62,6 +63,7 @@ def run(args):
         time.sleep(2.5)  # Allow an upload-triggered boot to finish before navigating.
         probe.command('ui monitor')  # Registers hooks on both cores, as opening Risorse does.
         probe.click('Indietro')
+        probe.click('Aspetto')  # Risorse now returns to the Sistema tab.
         original_theme = next(button[0].split()[-1] for button in probe.buttons() if '\uf00c' in button[0])
         probe.click('Sistema')
         original_sound = next(button[0] for button in probe.buttons() if 'Suoni' in button[0])

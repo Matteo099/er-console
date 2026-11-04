@@ -18,6 +18,7 @@ void SettingsScene::onEnter()
     soundEnabled = config.audio.enabled;
     UITheme::select(UITheme::fromName(config.ui.theme.c_str()));
     view.create();
+    view.selectTab(initialTab);
     view.setSoundEnabled(soundEnabled);
     view.setTheme(UITheme::current());
 

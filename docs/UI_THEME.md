@@ -29,12 +29,17 @@ La dipendenza dal descrittore privato del tema LVGL 9.4 e' isolata in
 `UITheme.cpp`: verificarla prima di aggiornare la versione di LVGL.
 
 Il titolo prodotto e' centralizzato in `src/config/Branding.h`: **Escaperiom**.
-`LimanulabLogo` ridisegna la lucciola originale con forme piatte e colori del
-tema, direttamente nelle callback di disegno LVGL. Non legge immagini dalla
-SD. Il portale web usa la stessa geometria in
-`frontend/src/assets/images/limanulab.svg` e mostra il medesimo titolo.
+`EscaperiomLogo` riproduce il simbolo a labirinto e il logotipo geometrico di
+`sd/.core/images/logo.svg`, direttamente nelle callback di disegno LVGL,
+senza leggere immagini dalla SD. Simbolo, nucleo e testo seguono i colori
+`strong`, `accent` e `ink` del tema. L'SVG usa la variante Menta su sfondo
+trasparente; il portale usa le esportazioni `escaperiom*.svg` in
+`frontend/src/assets/images`. Dopo una modifica al portale eseguire
+`npm run build` in `frontend` e copiare `sd/.core/portal` sulla scheda fisica.
 
-La Home aggiorna gli indicatori ogni 500 ms. I colori semantici restano
+`SceneManager` gestisce `DeviceStatusBar`, presente in alto a destra in tutte
+le schermate, anche sopra QR e conferme. Lo stato si aggiorna ogni 500 ms.
+`BrandHeader` riserva lo spazio necessario al gruppo. I colori semantici restano
 gli stessi nei tre temi: verde per disponibile, giallo per attesa/degrado,
 rosso con una X sovrapposta all'icona per indisponibile/errore.
 
@@ -43,6 +48,8 @@ rosso con una X sovrapposta all'icona per indisponibile/errore.
   errori senza una lettura completa riuscita. Una semplice apertura di file
   non azzera gli errori. La mancanza di un file opzionale (`ENOENT`/`ENOTDIR`)
   non viene classificata automaticamente come guasto della scheda.
+  Un file obbligatorio del gioco che non si riesce a leggere segnala invece
+  degrado, anche quando Arduino traduce l'errore sottostante in `ENOENT`.
 - Wi-Fi: verde `OK` se connesso, verde `AP` per la rete locale del portale,
   giallo `...` durante la connessione, rosso con X `OFF` se disconnesso e
   rosso con X `!` in errore. `AP` non indica accesso a Internet.
@@ -52,8 +59,12 @@ immagini LVGL; non effettua scansioni o letture periodiche dal thread UI.
 Non e' un sensore di rimozione: senza una nuova operazione I/O lo stato
 resta quello dell'ultima verifica. Un audio letto parzialmente non entra
 in cache come file valido.
+Anche il controllo periodico di `/.core` nel task storage conta un errore
+se la directory non e' piu' leggibile; il solo `exists` riuscito non azzera
+gli errori delle letture precedenti.
 
-L'indicatore Wi-Fi viene escluso con `WIFI_ENABLED=0`.
+Con `WIFI_ENABLED=0` l'indicatore resta visibile come `OFF` con X;
+i collegamenti alle impostazioni di rete vengono nascosti.
 
 Il QR contiene il nome dell'access point effettivamente avviato, senza
 rileggere la configurazione SD; i caratteri riservati dell'SSID vengono
@@ -66,6 +77,11 @@ configurato sul dispositivo.
   Il pulsante Gioca e' disabilitato quando il filesystem non e' disponibile.
 - Impostazioni: Aspetto per i temi; Sistema per suoni, risorse e rete.
   Il collegamento Wi-Fi esiste solo con `WIFI_ENABLED=1`.
+  Indietro da Risorse o Rete torna alla scheda Sistema.
+- Risorse: spazio SD occupato, totale, libero e percentuale. La scansione FAT
+  avviene in un task dedicato e il risultato viene conservato dal servizio
+  storage; Aggiorna richiede una nuova lettura. Se fallisce compare uno stato
+  esplicito, senza mostrare zero come spazio occupato.
 - Rete: stato connessione; accesso al portale e QR solo con entrambi i flag
   `WIFI_ENABLED` e `PORTAL_ENABLED` attivi e con il portale effettivamente avviato.
   Un servizio disabilitato non produce URL o QR dimostrativi.

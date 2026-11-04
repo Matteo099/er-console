@@ -5,6 +5,7 @@
 #include "systems/ui/components/Container.h"
 #include "systems/ui/components/Label.h"
 #include "log/Logger.h"
+#include "systems/ui/components/SceneLayout.h"
 
 namespace
 {
@@ -20,49 +21,22 @@ void FailSubview::create(lv_obj_t *parent)
         LV_PCT(100),
         LV_PCT(100));
 
-    titleLabel =
-        Label::create(
-            root,
-            "Tempo scaduto",
-            &lv_font_roboto_mono_28,
-            LV_TEXT_ALIGN_CENTER,
-            240);
-
-    Label::setTextColor(
-        titleLabel,
-        lv_color_hex(0xA44848));
-
-    Align::setPosition(
-        titleLabel,
-        LV_ALIGN_TOP_MID,
-        0,
-        30);
-
-    retryBtn =
-        Button::create(
-            root,
-            "Riprova",
-            onRetry,
-            this,
-            140,
-            44,
-            LV_ALIGN_CENTER,
-            0,
-            -10,
-            LV_SYMBOL_REFRESH);
-
-    backBtn =
-        Button::create(
-            root,
-            "Indietro",
-            onBack,
-            this,
-            140,
-            44,
-            LV_ALIGN_CENTER,
-            0,
-            50,
-            LV_SYMBOL_LEFT);
+    auto layout = SceneLayout::create(root, 44, 48, false);
+    titleLabel = Label::create(layout.top, "Tempo scaduto", &lv_font_montserrat_20,
+                               LV_TEXT_ALIGN_CENTER, LV_PCT(100));
+    UITheme::danger(titleLabel);
+    lv_obj_center(titleLabel);
+    messageLabel = Label::create(layout.body, "", &lv_font_montserrat_14,
+                                 LV_TEXT_ALIGN_CENTER, LV_PCT(100));
+    UITheme::muted(messageLabel);
+    lv_obj_center(messageLabel);
+    Container::setFlex(layout.footer, LV_FLEX_FLOW_ROW, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(layout.footer, 8, 0);
+    retryBtn = Button::create(layout.footer, "Riprova", onRetry, this, 132, 44,
+                              LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_REFRESH);
+    backBtn = Button::create(layout.footer, "Indietro", onBack, this, 140, 44,
+                             LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_LEFT);
+    UITheme::secondary(backBtn);
 
     hide();
 
@@ -74,7 +48,7 @@ void FailSubview::destroy()
     Log::info(TAG, "Destroying fail subview");
 
     root = nullptr;
-    titleLabel = nullptr;
+    titleLabel = messageLabel = nullptr;
     retryBtn = nullptr;
     backBtn = nullptr;
 
@@ -137,4 +111,10 @@ void FailSubview::onBack(lv_event_t *e)
 
     if (view->eventCallback)
         view->eventCallback("back");
+}
+
+void FailSubview::setMessage(const char *title, const char *message)
+{
+    Label::setText(titleLabel, title);
+    Label::setText(messageLabel, message);
 }

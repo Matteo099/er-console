@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "core/SystemService.h"
+#include "core/TaskMutex.h"
 
 #include "subsystems/ISubsystem.h"
 #include "InputConfig.h"
@@ -47,6 +48,7 @@ public:
     SevenSegmentSystem *sevenSegment();
 
 private:
+    TaskMutex lifecycleMutex;
     bool powerInitialized = false;
     bool rfidInitialized = false;
     bool oledInitialized = false;

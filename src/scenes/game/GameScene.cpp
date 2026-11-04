@@ -7,86 +7,103 @@
 
 #include "core/SystemEventBus.h"
 #include "config/Assets.h"
+#include <Arduino.h>
+#include <algorithm>
 
 void GameScene::onEnter()
 {
-    Log::info(Log::SCENE_TAG, "Entering GameScene");
+    Log::info(Log::SCENE_TAG, "Entering GameScene: %s", gameInfo.id.c_str());
     view.setEventHandler(this);
     view.create();
+    view.setTitle(gameInfo.title);
     view.showLoading();
-    view.setLoadingMessage("Starting game...");
+    view.setLoadingMessage("Preparazione del gioco...");
+    remainingSec = uint32_t(gameInfo.durationMin) * 60;
     view.setTime(remainingSec);
     view.setRunning(false);
-
     luaSystem = static_cast<LuaSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_LUA));
     inputSystem = static_cast<InputSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
-
-    if (!luaSystem)
+    if (!luaSystem || !inputSystem || gameInfo.id.empty())
     {
-        loadState = GameLoadState::LoadFailed;
-        view.showFailure();
-        Log::error(Log::GAME_TAG, "LuaSystem missing");
+        failLoad("Il gioco non e' disponibile. Torna al catalogo e riprova.");
         return;
     }
-
-    if (!inputSystem)
-    {
-        loadState = GameLoadState::LoadFailed;
-        view.showFailure();
-        Log::error(Log::GAME_TAG, "InputSystem missing");
-        return;
-    }
-
-    if (gameInfo.id.empty())
-    {
-        loadState = GameLoadState::LoadFailed;
-        view.showFailure();
-        Log::error(Log::GAME_TAG, "Game info missing");
-        return;
-    }
-
     loadState = GameLoadState::Loading;
-    loadGameScript();
+    loadRequested = true;
+    loadRequestedAt = lv_tick_get();
+}
+
+void GameScene::postGameObjects(std::vector<GameObjectSubview::ObjectData> objects)
+{
+    TaskMutex::Guard lock(pendingMutex);
+    pendingObjects = std::move(objects);
+    objectsPending = true;
 }
 
 void GameScene::onUpdate()
 {
-    if (state == GameState::Running && remainingSec > 0)
+    // Let the loading screen render and the previous scene unload before I/O.
+    if (loadRequested && lv_tick_get() - loadRequestedAt >= 160)
     {
-        uint32_t now = lv_tick_get();
-        if (now - lastTickMs >= 1000)
+        loadRequested = false;
+        loadGameScript();
+    }
+    std::vector<GameObjectSubview::ObjectData> objects;
+    bool applyObjects = false;
+    {
+        TaskMutex::Guard lock(pendingMutex);
+        if (objectsPending)
         {
-            lastTickMs += 1000;
-            remainingSec--;
-            statistics.elapsedSeconds++;
-            view.setTime(remainingSec);
-            if (remainingSec == 0)
+            objects.swap(pendingObjects);
+            objectsPending = false;
+            applyObjects = true;
+        }
+    }
+    if (applyObjects && loadState == GameLoadState::LoadComplete) view.setGameObjectData(objects);
+    if (!exitConfirmationOpen && completionPending.exchange(false) && loadState == GameLoadState::LoadComplete)
+        completeGame();
+    if (loadState == GameLoadState::LoadComplete && state != GameState::Finished && !luaSystem->isScriptLoaded())
+        failLoad("Il gioco si e' fermato per un errore nello script. Riprova o controlla i file.");
+
+    if (state == GameState::Running)
+    {
+        const uint32_t elapsed = (lv_tick_get() - lastTickMs) / 1000;
+        if (elapsed)
+        {
+            lastTickMs += elapsed * 1000;
+            const uint32_t played = gameInfo.durationMin ? std::min(elapsed, remainingSec) : elapsed;
+            statistics.elapsedSeconds += played;
+            if (gameInfo.durationMin)
             {
-                state = GameState::Finished;
-                sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::STOP);
-                luaSystem->pause();
-                view.setRunning(false);
-                view.showFailure();
+                remainingSec -= played;
+                view.setTime(remainingSec);
+                if (remainingSec == 0)
+                {
+                    state = GameState::Finished;
+                    sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::STOP);
+                    luaSystem->pause();
+                    view.setRunning(false);
+                    view.showFailure();
+                }
             }
         }
     }
-
     view.update();
 }
 
 void GameScene::onExit()
 {
+    stopGame();
     view.destroy();
-
-    if (luaSystem)
-        luaSystem->unloadScript();
 }
 
 void GameScene::completeGame()
 {
-    if (state == GameState::Finished)
+    if (state == GameState::Finished || loadState != GameLoadState::LoadComplete)
         return;
 
+    exitConfirmationOpen = false;
+    view.hideExitConfirmation();
     state = GameState::Finished;
     luaSystem->pause();
     view.setRunning(false);
@@ -110,6 +127,7 @@ bool GameScene::handleUIEvent(const UIEvent &event)
     /* MainSubview buttons */
     if (clicked.buttonId == "start_pause")
     {
+        if (loadState != GameLoadState::LoadComplete || exitConfirmationOpen) return true;
         if (state == GameState::Ready || state == GameState::Paused)
         {
             state = GameState::Running;
@@ -129,6 +147,38 @@ bool GameScene::handleUIEvent(const UIEvent &event)
     }
     if (clicked.buttonId == "cancel")
     {
+        if (exitConfirmationOpen) return true;
+        resumeAfterConfirmation = state == GameState::Running;
+        if (resumeAfterConfirmation)
+        {
+            state = GameState::Paused;
+            luaSystem->pause();
+            pauseTimer();
+            view.setRunning(false);
+        }
+        exitConfirmationOpen = true;
+        view.showExitConfirmation();
+        return true;
+    }
+    if (clicked.buttonId == "continue_game")
+    {
+        if (!exitConfirmationOpen) return true;
+        exitConfirmationOpen = false;
+        view.hideExitConfirmation();
+        if (resumeAfterConfirmation)
+        {
+            state = GameState::Running;
+            lastTickMs = lv_tick_get();
+            resumeTimer();
+            luaSystem->resume();
+            view.setRunning(true);
+        }
+        return true;
+    }
+    if (clicked.buttonId == "confirm_exit")
+    {
+        if (!exitConfirmationOpen) return true;
+        view.hideExitConfirmation();
         stopGame();
         request = SceneRequest(SceneChange::GoToGameList, SceneTransition::SlideRight);
         return true;
@@ -154,7 +204,11 @@ bool GameScene::handleUIEvent(const UIEvent &event)
     /* FailSubview */
     if (clicked.buttonId == "retry")
     {
-        loadGameScript();
+        view.showLoading();
+        view.setLoadingMessage("Preparazione del gioco...");
+        loadState = GameLoadState::Loading;
+        loadRequested = true;
+        loadRequestedAt = lv_tick_get();
         return true;
     }
     if (clicked.buttonId == "back")
@@ -168,50 +222,64 @@ bool GameScene::handleUIEvent(const UIEvent &event)
 
 bool GameScene::loadGameScript()
 {
-    if (!luaSystem || gameInfo.id.empty())
-        return false;
-
+    stopGame();
+    loadState = GameLoadState::Loading;
+    state = GameState::Ready;
+    statistics = GameStatistics{};
+    view.setGameObjectData({});
+    remainingSec = uint32_t(gameInfo.durationMin) * 60;
+    view.setTime(remainingSec);
+    view.setRunning(false);
     view.showLoading();
-    view.setLoadingMessage("Initializing input...");
-
+    view.setLoadingMessage("Preparazione dei dispositivi...");
     if (!inputSystem->begin(gameInfo.inputConfig))
     {
-        loadState = GameLoadState::LoadFailed;
-        view.showFailure();
+        failLoad("I dispositivi richiesti dal gioco non sono disponibili.");
         return false;
     }
-
-    view.setLoadingMessage("Loading game script...");
-    std::string scriptPath = getGameDataDirectory() + "/game.lua";
-    remainingSec = gameInfo.durationMin * 60;
-    view.setTime(remainingSec);
+    view.setLoadingMessage("Lettura del gioco dalla SD...");
+    const std::string path = getGameDataDirectory() + "/game.lua";
     luaSystem->setGameScene(this);
-
-    if (!luaSystem->loadScript(scriptPath.c_str()))
+    if (!luaSystem->loadScript(path.c_str()))
     {
-        loadState = GameLoadState::LoadFailed;
-        view.showFailure();
+        const bool io = luaSystem->getErrorKind() == LuaSystem::ErrorKind::Storage;
+        Log::error(Log::GAME_TAG, "Game load failed: %s", luaSystem->getLastError().c_str());
+        failLoad(io ? "Non riesco a leggere il file del gioco dalla SD. Riprova o controlla la scheda." :
+                      "Il file del gioco contiene un errore. Riprova o controlla lo script.");
         return false;
     }
-
     luaSystem->pause();
     loadState = GameLoadState::LoadComplete;
     state = GameState::Ready;
     view.showMain();
-    Log::info(Log::GAME_TAG, "Game loaded");
+    Log::info(Log::GAME_TAG, "Game loaded: %s, duration=%u seconds", gameInfo.id.c_str(), unsigned(remainingSec));
     return true;
+}
+
+void GameScene::failLoad(const char *message)
+{
+    loadRequested = false;
+    loadState = GameLoadState::LoadFailed;
+    stopGame();
+    if (inputSystem) inputSystem->shutdown();
+    view.setRunning(false);
+    view.showLoadError(message);
 }
 
 void GameScene::stopGame()
 {
-    if (state == GameState::Running || state == GameState::Paused)
+    loadRequested = false;
+    exitConfirmationOpen = false;
+    completionPending.store(false);
+    state = GameState::Finished;
+    if (luaSystem && luaSystem->isBoundTo(this))
     {
-        state = GameState::Finished;
-        view.setRunning(false);
-    }
-
-    if (luaSystem)
         luaSystem->unloadScript();
+        sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::STOP);
+    }
+    TaskMutex::Guard lock(pendingMutex);
+    pendingObjects.clear();
+    objectsPending = false;
 }
 
 void GameScene::startTimer()

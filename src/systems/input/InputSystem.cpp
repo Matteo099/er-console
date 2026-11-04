@@ -15,6 +15,7 @@ InputSystem::~InputSystem()
 
 bool InputSystem::begin(const InputConfig &config)
 {
+    TaskMutex::Guard guard(lifecycleMutex);
     reset();
     auto& i2c = I2CBusManager::bus();
     auto& spi = SPIBusManager::bus();
@@ -181,6 +182,7 @@ bool InputSystem::begin(const InputConfig &config)
 
 void InputSystem::shutdown()
 {
+    TaskMutex::Guard guard(lifecycleMutex);
     Log::info(Log::INPUT_TAG, "Shutting down InputSystem");
     reset();
 }
@@ -342,6 +344,7 @@ void InputSystem::init(void *params)
 
 void InputSystem::update()
 {
+    TaskMutex::Guard guard(lifecycleMutex);
     for (auto *system : subsystems)
     {
         if (system)

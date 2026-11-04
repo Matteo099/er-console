@@ -61,6 +61,7 @@ void SceneManager::changeScene(Scene* next, SceneTransition transition)
 
     current = next;
     current->onEnter();
+    indicators.attachTo(current->getView().getScreen());
 
     lv_obj_t* oldScreen = nullptr;
 
@@ -96,6 +97,7 @@ void SceneManager::update()
         return;
 
     current->onUpdate();
+    indicators.update();
     SceneRequest req = current->getRequest();
 
     if (!req.isNone())
@@ -112,6 +114,9 @@ void SceneManager::update()
 
         case SceneChange::GoToSettings:
             changeScene(new SettingsScene(), req.transition);
+            break;
+        case SceneChange::GoToSettingsSystem:
+            changeScene(new SettingsScene(SettingsView::Tab::System), req.transition);
             break;
 
         case SceneChange::GoToMonitor:
@@ -145,4 +150,14 @@ void SceneManager::update()
             break;
         }
     }
+}
+
+void SceneManager::previewIndicators(unsigned mode)
+{
+    indicators.preview(mode == 0 ? DeviceStatusBar::StorageState::Ready :
+                       mode == 1 ? DeviceStatusBar::StorageState::Degraded :
+                       mode == 2 ? DeviceStatusBar::StorageState::Error : DeviceStatusBar::StorageState::Unavailable,
+                       mode == 0 ? DeviceStatusBar::WiFiState::Connected :
+                       mode == 1 ? DeviceStatusBar::WiFiState::Connecting :
+                       mode == 2 ? DeviceStatusBar::WiFiState::Error : DeviceStatusBar::WiFiState::Disconnected);
 }

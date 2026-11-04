@@ -8,6 +8,7 @@
 class SettingsView : public View
 {
 public:
+    enum class Tab { Appearance, System };
     void create() override;
     void update() override;
     void destroy() override;
@@ -18,6 +19,7 @@ public:
     void setWiFiStatus(const std::string& status);
     void setTheme(UIThemeId theme);
     void setPreferenceStatus(const char *text);
+    void selectTab(Tab tab);
 
 private:
     lv_obj_t *screen = nullptr;

@@ -33,9 +33,6 @@ namespace
             view.setStorageState(mode == 0 ? MainMenuView::StorageState::Ready :
                                  mode == 1 ? MainMenuView::StorageState::Degraded :
                                  mode == 2 ? MainMenuView::StorageState::Error : MainMenuView::StorageState::Unavailable);
-            view.setWiFiState(mode == 0 ? MainMenuView::WiFiState::Connected :
-                              mode == 1 ? MainMenuView::WiFiState::Connecting :
-                              mode == 2 ? MainMenuView::WiFiState::Error : MainMenuView::WiFiState::Disconnected);
         }
         void onUpdate() override { view.update(); }
         void onExit() override { view.destroy(); }
@@ -87,6 +84,17 @@ namespace
         return lv_obj_check_type(obj, &lv_button_class) ? obj : nullptr;
     }
 
+    lv_obj_t *scrollAt(lv_obj_t *obj, int x, int y)
+    {
+        if (!lv_obj_is_visible(obj)) return nullptr;
+        lv_area_t a;
+        lv_obj_get_coords(obj, &a);
+        if (x < a.x1 || x > a.x2 || y < a.y1 || y > a.y2) return nullptr;
+        for (int i = int(lv_obj_get_child_count(obj)) - 1; i >= 0; --i)
+            if (auto *found = scrollAt(lv_obj_get_child(obj, i), x, y)) return found;
+        return lv_obj_has_flag(obj, LV_OBJ_FLAG_SCROLLABLE) ? obj : nullptr;
+    }
+
     void tree(lv_obj_t *obj)
     {
         if (!lv_obj_is_visible(obj)) return;
@@ -94,14 +102,16 @@ namespace
         lv_obj_get_coords(obj, &a);
         if (lv_obj_check_type(obj, &lv_button_class))
         {
-            Serial.printf("@BUTTON %d %d %d %d disabled=%d ", a.x1, a.y1, a.x2, a.y2,
-                          lv_obj_has_state(obj, LV_STATE_DISABLED));
+            char prefix[96];
+            snprintf(prefix, sizeof(prefix), "@BUTTON %d %d %d %d disabled=%d ", a.x1, a.y1, a.x2, a.y2,
+                     lv_obj_has_state(obj, LV_STATE_DISABLED));
+            String row(prefix);
             for (uint32_t i = 0; i < lv_obj_get_child_count(obj); ++i)
             {
                 auto *child = lv_obj_get_child(obj, i);
-                if (lv_obj_check_type(child, &lv_label_class)) Serial.printf("%s ", lv_label_get_text(child));
+                if (lv_obj_check_type(child, &lv_label_class)) { row += lv_label_get_text(child); row += ' '; }
             }
-            Serial.println();
+            Serial.println(row);
         }
         if (lv_obj_check_type(obj, &lv_label_class))
         {
@@ -200,10 +210,12 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui victory") scenes.changeScene(new GamePreview(1), SceneTransition::None);
         else if (command == "ui fail") scenes.changeScene(new GamePreview(2), SceneTransition::None);
         else if (command == "ui objects") scenes.changeScene(new GamePreview(3), SceneTransition::None);
-        else if (command == "ui indicators ready") scenes.changeScene(new IndicatorPreview(0), SceneTransition::None);
-        else if (command == "ui indicators warning") scenes.changeScene(new IndicatorPreview(1), SceneTransition::None);
-        else if (command == "ui indicators error") scenes.changeScene(new IndicatorPreview(2), SceneTransition::None);
-        else if (command == "ui indicators off") scenes.changeScene(new IndicatorPreview(3), SceneTransition::None);
+        else if (command.startsWith("ui indicators "))
+        {
+            unsigned mode = command.endsWith("ready") ? 0 : command.endsWith("warning") ? 1 : command.endsWith("error") ? 2 : 3;
+            scenes.changeScene(new IndicatorPreview(mode), SceneTransition::None);
+            scenes.previewIndicators(mode);
+        }
         else if (command == "ui snapshot") snapshot();
         else if (command == "ui tree") tree(lv_screen_active());
         else if (command == "ui sdcheck") checkStorage();
@@ -221,6 +233,12 @@ void UIDiagnostics::update(SceneManager &scenes)
             sscanf(command.c_str(), "ui scroll %d", &y);
             // SceneLayout's body is the second child. Settings panels scroll independently.
             if (auto *body = lv_obj_get_child(lv_screen_active(), 1)) lv_obj_scroll_to_y(body, y, LV_ANIM_OFF);
+        }
+        else if (command.startsWith("ui scrollat "))
+        {
+            int x = 0, y = 0, offset = 0;
+            if (sscanf(command.c_str(), "ui scrollat %d %d %d", &x, &y, &offset) == 3)
+                if (auto *target = scrollAt(lv_screen_active(), x, y)) lv_obj_scroll_to_y(target, offset, LV_ANIM_OFF);
         }
         Serial.printf("@UI DONE %s\n", command.c_str());
         command = "";

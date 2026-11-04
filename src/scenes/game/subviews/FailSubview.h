@@ -15,6 +15,7 @@ public:
     void hide();
 
     void setEventCallback(EventCallback callback);
+    void setMessage(const char *title, const char *message);
 
 private:
     static void onRetry(lv_event_t* e);
@@ -25,6 +26,7 @@ private:
     lv_obj_t* root = nullptr;
 
     lv_obj_t* titleLabel = nullptr;
+    lv_obj_t* messageLabel = nullptr;
     lv_obj_t* retryBtn = nullptr;
     lv_obj_t* backBtn = nullptr;
 };

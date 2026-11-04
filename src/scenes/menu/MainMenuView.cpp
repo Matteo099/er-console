@@ -13,10 +13,6 @@ void MainMenuView::create()
     screen = Screen::create();
     auto layout = SceneLayout::create(screen, 44, 0, false);
     brandImg = BrandHeader::create(layout.top);
-    sdBadge = StatusBadge::create(brandImg, LV_SYMBOL_DRIVE, "SD");
-#if WIFI_ENABLED
-    wifiBadge = StatusBadge::create(brandImg, LV_SYMBOL_WIFI, "OFF");
-#endif
 
     menuContainer = Container::create(layout.body, LV_PCT(100), LV_PCT(100), LV_ALIGN_TOP_MID);
     Container::setFlex(menuContainer, LV_FLEX_FLOW_COLUMN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
@@ -55,33 +51,12 @@ void MainMenuView::setStorageState(StorageState state)
     if (!btnNewGame) return;
     const bool unavailable = state == StorageState::Unavailable || state == StorageState::Error;
     lv_obj_set_state(btnNewGame, LV_STATE_DISABLED, unavailable);
-    const auto tone = state == StorageState::Ready ? UIStatusTone::Good :
-                      state == StorageState::Degraded ? UIStatusTone::Warning : UIStatusTone::Error;
-    StatusBadge::set(sdBadge, tone, unavailable, state == StorageState::Degraded ? "SD!" : "SD");
-}
-
-void MainMenuView::setWiFiState(WiFiState state)
-{
-    const char *text = "OFF";
-    auto tone = UIStatusTone::Error;
-    bool unavailable = true;
-    switch (state)
-    {
-    case WiFiState::Connected: text = "OK"; tone = UIStatusTone::Good; unavailable = false; break;
-    case WiFiState::AccessPoint: text = "AP"; tone = UIStatusTone::Good; unavailable = false; break;
-    case WiFiState::Connecting: text = "..."; tone = UIStatusTone::Warning; unavailable = false; break;
-    case WiFiState::Error: text = "!"; break;
-    case WiFiState::Disconnected: break;
-    }
-    StatusBadge::set(wifiBadge, tone, unavailable, text);
 }
 
 void MainMenuView::update() {}
 void MainMenuView::destroy()
 {
     screen = brandImg = menuContainer = nullptr;
-    sdBadge = StatusBadge::Parts{};
-    wifiBadge = StatusBadge::Parts{};
     btnNewGame = btnSettings = btnAbout = nullptr;
 }
 void MainMenuView::onButtonClicked(lv_event_t *e)

@@ -48,7 +48,8 @@ void AudioSystem::init(void *params)
     }
 
     Log::info(Log::AUDIO_TAG, "Audio system initialized");
-    driver->startWav(storage->open(AUDIO_CLICK_FILE));
+    // Apply queued UI volume/mute preferences before requesting the startup sound.
+    sendAudioEvent(AUDIO_CLICK_FILE, AudioEventType::PLAY_WAV);
 }
 
 void AudioSystem::update()
@@ -100,6 +101,7 @@ void AudioSystem::update()
 
 void AudioSystem::beep(uint16_t freq, uint16_t ms)
 {
+    if (volume == 0) return;
     Log::debug(Log::AUDIO_TAG, "Playing beep freq=%d ms=%d", freq, ms);
     driver->playTone(freq, ms);
 }
@@ -111,6 +113,7 @@ void AudioSystem::play(const char *path, bool loop)
 
     if (!storage || !path)
         return;
+    if (volume == 0) return;
 
     Log::info(Log::AUDIO_TAG, "Playing wav: %s", path);
     AudioCacheEntry *entry = findCache(path);
@@ -162,6 +165,7 @@ void AudioSystem::setVolume(uint8_t volume)
     Log::info(Log::AUDIO_TAG, "Setting volume to %d", volume);
 
     driver->setVolume(volume);
+    if (volume == 0) stop();
 }
 
 uint8_t AudioSystem::getVolume() const

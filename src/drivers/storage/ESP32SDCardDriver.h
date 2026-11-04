@@ -21,6 +21,7 @@ public:
     uint64_t totalBytes() const override;
     uint64_t capacityBytes() const override;
     uint64_t usedBytes() const override;
+    bool readSpaceUsage(uint64_t &total, uint64_t &used) const override;
     bool ensureParents(const char *path) override;
 
 private:

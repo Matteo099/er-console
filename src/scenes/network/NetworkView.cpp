@@ -13,7 +13,7 @@ void NetworkView::create()
 {
     screen = Screen::create();
     auto layout = SceneLayout::create(screen);
-    brandImg = BrandHeader::create(layout.top, 100, "Rete e connessioni");
+    brandImg = BrandHeader::create(layout.top, 100, "Connessioni");
     container = Container::create(layout.body, LV_PCT(100), LV_SIZE_CONTENT, LV_ALIGN_TOP_MID);
     Container::setFlex(container);
     lv_obj_set_style_pad_row(container, 8, 0);
@@ -49,13 +49,13 @@ void NetworkView::create()
     lv_obj_set_pos(qrOverlay, 0, 0);
     UITheme::screen(qrOverlay);
     lv_obj_clear_flag(qrOverlay, LV_OBJ_FLAG_SCROLLABLE);
-    auto modal = SceneLayout::create(qrOverlay, 44, 40, false);
+    auto modal = SceneLayout::create(qrOverlay, 44, 44, false);
     auto *heading = Label::create(modal.top, "Collega il telefono", &lv_font_montserrat_16);
     lv_obj_align(heading, LV_ALIGN_LEFT_MID, 12, 0);
-    Button::create(modal.top, nullptr, onPortalClicked, this, 44, 44, LV_ALIGN_RIGHT_MID, -8, 0, LV_SYMBOL_CLOSE);
+    Button::create(modal.footer, nullptr, onPortalClicked, this, 44, 44, LV_ALIGN_RIGHT_MID, -8, 0, LV_SYMBOL_CLOSE);
     auto *frame = lv_obj_create(modal.body);
     lv_obj_remove_style_all(frame);
-    lv_obj_set_size(frame, 144, 144);
+    lv_obj_set_size(frame, 140, 140);
     lv_obj_set_style_bg_color(frame, lv_color_white(), 0);
     lv_obj_set_style_bg_opa(frame, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(frame, 8, 0);
@@ -67,9 +67,9 @@ void NetworkView::create()
     lv_qrcode_set_quiet_zone(qrCode, true);
     lv_obj_center(qrCode);
     qrHelp = Label::create(modal.footer, "Inquadra il QR per collegarti", &lv_font_montserrat_12,
-                           LV_TEXT_ALIGN_CENTER, LV_PCT(100));
+                           LV_TEXT_ALIGN_CENTER, LV_PCT(80));
     UITheme::muted(qrHelp);
-    lv_obj_center(qrHelp);
+    lv_obj_align(qrHelp, LV_ALIGN_LEFT_MID, 0, 0);
     lv_obj_add_flag(qrOverlay, LV_OBJ_FLAG_HIDDEN);
 #endif
     btnBack = BackButton::create(layout.footer, onBackClicked, this);

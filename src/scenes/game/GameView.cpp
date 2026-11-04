@@ -2,6 +2,8 @@
 
 #include "systems/ui/UIEvents.h"
 #include "systems/ui/components/Screen.h"
+#include "systems/ui/components/SceneLayout.h"
+#include "systems/ui/components/BrandHeader.h"
 #include "log/Logger.h"
 
 namespace
@@ -39,11 +41,15 @@ void GameView::create()
         LV_PCT(100),
         LV_PCT(100));
 
-    mainSubview.create(screen);
-    loadingSubview.create(screen);
-    victorySubview.create(screen);
-    failSubview.create(screen);
-    gameObjectSubview.create(screen);
+    auto layout = SceneLayout::create(screen, 44, 0, false);
+    auto *header = BrandHeader::create(layout.top, 100, "Partita");
+    titleLabel = lv_obj_get_child(header, 1);
+    lv_obj_set_style_pad_all(layout.body, 0, 0);
+    mainSubview.create(layout.body);
+    loadingSubview.create(layout.body);
+    victorySubview.create(layout.body);
+    failSubview.create(layout.body);
+    gameObjectSubview.create(layout.body);
 
     auto callback =
         [this](const char *id)
@@ -56,6 +62,10 @@ void GameView::create()
     victorySubview.setEventCallback(callback);
     failSubview.setEventCallback(callback);
     gameObjectSubview.setEventCallback(callback);
+    exitDialog.create(screen, "Sei sicuro di voler abbandonare la partita?", [this](bool leave)
+    {
+        emitEvent(ButtonClickedEvent(leave ? "confirm_exit" : "continue_game"));
+    });
 
     showLoading();
 
@@ -71,6 +81,8 @@ void GameView::destroy()
     victorySubview.destroy();
     failSubview.destroy();
     gameObjectSubview.destroy();
+    exitDialog.destroy();
+    titleLabel = nullptr;
 
     screen = nullptr;
 
@@ -164,9 +176,19 @@ void GameView::showVictory()
 
 void GameView::showFailure()
 {
+    failSubview.setMessage("Tempo scaduto", "Il tempo a disposizione e' terminato.");
     Log::debug(TAG, "showFailure()");
     setState(GameSubview::Fail);
 }
+
+void GameView::showLoadError(const char *message)
+{
+    failSubview.setMessage("Impossibile avviare", message);
+    setState(GameSubview::Fail);
+}
+void GameView::setTitle(const std::string &title) { Label::setText(titleLabel, title.empty() ? "Partita" : title.c_str()); }
+void GameView::showExitConfirmation() { exitDialog.show(); }
+void GameView::hideExitConfirmation() { exitDialog.hide(); }
 
 void GameView::showGameObject()
 {

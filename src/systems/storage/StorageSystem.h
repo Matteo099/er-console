@@ -19,6 +19,12 @@ class StorageSystem : public SystemService
 {
 public:
     enum class Health { Unavailable, Ready, Degraded, Error };
+    struct SpaceUsage
+    {
+        enum class State { Unknown, Loading, Ready, Failed };
+        State state = State::Unknown;
+        uint64_t total = 0, used = 0;
+    };
     StorageSystem();
 
     void init(void *params = nullptr) override;
@@ -29,7 +35,7 @@ public:
     void update() override;
 
     virtual IFile *open(const char *path, FileMode mode = FileMode::Read);
-    bool readTextFile(const char *path, std::string &out);
+    bool readTextFile(const char *path, std::string &out, bool required = false);
     bool writeTextFile(const char *path, const std::string &contents, bool overwrite = true);
     File openNative(const char *path, bool write = false);
     bool removePath(const char *path);
@@ -41,6 +47,8 @@ public:
     uint64_t capacityBytes() const;
     uint64_t usedBytes() const;
     uint64_t freeBytes() const;
+    void requestSpaceUsage();
+    SpaceUsage spaceUsage() const;
     void listFiles() const;
 #if SD_READ_DIAGNOSTICS_ENABLED
     void runReadDiagnostics(const char *phase) const;
@@ -54,6 +62,9 @@ public:
 
 private:
     bool checkHealth();
+    static void spaceUsageTask(void *context);
+    mutable portMUX_TYPE spaceMutex = portMUX_INITIALIZER_UNLOCKED;
+    SpaceUsage cachedSpace;
 
 private:
     SDCardDriver *driver = nullptr;

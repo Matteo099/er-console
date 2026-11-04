@@ -7,6 +7,7 @@
 class SettingsScene : public Scene
 {
 public:    
+    explicit SettingsScene(SettingsView::Tab tab = SettingsView::Tab::Appearance) : initialTab(tab) {}
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
@@ -17,6 +18,7 @@ public:
     bool handleUIEvent(const UIEvent& event) override;
 
 private:
+    SettingsView::Tab initialTab;
     SettingsView view;
     SceneRequest request = SceneRequest();
 

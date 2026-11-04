@@ -4,6 +4,7 @@
 #include "systems/storage/StorageSystem.h"
 #include "systems/audio/AudioSystem.h"
 #include "systems/input/InputSystem.h"
+#include "core/TaskMutex.h"
 
 extern "C" {
 #include "lua.h"
@@ -17,6 +18,7 @@ class GameScene;
 class LuaSystem : public SystemService
 {
 public:
+    enum class ErrorKind { None, Storage, Syntax, Runtime, Initialization };
     LuaSystem();
     ~LuaSystem();
 
@@ -31,23 +33,29 @@ public:
     void reset();
 
     // Game control
-    void pause() { gamePaused = true; }
-    void resume() { gamePaused = false; }
+    void pause() { TaskMutex::Guard lock(vmMutex); gamePaused = true; }
+    void resume() { TaskMutex::Guard lock(vmMutex); gamePaused = false; lastTickMs = 0; }
 
     // State
-    bool isReady() const { return ready; }
-    bool isScriptLoaded() const { return scriptLoaded; }
+    bool isReady() const { TaskMutex::Guard lock(vmMutex); return ready; }
+    bool isScriptLoaded() const { TaskMutex::Guard lock(vmMutex); return scriptLoaded; }
+    ErrorKind getErrorKind() const { TaskMutex::Guard lock(vmMutex); return errorKind; }
+    std::string getLastError() const { TaskMutex::Guard lock(vmMutex); return lastError; }
+    bool isBoundTo(const GameScene *scene) const { TaskMutex::Guard lock(vmMutex); return gameScene == scene; }
 
     // Lua VM access
     lua_State* getVM() { return L; }
 
     // API registration (for dependency injection)
-    void setGameScene(GameScene* scene) { gameScene = scene; }
+    void setGameScene(GameScene* scene) { TaskMutex::Guard lock(vmMutex); gameScene = scene; }
     void setStorageSystem(StorageSystem* sys) { storageSystem = sys; }
     void setAudioSystem(AudioSystem* sys) { audioSystem = sys; }
     void setInputSystem(InputSystem* sys) { inputSystem = sys; }
 
 private:
+    mutable TaskMutex vmMutex;
+    ErrorKind errorKind = ErrorKind::None;
+    std::string lastError;
     // Lua VM
     lua_State* L = nullptr;
 

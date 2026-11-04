@@ -4,6 +4,7 @@
 #include "config/BoardConfig.h"
 #include "ESP32SDFile.h"
 #include <cstring>
+#include <cerrno>
 
 namespace
 {
@@ -157,10 +158,14 @@ bool ESP32SDCardDriver::listDirectory(
 
     while (true)
     {
+        errno = 0;
         File entry = directory.openNextFile();
 
         if (!entry)
+        {
+            if (errno && errno != ENOENT) { directory.close(); return false; }
             break;
+        }
 
         StorageEntry info;
 
@@ -222,6 +227,28 @@ uint64_t ESP32SDCardDriver::usedBytes() const
     SPIBusLock::Guard guard;
 
     return SD.usedBytes();
+}
+
+bool ESP32SDCardDriver::readSpaceUsage(uint64_t &total, uint64_t &used) const
+{
+    if (!isMounted) return false;
+    SPIBusLock::Guard guard;
+    total = SD.totalBytes();
+    if (!total) return false;
+    used = SD.usedBytes();
+    if (used > total) return false;
+    // Arduino's API also returns zero on failure. Never call a nonempty volume empty.
+    if (used == 0)
+    {
+        File root = SD.open("/");
+        if (!root || !root.isDirectory()) return false;
+        errno = 0;
+        File entry = root.openNextFile();
+        const bool empty = !entry && errno == 0;
+        entry.close(); root.close();
+        if (!empty) return false;
+    }
+    return true;
 }
 
 bool ESP32SDCardDriver::ensureParents(const char *path)

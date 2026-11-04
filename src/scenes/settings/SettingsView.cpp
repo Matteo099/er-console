@@ -117,11 +117,15 @@ void SettingsView::onTabClicked(lv_event_t *e)
 {
     auto *view = static_cast<SettingsView *>(lv_event_get_user_data(e));
     if (!view) return;
-    const bool appearance = lv_event_get_target(e) == view->tabAppearance;
-    lv_obj_set_flag(view->themePanel, LV_OBJ_FLAG_HIDDEN, !appearance);
-    lv_obj_set_flag(view->systemPanel, LV_OBJ_FLAG_HIDDEN, appearance);
-    lv_obj_set_state(view->tabAppearance, LV_STATE_CHECKED, appearance);
-    lv_obj_set_state(view->tabSystem, LV_STATE_CHECKED, !appearance);
+    view->selectTab(lv_event_get_target(e) == view->tabAppearance ? Tab::Appearance : Tab::System);
+}
+void SettingsView::selectTab(Tab tab)
+{
+    const bool appearance = tab == Tab::Appearance;
+    lv_obj_set_flag(themePanel, LV_OBJ_FLAG_HIDDEN, !appearance);
+    lv_obj_set_flag(systemPanel, LV_OBJ_FLAG_HIDDEN, appearance);
+    lv_obj_set_state(tabAppearance, LV_STATE_CHECKED, appearance);
+    lv_obj_set_state(tabSystem, LV_STATE_CHECKED, !appearance);
 }
 void SettingsView::onWifiClicked(lv_event_t *e) { auto *v = static_cast<SettingsView *>(lv_event_get_user_data(e)); if (v) v->emitEvent(ButtonClickedEvent("wifi_settings")); }
 void SettingsView::onSoundClicked(lv_event_t *e) { auto *v = static_cast<SettingsView *>(lv_event_get_user_data(e)); if (v) v->emitEvent(ButtonClickedEvent("toggle_sound")); }

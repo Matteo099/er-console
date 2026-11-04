@@ -3,8 +3,6 @@
 #include "systems/ui/UIEvents.h"
 #include "core/SystemEventBus.h"
 #include "systems/storage/StorageSystem.h"
-#include "systems/network/NetworkSystem.h"
-#include "systems/portal/PortalSystem.h"
 #include "config/Console.h"
 #include <Arduino.h>
 
@@ -32,25 +30,6 @@ void MainMenuScene::refreshStatus()
         }
     }
     view.setStorageState(sd);
-#if WIFI_ENABLED
-    auto *network = static_cast<NetworkSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
-    auto *portal = static_cast<PortalSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_PORTAL));
-    auto state = MainMenuView::WiFiState::Disconnected;
-    if (portal && portal->isRunning()) state = MainMenuView::WiFiState::AccessPoint;
-    if (network)
-    {
-        switch (network->getStatus().state)
-        {
-        case NetworkSystem::State::Connected: state = MainMenuView::WiFiState::Connected; break;
-        case NetworkSystem::State::Connecting: state = MainMenuView::WiFiState::Connecting; break;
-        case NetworkSystem::State::Error:
-            if (state != MainMenuView::WiFiState::AccessPoint) state = MainMenuView::WiFiState::Error;
-            break;
-        default: break;
-        }
-    }
-    view.setWiFiState(state);
-#endif
 }
 
 void MainMenuScene::onUpdate()

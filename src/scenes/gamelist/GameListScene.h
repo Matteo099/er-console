@@ -21,6 +21,7 @@ private:
     GameListView view;
     // int selectedIndex = -1;
     std::vector<GameInfo> games;
+    std::string loadError;
     SceneRequest request = SceneRequest();
 
     void loadGames();

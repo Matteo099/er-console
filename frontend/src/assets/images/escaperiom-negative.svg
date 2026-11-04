@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 160" role="img" aria-label="ESCAPERIOM"><rect width="760" height="160" fill="none" />
+
+  
+  <g transform="translate(40,20)" fill="none" stroke-width="10" stroke-linecap="butt" stroke-linejoin="miter">
+    
+    <path d="M75 5 H5 V115 H115 V55" stroke="#C8E7D8" />
+    
+    <path d="M85 55 V85 H35 V35 H65" stroke="#C8E7D8" />
+    
+    <path d="M60 85 V115" stroke="#C8E7D8" />
+    
+    <rect x="50" y="50" width="20" height="20" fill="#2D6652" stroke="none" />
+  </g>
+
+  
+  <g transform="translate(0,20)" fill="none" stroke="#F8FAFC" stroke-width="11" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="4">
+    
+    <path d="M224 36 H190 V84 H224 M190 60 H218" />
+    
+    <path d="M281 36 H247 V60 H281 V84 H247" />
+    
+    <path d="M338 36 H304 V84 H338" />
+    
+    <path d="M361 84 L374 36 H382 L395 84 M367 68 H389" />
+    
+    <path d="M418 84 V36 H452 V60 H418" />
+    
+    <path d="M509 36 H475 V84 H509 M475 60 H503" />
+    
+    <path d="M532 84 V36 H566 V60 H532 M546 60 L566 84" />
+    
+    <path d="M589 36 V84" />
+    
+    <rect x="612" y="36" width="34" height="48" />
+    <rect x="623" y="54" width="12" height="12" fill="#2D6652" stroke="none" />
+    
+    <path d="M669 84 V36 L691 62 L713 36 V84" />
+  </g>
+</svg>

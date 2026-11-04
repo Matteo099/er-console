@@ -25,7 +25,7 @@ public:
         return pos;
     }
 
-    size_t length() const
+    size_t length() const override
     {
         return size;
     }

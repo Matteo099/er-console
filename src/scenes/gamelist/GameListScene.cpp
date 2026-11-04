@@ -88,6 +88,7 @@ void GameListScene::onEnter()
     loadGames();
     view.create();
     view.setGames(games);
+    view.setLoadError(loadError);
 }
 
 void GameListScene::onUpdate()
@@ -119,6 +120,13 @@ bool GameListScene::handleUIEvent(const UIEvent &event)
 
     if (clicked.buttonId == "start_game")
     {
+        if (games.empty() && !loadError.empty())
+        {
+            loadGames();
+            view.setGames(games);
+            view.setLoadError(loadError);
+            return true;
+        }
         if (GameInfo *game =
                 view.getCurrentGame())
         {
@@ -137,11 +145,13 @@ bool GameListScene::handleUIEvent(const UIEvent &event)
 void GameListScene::loadGames()
 {
     games.clear();
+    loadError.clear();
     StorageSystem *storageSystem = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
 
     if (!storageSystem || !storageSystem->isReady())
     {
         Log::error(Log::SCENE_TAG, "Storage system is not ready");
+        loadError = "SD non disponibile. Controlla la scheda e riprova.";
         return;
     }
 
@@ -149,6 +159,7 @@ void GameListScene::loadGames()
     if (!storageSystem->listDirectory(GAMES_DIR, entries, false))
     {
         Log::error(Log::SCENE_TAG, "Failed to list games directory");
+        loadError = "Non riesco a leggere il catalogo dalla SD. Riprova.";
         return;
     }
 
@@ -159,9 +170,10 @@ void GameListScene::loadGames()
 
         std::string configPath = std::string(GAMES_DIR) + "/" + entry.name + "/config.json";
         std::string jsonText;
-        if (!storageSystem->readTextFile(configPath.c_str(), jsonText))
+        if (!storageSystem->readTextFile(configPath.c_str(), jsonText, true))
         {
             Log::warn(Log::SCENE_TAG, "Missing config.json for game: %s", entry.name.c_str());
+            loadError = "Alcuni file del catalogo non sono leggibili. Riprova.";
             continue;
         }
 

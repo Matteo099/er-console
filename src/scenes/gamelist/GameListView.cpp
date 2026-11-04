@@ -68,20 +68,24 @@ void GameListView::rebuildCurrentCard()
 
     if (games.empty())
     {
-        auto *title = Label::create(cardContainer, "Nessuna avventura", &lv_font_montserrat_18,
+        auto *title = Label::create(cardContainer, loadError.empty() ? "Nessuna avventura" : "Catalogo non disponibile", &lv_font_montserrat_18,
                                     LV_TEXT_ALIGN_CENTER, LV_PCT(100));
         lv_obj_set_style_pad_top(title, 20, 0);
-        auto *help = Label::create(cardContainer, "Gli scenari sulla microSD appariranno qui.",
+        auto *help = Label::create(cardContainer, loadError.empty() ? "Gli scenari sulla microSD appariranno qui." : loadError.c_str(),
                                    &lv_font_montserrat_12, LV_TEXT_ALIGN_CENTER, LV_PCT(100));
         lv_obj_align_to(help, title, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
         UITheme::muted(help);
         lv_label_set_text(pageLabel, "0 / 0");
-        lv_obj_add_state(btnStart, LV_STATE_DISABLED);
+        lv_obj_set_state(btnStart, LV_STATE_DISABLED, loadError.empty());
+        Label::setText(lv_obj_get_child(btnStart, 0), loadError.empty() ? LV_SYMBOL_PLAY : LV_SYMBOL_REFRESH);
+        Label::setText(lv_obj_get_child(btnStart, 1), loadError.empty() ? "Avvia" : "Riprova");
         lv_obj_add_state(btnPrev, LV_STATE_DISABLED);
         lv_obj_add_state(btnNext, LV_STATE_DISABLED);
         return;
     }
     lv_obj_remove_state(btnStart, LV_STATE_DISABLED);
+    Label::setText(lv_obj_get_child(btnStart, 0), LV_SYMBOL_PLAY);
+    Label::setText(lv_obj_get_child(btnStart, 1), "Avvia");
     lv_obj_set_state(btnPrev, LV_STATE_DISABLED, games.size() < 2);
     lv_obj_set_state(btnNext, LV_STATE_DISABLED, games.size() < 2);
     lv_obj_scroll_to_y(lv_obj_get_parent(cardContainer), 0, LV_ANIM_OFF);
@@ -98,6 +102,8 @@ void GameListView::rebuildCurrentCard()
 void GameListView::update()
 {
 }
+
+void GameListView::setLoadError(const std::string &message) { loadError = message; rebuildCurrentCard(); }
 
 void GameListView::onPrevClicked(lv_event_t *e)
 {

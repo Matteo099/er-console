@@ -16,6 +16,7 @@ public:
     lv_obj_t *getScreen() override { return screen; };
     GameInfo* getCurrentGame();
     void setGames(const std::vector<GameInfo> &games);
+    void setLoadError(const std::string &message);
 
 private:
     struct CardUserData
@@ -47,6 +48,7 @@ private:
     lv_obj_t *btnStart = nullptr;
 
     size_t currentIndex = 0;
+    std::string loadError;
 
     GameListAction pendingAction = GameListAction::None;
 };

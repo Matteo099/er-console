@@ -7,6 +7,7 @@
 #include "subviews/VictorySubview.h"
 #include "subviews/FailSubview.h"
 #include "subviews/GameObjectSubview.h"
+#include "systems/ui/components/ConfirmationDialog.h"
 
 #include <string>
 
@@ -30,6 +31,10 @@ public:
     void showVictory();
     void showFailure();
     void showGameObject();
+    void showLoadError(const char *message);
+    void setTitle(const std::string &title);
+    void showExitConfirmation();
+    void hideExitConfirmation();
 
     void setLoadingMessage(const std::string &message);
     void setVictoryStats(const VictorySubview::GameStats &stats);
@@ -44,6 +49,8 @@ private:
     void setState(GameSubview state);
 
     lv_obj_t *screen = nullptr;
+    lv_obj_t *titleLabel = nullptr;
+    ConfirmationDialog exitDialog;
 
     GameSubview currentState = GameSubview::Main;
 

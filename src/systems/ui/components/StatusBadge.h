@@ -11,14 +11,17 @@ public:
     {
         Parts parts;
         parts.root = Container::create(parent, LV_SIZE_CONTENT, 20);
+        lv_obj_clear_flag(parts.root, LV_OBJ_FLAG_CLICKABLE);
         Container::setFlex(parts.root, LV_FLEX_FLOW_ROW, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_set_style_pad_column(parts.root, 3, 0);
         auto *glyph = Container::create(parts.root, 18, 18);
+        lv_obj_clear_flag(glyph, LV_OBJ_FLAG_CLICKABLE);
         parts.icon = Label::create(glyph, symbol, &lv_font_montserrat_12);
         lv_obj_center(parts.icon);
         parts.caption = Label::create(parts.root, text, &lv_font_montserrat_12);
         parts.cross = lv_obj_create(glyph);
         lv_obj_remove_style_all(parts.cross);
+        lv_obj_clear_flag(parts.cross, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_set_size(parts.cross, 9, 9);
         lv_obj_align(parts.cross, LV_ALIGN_TOP_RIGHT, 0, 0);
         lv_obj_set_style_radius(parts.cross, LV_RADIUS_CIRCLE, 0);

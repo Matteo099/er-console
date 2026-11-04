@@ -51,7 +51,7 @@ bool NetworkScene::handleUIEvent(const UIEvent& event)
 
     if (clicked.buttonId == "back")
     {
-        request = SceneRequest(SceneChange::GoToSettings, SceneTransition::SlideRight);
+        request = SceneRequest(SceneChange::GoToSettingsSystem, SceneTransition::SlideRight);
         return true;
     }
 

@@ -14,6 +14,7 @@ public:
 
     virtual bool seek(size_t pos) = 0;
     virtual bool available() = 0;
+    virtual size_t length() const = 0;
 
     virtual void flush() = 0;
     virtual void close() = 0;

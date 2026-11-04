@@ -111,7 +111,7 @@ void MainSubview::update()
                 0);
         }
 
-        if (!tickingClockAudioStarted && !paused)
+        if (!tickingClockAudioStarted && !paused && UIFeedback::soundEnabled())
         {
             Log::info(TAG, "Starting ticking clock warning audio");
             sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::PLAY_LOOP_WAV);
@@ -119,7 +119,7 @@ void MainSubview::update()
         }
     }
 
-    if (paused)
+    if (paused || !UIFeedback::soundEnabled())
     {
         if (tickingClockAudioStarted)
         {

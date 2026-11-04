@@ -16,11 +16,13 @@ LuaSystem::LuaSystem() {}
 
 LuaSystem::~LuaSystem()
 {
+    TaskMutex::Guard lock(vmMutex);
     destroyVM();
 }
 
 void LuaSystem::init(void *params)
 {
+    TaskMutex::Guard lock(vmMutex);
     Log::info(Log::LUA_TAG, "Initializing LuaSystem");
 
     if (!storageSystem)
@@ -66,97 +68,77 @@ void LuaSystem::destroyVM()
 
 void LuaSystem::update()
 {
+    TaskMutex::Guard lock(vmMutex);
     if (!ready || !scriptLoaded)
         return;
 
     tick();
 }
 
-static const char *luaFileReader(lua_State *L, void *data, size_t *size)
-{
-    IFile *file = static_cast<IFile *>(data);
-
-    static uint8_t buffer[512]; // small, safe chunk
-    if (!file->available())
-    {
-        *size = 0;
-        return nullptr;
-    }
-
-    int read = file->read(buffer, sizeof(buffer));
-    if (read <= 0)
-    {
-        *size = 0;
-        return nullptr;
-    }
-
-    *size = static_cast<size_t>(read);
-    return reinterpret_cast<const char *>(buffer);
-}
-
 bool LuaSystem::loadScript(const char *path)
 {
-    reset(); // reset state before loading new script
-
-    if (!L || !storageSystem)
-        return false;
-
-    IFile *file = storageSystem->open(path);
-    if (!file)
+    TaskMutex::Guard lock(vmMutex);
+    scriptLoaded = false;
+    gamePaused = true;
+    errorKind = ErrorKind::None;
+    lastError.clear();
+    if (!storageSystem || !path)
     {
-        Log::error(Log::LUA_TAG, "Cannot open script: %s", path);
+        errorKind = ErrorKind::Storage;
+        lastError = "Storage non disponibile";
         return false;
     }
 
-
-    // Load Lua chunk via streaming reader
-    if (lua_load(L, luaFileReader, file, path, nullptr) != LUA_OK)
+    // Validate the entire read before compiling. A failed streaming read is not EOF.
+    std::string source;
+    bool read = false;
+    for (unsigned attempt = 0; attempt < 3 && !read; ++attempt)
     {
-        Log::error(Log::LUA_TAG, "Lua load error (%s): %s", path, lua_tostring(L, -1));
+        read = storageSystem->readTextFile(path, source, true);
+        if (!read && attempt < 2) vTaskDelay(pdMS_TO_TICKS(30));
+    }
+    if (!read)
+    {
+        errorKind = ErrorKind::Storage;
+        lastError = std::string("Impossibile leggere il file completo: ") + path;
+        Log::error(Log::LUA_TAG, "%s", lastError.c_str());
+        return false;
+    }
+    if (source.compare(0, 3, "\xEF\xBB\xBF") == 0) source.erase(0, 3);
+    if (source.empty())
+    {
+        errorKind = ErrorKind::Syntax;
+        lastError = "Il file del gioco e' vuoto";
+        return false;
+    }
+
+    reset();
+    if (!L)
+    {
+        errorKind = ErrorKind::Initialization;
+        lastError = "Memoria insufficiente per avviare Lua";
+        return false;
+    }
+    auto failed = [&](ErrorKind kind, const char *phase)
+    {
+        errorKind = kind;
+        const char *message = lua_tostring(L, -1);
+        lastError = message ? message : "Errore Lua";
+        Log::error(Log::LUA_TAG, "%s (%s): %s", phase, path, lastError.c_str());
         lua_pop(L, 1);
-        file->close();
-        delete file;
         return false;
-    }
+    };
+    if (luaL_loadbuffer(L, source.data(), source.size(), path) != LUA_OK)
+        return failed(ErrorKind::Syntax, "Lua load error");
+    Log::info(Log::LUA_TAG, "Executing Lua script: %s (%u bytes)", path, unsigned(source.size()));
+    if (lua_pcall(L, 0, 0, 0) != LUA_OK) return failed(ErrorKind::Runtime, "Lua runtime error");
 
-    // Execute script
-    Log::info(Log::LUA_TAG, "Executing Lua script: %s", path);
-    if (lua_pcall(L, 0, 0, 0) != LUA_OK)
-    {
-        Log::error(Log::LUA_TAG, "Lua runtime error (%s): %s", path, lua_tostring(L, -1));
-        lua_pop(L, 1);
-        file->close();
-        delete file;
-        return false;
-    }
-
-    // Debug: Check if 'system' table is available
-    // lua_getglobal(L, "system");
-    // Log::debug(Log::LUA_TAG, "system type = %s", lua_typename(L, lua_type(L, -1)));
-    // lua_pop(L, 1);
-
-    // Optional init()
     lua_getglobal(L, "init");
-    Log::debug(Log::LUA_TAG, "init type = %s", lua_typename(L, lua_type(L, -1)));
     if (lua_isfunction(L, -1))
     {
-        if (lua_pcall(L, 0, 0, 0) != LUA_OK)
-        {
-            Log::error(Log::LUA_TAG, "Lua init() error: %s", lua_tostring(L, -1));
-            lua_pop(L, 1);
-            file->close();
-            delete file;
-            return false;
-        }
+        if (lua_pcall(L, 0, 0, 0) != LUA_OK) return failed(ErrorKind::Initialization, "Lua init error");
     }
-    else
-    {
-        lua_pop(L, 1);
-    }
-
-    file->close();
-    delete file;
-
+    else lua_pop(L, 1);
     lastTickMs = millis();
     scriptLoaded = true;
     return true;
@@ -169,29 +151,25 @@ bool LuaSystem::loadMainScript(const char *path)
 
 void LuaSystem::unloadScript()
 {
+    TaskMutex::Guard lock(vmMutex);
+    const bool wasLoaded = scriptLoaded;
     scriptLoaded = false;
     gamePaused = true;
-
-    if (!L)
-        return;
-
-    // Call Lua exit() if it exists
-    lua_getglobal(L, "exit");
-
-    if (lua_isfunction(L, -1))
+    gameScene = nullptr;
+    if (L && wasLoaded)
     {
-        if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+        lua_getglobal(L, "exit");
+        if (lua_isfunction(L, -1))
         {
-            Log::error(Log::LUA_TAG, "Lua exit() error: %s", lua_tostring(L, -1));
-            lua_pop(L, 1);
+            if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+            {
+                Log::error(Log::LUA_TAG, "Lua exit error: %s", lua_tostring(L, -1));
+                lua_pop(L, 1);
+            }
         }
+        else lua_pop(L, 1);
     }
-    else
-    {
-        lua_pop(L, 1); // remove non-function value
-    }
-
-    inputSystem->shutdown();
+    if (inputSystem) inputSystem->shutdown();
 }
 
 void LuaSystem::tick()
@@ -225,7 +203,9 @@ void LuaSystem::tick()
 
     if (lua_pcall(L, 2, 0, 0) != LUA_OK)
     {
-        Log::error(Log::LUA_TAG, "Lua update() error: %s", lua_tostring(L, -1));
+        errorKind = ErrorKind::Runtime;
+        lastError = lua_tostring(L, -1) ? lua_tostring(L, -1) : "Errore Lua";
+        Log::error(Log::LUA_TAG, "Lua update() error: %s", lastError.c_str());
         lua_pop(L, 1);
         scriptLoaded = false;
     }
@@ -233,6 +213,7 @@ void LuaSystem::tick()
 
 void LuaSystem::reset()
 {
+    TaskMutex::Guard lock(vmMutex);
     destroyVM();
 
     if (!createVM())
