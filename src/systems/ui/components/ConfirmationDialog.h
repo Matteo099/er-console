@@ -18,7 +18,7 @@ public:
         UITheme::card(card);
         Container::setFlex(card);
         lv_obj_set_style_pad_row(card, 12, 0);
-        Label::create(card, "Abbandonare il gioco?", &lv_font_montserrat_18, LV_TEXT_ALIGN_CENTER, LV_PCT(100));
+        Label::create(card, "Abbandonare il gioco?", UITheme::heading(), LV_TEXT_ALIGN_CENTER, LV_PCT(100));
         auto *text = Label::create(card, question, &lv_font_montserrat_14, LV_TEXT_ALIGN_CENTER, LV_PCT(100));
         UITheme::muted(text);
         auto *row = Container::create(card, LV_PCT(100), 44);

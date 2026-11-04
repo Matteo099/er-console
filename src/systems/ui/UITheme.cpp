@@ -110,6 +110,7 @@ void UITheme::init(lv_display_t *disp)
 void UITheme::select(UIThemeId id)
 {
     if (static_cast<unsigned>(id) > 2) id = UIThemeId::Mint;
+    if (initialized && active == id) return;
     active = id;
     if (!initialized) return;
     updateStyles();
@@ -155,6 +156,10 @@ const lv_font_t *UITheme::font(const lv_font_t *requested)
     if (requested == &lv_font_roboto_mono_28) return &fonts[5];
     if (requested == &lv_font_roboto_mono_30) return &fonts[6];
     return requested ? requested : &fonts[1];
+}
+const lv_font_t *UITheme::heading(uint8_t size)
+{
+    return size <= 18 ? &lv_font_escaperiom_18 : size <= 22 ? &lv_font_escaperiom_22 : &lv_font_escaperiom_26;
 }
 void UITheme::screen(lv_obj_t *obj) { lv_obj_add_style(obj, &pageStyle, 0); }
 void UITheme::card(lv_obj_t *obj)

@@ -311,7 +311,7 @@
 #define LV_COLOR_MIX_ROUND_OFS  0
 
 /* Add 2 x 32 bit variables to each lv_obj_t to speed up getting style properties */
-#define LV_OBJ_STYLE_CACHE      0
+#define LV_OBJ_STYLE_CACHE      1
 
 /* Add `id` field to `lv_obj_t` */
 #define LV_USE_OBJ_ID           0
@@ -428,6 +428,9 @@
  *You can use these fonts as default font too and they will be available globally.
  *E.g. #define LV_FONT_CUSTOM_DECLARE   LV_FONT_DECLARE(my_font_1) LV_FONT_DECLARE(my_font_2)*/
 #define LV_FONT_CUSTOM_DECLARE \
+    LV_FONT_DECLARE(lv_font_escaperiom_18) \
+    LV_FONT_DECLARE(lv_font_escaperiom_22) \
+    LV_FONT_DECLARE(lv_font_escaperiom_26) \
     LV_FONT_DECLARE(lv_font_roboto_mono_12) \
     LV_FONT_DECLARE(lv_font_roboto_mono_14) \
     LV_FONT_DECLARE(lv_font_roboto_mono_16) \

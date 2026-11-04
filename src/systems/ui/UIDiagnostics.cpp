@@ -6,6 +6,10 @@
 #include <cstring>
 #include "systems/ui/SceneManager.h"
 #include "systems/ui/UITheme.h"
+#include "systems/ui/UIFrameStats.h"
+#include "systems/ui/UIFeedback.h"
+#include "systems/audio/AudioEvent.h"
+#include "services/DeviceConfigRepository.h"
 #include "scenes/menu/MainMenuScene.h"
 #include "scenes/settings/SettingsScene.h"
 #include "scenes/gamelist/GameListScene.h"
@@ -218,6 +222,19 @@ void UIDiagnostics::update(SceneManager &scenes)
         }
         else if (command == "ui snapshot") snapshot();
         else if (command == "ui tree") tree(lv_screen_active());
+        else if (command == "ui perf reset") UIFrameStats::reset();
+        else if (command == "ui perf") UIFrameStats::print();
+        else if (command == "ui quiet on" || command == "ui quiet off")
+        {
+            DeviceConfig config;
+            DeviceConfigRepository().loadCached(config);
+            const bool enabled = command.endsWith("off") && config.audio.enabled;
+            UIFeedback::setSoundEnabled(enabled);
+            AudioEvent event{};
+            event.type = AudioEventType::SET_VOLUME;
+            event.volume.volume = enabled ? config.audio.volume : 0;
+            xQueueSend(SystemEventBus::audioQueue, &event, 0);
+        }
         else if (command == "ui sdcheck") checkStorage();
         else if (command.startsWith("ui theme ")) UITheme::select(UITheme::fromName(command.substring(9).c_str()));
         else if (command.startsWith("ui click "))

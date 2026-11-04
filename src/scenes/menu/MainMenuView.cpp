@@ -17,7 +17,7 @@ void MainMenuView::create()
     menuContainer = Container::create(layout.body, LV_PCT(100), LV_PCT(100), LV_ALIGN_TOP_MID);
     Container::setFlex(menuContainer, LV_FLEX_FLOW_COLUMN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_style_pad_row(menuContainer, 6, 0);
-    Label::create(menuContainer, "La prossima avventura", &lv_font_montserrat_20);
+    Label::create(menuContainer, "La prossima avventura", UITheme::heading(26));
     auto *subtitle = Label::create(menuContainer,
 #if WIFI_ENABLED
                                    "Scegli una storia. Mettiti alla prova.",

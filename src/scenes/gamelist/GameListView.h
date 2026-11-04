@@ -15,8 +15,7 @@ public:
 
     lv_obj_t *getScreen() override { return screen; };
     GameInfo* getCurrentGame();
-    void setGames(const std::vector<GameInfo> &games);
-    void setLoadError(const std::string &message);
+    void setCatalog(const std::vector<GameInfo> &games, const std::string &message, bool loading);
 
 private:
     struct CardUserData
@@ -30,6 +29,7 @@ private:
     static void onBackClicked(lv_event_t *e);
     static void onPrevClicked(lv_event_t* e);
     static void onNextClicked(lv_event_t* e);
+    static void onRefreshClicked(lv_event_t* e);
     
     void rebuildCurrentCard();
 
@@ -46,9 +46,11 @@ private:
     lv_obj_t *btnPrev = nullptr;
     lv_obj_t *btnNext = nullptr;
     lv_obj_t *btnStart = nullptr;
+    lv_obj_t *btnRefresh = nullptr;
 
     size_t currentIndex = 0;
     std::string loadError;
+    bool loading = false;
 
     GameListAction pendingAction = GameListAction::None;
 };

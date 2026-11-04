@@ -71,10 +71,12 @@ La navigazione Risorse / Rete torna a Sistema; il QR acquisito in
 circa 29,4 MB occupati su 29,1 GB. La build del portale e' riuscita; i rami
 Wi-Fi/portale disabilitati sono stati compilati con controllo sintattico.
 
-La configurazione finale mantiene Wi-Fi e portale abilitati e riporta
+La configurazione usata per quella verifica mantiene Wi-Fi e portale abilitati e riporta
 `UI_DIAGNOSTICS_ENABLED=0`. Usare l'ambiente
 `esp32-s3-devkitc-1-n16r8v-debug` anche per il monitor seriale, per mantenere
 il decoder allineato all'ELF della build caricata.
+La revisione successiva per font e fluidita' disabilita Wi-Fi e portale per
+isolare i reset brownout: vedere [UI_PERFORMANCE.md](UI_PERFORMANCE.md).
 
 Upload finale riuscito: `.pio/game-final-upload.log`. ELF e BIN corrispondenti
 sono conservati in `.pio/game-symbols/final.*` con hash in

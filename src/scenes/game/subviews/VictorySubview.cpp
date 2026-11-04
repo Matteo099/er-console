@@ -33,7 +33,7 @@ void VictorySubview::create(lv_obj_t *parent)
     titleLabel = Label::create(
         header,
         "Ce l'hai fatta!",
-        &lv_font_roboto_mono_28,
+        UITheme::heading(26),
         LV_TEXT_ALIGN_CENTER,
         LV_PCT(100));
 

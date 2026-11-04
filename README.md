@@ -5,17 +5,19 @@
 Le opzioni di isolamento sono in [`src/config/Console.h`](src/config/Console.h):
 
 ```cpp
-#define WIFI_ENABLED 1
-#define PORTAL_ENABLED 1
+#define WIFI_ENABLED 0
+#define PORTAL_ENABLED 0
 #define SD_INIT_BEFORE_DISPLAY 1
 #define SD_READ_DIAGNOSTICS_ENABLED 0
 #define STORAGE_BOOT_LIST_ENABLED 0
+#define UI_SCENE_ANIMATIONS_ENABLED 0
 #define UI_DIAGNOSTICS_ENABLED 0
 ```
 
-Wi-Fi e portale sono attualmente abilitati. Per isolarli durante le prove SD
-impostare i primi due flag a `0`; con Wi-Fi disabilitato anche il
-portale rimane spento. Il precedente `ER_DISABLE_WIFI` della sola build debug
+Wi-Fi e portale sono attualmente disabilitati per isolare i reset brownout
+osservati con alimentazione USB del PC. Riportare entrambi i flag a `1` per
+riattivarli; con Wi-Fi disabilitato anche il portale rimane spento.
+Il precedente `ER_DISABLE_WIFI` della sola build debug
 e' stato sostituito da queste opzioni.
 
 La configurazione attuale inizializza SD prima del display. I controlli ripetuti
@@ -35,6 +37,11 @@ I controlli di rete e portale compaiono solo quando i servizi sono abilitati.
 
 Architettura, palette, configurazione e acquisizione delle schermate:
 [`docs/UI_THEME.md`](docs/UI_THEME.md).
+
+Ottimizzazioni dei cambi scena e misure:
+[`docs/UI_PERFORMANCE.md`](docs/UI_PERFORMANCE.md).
+Il font dei titoli e il generatore sono descritti in
+[`assets/fonts/README.md`](assets/fonts/README.md).
 
 # 1️⃣ Stack software – visione d’insieme
 

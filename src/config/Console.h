@@ -5,10 +5,10 @@
 
 // Set to 1 to restore networking after SD diagnostics.
 #ifndef WIFI_ENABLED
-#define WIFI_ENABLED 1
+#define WIFI_ENABLED 0
 #endif
 #ifndef PORTAL_ENABLED
-#define PORTAL_ENABLED 1
+#define PORTAL_ENABLED 0
 #endif
 // Disabling Wi-Fi also disables the portal, including its access point.
 
@@ -28,6 +28,11 @@
 #endif
 
 // Development-only serial UI inspection/navigation.
+// Full-screen slides/fades are expensive on the 20 MHz SPI display.
+#ifndef UI_SCENE_ANIMATIONS_ENABLED
+#define UI_SCENE_ANIMATIONS_ENABLED 0
+#endif
+
 #ifndef UI_DIAGNOSTICS_ENABLED
 #define UI_DIAGNOSTICS_ENABLED 0
 #endif

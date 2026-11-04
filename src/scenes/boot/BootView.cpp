@@ -12,7 +12,7 @@ void BootView::create()
     middleRow = layout.body;
     bottomRow = layout.footer;
     brandImg = BrandHeader::create(topRow);
-    auto *title = Label::create(middleRow, "Si parte.", &lv_font_montserrat_28, LV_TEXT_ALIGN_CENTER);
+    auto *title = Label::create(middleRow, "Si parte.", UITheme::heading(26), LV_TEXT_ALIGN_CENTER);
     lv_obj_align(title, LV_ALIGN_CENTER, 0, -15);
     auto *hint = Label::create(middleRow, "Prepariamo la tua avventura", &lv_font_montserrat_12);
     UITheme::muted(hint);

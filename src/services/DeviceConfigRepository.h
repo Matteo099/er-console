@@ -43,6 +43,7 @@ class DeviceConfigRepository
 public:
     DeviceConfig defaultConfig() const;
     bool load(StorageSystem* storage, DeviceConfig& config) const;
+    void loadCached(DeviceConfig& config) const;
     bool save(StorageSystem* storage, const DeviceConfig& config) const;
     bool saveUiPreferences(const std::string &theme, bool soundEnabled) const;
     std::string toJson(const DeviceConfig& config) const;

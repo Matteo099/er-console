@@ -20,8 +20,10 @@ public:
     int height() override;
 
     TouchPoint read() override;
+    void waitForFlush() override;
 
 private:
     LGFX lgfx;
+    bool dmaPending = false;
 };
 

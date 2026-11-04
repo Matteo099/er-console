@@ -22,7 +22,7 @@ void NetworkView::create()
     UITheme::card(statusCard);
     Container::setFlex(statusCard, LV_FLEX_FLOW_COLUMN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_style_pad_row(statusCard, 7, 0);
-    auto *title = Label::create(statusCard, LV_SYMBOL_WIFI " WI-FI", &lv_font_montserrat_12);
+    auto *title = Label::create(statusCard, LV_SYMBOL_WIFI " WI-FI", UITheme::heading(18));
     UITheme::accent(title);
     statusLabel = Label::create(statusCard, "In attesa", &lv_font_montserrat_16, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     ssidLabel = Label::create(statusCard, "", &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
@@ -36,7 +36,7 @@ void NetworkView::create()
     portalCard = Container::create(container, LV_PCT(100), LV_SIZE_CONTENT);
     UITheme::card(portalCard);
     Container::setFlex(portalCard);
-    auto *portalTitle = Label::create(portalCard, "RETE DELLA CONSOLE", &lv_font_montserrat_12);
+    auto *portalTitle = Label::create(portalCard, "RETE DELLA CONSOLE", UITheme::heading(18));
     UITheme::accent(portalTitle);
     portalLabel = Label::create(portalCard, "", &lv_font_montserrat_12);
     UITheme::muted(portalLabel);
@@ -50,7 +50,7 @@ void NetworkView::create()
     UITheme::screen(qrOverlay);
     lv_obj_clear_flag(qrOverlay, LV_OBJ_FLAG_SCROLLABLE);
     auto modal = SceneLayout::create(qrOverlay, 44, 44, false);
-    auto *heading = Label::create(modal.top, "Collega il telefono", &lv_font_montserrat_16);
+    auto *heading = Label::create(modal.top, "Collega il telefono", UITheme::heading());
     lv_obj_align(heading, LV_ALIGN_LEFT_MID, 12, 0);
     Button::create(modal.footer, nullptr, onPortalClicked, this, 44, 44, LV_ALIGN_RIGHT_MID, -8, 0, LV_SYMBOL_CLOSE);
     auto *frame = lv_obj_create(modal.body);

@@ -15,5 +15,6 @@ public:
         uint8_t *colorData) = 0;
 
     virtual int width() = 0;
+    virtual void waitForFlush() {}
     virtual int height() = 0;
 };

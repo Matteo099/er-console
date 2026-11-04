@@ -17,7 +17,7 @@ namespace
         UITheme::card(obj);
         Container::setFlex(obj, LV_FLEX_FLOW_COLUMN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
         lv_obj_set_style_pad_row(obj, 7, 0);
-        auto *label = Label::create(obj, title, &lv_font_montserrat_12);
+        auto *label = Label::create(obj, title, UITheme::heading(18));
         UITheme::accent(label);
         return obj;
     }

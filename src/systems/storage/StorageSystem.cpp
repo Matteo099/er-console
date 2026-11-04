@@ -46,6 +46,7 @@ void StorageSystem::init(void *params)
 #endif
     }
 
+    cardCapacity = driver->capacityBytes();
     ready = true;
     noteIOSuccess();
     Log::info(Log::STORAGE_TAG, "Storage ready");
@@ -435,7 +436,8 @@ uint64_t StorageSystem::totalBytes() const
 
 uint64_t StorageSystem::capacityBytes() const
 {
-    return ready ? driver->capacityBytes() : 0;
+    // Cached before publishing readiness: telemetry never waits for the SD bus.
+    return ready ? cardCapacity : 0;
 }
 
 StorageSystem::SpaceUsage StorageSystem::spaceUsage() const

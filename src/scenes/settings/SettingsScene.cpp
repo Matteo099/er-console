@@ -14,7 +14,7 @@ void SettingsScene::onEnter()
     Log::info(Log::SCENE_TAG, "Entering SettingsScene");
     view.setEventHandler(this);
     storage = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
-    repository.load(storage, config);
+    repository.loadCached(config);
     soundEnabled = config.audio.enabled;
     UITheme::select(UITheme::fromName(config.ui.theme.c_str()));
     view.create();

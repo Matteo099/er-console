@@ -22,7 +22,7 @@ void FailSubview::create(lv_obj_t *parent)
         LV_PCT(100));
 
     auto layout = SceneLayout::create(root, 44, 48, false);
-    titleLabel = Label::create(layout.top, "Tempo scaduto", &lv_font_montserrat_20,
+    titleLabel = Label::create(layout.top, "Tempo scaduto", UITheme::heading(26),
                                LV_TEXT_ALIGN_CENTER, LV_PCT(100));
     UITheme::danger(titleLabel);
     lv_obj_center(titleLabel);

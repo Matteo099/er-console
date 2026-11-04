@@ -31,7 +31,7 @@ void GameObjectSubview::create(lv_obj_t *parent)
     titleLabel = Label::create(
         header,
         "",
-        &lv_font_montserrat_16,
+        UITheme::heading(),
         LV_TEXT_ALIGN_CENTER,
         LV_PCT(100));
 
@@ -41,6 +41,7 @@ void GameObjectSubview::create(lv_obj_t *parent)
         0,
         0);
     lv_label_set_long_mode(titleLabel, LV_LABEL_LONG_DOT);
+    lv_obj_set_height(titleLabel, UITheme::heading()->line_height);
 
     content = lv_obj_create(layout.body);
     lv_obj_remove_style_all(content);

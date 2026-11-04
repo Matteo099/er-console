@@ -25,6 +25,11 @@ verticale. Il target verificato e' il TFT 320x240 in landscape.
 
 I font Montserrat usano i font Roboto Mono gia' presenti come fallback per
 gli accenti Latin-1. Il timer mantiene il font numerico monospace grande.
+Titoli e intestazioni usano `UITheme::heading`: Escaperiom Display a 22 px;
+18 px per i capitoletti e 26 px per i titoli principali. Il font comprende
+gli accenti italiani e usa forme maiuscole anche per le minuscole. Testi lunghi
+e pulsanti conservano i font di lettura. Generatore, TTF/WOFF2 e rigenerazione
+dei bitmap sono descritti in [assets/fonts/README.md](../assets/fonts/README.md).
 La dipendenza dal descrittore privato del tema LVGL 9.4 e' isolata in
 `UITheme.cpp`: verificarla prima di aggiornare la versione di LVGL.
 

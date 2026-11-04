@@ -19,6 +19,8 @@ public:
     static const Palette &palette();
     static lv_color_t statusColor(UIStatusTone tone);
     static const lv_font_t *font(const lv_font_t *requested);
+    // 18: section captions, 22: screen headers, 26: prominent titles.
+    static const lv_font_t *heading(uint8_t size = 22);
     static void screen(lv_obj_t *obj);
     static void card(lv_obj_t *obj);
     static void soft(lv_obj_t *obj);

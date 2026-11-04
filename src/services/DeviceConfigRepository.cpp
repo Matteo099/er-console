@@ -3,9 +3,13 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <nvs.h>
+#include "core/TaskMutex.h"
 
 namespace
 {
+    TaskMutex configMutex;
+    DeviceConfig cachedConfig;
+    bool hasConfig = false;
     void loadUiPreferences(DeviceConfig &config)
     {
         nvs_handle_t handle;
@@ -33,10 +37,23 @@ bool DeviceConfigRepository::load(StorageSystem* storage, DeviceConfig& config) 
         std::string json;
         if (storage->readTextFile(DEVICE_CONFIG_FILE, json)) loaded = parseJson(json, config);
     }
+    if (!loaded)
+    {
+        TaskMutex::Guard lock(configMutex);
+        if (hasConfig) config = cachedConfig;
+    }
     // Local display preferences remain usable without SD. All callers, including
     // the portal, see the same effective UI configuration through this repository.
     loadUiPreferences(config);
+    { TaskMutex::Guard lock(configMutex); cachedConfig = config; hasConfig |= loaded; }
     return loaded;
+}
+
+void DeviceConfigRepository::loadCached(DeviceConfig &config) const
+{
+    TaskMutex::Guard lock(configMutex);
+    config = cachedConfig;
+    loadUiPreferences(config);
 }
 
 bool DeviceConfigRepository::save(StorageSystem* storage, const DeviceConfig& config) const
@@ -45,6 +62,7 @@ bool DeviceConfigRepository::save(StorageSystem* storage, const DeviceConfig& co
         return false;
 
     if (!storage->writeTextFile(DEVICE_CONFIG_FILE, toJson(config), true)) return false;
+    { TaskMutex::Guard lock(configMutex); cachedConfig = config; hasConfig = true; }
     return saveUiPreferences(config.ui.theme, config.audio.enabled);
 }
 
@@ -56,6 +74,12 @@ bool DeviceConfigRepository::saveUiPreferences(const std::string &theme, bool so
     if (result == ESP_OK) result = nvs_set_u8(handle, "sound", soundEnabled ? 1 : 0);
     if (result == ESP_OK) result = nvs_commit(handle);
     nvs_close(handle);
+    if (result == ESP_OK)
+    {
+        TaskMutex::Guard lock(configMutex);
+        cachedConfig.ui.theme = theme;
+        cachedConfig.audio.enabled = soundEnabled;
+    }
     return result == ESP_OK;
 }
 

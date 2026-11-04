@@ -72,5 +72,6 @@ private:
     StorageRecoverySystem *recovery;
 #endif
     bool ready = false;
+    uint64_t cardCapacity = 0;
     mutable std::atomic<uint32_t> ioFailures{0};
 };

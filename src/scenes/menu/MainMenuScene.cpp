@@ -4,6 +4,7 @@
 #include "core/SystemEventBus.h"
 #include "systems/storage/StorageSystem.h"
 #include "config/Console.h"
+#include "services/GameCatalog.h"
 #include <Arduino.h>
 
 void MainMenuScene::onEnter()
@@ -12,6 +13,7 @@ void MainMenuScene::onEnter()
     view.setEventHandler(this);
     view.create();
     refreshStatus();
+    GameCatalog::request();
 }
 
 void MainMenuScene::refreshStatus()

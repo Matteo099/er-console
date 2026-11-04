@@ -20,9 +20,9 @@ public:
 private:
     GameListView view;
     // int selectedIndex = -1;
-    std::vector<GameInfo> games;
-    std::string loadError;
+    GameInfo selectedGame;
+    uint32_t catalogVersion = 0;
     SceneRequest request = SceneRequest();
 
-    void loadGames();
+    void refreshCatalog();
 };

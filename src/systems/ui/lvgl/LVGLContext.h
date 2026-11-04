@@ -21,6 +21,7 @@ private:
         lv_indev_t* indev,
         lv_indev_data_t* data
     );
+    static void flush_wait_cb(lv_display_t *disp);
 
     static DisplayDriver* s_display;
     static TouchController* s_touch;

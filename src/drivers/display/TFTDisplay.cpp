@@ -10,6 +10,8 @@ void TFTDisplay::init()
 
     // Initialize LovyanGFX
     lgfx.init();
+    lgfx.initDMA();
+    lgfx.setColorDepth(16);
     lgfx.setRotation(1);
 
     Log::info(Log::DISPLAY_TAG, "LovyanGFX initialized OK");
@@ -49,10 +51,23 @@ void TFTDisplay::flush(
     int32_t w = x2 - x1 + 1;
     int32_t h = y2 - y1 + 1;
 
+    waitForFlush();
+    // Match the panel's wire byte order once, then DMA the LVGL buffer directly.
+    // rgb565_t would make LovyanGFX convert/copy it in small internal chunks.
+    auto *pixels = reinterpret_cast<uint16_t *>(colorMap);
+    for (int32_t i = 0; i < w * h; ++i) pixels[i] = __builtin_bswap16(pixels[i]);
     lgfx.startWrite();
     lgfx.setAddrWindow(x1, y1, w, h);
-    lgfx.writePixels((lgfx::rgb565_t *)colorMap, w * h);
+    lgfx.writePixelsDMA(reinterpret_cast<lgfx::swap565_t *>(colorMap), w * h);
+    dmaPending = true;
+}
+
+void TFTDisplay::waitForFlush()
+{
+    if (!dmaPending) return;
+    lgfx.waitDMA();
     lgfx.endWrite();
+    dmaPending = false;
 }
 
 int TFTDisplay::width()
@@ -74,6 +89,7 @@ int TFTDisplay::height()
 
 TouchPoint TFTDisplay::read()
 {
+    waitForFlush(); // Touch shares SPI2 with the panel.
     TouchPoint p{0, 0, false};
     int x, y;
     if (lgfx.getTouch(&x, &y))

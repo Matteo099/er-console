@@ -10,6 +10,8 @@
 #include "scenes/game/GameScene.h"
 #include "core/SystemEventBus.h"
 #include "config/Console.h"
+#include "UIFrameStats.h"
+#include <Arduino.h>
 
 static lv_scr_load_anim_t toLvgl(SceneTransition t)
 {
@@ -60,8 +62,10 @@ void SceneManager::changeScene(Scene* next, SceneTransition transition)
     Log::info(Log::UI_TAG, "Changing scene");
 
     current = next;
+    const uint32_t prepareStarted = micros();
     current->onEnter();
     indicators.attachTo(current->getView().getScreen());
+    UIFrameStats::prepared(micros() - prepareStarted);
 
     lv_obj_t* oldScreen = nullptr;
 
@@ -79,10 +83,13 @@ void SceneManager::changeScene(Scene* next, SceneTransition transition)
         }
     }
 
+#if !UI_SCENE_ANIMATIONS_ENABLED
+    transition = SceneTransition::None;
+#endif
     lv_scr_load_anim(
         current->getView().getScreen(),
         toLvgl(transition),
-        140,
+        transition == SceneTransition::None ? 0 : 140,
         0,
         true);
 

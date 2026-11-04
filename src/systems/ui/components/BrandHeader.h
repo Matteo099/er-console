@@ -26,7 +26,8 @@ public:
             EscaperiomLogo::createMark(row, 28);
             auto *label = lv_label_create(row);
             lv_label_set_text(label, title);
-            lv_obj_set_style_text_font(label, UITheme::font(&lv_font_montserrat_16), 0);
+            lv_obj_set_style_text_font(label, UITheme::heading(), 0);
+            lv_obj_set_height(label, UITheme::heading()->line_height);
             lv_label_set_long_mode(label, LV_LABEL_LONG_DOT);
             lv_obj_set_flex_grow(label, 1);
         }

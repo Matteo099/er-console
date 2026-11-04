@@ -18,7 +18,7 @@ public:
         UITheme::card(card);
         Container::setFlex(card, LV_FLEX_FLOW_COLUMN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
         lv_obj_set_style_pad_row(card, 9, 0);
-        Label::create(card, data.title.c_str(), &lv_font_montserrat_20, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
+        Label::create(card, data.title.c_str(), UITheme::heading(26), LV_TEXT_ALIGN_LEFT, LV_PCT(100));
         if (!data.description.empty())
         {
             auto *description = Label::create(card, data.description.c_str(), &lv_font_montserrat_12,
