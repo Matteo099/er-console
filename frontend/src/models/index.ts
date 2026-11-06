@@ -28,6 +28,12 @@ export interface DeviceConfig {
   wifi: WiFiConfig
   locale: LocaleConfig
   ui: UIConfig
+  audio: {
+    music: { enabled: boolean; volume: number }
+    effects: { enabled: boolean; volume: number }
+    enabled?: boolean
+    volume?: number
+  }
 }
 
 // ============================================================================

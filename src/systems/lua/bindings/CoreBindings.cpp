@@ -1,4 +1,5 @@
 #include "CoreBindings.h"
+#include "systems/ui/localization/I18n.h"
 
 #include "log/Logger.h"
 
@@ -71,6 +72,8 @@ int CoreBindings::clearLogs(lua_State *L)
 void CoreBindings::registerAPI(lua_State *L)
 {
     lua_newtable(L);
+    lua_pushcfunction(L, language);
+    lua_setfield(L, -2, "language");
     lua_pushcfunction(L, info);
     lua_setfield(L, -2, "info");
     lua_pushcfunction(L, warn);
@@ -85,3 +88,5 @@ void CoreBindings::registerAPI(lua_State *L)
     lua_setfield(L, -2, "clearLogs");
     lua_setglobal(L, "system");
 }
+
+int CoreBindings::language(lua_State *L) { lua_pushstring(L, I18n::code()); return 1; }

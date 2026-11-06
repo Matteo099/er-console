@@ -1,236 +1,113 @@
 #include "NetworkSystem.h"
+#include "config/Console.h"
+#include "config/Assets.h"
 #include "log/Logger.h"
 #include <WiFi.h>
 #include <sstream>
-#include <algorithm>
-#include "config/Assets.h"
-#include "config/Console.h"
 
-namespace
-{
-    static void trimString(std::string& value)
-    {
-        size_t right = value.find_last_not_of(" \t\r");
-        if (right == std::string::npos)
-        {
-            value.clear();
-            return;
-        }
-
-        value.erase(right + 1);
-        size_t left = value.find_first_not_of(" \t");
-        if (left == std::string::npos)
-            value.clear();
-        else
-            value.erase(0, left);
-    }
-}
-
-NetworkSystem::NetworkSystem()
-{
-    status.state = State::Idle;
-    status.message = "Wi-Fi idle";
-}
-
+NetworkSystem::NetworkSystem() { status.message = "Idle"; }
 void NetworkSystem::init(void *params)
 {
     Log::info(Log::NETWORK_TAG, "Initializing network system");
-
-#if !WIFI_ENABLED
-    WiFi.mode(WIFI_OFF);
-    status.state = State::Idle;
-    status.message = "Wi-Fi disabled in Console.h";
-    initialized = true;
-    Log::warn(Log::NETWORK_TAG, "Wi-Fi disabled in Console.h");
-    return;
-#else
-    // PortalSystem owns the AP; a disabled portal must not leave an AP active.
+#if WIFI_ENABLED
+    WiFi.persistent(false);
     WiFi.mode(WIFI_STA);
-    WiFi.disconnect(false, true);
-
-    StorageSystem *storage = static_cast<StorageSystem *>(params);
-
-    reloadFromStorage(storage);
-
-    initialized = true;
+    reloadFromStorage(static_cast<StorageSystem *>(params));
+#else
+    WiFi.mode(WIFI_OFF);
+    setState(State::Idle, "Disabled by build configuration");
+    Log::warn(Log::NETWORK_TAG, "Wi-Fi disabled in Console.h");
 #endif
+    initialized = true;
 }
-
 void NetworkSystem::update()
 {
-#if !WIFI_ENABLED
-    return;
-#endif
-    if (!initialized)
-        return;
-
+#if WIFI_ENABLED
+    if (!initialized) return;
+    Command next;
+    std::string selectedSsid, selectedPassword;
+    {
+        TaskMutex::Guard lock(mutex);
+        next = command; command = Command::None;
+        selectedSsid = ssid; selectedPassword = password;
+    }
+    if (next == Command::Disconnect) WiFi.disconnect(false, false); // Keep the portal AP alive.
+    if (next == Command::Connect)
+    {
+        WiFi.disconnect(false, false);
+        WiFi.begin(selectedSsid.c_str(), selectedPassword.empty() ? nullptr : selectedPassword.c_str());
+    }
     refreshStatus();
+#endif
 }
-
 bool NetworkSystem::connect()
 {
+    TaskMutex::Guard lock(mutex);
 #if !WIFI_ENABLED
-    Log::warn(Log::NETWORK_TAG, "Wi-Fi connect ignored: disabled in Console.h");
-    setState(State::Error, "Wi-Fi disabled");
-    return false;
+    setState(State::Error, "Disabled by build configuration"); return false;
 #else
-    if (ssid.empty())
-    {
-        setState(State::Error, "Missing Wi-Fi credentials");
-        return false;
-    }
-
-    if (WiFi.status() == WL_CONNECTED)
-    {
-        status.ip = WiFi.localIP().toString().c_str();
-        setState(State::Connected, "Already connected");
-        return true;
-    }
-
-    Log::info(Log::NETWORK_TAG, "Connecting to Wi-Fi '%s'", ssid.c_str());
-    WiFi.begin(ssid.c_str(), password.c_str());
-    connectStartMs = millis();
-    setState(State::Connecting, "Connecting...");
-    return true;
+    if (ssid.empty()) { setState(State::Error, "Missing credentials"); return false; }
+    status.ssid = ssid; status.ip.clear(); status.signal = 0;
+    command = Command::Connect; connectStartMs = millis();
+    setState(State::Connecting, "Connecting"); return true;
 #endif
 }
-
-bool NetworkSystem::reloadFromStorage(StorageSystem* storage)
-{
-#if !WIFI_ENABLED
-    setState(State::Idle, "Wi-Fi disabled in Console.h");
-    return false;
-#endif
-    DeviceConfig config = configRepository.defaultConfig();
-    bool loaded = storage && storage->isReady() && configRepository.load(storage, config);
-
-    if (loaded)
-    {
-        setCredentials(config.wifi.ssid, config.wifi.password);
-        if (!ssid.empty())
-            Log::info(Log::NETWORK_TAG, "Wi-Fi credential loaded from config.json: %s", ssid.c_str());
-    }
-    else if (loadLegacyCredentials(storage))
-    {
-        config.wifi.ssid = ssid;
-        config.wifi.password = password;
-        if (storage && storage->isReady())
-            configRepository.save(storage, config);
-    }
-
-    if (ssid.empty())
-        setState(State::Idle, "No Wi-Fi credentials found");
-    else if (WiFi.status() == WL_CONNECTED)
-        setState(State::Connected, "Connected");
-    else
-        setState(State::Disconnected, "Ready to connect");
-
-    return !ssid.empty();
-}
-
-void NetworkSystem::setCredentials(const std::string& newSsid, const std::string& newPassword)
-{
-    ssid = newSsid;
-    password = newPassword;
-}
-
 void NetworkSystem::disconnect()
 {
-#if !WIFI_ENABLED
-    setState(State::Idle, "Wi-Fi disabled in Console.h");
-    return;
-#endif
-    if (WiFi.status() == WL_CONNECTED)
-    {
-        WiFi.disconnect(true, true);
-        Log::info(Log::NETWORK_TAG, "Wi-Fi disconnected");
-    }
-
+    TaskMutex::Guard lock(mutex);
+    command = Command::Disconnect;
     setState(State::Disconnected, "Disconnected");
 }
-
+void NetworkSystem::setCredentials(const std::string &newSsid, const std::string &newPassword)
+{
+    TaskMutex::Guard lock(mutex);
+    ssid = newSsid; password = newPassword;
+    if (status.state != State::Connected) status.ssid = ssid;
+}
+bool NetworkSystem::reloadFromStorage(StorageSystem *storage)
+{
+    DeviceConfig config;
+    const bool loaded = configRepository.load(storage, config);
+    setCredentials(config.wifi.ssid, config.wifi.password);
+    if (!loaded && config.wifi.ssid.empty()) loadLegacyCredentials(storage);
+    setState(hasCredentials() ? State::Disconnected : State::Idle, hasCredentials() ? "Ready to connect" : "Missing credentials");
+    return hasCredentials();
+}
 bool NetworkSystem::loadLegacyCredentials(StorageSystem *storage)
 {
-    if (!storage || !storage->isReady())
-    {
-        Log::warn(Log::NETWORK_TAG, "Storage unavailable, skipping Wi-Fi credentials load");
-        return false;
-    }
-
     std::string contents;
-    if (!storage->readTextFile(WIFI_CFG_FILE, contents))
-    {
-        Log::warn(Log::NETWORK_TAG, "Wi-Fi credentials file not found");
-        return false;
-    }
-
+    if (!storage || !storage->readTextFile(WIFI_CFG_FILE, contents)) return false;
+    std::string selectedSsid, selectedPassword, line;
     std::istringstream stream(contents);
-    std::string line;
     while (std::getline(stream, line))
     {
-        auto sep = line.find('=');
-        if (sep == std::string::npos)
-            continue;
-
-        std::string key = line.substr(0, sep);
-        std::string value = line.substr(sep + 1);
-
-        trimString(key);
-        trimString(value);
-
-        if (key == "ssid")
-            ssid = value;
-        else if (key == "password")
-            password = value;
+        const auto separator = line.find('='); if (separator == std::string::npos) continue;
+        auto value = line.substr(separator + 1);
+        if (!value.empty() && value.back() == '\r') value.pop_back();
+        if (line.substr(0, separator) == "ssid") selectedSsid = value;
+        if (line.substr(0, separator) == "password") selectedPassword = value;
     }
-
-    if (!ssid.empty())
-    {
-        Log::info(Log::NETWORK_TAG, "Wi-Fi credential loaded: %s", ssid.c_str());
-    }
-    else
-    {
-        Log::warn(Log::NETWORK_TAG, "Wi-Fi credentials are empty in file '%s'", WIFI_CFG_FILE);
-    }
-
-    return !ssid.empty();
+    if (selectedSsid.empty() || !DeviceConfigRepository::validNetwork(selectedSsid, selectedPassword)) return false;
+    setCredentials(selectedSsid, selectedPassword);
+    configRepository.saveNetworkPreferences(selectedSsid, selectedPassword);
+    return true;
 }
-
 void NetworkSystem::refreshStatus()
 {
-    wl_status_t wifiStatus = WiFi.status();
-    if (status.state == State::Connecting)
+    TaskMutex::Guard lock(mutex);
+    if (WiFi.status() == WL_CONNECTED)
     {
-        if (wifiStatus == WL_CONNECTED)
-        {
-            status.ip = WiFi.localIP().toString().c_str();
-            setState(State::Connected, "Connected");
-            return;
-        }
-
-        if (millis() - connectStartMs > CONNECT_TIMEOUT_MS)
-        {
-            setState(State::Error, "Connection timed out");
-            return;
-        }
-    }
-
-    if (wifiStatus == WL_CONNECTED)
-    {
-        status.ip = WiFi.localIP().toString().c_str();
+        status.ssid = WiFi.SSID().c_str(); status.ip = WiFi.localIP().toString().c_str(); status.signal = WiFi.RSSI();
         setState(State::Connected, "Connected");
     }
-    else if (status.state == State::Connected)
-    {
-        setState(State::Disconnected, "Disconnected");
-    }
+    else if (status.state == State::Connecting && millis() - connectStartMs > CONNECT_TIMEOUT_MS)
+        setState(State::Error, "Connection timed out", true);
+    else if (status.state == State::Connected) setState(State::Disconnected, "Disconnected");
 }
-
-void NetworkSystem::setState(State newState, const std::string &message)
+void NetworkSystem::setState(State state, const std::string &message, bool timedOut)
 {
-    status.ssid = ssid;
-    status.state = newState;
-    status.message = message;
-    if (newState != State::Connected)
-        status.ip.clear();
+    TaskMutex::Guard lock(mutex);
+    status.state = state; status.message = message;
+    status.timedOut = timedOut;
+    if (state != State::Connected) { status.ip.clear(); status.signal = 0; }
 }

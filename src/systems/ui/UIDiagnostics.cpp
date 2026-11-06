@@ -21,6 +21,7 @@
 #include "systems/storage/StorageSystem.h"
 #include "drivers/bus/SPIBusLock.h"
 #include "config/Assets.h"
+#include "SettingsDiagnostics.h"
 
 namespace
 {
@@ -99,11 +100,25 @@ namespace
         return lv_obj_has_flag(obj, LV_OBJ_FLAG_SCROLLABLE) ? obj : nullptr;
     }
 
+    lv_obj_t *controlAt(lv_obj_t *obj, int x, int y)
+    {
+        if (!lv_obj_is_visible(obj)) return nullptr;
+        lv_area_t area; lv_obj_get_coords(obj, &area);
+        if (x < area.x1 || x > area.x2 || y < area.y1 || y > area.y2) return nullptr;
+        for (int i = int(lv_obj_get_child_count(obj)) - 1; i >= 0; --i)
+            if (auto *found = controlAt(lv_obj_get_child(obj, i), x, y)) return found;
+        return lv_obj_check_type(obj, &lv_switch_class) || lv_obj_check_type(obj, &lv_slider_class) ? obj : nullptr;
+    }
+
     void tree(lv_obj_t *obj)
     {
         if (!lv_obj_is_visible(obj)) return;
         lv_area_t a;
         lv_obj_get_coords(obj, &a);
+        if (lv_obj_check_type(obj, &lv_switch_class))
+            Serial.printf("@SWITCH %d %d %d %d value=%d\n", a.x1, a.y1, a.x2, a.y2, lv_obj_has_state(obj, LV_STATE_CHECKED));
+        if (lv_obj_check_type(obj, &lv_slider_class))
+            Serial.printf("@SLIDER %d %d %d %d value=%d\n", a.x1, a.y1, a.x2, a.y2, int(lv_slider_get_value(obj)));
         if (lv_obj_check_type(obj, &lv_button_class))
         {
             char prefix[96];
@@ -207,9 +222,7 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui games") scenes.changeScene(new GameListScene(), SceneTransition::None);
         else if (command == "ui monitor") scenes.changeScene(new MonitorScene(), SceneTransition::None);
         else if (command == "ui about") scenes.changeScene(new AboutScene(), SceneTransition::None);
-#if WIFI_ENABLED
         else if (command == "ui network") scenes.changeScene(new NetworkScene(), SceneTransition::None);
-#endif
         else if (command == "ui game") scenes.changeScene(new GamePreview(0), SceneTransition::None);
         else if (command == "ui victory") scenes.changeScene(new GamePreview(1), SceneTransition::None);
         else if (command == "ui fail") scenes.changeScene(new GamePreview(2), SceneTransition::None);
@@ -224,15 +237,22 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui tree") tree(lv_screen_active());
         else if (command == "ui perf reset") UIFrameStats::reset();
         else if (command == "ui perf") UIFrameStats::print();
+        else if (command == "ui selftest") runSettingsDiagnostics();
+        else if (command == "ui preferences")
+        {
+            DeviceConfig config; DeviceConfigRepository().loadCached(config);
+            Serial.printf("@PREFERENCES theme=%s language=%s music=%u/%u effects=%u/%u\n", config.ui.theme.c_str(), config.locale.language.c_str(),
+                config.audio.music.enabled, config.audio.music.volume, config.audio.effects.enabled, config.audio.effects.volume);
+        }
         else if (command == "ui quiet on" || command == "ui quiet off")
         {
             DeviceConfig config;
             DeviceConfigRepository().loadCached(config);
-            const bool enabled = command.endsWith("off") && config.audio.enabled;
+            const bool enabled = command.endsWith("off") && config.audio.effects.enabled && config.audio.effects.volume;
             UIFeedback::setSoundEnabled(enabled);
             AudioEvent event{};
             event.type = AudioEventType::SET_VOLUME;
-            event.volume.volume = enabled ? config.audio.volume : 0;
+            event.volume.volume = command.endsWith("off") ? 100 : 0;
             xQueueSend(SystemEventBus::audioQueue, &event, 0);
         }
         else if (command == "ui sdcheck") checkStorage();
@@ -243,6 +263,18 @@ void UIDiagnostics::update(SceneManager &scenes)
             if (sscanf(command.c_str(), "ui click %d %d", &x, &y) == 2)
                 if (auto *button = buttonAt(lv_screen_active(), x, y))
                     if (!lv_obj_has_state(button, LV_STATE_DISABLED)) lv_obj_send_event(button, LV_EVENT_CLICKED, nullptr);
+        }
+        else if (command.startsWith("ui set "))
+        {
+            int x = 0, y = 0, value = 0;
+            if (sscanf(command.c_str(), "ui set %d %d %d", &x, &y, &value) == 3)
+                if (auto *control = controlAt(lv_screen_active(), x, y))
+                    if (!lv_obj_has_state(control, LV_STATE_DISABLED))
+                    {
+                        if (lv_obj_check_type(control, &lv_switch_class)) lv_obj_set_state(control, LV_STATE_CHECKED, value != 0);
+                        else lv_slider_set_value(control, value, LV_ANIM_OFF);
+                        lv_obj_send_event(control, LV_EVENT_VALUE_CHANGED, nullptr);
+                    }
         }
         else if (command.startsWith("ui scroll "))
         {

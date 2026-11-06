@@ -13,6 +13,9 @@
 #include "systems/audio/AudioEvent.h"
 #include "systems/ui/UIDiagnostics.h"
 #include "core/SystemEventBus.h"
+#include "localization/I18n.h"
+#include "systems/audio/AudioSystem.h"
+#include "localization/LocalizedText.h"
 
 void UIManager::init(void *params)
 {
@@ -42,6 +45,23 @@ void UIManager::update()
 {
     if (!preferencesLoaded && (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY))
         loadPreferences();
+    const auto changedRevision = DeviceConfigRepository::revision();
+    if (preferencesRevision != changedRevision)
+    {
+        DeviceConfig config; DeviceConfigRepository().loadCached(config);
+        preferencesRevision = changedRevision;
+        I18n::select(config.locale.language.c_str());
+        UITheme::select(UITheme::fromName(config.ui.theme.c_str()));
+        UIFeedback::setSoundEnabled(config.audio.effects.enabled && config.audio.effects.volume);
+        auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
+        if (audio) audio->configure(config.audio);
+        scenes.preferencesChanged();
+    }
+    if (localeRevision != I18n::revision())
+    {
+        localeRevision = I18n::revision();
+        LocalizedText::refresh();
+    }
     // Advance LVGL timers & rendering
     lvgl.update();
     // Advance scene logic (non-blocking)
@@ -55,12 +75,11 @@ void UIManager::loadPreferences()
     DeviceConfigRepository repository;
     DeviceConfig config;
     repository.load(storage, config);
+    I18n::select(config.locale.language.c_str());
     UITheme::select(UITheme::fromName(config.ui.theme.c_str()));
-    UIFeedback::setSoundEnabled(config.audio.enabled);
-    AudioEvent event{};
-    event.type = AudioEventType::SET_VOLUME;
-    event.volume.volume = config.audio.enabled ? config.audio.volume : 0;
-    xQueueSend(SystemEventBus::audioQueue, &event, 0);
+    UIFeedback::setSoundEnabled(config.audio.effects.enabled && config.audio.effects.volume);
+    auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
+    if (audio) audio->configure(config.audio);
     preferencesLoaded = (storage && storage->isReady()) ||
         (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY);
 }

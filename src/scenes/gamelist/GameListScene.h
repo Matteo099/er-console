@@ -11,6 +11,7 @@ public:
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
+    void onPreferencesChanged() override { catalogVersion = 0; refreshCatalog(); }
 
     View &getView() override { return view; }
     SceneRequest getRequest() const override;

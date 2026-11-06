@@ -31,9 +31,10 @@ int AudioBindings::beep(lua_State *L)
 // @doc Play a wav audio file from storage
 // @param path Path to the audio file in storage
 // @param loop Optional. True to loop playback (default: false)
+// @param channel Optional. "music" or "effects"; loops default to music, one-shots to effects.
 // @example audio.play("beep.wav")
 // @example audio.play("music.wav", true)
-// @lua audio.play(path:string, loop:boolean=false) -> void
+// @lua audio.play(path:string, loop:boolean=false, channel:string=nil) -> void
 int AudioBindings::play(lua_State *L)
 {
     auto *audio = get(L);
@@ -42,19 +43,24 @@ int AudioBindings::play(lua_State *L)
 
     const char *path = luaL_checkstring(L, 1);
     bool loop = lua_toboolean(L, 2); // defaults to false if omitted or nil
-    audio->play(path, loop);
+    const char *channel = luaL_optstring(L, 3, loop ? "music" : "effects");
+    if (std::strcmp(channel, "music") && std::strcmp(channel, "effects")) return luaL_error(L, "channel must be music or effects");
+    audio->play(path, loop, !std::strcmp(channel, "music") ? AudioChannel::Music : AudioChannel::Effects);
     return 0;
 }
 
-// @doc Stop the currently playing audio
+// @doc Stop music, effects, or both (default).
+// @param channel Optional. "music", "effects" or "all".
 // @example audio.stop()
-// @lua audio.stop() -> void
+// @lua audio.stop(channel:string="all") -> void
 int AudioBindings::stop(lua_State *L)
 {
     auto *audio = get(L);
     if (!audio)
         return 0;
-    audio->stop();
+    const char *channel = luaL_optstring(L, 1, "all");
+    if (std::strcmp(channel, "music") && std::strcmp(channel, "effects") && std::strcmp(channel, "all")) return luaL_error(L, "channel must be music, effects or all");
+    audio->stop(!std::strcmp(channel, "music") ? AudioChannel::Music : !std::strcmp(channel, "effects") ? AudioChannel::Effects : AudioChannel::All);
     return 0;
 }
 

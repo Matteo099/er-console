@@ -3,123 +3,82 @@
 #include "systems/ui/UIEvents.h"
 #include "core/SystemEventBus.h"
 #include "systems/network/NetworkSystem.h"
-#include "systems/ui/UITheme.h"
+#include "systems/audio/AudioSystem.h"
 #include "systems/ui/UIFeedback.h"
-#include "systems/audio/AudioEvent.h"
+#include "systems/ui/localization/I18n.h"
 #include "config/Console.h"
 #include <Arduino.h>
 
 void SettingsScene::onEnter()
 {
-    Log::info(Log::SCENE_TAG, "Entering SettingsScene");
     view.setEventHandler(this);
-    storage = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
     repository.loadCached(config);
-    soundEnabled = config.audio.enabled;
+    I18n::select(config.locale.language.c_str());
     UITheme::select(UITheme::fromName(config.ui.theme.c_str()));
-    view.create();
-    view.selectTab(initialTab);
-    view.setSoundEnabled(soundEnabled);
-    view.setTheme(UITheme::current());
-
-    network = static_cast<NetworkSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
-    if (network)
-    {
-        const auto& status = network->getStatus();
-        view.setWiFiStatus(status.message);
-    }
+    view.create(); view.selectTab(initialTab); view.setAudio(config.audio); view.setTheme(UITheme::current());
+    network = static_cast<NetworkSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
 }
-
 void SettingsScene::onUpdate()
 {
     if (dirty && millis() - changedAt >= 400) savePreferences();
-    if (network)
-    {
-        view.setWiFiStatus(network->getStatus().message);
-    }
-    view.update();
-}
-
-void SettingsScene::onExit()
-{
-    if (dirty) savePreferences();
-    view.destroy();
-}
-
-SceneRequest SettingsScene::getRequest() const
-{
-    return request;
-}
-
-bool SettingsScene::handleUIEvent(const UIEvent& event)
-{
-    if (event.getType() != ButtonClickedEvent::TYPE)
-        return false;
-
-    const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
-    if (clicked.buttonId == "theme_mint" || clicked.buttonId == "theme_sky" || clicked.buttonId == "theme_coral")
-    {
-        const auto id = clicked.buttonId == "theme_sky" ? UIThemeId::Sky :
-                        clicked.buttonId == "theme_coral" ? UIThemeId::Coral : UIThemeId::Mint;
-        UITheme::select(id);
-        config.ui.theme = UITheme::name(id);
-        view.setTheme(id);
-        view.setPreferenceStatus("Tema applicato");
-        dirty = true;
-        changedAt = millis();
-        return true;
-    }
-    if (clicked.buttonId == "toggle_sound")
-    {
-        soundEnabled = !soundEnabled;
-        view.setSoundEnabled(soundEnabled);
-        config.audio.enabled = soundEnabled;
-        applyAudioPreference();
-        dirty = true;
-        changedAt = millis();
-        return true;
-    }
-
-    if (clicked.buttonId == "wifi_settings")
-    {
 #if WIFI_ENABLED
-        request = SceneRequest(SceneChange::GoToNetwork, SceneTransition::SlideLeft);
+    const auto state = network ? network->getStatus().state : NetworkSystem::State::Error;
+    view.setWiFiStatus(tr(!network ? Text::NetworkUnavailable : state == NetworkSystem::State::Connected ? Text::Connected :
+                         state == NetworkSystem::State::Connecting ? Text::Connecting : state == NetworkSystem::State::Error ? Text::ConnectionFailed : Text::Disconnected));
+#else
+    view.setWiFiStatus(tr(Text::WifiDisabled));
 #endif
-        return true;
-    }
-
-    if (clicked.buttonId == "monitor")
-    {
-        request = SceneRequest(SceneChange::GoToMonitor, SceneTransition::SlideLeft);
-        return true;
-    }
-
-    if (clicked.buttonId == "back")
-    {
-        request = SceneRequest(SceneChange::GoToMainMenu, SceneTransition::SlideRight);
-        return true;
-    }
-
-    return false;
 }
-
+void SettingsScene::onExit() { if (dirty) savePreferences(); view.destroy(); }
+void SettingsScene::onPreferencesChanged()
+{
+    if (dirty) return;
+    repository.loadCached(config);
+    view.translate(); view.setAudio(config.audio); view.setTheme(UITheme::current());
+}
+SceneRequest SettingsScene::getRequest() const { return request; }
+bool SettingsScene::handleUIEvent(const UIEvent &event)
+{
+    if (event.getType() == AudioPreferenceChangedEvent::TYPE)
+    {
+        const auto &changed = static_cast<const AudioPreferenceChangedEvent &>(event);
+        (changed.channel == AudioChannel::Music ? config.audio.music : config.audio.effects) = changed.value;
+        applyAudioPreference();
+    }
+    else if (event.getType() == ButtonClickedEvent::TYPE)
+    {
+        const auto &id = static_cast<const ButtonClickedEvent &>(event).buttonId;
+        if (id == "theme_mint" || id == "theme_sky" || id == "theme_coral")
+        {
+            const auto theme = id == "theme_sky" ? UIThemeId::Sky : id == "theme_coral" ? UIThemeId::Coral : UIThemeId::Mint;
+            UITheme::select(theme); config.ui.theme = UITheme::name(theme); view.setTheme(theme);
+        }
+        else if (id == "language_it" || id == "language_en")
+        {
+            I18n::select(id == "language_en" ? I18n::Language::English : I18n::Language::Italian);
+            config.locale.language = I18n::code(); view.translate();
+        }
+        else if (id == "wifi_settings") { request = SceneRequest(SceneChange::GoToNetwork, SceneTransition::SlideLeft); return true; }
+        else if (id == "monitor") { request = SceneRequest(SceneChange::GoToMonitor, SceneTransition::SlideLeft); return true; }
+        else if (id == "back") { request = SceneRequest(SceneChange::GoToMainMenu, SceneTransition::SlideRight); return true; }
+        else return false;
+    }
+    else return false;
+    dirty = true; changedAt = millis(); view.setPreferenceStatus(Text::Applied); return true;
+}
 void SettingsScene::applyAudioPreference()
 {
-    UIFeedback::setSoundEnabled(soundEnabled);
-    AudioEvent event{};
-    event.type = AudioEventType::SET_VOLUME;
-    event.volume.volume = soundEnabled ? config.audio.volume : 0;
-    xQueueSend(SystemEventBus::audioQueue, &event, 0);
+    config.audio.enabled = config.audio.effects.enabled; config.audio.volume = config.audio.effects.volume;
+    UIFeedback::setSoundEnabled(config.audio.effects.enabled && config.audio.effects.volume);
+    auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
+    if (audio) audio->configure(config.audio);
 }
-
 void SettingsScene::savePreferences()
 {
-    config.ui.theme = UITheme::name(UITheme::current());
-    config.audio.enabled = soundEnabled;
-    const bool saved = repository.saveUiPreferences(config.ui.theme, soundEnabled);
-    if (saved) Log::info(Log::UI_TAG, "UI preferences saved: theme=%s sound=%s",
-                         config.ui.theme.c_str(), soundEnabled ? "on" : "off");
-    view.setPreferenceStatus(saved ? "Preferenze salvate" : "Modifiche temporanee");
-    if (!saved) Log::warn(Log::UI_TAG, "UI preferences applied in memory; NVS save unavailable");
+    const bool saved = repository.savePreferences(config);
+    view.setPreferenceStatus(saved ? Text::Saved : Text::Temporary);
+    if (saved) Log::info(Log::UI_TAG, "UI preferences saved: theme=%s locale=%s music=%d/%u effects=%d/%u", config.ui.theme.c_str(),
+                         config.locale.language.c_str(), config.audio.music.enabled, config.audio.music.volume,
+                         config.audio.effects.enabled, config.audio.effects.volume);
     dirty = false;
 }

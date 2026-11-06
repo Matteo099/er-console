@@ -57,50 +57,10 @@ class StabilityProbe(Probe):
 
 
 def run(args):
-    probe = StabilityProbe(args.port, args.output)
-    started = time.monotonic()
-    try:
-        time.sleep(2.5)  # Allow an upload-triggered boot to finish before navigating.
-        probe.command('ui monitor')  # Registers hooks on both cores, as opening Risorse does.
-        probe.click('Indietro')
-        probe.click('Aspetto')  # Risorse now returns to the Sistema tab.
-        original_theme = next(button[0].split()[-1] for button in probe.buttons() if '\uf00c' in button[0])
-        probe.click('Sistema')
-        original_sound = next(button[0] for button in probe.buttons() if 'Suoni' in button[0])
-        probe.click('Indietro')
-        for cycle in range(args.cycles):
-            probe.click('Info')
-            probe.click('Indietro')
-            probe.click('Impostazioni')
-            probe.click(('Menta', 'Cielo', 'Corallo')[cycle % 3])
-            time.sleep(.5)  # Past the 400 ms NVS debounce.
-            probe.click('Sistema')
-            probe.click('Suoni')
-            time.sleep(.5)
-            probe.click('Suoni')
-            time.sleep(.5)
-            probe.click('Risorse')
-            probe.command('ui scroll 160')
-            probe.command('ui scroll 0')
-            probe.click('Indietro')
-            probe.click('Indietro')
-            print(f'PASS cycle {cycle + 1}/{args.cycles}', flush=True)
-        probe.click('Impostazioni')
-        probe.click(original_theme)
-        time.sleep(.5)
-        probe.click('Sistema')
-        assert next(button[0] for button in probe.buttons() if 'Suoni' in button[0]) == original_sound
-        probe.click('Indietro')
-        # Observe a quiet interval too; don't stop reading immediately after the last event.
-        for _ in range(10):
-            probe.command('ui tree')
-            time.sleep(.2)
-        commits = sum('UI preferences saved:' in line for line in probe.log)
-        sd_errors = sum('Card Failed' in line for line in probe.log)
-        assert commits >= args.cycles * 3, f'Too few persisted changes: {commits}'
-        print(f'PASS {args.cycles} cycles, {commits} saves, {time.monotonic() - started:.1f}s without reset; SD command failures={sd_errors}', flush=True)
-    finally:
-        probe.close('session')
+    # Keep the established command while sharing the current Settings regression.
+    from ui_settings import run as settings_run
+    args.reset = False
+    settings_run(args)
 
 
 if __name__ == '__main__':

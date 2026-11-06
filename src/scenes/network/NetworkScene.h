@@ -9,6 +9,7 @@ public:
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
+    void onPreferencesChanged() override { portalDataReady = false; refreshNetworkStatus(); }
     View& getView() override { return view; }
     SceneRequest getRequest() const override;
     bool handleUIEvent(const UIEvent& event) override;

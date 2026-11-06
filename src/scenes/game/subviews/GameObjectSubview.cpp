@@ -1,3 +1,4 @@
+#include "systems/ui/localization/I18n.h"
 #include "GameObjectSubview.h"
 
 #include "systems/ui/components/Button.h"
@@ -125,14 +126,14 @@ void GameObjectSubview::rebuild()
     {
         Log::debug(TAG, "No objects to display");
 
-        lv_label_set_text(titleLabel, "Oggetti e indizi");
+        lv_label_set_text(titleLabel, tr(Text::Objects));
         lv_label_set_text(pageLabel, "0 / 0");
 
         lv_obj_add_state(prevBtn, LV_STATE_DISABLED);
         lv_obj_add_state(nextBtn, LV_STATE_DISABLED);
 
         auto *label = lv_label_create(content);
-        lv_label_set_text(label, "Gli indizi raccolti appariranno qui.");
+        lv_label_set_text(label, tr(Text::ObjectsHint));
         lv_obj_set_width(label, LV_PCT(100));
         lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
         lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);

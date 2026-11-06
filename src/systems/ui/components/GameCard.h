@@ -1,4 +1,5 @@
 #pragma once
+#include "systems/ui/localization/I18n.h"
 #include <lvgl.h>
 #include <string>
 #include "Container.h"
@@ -28,9 +29,9 @@ public:
         char detail[80];
         const int difficulty = data.difficulty < 1 ? 1 : data.difficulty > 5 ? 5 : data.difficulty;
         if (data.durationMin > 0)
-            lv_snprintf(detail, sizeof(detail), LV_SYMBOL_REFRESH " %d min     Livello %d/5", data.durationMin, difficulty);
+            lv_snprintf(detail, sizeof(detail), (std::string(LV_SYMBOL_REFRESH) + " " + tr(Text::GameDetails)).c_str(), data.durationMin, difficulty);
         else
-            lv_snprintf(detail, sizeof(detail), "Durata libera     Livello %d/5", difficulty);
+            lv_snprintf(detail, sizeof(detail), tr(Text::UnlimitedDetails), difficulty);
         auto *meta = Label::create(card, detail, &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
         UITheme::accent(meta);
         if (!data.author.empty())

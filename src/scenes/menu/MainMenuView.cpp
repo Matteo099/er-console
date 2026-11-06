@@ -1,3 +1,4 @@
+#include "systems/ui/localization/I18n.h"
 #include "MainMenuView.h"
 #include "systems/ui/UIEvents.h"
 #include "systems/ui/components/BrandHeader.h"
@@ -17,17 +18,17 @@ void MainMenuView::create()
     menuContainer = Container::create(layout.body, LV_PCT(100), LV_PCT(100), LV_ALIGN_TOP_MID);
     Container::setFlex(menuContainer, LV_FLEX_FLOW_COLUMN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_style_pad_row(menuContainer, 6, 0);
-    Label::create(menuContainer, "La prossima avventura", UITheme::heading(26));
+    Label::create(menuContainer, tr(Text::NextAdventure), UITheme::heading(26));
     auto *subtitle = Label::create(menuContainer,
 #if WIFI_ENABLED
-                                   "Scegli una storia. Mettiti alla prova.",
+                                   tr(Text::ChooseStory),
 #else
-                                   "Uso locale. La sfida inizia qui.",
+                                   tr(Text::LocalUse),
 #endif
                                    &lv_font_montserrat_12);
     UITheme::muted(subtitle);
 
-    btnNewGame = Button::create(menuContainer, "Gioca", onButtonClicked, this,
+    btnNewGame = Button::create(menuContainer, tr(Text::Play), onButtonClicked, this,
                                 LV_PCT(100), 62, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);
     lv_obj_set_style_text_font(lv_obj_get_child(btnNewGame, 1), &lv_font_montserrat_20, 0);
     auto *arrow = Label::create(btnNewGame, LV_SYMBOL_RIGHT, &lv_font_montserrat_14);
@@ -36,9 +37,9 @@ void MainMenuView::create()
     auto *row = Container::create(menuContainer, LV_PCT(100), 52);
     Container::setFlex(row, LV_FLEX_FLOW_ROW, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_column(row, 8, 0);
-    btnSettings = Button::create(row, "Impostazioni", onButtonClicked, this, 0, 48,
+    btnSettings = Button::create(row, tr(Text::Settings), onButtonClicked, this, 0, 48,
                                  LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_SETTINGS);
-    btnAbout = Button::create(row, "Info", onButtonClicked, this, 0, 48,
+    btnAbout = Button::create(row, tr(Text::Info), onButtonClicked, this, 0, 48,
                               LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_LIST);
     lv_obj_set_flex_grow(btnSettings, 2);
     lv_obj_set_flex_grow(btnAbout, 1);

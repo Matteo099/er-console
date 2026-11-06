@@ -1,4 +1,5 @@
 #pragma once
+#include "systems/ui/localization/I18n.h"
 #include <functional>
 #include "Container.h"
 #include "Label.h"
@@ -18,14 +19,14 @@ public:
         UITheme::card(card);
         Container::setFlex(card);
         lv_obj_set_style_pad_row(card, 12, 0);
-        Label::create(card, "Abbandonare il gioco?", UITheme::heading(), LV_TEXT_ALIGN_CENTER, LV_PCT(100));
+        Label::create(card, tr(Text::LeaveTitle), UITheme::heading(), LV_TEXT_ALIGN_CENTER, LV_PCT(100));
         auto *text = Label::create(card, question, &lv_font_montserrat_14, LV_TEXT_ALIGN_CENTER, LV_PCT(100));
         UITheme::muted(text);
         auto *row = Container::create(card, LV_PCT(100), 44);
         Container::setFlex(row, LV_FLEX_FLOW_ROW);
         lv_obj_set_style_pad_column(row, 8, 0);
-        auto *stay = Button::create(row, "Continua", onStay, this, 0, 44);
-        auto *leave = Button::create(row, "Abbandona", onLeave, this, 0, 44);
+        auto *stay = Button::create(row, tr(Text::Continue), onStay, this, 0, 44);
+        auto *leave = Button::create(row, tr(Text::Leave), onLeave, this, 0, 44);
         lv_obj_set_flex_grow(stay, 1);
         lv_obj_set_flex_grow(leave, 1);
         UITheme::secondary(leave);

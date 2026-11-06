@@ -135,9 +135,7 @@ void SceneManager::update()
             break;
 
         case SceneChange::GoToNetwork:
-#if WIFI_ENABLED
             changeScene(new NetworkScene(), req.transition);
-#endif
             break;
 
         case SceneChange::GoToGame:

@@ -1,3 +1,4 @@
+#include "systems/ui/localization/I18n.h"
 #include "SampleView.h"
 #include "log/Logger.h"
 #include "config/Assets.h"
@@ -9,7 +10,7 @@ void SampleView::create()
 {
     screen = Screen::create();
 
-    btn = Button::create(screen, "Play Sound", onButtonClicked, this);
+    btn = Button::create(screen, tr(Text::PlaySound), onButtonClicked, this);
 }
 
 void SampleView::update()

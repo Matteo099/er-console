@@ -17,7 +17,7 @@ void GameListScene::refreshCatalog()
     GameCatalog::Snapshot catalog;
     if (!GameCatalog::snapshot(catalogVersion, catalog)) return;
     catalogVersion = catalog.version;
-    view.setCatalog(catalog.games, catalog.error, catalog.loading);
+    view.setCatalog(catalog.games, tr(catalog.error), catalog.loading);
 }
 
 void GameListScene::onUpdate() { refreshCatalog(); view.update(); }

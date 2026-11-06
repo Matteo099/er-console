@@ -1,3 +1,4 @@
+#include "systems/ui/localization/I18n.h"
 #include "VictorySubview.h"
 
 #include "systems/ui/components/Button.h"
@@ -32,7 +33,7 @@ void VictorySubview::create(lv_obj_t *parent)
     // ----------------------------
     titleLabel = Label::create(
         header,
-        "Ce l'hai fatta!",
+        tr(Text::Victory),
         UITheme::heading(26),
         LV_TEXT_ALIGN_CENTER,
         LV_PCT(100));
@@ -62,17 +63,17 @@ void VictorySubview::create(lv_obj_t *parent)
     lv_obj_set_scroll_dir(statsContainer, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(statsContainer, LV_SCROLLBAR_MODE_AUTO);
 
-    elapsedRow = StatisticRow::create(statsContainer, "Tempo giocato");
-    pausedRow  = StatisticRow::create(statsContainer, "Pausa");
-    hintsRow   = StatisticRow::create(statsContainer, "Indizi");
-    solvedRow  = StatisticRow::create(statsContainer, "Obiettivi");
+    elapsedRow = StatisticRow::create(statsContainer, tr(Text::TimePlayed));
+    pausedRow  = StatisticRow::create(statsContainer, tr(Text::Pause));
+    hintsRow   = StatisticRow::create(statsContainer, tr(Text::Hints));
+    solvedRow  = StatisticRow::create(statsContainer, tr(Text::Objectives));
 
     // ----------------------------
     // FOOTER (Button)
     // ----------------------------
     completeBtn = Button::create(
         footer,
-        "Continua",
+        tr(Text::Continue),
         onComplete,
         this,
         150,

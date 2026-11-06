@@ -1,3 +1,4 @@
+#include "systems/ui/localization/I18n.h"
 #include "GameScene.h"
 
 #include "log/Logger.h"
@@ -17,7 +18,7 @@ void GameScene::onEnter()
     view.create();
     view.setTitle(gameInfo.title);
     view.showLoading();
-    view.setLoadingMessage("Preparazione del gioco...");
+    view.setLoadingMessage(tr(Text::PrepareGame));
     remainingSec = uint32_t(gameInfo.durationMin) * 60;
     view.setTime(remainingSec);
     view.setRunning(false);
@@ -25,7 +26,7 @@ void GameScene::onEnter()
     inputSystem = static_cast<InputSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
     if (!luaSystem || !inputSystem || gameInfo.id.empty())
     {
-        failLoad("Il gioco non e' disponibile. Torna al catalogo e riprova.");
+        failLoad(tr(Text::GameUnavailable));
         return;
     }
     loadState = GameLoadState::Loading;
@@ -63,7 +64,7 @@ void GameScene::onUpdate()
     if (!exitConfirmationOpen && completionPending.exchange(false) && loadState == GameLoadState::LoadComplete)
         completeGame();
     if (loadState == GameLoadState::LoadComplete && state != GameState::Finished && !luaSystem->isScriptLoaded())
-        failLoad("Il gioco si e' fermato per un errore nello script. Riprova o controlla i file.");
+        failLoad(tr(Text::GameStopped));
 
     if (state == GameState::Running)
     {
@@ -205,7 +206,7 @@ bool GameScene::handleUIEvent(const UIEvent &event)
     if (clicked.buttonId == "retry")
     {
         view.showLoading();
-        view.setLoadingMessage("Preparazione del gioco...");
+        view.setLoadingMessage(tr(Text::PrepareGame));
         loadState = GameLoadState::Loading;
         loadRequested = true;
         loadRequestedAt = lv_tick_get();
@@ -231,21 +232,21 @@ bool GameScene::loadGameScript()
     view.setTime(remainingSec);
     view.setRunning(false);
     view.showLoading();
-    view.setLoadingMessage("Preparazione dei dispositivi...");
+    view.setLoadingMessage(tr(Text::PrepareDevices));
     if (!inputSystem->begin(gameInfo.inputConfig))
     {
-        failLoad("I dispositivi richiesti dal gioco non sono disponibili.");
+        failLoad(tr(Text::DevicesUnavailable));
         return false;
     }
-    view.setLoadingMessage("Lettura del gioco dalla SD...");
+    view.setLoadingMessage(tr(Text::ReadGame));
     const std::string path = getGameDataDirectory() + "/game.lua";
     luaSystem->setGameScene(this);
     if (!luaSystem->loadScript(path.c_str()))
     {
         const bool io = luaSystem->getErrorKind() == LuaSystem::ErrorKind::Storage;
         Log::error(Log::GAME_TAG, "Game load failed: %s", luaSystem->getLastError().c_str());
-        failLoad(io ? "Non riesco a leggere il file del gioco dalla SD. Riprova o controlla la scheda." :
-                      "Il file del gioco contiene un errore. Riprova o controlla lo script.");
+        failLoad(io ? tr(Text::GameReadError) :
+                      tr(Text::GameScriptError));
         return false;
     }
     luaSystem->pause();

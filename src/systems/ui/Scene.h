@@ -54,6 +54,7 @@ public:
     virtual void onEnter() = 0;
     virtual void onUpdate() = 0;
     virtual void onExit() = 0;
+    virtual void onPreferencesChanged() {}
 
     virtual View &getView() = 0;
     virtual SceneRequest getRequest() const

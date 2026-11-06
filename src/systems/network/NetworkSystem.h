@@ -4,6 +4,7 @@
 #include "core/SystemService.h"
 #include "services/DeviceConfigRepository.h"
 #include <string>
+#include "core/TaskMutex.h"
 
 class NetworkSystem : public SystemService
 {
@@ -23,6 +24,8 @@ public:
         std::string ip;
         State state = State::Idle;
         std::string message;
+        int signal = 0;
+        bool timedOut = false;
     };
 
     NetworkSystem();
@@ -35,13 +38,13 @@ public:
     bool reloadFromStorage(StorageSystem* storage);
     void setCredentials(const std::string& newSsid, const std::string& newPassword);
 
-    const Status& getStatus() const { return status; }
-    bool hasCredentials() const { return !ssid.empty(); }
+    Status getStatus() const { TaskMutex::Guard lock(mutex); return status; }
+    bool hasCredentials() const { TaskMutex::Guard lock(mutex); return !ssid.empty(); }
 
 private:
     bool loadLegacyCredentials(StorageSystem* storage);
     void refreshStatus();
-    void setState(State state, const std::string& message);
+    void setState(State state, const std::string& message, bool timedOut = false);
 
 private:
     bool initialized = false;
@@ -51,4 +54,7 @@ private:
     unsigned long connectStartMs = 0;
     static constexpr unsigned long CONNECT_TIMEOUT_MS = 10000;
     DeviceConfigRepository configRepository;
+    mutable TaskMutex mutex;
+    enum class Command { None, Connect, Disconnect };
+    Command command = Command::None;
 };

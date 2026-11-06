@@ -4,6 +4,7 @@
 #include "systems/ui/UIFeedback.h"
 #include "systems/audio/AudioEvent.h"
 #include "config/Assets.h"
+#include "systems/ui/localization/LocalizedText.h"
 
 class Button
 {
@@ -38,6 +39,7 @@ public:
         {
             auto *label = lv_label_create(button);
             lv_label_set_text(label, text);
+            LocalizedText::bind(label, text);
             lv_obj_set_style_text_font(label, UITheme::font(&lv_font_montserrat_14), 0);
             lv_label_set_long_mode(label, LV_LABEL_LONG_DOT);
             lv_obj_set_flex_grow(label, 1);

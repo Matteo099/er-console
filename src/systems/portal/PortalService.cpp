@@ -57,6 +57,7 @@ DeviceConfig PortalService::getConfig() const
         configRepository.load(storageSystem, config);
         cachedConfig = config;
     }
+    else configRepository.loadCached(config);
     return config;
 }
 
@@ -65,8 +66,9 @@ bool PortalService::saveConfig(const DeviceConfig& config)
     if (!storageSystem || !storageSystem->isReady())
         return false;
 
+    if (!configRepository.save(storageSystem, config)) return false;
     cachedConfig = config;
-    return configRepository.save(storageSystem, config);
+    return true;
 }
 
 PortalStatusData PortalService::getStatus() const

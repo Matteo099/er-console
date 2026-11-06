@@ -94,7 +94,7 @@ GameCatalog::Snapshot GameCatalog::readGames()
     if (!storageSystem || !storageSystem->isReady())
     {
         Log::error(Log::SCENE_TAG, "Storage system is not ready");
-        result.error = "SD non disponibile. Controlla la scheda e riprova.";
+        result.error = Text::StorageUnavailable;
         return result;
     }
 
@@ -102,7 +102,7 @@ GameCatalog::Snapshot GameCatalog::readGames()
     if (!storageSystem->listDirectory(GAMES_DIR, entries, false))
     {
         Log::error(Log::SCENE_TAG, "Failed to list games directory");
-        result.error = "Non riesco a leggere il catalogo dalla SD. Riprova.";
+        result.error = Text::CatalogReadError;
         return result;
     }
 
@@ -116,7 +116,7 @@ GameCatalog::Snapshot GameCatalog::readGames()
         if (!storageSystem->readTextFile(configPath.c_str(), jsonText, true))
         {
             Log::warn(Log::SCENE_TAG, "Missing config.json for game: %s", entry.name.c_str());
-            result.error = "Alcuni file del catalogo non sono leggibili. Riprova.";
+            result.error = Text::CatalogFilesError;
             continue;
         }
 
@@ -125,7 +125,7 @@ GameCatalog::Snapshot GameCatalog::readGames()
         if (err)
         {
             Log::error(Log::SCENE_TAG, "JSON parse error in %s: %s", entry.name.c_str(), err.c_str());
-            result.error = "La configurazione di alcuni giochi non e' valida.";
+            result.error = Text::CatalogConfigError;
             continue;
         }
 
@@ -167,7 +167,7 @@ void GameCatalog::request(bool force)
         TaskMutex::Guard lock(catalogMutex);
         cachedCatalog.loading = false;
         cachedCatalog.initialized = true;
-        cachedCatalog.error = "Memoria insufficiente. Riprova.";
+        cachedCatalog.error = Text::MemoryError;
         ++cachedCatalog.version;
     }
 }
@@ -175,14 +175,14 @@ void GameCatalog::request(bool force)
 void GameCatalog::loadTask(void *)
 {
     auto result = readGames();
-    if (result.games.empty() && !result.error.empty())
+    if (result.games.empty() && result.error != Text::None)
     {
         vTaskDelay(pdMS_TO_TICKS(100));
         result = readGames(); // One bounded retry; the UI remains available.
     }
     {
         TaskMutex::Guard lock(catalogMutex);
-        if (!result.error.empty() && result.games.empty()) result.games.swap(cachedCatalog.games);
+        if (result.error != Text::None && result.games.empty()) result.games.swap(cachedCatalog.games);
         result.version = cachedCatalog.version + 1;
         cachedCatalog = std::move(result);
     }

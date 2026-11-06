@@ -1,3 +1,4 @@
+#include "systems/ui/localization/I18n.h"
 #include "FailSubview.h"
 
 #include "systems/ui/components/Align.h"
@@ -22,7 +23,7 @@ void FailSubview::create(lv_obj_t *parent)
         LV_PCT(100));
 
     auto layout = SceneLayout::create(root, 44, 48, false);
-    titleLabel = Label::create(layout.top, "Tempo scaduto", UITheme::heading(26),
+    titleLabel = Label::create(layout.top, tr(Text::TimeExpired), UITheme::heading(26),
                                LV_TEXT_ALIGN_CENTER, LV_PCT(100));
     UITheme::danger(titleLabel);
     lv_obj_center(titleLabel);
@@ -32,9 +33,9 @@ void FailSubview::create(lv_obj_t *parent)
     lv_obj_center(messageLabel);
     Container::setFlex(layout.footer, LV_FLEX_FLOW_ROW, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_column(layout.footer, 8, 0);
-    retryBtn = Button::create(layout.footer, "Riprova", onRetry, this, 132, 44,
+    retryBtn = Button::create(layout.footer, tr(Text::Retry), onRetry, this, 132, 44,
                               LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_REFRESH);
-    backBtn = Button::create(layout.footer, "Indietro", onBack, this, 140, 44,
+    backBtn = Button::create(layout.footer, tr(Text::Back), onBack, this, 140, 44,
                              LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_LEFT);
     UITheme::secondary(backBtn);
 

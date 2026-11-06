@@ -12,6 +12,7 @@ public:
 
     void changeScene(Scene* next, SceneTransition transition);
     void previewIndicators(unsigned mode);
+    void preferencesChanged() { if (current) current->onPreferencesChanged(); }
 
 private:
     Scene* current = nullptr;

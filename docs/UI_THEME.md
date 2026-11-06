@@ -68,8 +68,9 @@ Anche il controllo periodico di `/.core` nel task storage conta un errore
 se la directory non e' piu' leggibile; il solo `exists` riuscito non azzera
 gli errori delle letture precedenti.
 
-Con `WIFI_ENABLED=0` l'indicatore resta visibile come `OFF` con X;
-i collegamenti alle impostazioni di rete vengono nascosti.
+Con `WIFI_ENABLED=0` l'indicatore resta visibile come `OFF` con X.
+La pagina Rete permette di preparare le credenziali, indicando che la radio
+e' disabilitata; non avvia connessioni o access point.
 
 Il QR contiene il nome dell'access point effettivamente avviato, senza
 rileggere la configurazione SD; i caratteri riservati dell'SSID vengono
@@ -80,8 +81,8 @@ configurato sul dispositivo.
 
 - Home: stato microSD e Wi-Fi, accesso al catalogo, impostazioni e informazioni.
   Il pulsante Gioca e' disabilitato quando il filesystem non e' disponibile.
-- Impostazioni: Aspetto per i temi; Sistema per suoni, risorse e rete.
-  Il collegamento Wi-Fi esiste solo con `WIFI_ENABLED=1`.
+- Impostazioni: Tema, Audio, Lingua e Sistema; musica ed effetti hanno ciascuno
+  interruttore e volume. Sistema raccoglie risorse e rete.
   Indietro da Risorse o Rete torna alla scheda Sistema.
 - Risorse: spazio SD occupato, totale, libero e percentuale. La scansione FAT
   avviene in un task dedicato e il risultato viene conservato dal servizio
@@ -108,9 +109,9 @@ configurato sul dispositivo.
 le preferenze locali NVS, in quest'ordine. I nomi precedenti `light`/`dark`
 ricadono su Menta; `blue` e `red` sono alias di Cielo e Corallo.
 
-Il cambio tema e suoni viene applicato subito e salvato dopo 400 ms di quiete
-o all'uscita dalle impostazioni. Usa il namespace NVS `console-ui`, chiavi
-`theme` e `sound`: non riscrive il JSON della SD per ogni tocco. Questo consente
+Tema, lingua e audio vengono applicati subito e salvati dopo 400 ms di quiete
+o all'uscita dalle impostazioni. Usano il namespace NVS `console-ui`, record
+versionato `prefs-v2`: non riscrivono il JSON della SD per ogni tocco. Questo consente
 di mantenere le preferenze anche con SD assente. Un salvataggio completo dal
 portale aggiorna anche questi valori NVS; il caricamento dal repository
 restituisce gli stessi valori effettivi a tutti i servizi.

@@ -152,6 +152,17 @@
                 "connectFailed": "Failed to connect to WiFi network",
                 "wifiScanUnavailable": "WiFi scan unavailable from backend",
                 "factoryResetFailed": "Factory reset failed"
+            },
+            "audio": {
+                "title": "Audio",
+                "music": "Music",
+                "effects": "Sound effects",
+                "volume": "Volume"
+            },
+            "themes": {
+                "mint": "Mint",
+                "sky": "Sky",
+                "coral": "Coral"
             }
         },
         "files": {

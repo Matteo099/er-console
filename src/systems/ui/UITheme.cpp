@@ -1,4 +1,5 @@
 #include "UITheme.h"
+#include "localization/I18n.h"
 #include <cstring>
 #include <initializer_list>
 // LVGL 9.4 keeps its theme descriptor here; contained in this adapter.
@@ -136,7 +137,7 @@ UIThemeId UITheme::fromName(const char *value)
     return UIThemeId::Mint;
 }
 const char *UITheme::name(UIThemeId id) { return id == UIThemeId::Sky ? "sky" : id == UIThemeId::Coral ? "coral" : "mint"; }
-const char *UITheme::title(UIThemeId id) { return id == UIThemeId::Sky ? "Cielo" : id == UIThemeId::Coral ? "Corallo" : "Menta"; }
+const char *UITheme::title(UIThemeId id) { return tr(id == UIThemeId::Sky ? Text::Sky : id == UIThemeId::Coral ? Text::Coral : Text::Mint); }
 const lv_font_t *UITheme::font(const lv_font_t *requested)
 {
     // Built-in Montserrat omits Latin-1 accents; reuse the existing project font

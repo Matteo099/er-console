@@ -32,8 +32,13 @@ Per il confronto dei bus e la procedura A/B vedere
 ## Interfaccia TFT
 
 La UI usa tre temi pastello, **Menta**, **Cielo** e **Corallo**, selezionabili da
-Impostazioni > Aspetto. Tema e suoni vengono conservati nella memoria interna.
-I controlli di rete e portale compaiono solo quando i servizi sono abilitati.
+Impostazioni > Tema. Le schede Audio, Lingua e Sistema centralizzano le altre
+preferenze: musica ed effetti indipendenti, italiano/inglese, rete e monitoraggio.
+Tema, lingua, audio e credenziali Wi-Fi vengono conservati nella memoria interna.
+La rete resta configurabile anche con radio disabilitata; connessione e portale
+rispettano i flag di avvio.
+
+Configurazione, migrazione e traduzioni: [docs/SETTINGS.md](docs/SETTINGS.md).
 
 Architettura, palette, configurazione e acquisizione delle schermate:
 [`docs/UI_THEME.md`](docs/UI_THEME.md).

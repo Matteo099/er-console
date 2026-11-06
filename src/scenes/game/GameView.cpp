@@ -1,3 +1,4 @@
+#include "systems/ui/localization/I18n.h"
 #include "GameView.h"
 
 #include "systems/ui/UIEvents.h"
@@ -42,7 +43,7 @@ void GameView::create()
         LV_PCT(100));
 
     auto layout = SceneLayout::create(screen, 44, 0, false);
-    auto *header = BrandHeader::create(layout.top, 100, "Partita");
+    auto *header = BrandHeader::create(layout.top, 100, tr(Text::Game));
     titleLabel = lv_obj_get_child(header, 1);
     lv_obj_set_style_pad_all(layout.body, 0, 0);
     mainSubview.create(layout.body);
@@ -62,7 +63,7 @@ void GameView::create()
     victorySubview.setEventCallback(callback);
     failSubview.setEventCallback(callback);
     gameObjectSubview.setEventCallback(callback);
-    exitDialog.create(screen, "Sei sicuro di voler abbandonare la partita?", [this](bool leave)
+    exitDialog.create(screen, tr(Text::LeaveQuestion), [this](bool leave)
     {
         emitEvent(ButtonClickedEvent(leave ? "confirm_exit" : "continue_game"));
     });
@@ -176,17 +177,17 @@ void GameView::showVictory()
 
 void GameView::showFailure()
 {
-    failSubview.setMessage("Tempo scaduto", "Il tempo a disposizione e' terminato.");
+    failSubview.setMessage(tr(Text::TimeExpired), tr(Text::TimeExpiredDetail));
     Log::debug(TAG, "showFailure()");
     setState(GameSubview::Fail);
 }
 
 void GameView::showLoadError(const char *message)
 {
-    failSubview.setMessage("Impossibile avviare", message);
+    failSubview.setMessage(tr(Text::CannotStart), message);
     setState(GameSubview::Fail);
 }
-void GameView::setTitle(const std::string &title) { Label::setText(titleLabel, title.empty() ? "Partita" : title.c_str()); }
+void GameView::setTitle(const std::string &title) { Label::setText(titleLabel, title.empty() ? tr(Text::Game) : title.c_str()); }
 void GameView::showExitConfirmation() { exitDialog.show(); }
 void GameView::hideExitConfirmation() { exitDialog.hide(); }
 

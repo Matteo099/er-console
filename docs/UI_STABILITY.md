@@ -64,14 +64,16 @@ pio run -e esp32-s3-devkitc-1-n16r8v-debug -t upload --upload-port COM3 --disabl
 & "$env:USERPROFILE/.platformio/penv/Scripts/python.exe" scripts/ui_stability.py --port COM3 --cycles 20
 ```
 
-Il test apre prima Risorse, poi usa gli eventi reali dei pulsanti per visitare
-Info, Home, Impostazioni e Risorse, alternare i tre temi e attivare/disattivare
-i suoni. Attende il salvataggio NVS dopo ogni modifica e scorre il monitor.
-Conserva il log completo, inclusi i registri in caso di panic. A fine prova
-riuscita ripristina tema e suoni iniziali. Non avvia giochi o script Lua.
+Il comando usa ora la regressione condivisa `scripts/ui_settings.py`: verifica
+volumi e interruttori indipendenti, italiano/inglese, Home, Risorse e Rete;
+poi alterna i tre temi con i callback CPU gia' registrati. Attende il salvataggio
+NVS e scorre le schermate. Conserva il log e le preferenze iniziali, tentando
+di ripristinarle anche dopo un errore. Non avvia giochi, connessioni o script Lua.
+Per verificare anche la persistenza con riavvio usare
+`scripts/ui_settings.py --reset`. Vedere [SETTINGS.md](SETTINGS.md).
 
-Un esito senza riavvii non certifica le letture SD: il riepilogo conta
-separatamente i messaggi `Card Failed`. Per gli errori SD vedere
+Un esito senza riavvii non certifica le letture SD: controllare separatamente
+i messaggi `Card Failed` nel log completo. Per gli errori SD vedere
 [SD_DIAGNOSTICS.md](SD_DIAGNOSTICS.md). Riportare il flag diagnostico a `0`
 e caricare nuovamente al termine delle verifiche.
 

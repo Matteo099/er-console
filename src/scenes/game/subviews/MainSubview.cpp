@@ -1,3 +1,4 @@
+#include "systems/ui/localization/I18n.h"
 #include "MainSubview.h"
 
 #include "systems/ui/components/Button.h"
@@ -23,7 +24,8 @@ void MainSubview::create(lv_obj_t *parent)
 
     pauseOverlay = Container::create(root, LV_PCT(100), LV_PCT(100), LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_bg_opa(pauseOverlay, LV_OPA_TRANSP, 0);
-    pauseIcon = Label::create(pauseOverlay, LV_SYMBOL_PAUSE " In pausa", &lv_font_montserrat_16, LV_TEXT_ALIGN_CENTER);
+    pauseIcon = Label::create(pauseOverlay, (std::string(LV_SYMBOL_PAUSE) + " " + tr(Text::Paused)).c_str(), &lv_font_montserrat_16, LV_TEXT_ALIGN_CENTER);
+    LocalizedText::bind(pauseIcon, Text::Paused, LV_SYMBOL_PAUSE " ");
     Align::setPosition(pauseIcon, LV_ALIGN_CENTER, 0, 10);
     UITheme::accent(pauseIcon);
     lv_obj_add_flag(pauseOverlay, LV_OBJ_FLAG_HIDDEN);
@@ -44,7 +46,7 @@ void MainSubview::create(lv_obj_t *parent)
         44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_CLOSE);
 
     startPauseBtn = Button::create(
-        footer, "Avvia", onStartPause, this,
+        footer, tr(Text::Start), onStartPause, this,
         140, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);
 
     objectsBtn = Button::create(
@@ -114,7 +116,7 @@ void MainSubview::update()
         if (!tickingClockAudioStarted && !paused && UIFeedback::soundEnabled())
         {
             Log::info(TAG, "Starting ticking clock warning audio");
-            sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::PLAY_LOOP_WAV);
+            sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::PLAY_LOOP_WAV, AudioChannel::Effects);
             tickingClockAudioStarted = true;
         }
     }
@@ -124,7 +126,7 @@ void MainSubview::update()
         if (tickingClockAudioStarted)
         {
             Log::info(TAG, "Stopping ticking clock warning audio");
-            sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::STOP);
+            sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::STOP, AudioChannel::Effects);
             tickingClockAudioStarted = false;
         }
     }
@@ -164,7 +166,7 @@ void MainSubview::setRunning(bool running)
     {
         lv_label_set_text(
             startPauseLabel,
-            running ? "Pausa" : "Avvia");
+            running ? tr(Text::Pause) : tr(Text::Start));
     }
 
     paused = !running;

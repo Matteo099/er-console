@@ -1,4 +1,5 @@
 #include "LoadingSubview.h"
+#include "systems/ui/localization/I18n.h"
 
 #include "systems/ui/components/Align.h"
 #include "systems/ui/components/Container.h"
@@ -32,7 +33,7 @@ void LoadingSubview::create(lv_obj_t *parent)
     messageLabel =
         Label::create(
             root,
-            "Caricamento...",
+            tr(Text::Loading),
             &lv_font_roboto_mono_16,
             LV_TEXT_ALIGN_CENTER,
             220);

@@ -11,6 +11,7 @@ public:
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
+    void onPreferencesChanged() override;
 
     View& getView() override { return view; }
     SceneRequest getRequest() const override;
@@ -23,9 +24,7 @@ private:
     SceneRequest request = SceneRequest();
 
     // ---- Settings state (logic-owned) ----
-    bool soundEnabled = true;
     class NetworkSystem* network = nullptr;
-    StorageSystem *storage = nullptr;
     DeviceConfig config;
     DeviceConfigRepository repository;
     bool dirty = false;

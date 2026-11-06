@@ -152,6 +152,17 @@
                 "connectFailed": "Connessione alla rete WiFi non riuscita",
                 "wifiScanUnavailable": "Scansione WiFi non disponibile dal backend",
                 "factoryResetFailed": "Ripristino di fabbrica non riuscito"
+            },
+            "audio": {
+                "title": "Audio",
+                "music": "Musica",
+                "effects": "Effetti sonori",
+                "volume": "Volume"
+            },
+            "themes": {
+                "mint": "Menta",
+                "sky": "Cielo",
+                "coral": "Corallo"
             }
         },
         "files": {

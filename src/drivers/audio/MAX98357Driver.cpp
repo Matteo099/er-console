@@ -8,8 +8,6 @@
 #include <freertos/task.h>
 #include "config/BoardConfig.h"
 
-#define BUFFER_SIZE 1024
-uint8_t buffer[BUFFER_SIZE];
 
 MAX98357Driver::MAX98357Driver(int bclk, int lrck, int dout)
     : pinBCLK(bclk), pinLRCK(lrck), pinDOUT(dout)
@@ -56,10 +54,10 @@ void MAX98357Driver::update()
         return;
     }
 
-    size_t bytesRead =
+    int bytesRead =
         currentFile->read(buffer, BUFFER_SIZE);
 
-    if (bytesRead == 0)
+    if (bytesRead <= 0)
     {
         stop();
         return;

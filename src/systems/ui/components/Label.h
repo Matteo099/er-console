@@ -3,6 +3,7 @@
 #include <lvgl.h>
 #include <cstring>
 #include "systems/ui/UITheme.h"
+#include "systems/ui/localization/LocalizedText.h"
 
 class Label
 {
@@ -18,6 +19,7 @@ public:
     {
         lv_obj_t *label = lv_label_create(parent);
         lv_label_set_text(label, text);
+        LocalizedText::bind(label, text);
 
         if (font)
             lv_obj_set_style_text_font(label, UITheme::font(font), 0);
@@ -52,6 +54,9 @@ public:
     static void setText(lv_obj_t *label, const char *text)
     {
         if (label && text && std::strcmp(lv_label_get_text(label), text))
+        {
+            LocalizedText::bind(label, text);
             lv_label_set_text(label, text);
+        }
     }
 };

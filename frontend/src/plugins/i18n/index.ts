@@ -9,13 +9,10 @@ const SUPPORTED_LOCALES = ['it', 'en', 'es', 'fr', 'de'] as const
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 const localeFromStorage = localStorage.getItem('er-console-locale') as SupportedLocale | null
-const localeFromBrowser = (navigator.language || 'en').slice(0, 2) as SupportedLocale
 
 const locale: SupportedLocale = localeFromStorage && SUPPORTED_LOCALES.includes(localeFromStorage)
     ? localeFromStorage
-    : SUPPORTED_LOCALES.includes(localeFromBrowser)
-        ? localeFromBrowser
-        : 'it'
+    : 'it'
 
 const i18n = createI18n({
     legacy: false,

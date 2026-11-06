@@ -15,14 +15,15 @@ const defaultConfig = (): DeviceConfig => ({
     password: '',
   },
   locale: {
-    language: 'en',
-    timezone: 'UTC',
-    dateFormat: 'YYYY-MM-DD',
+    language: 'it-IT',
+    timezone: 'Europe/Rome',
+    dateFormat: 'DD/MM/YYYY',
   },
   ui: {
     theme: 'mint',
     compactMode: false,
   },
+  audio: { music: { enabled: true, volume: 50 }, effects: { enabled: true, volume: 70 } },
 })
 
 const normalizeConfig = (value?: Partial<DeviceConfig> | null): DeviceConfig => {
@@ -37,12 +38,23 @@ const normalizeConfig = (value?: Partial<DeviceConfig> | null): DeviceConfig => 
     locale: {
       ...defaults.locale,
       ...value?.locale,
+      language: value?.locale?.language?.startsWith('en') ? 'en-GB' : 'it-IT',
     },
     ui: {
       ...defaults.ui,
       ...value?.ui,
       // The TFT maps legacy light/dark values to the default pastel palette.
       theme: value?.ui?.theme === 'sky' || value?.ui?.theme === 'coral' ? value.ui.theme : 'mint',
+    },
+    audio: {
+      music: {
+        enabled: value?.audio?.music?.enabled ?? value?.audio?.enabled ?? defaults.audio.music.enabled,
+        volume: Math.max(0, Math.min(100, value?.audio?.music?.volume ?? value?.audio?.volume ?? defaults.audio.music.volume)),
+      },
+      effects: {
+        enabled: value?.audio?.effects?.enabled ?? value?.audio?.enabled ?? defaults.audio.effects.enabled,
+        volume: Math.max(0, Math.min(100, value?.audio?.effects?.volume ?? value?.audio?.volume ?? defaults.audio.effects.volume)),
+      },
     },
   }
 }

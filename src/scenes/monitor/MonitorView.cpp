@@ -1,3 +1,4 @@
+#include "systems/ui/localization/I18n.h"
 #include "MonitorView.h"
 #include "systems/ui/UIEvents.h"
 #include "systems/ui/components/BackButton.h"
@@ -33,14 +34,14 @@ void MonitorView::create()
 {
     screen = Screen::create();
     auto layout = SceneLayout::create(screen);
-    BrandHeader::create(layout.top, 100, "Risorse");
+    BrandHeader::create(layout.top, 100, tr(Text::Resources));
     auto *column = Container::create(layout.body, LV_PCT(100), LV_SIZE_CONTENT, LV_ALIGN_TOP_MID);
     Container::setFlex(column);
     lv_obj_set_style_pad_row(column, 8, 0);
     auto *device = card(column, LV_SYMBOL_CHARGE " CONSOLE");
     cpuLabel = Label::create(device, "CPU", &lv_font_montserrat_14);
     cpuBar = bar(device);
-    ramLabel = Label::create(device, "Memoria", &lv_font_montserrat_14);
+    ramLabel = Label::create(device, tr(Text::Memory), &lv_font_montserrat_14);
     ramBar = bar(device);
     heapLabel = Label::create(device, "", &lv_font_montserrat_12);
     psramLabel = Label::create(device, "", &lv_font_montserrat_12);
@@ -50,15 +51,16 @@ void MonitorView::create()
     UITheme::muted(uptimeLabel);
     auto *sd = card(column, LV_SYMBOL_DRIVE " MICROSD");
     sdLabel = Label::create(sd, "", &lv_font_montserrat_14);
-    sdUsageLabel = Label::create(sd, "Calcolo dello spazio...", &lv_font_montserrat_12,
+    sdUsageLabel = Label::create(sd, tr(Text::SpacePending), &lv_font_montserrat_12,
                                  LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     UITheme::muted(sdUsageLabel);
     sdBar = bar(sd);
     lv_obj_add_flag(sdBar, LV_OBJ_FLAG_HIDDEN);
-    auto *refresh = Button::create(sd, "Aggiorna", onRefreshClicked, this, 132, 44,
+    auto *refresh = Button::create(sd, tr(Text::Refresh), onRefreshClicked, this, 132, 44,
                                    LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_REFRESH);
     UITheme::secondary(refresh);
-    powerCard = card(column, LV_SYMBOL_CHARGE " ALIMENTAZIONE");
+    powerCard = card(column, (std::string(LV_SYMBOL_CHARGE) + " " + tr(Text::Power)).c_str());
+    LocalizedText::bind(lv_obj_get_child(powerCard, 0), Text::Power, LV_SYMBOL_CHARGE " ");
     powerLabel = Label::create(powerCard, "", &lv_font_montserrat_14, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     setPowerAvailable(false);
     BackButton::create(layout.footer, onBackClicked, this);
@@ -80,14 +82,14 @@ void MonitorView::setRamUsage(uint32_t usedKb, uint32_t totalKb)
 {
     const auto percent = totalKb ? (uint64_t(usedKb) * 100 / totalKb) : 0;
     char text[48];
-    lv_snprintf(text, sizeof(text), "Memoria totale  %u%%", (unsigned)percent);
+    lv_snprintf(text, sizeof(text), tr(Text::RamPercent), (unsigned)percent);
     Label::setText(ramLabel, text);
     lv_bar_set_value(ramBar, percent, LV_ANIM_OFF);
 }
 void MonitorView::setHeap(uint32_t usedKb, uint32_t totalKb)
 {
     char text[64];
-    lv_snprintf(text, sizeof(text), "RAM interna  %u / %u KB", (unsigned)usedKb, (unsigned)totalKb);
+    lv_snprintf(text, sizeof(text), tr(Text::InternalRam), (unsigned)usedKb, (unsigned)totalKb);
     Label::setText(heapLabel, text);
 }
 void MonitorView::setPsram(uint32_t usedKb, uint32_t totalKb)
@@ -101,8 +103,8 @@ void MonitorView::setUptime(const char *text) { Label::setText(uptimeLabel, text
 void MonitorView::setSdCapacity(uint32_t totalMb)
 {
     char text[48];
-    if (totalMb) lv_snprintf(text, sizeof(text), "Capacita'  %u.%u GB", (unsigned)(totalMb / 1024), (unsigned)((totalMb % 1024) * 10 / 1024));
-    else lv_snprintf(text, sizeof(text), "SD non disponibile");
+    if (totalMb) lv_snprintf(text, sizeof(text), tr(Text::Capacity), (unsigned)(totalMb / 1024), (unsigned)((totalMb % 1024) * 10 / 1024));
+    else lv_snprintf(text, sizeof(text), tr(Text::SdUnavailable));
     Label::setText(sdLabel, text);
 }
 void MonitorView::setPowerAvailable(bool available) { lv_obj_set_flag(powerCard, LV_OBJ_FLAG_HIDDEN, !available); }
@@ -117,7 +119,7 @@ void MonitorView::setSdUsage(uint64_t total, uint64_t used)
     };
     char text[144];
     const double percent = total ? double(used) * 100 / total : 0;
-    std::snprintf(text, sizeof(text), "Occupati %s / %s (%.1f%%)\nLiberi %s",
+    std::snprintf(text, sizeof(text), tr(Text::SpaceUsage),
                    format(used).c_str(), format(total).c_str(), percent, format(total - used).c_str());
     Label::setText(sdUsageLabel, text);
     lv_obj_clear_flag(sdBar, LV_OBJ_FLAG_HIDDEN);
@@ -125,7 +127,7 @@ void MonitorView::setSdUsage(uint64_t total, uint64_t used)
 }
 void MonitorView::setSdUsagePending(bool failed)
 {
-    Label::setText(sdUsageLabel, failed ? "Spazio non disponibile. Riprova." : "Calcolo dello spazio...");
+    Label::setText(sdUsageLabel, failed ? tr(Text::SpaceUnavailable) : tr(Text::SpacePending));
     lv_obj_add_flag(sdBar, LV_OBJ_FLAG_HIDDEN);
 }
 void MonitorView::onRefreshClicked(lv_event_t *e)

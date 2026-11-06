@@ -12,6 +12,7 @@ private:
     LVGLContext lvgl;
     SceneManager scenes;
     bool preferencesLoaded = false;
+    uint32_t preferencesRevision = 0, localeRevision = 0;
     void loadPreferences();
 
 public:

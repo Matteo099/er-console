@@ -41,15 +41,28 @@
             <v-select
               v-model="config.ui.theme"
               :items="[
-                { title: 'Menta', value: 'mint' },
-                { title: 'Cielo', value: 'sky' },
-                { title: 'Corallo', value: 'coral' },
+                { title: t('erConsole.config.themes.mint'), value: 'mint' },
+                { title: t('erConsole.config.themes.sky'), value: 'sky' },
+                { title: t('erConsole.config.themes.coral'), value: 'coral' },
               ]"
               :label="t('erConsole.config.labels.uiTheme')"
               name="ui-theme"
               autocomplete="off"
               variant="outlined"
             />
+          </v-card-text>
+        </v-card>
+      </v-col>
+
+      <v-col cols="12" lg="6">
+        <v-card>
+          <v-card-title>{{ t('erConsole.config.audio.title') }}</v-card-title>
+          <v-card-text>
+            <template v-for="channel in (['music', 'effects'] as const)" :key="channel">
+              <v-switch v-model="config.audio[channel].enabled" :label="t(`erConsole.config.audio.${channel}`)" color="primary" hide-details />
+              <v-slider v-model="config.audio[channel].volume" :min="0" :max="100" :step="1" thumb-label="always"
+                :label="t('erConsole.config.audio.volume')" class="mt-6" />
+            </template>
           </v-card-text>
         </v-card>
       </v-col>
@@ -222,7 +235,7 @@ interface WifiConnectPayload {
 const configStore = useConfigStore()
 const notificationStore = useNotificationStore()
 const portalStore = usePortalStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const config = computed(() => configStore.config)
 const scanningWifi = ref(false)
@@ -237,7 +250,7 @@ const developerMode = computed({
   set: (value: boolean) => portalStore.setDeveloperMode(value),
 })
 
-const languageOptions = ['it', 'en', 'es', 'fr', 'de']
+const languageOptions = [{ title: 'Italiano', value: 'it-IT' }, { title: 'English', value: 'en-GB' }]
 
 const wifiHeaders = computed(() => [
   { title: t('erConsole.config.table.ssid'), key: 'ssid' },
@@ -272,6 +285,8 @@ const loadConfig = async () => {
 const saveConfig = async () => {
   try {
     await configStore.saveConfig()
+    locale.value = configStore.config?.locale.language.startsWith('en') ? 'en' : 'it'
+    localStorage.setItem('er-console-locale', locale.value)
     notificationStore.success(t('erConsole.config.notifications.saved'))
   } catch {
     notificationStore.error(configStore.error ?? t('erConsole.config.errors.saveFailed'))

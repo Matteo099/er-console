@@ -39,14 +39,15 @@ const defaultConfig = (): DeviceConfig => ({
     password: 'mockpassword',
   },
   locale: {
-    language: 'en',
-    timezone: 'UTC',
-    dateFormat: 'YYYY-MM-DD',
+    language: 'it-IT',
+    timezone: 'Europe/Rome',
+    dateFormat: 'DD/MM/YYYY',
   },
   ui: {
     theme: 'mint',
     compactMode: false,
   },
+  audio: { music: { enabled: true, volume: 50 }, effects: { enabled: true, volume: 70 } },
 })
 
 const initialFiles = (): Map<string, MockFileNode> => {

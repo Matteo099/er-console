@@ -1,3 +1,4 @@
+#include "systems/ui/localization/I18n.h"
 #include "GameListView.h"
 #include "log/Logger.h"
 #include "systems/ui/UIEvents.h"
@@ -17,7 +18,7 @@ void GameListView::create()
     screen = Screen::create();
     auto layout = SceneLayout::create(screen);
 
-    header = BrandHeader::create(layout.top, 100, "Avventure");
+    header = BrandHeader::create(layout.top, 100, tr(Text::Adventures));
 
     cardContainer = lv_obj_create(layout.body);
     lv_obj_remove_style_all(cardContainer);
@@ -47,7 +48,7 @@ void GameListView::create()
 
     btnNext = Button::create(footerRow, nullptr, onNextClicked, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_RIGHT);
     UITheme::secondary(btnNext);
-    btnStart = Button::create(footerRow, "Avvia", onStartClicked, this, 104, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);
+    btnStart = Button::create(footerRow, tr(Text::Start), onStartClicked, this, 104, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_PLAY);
     btnRefresh = Button::create(footerRow, nullptr, onRefreshClicked, this, 44, 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_REFRESH);
     UITheme::secondary(btnRefresh);
 
@@ -73,24 +74,24 @@ void GameListView::rebuildCurrentCard()
 
     if (games.empty())
     {
-        auto *title = Label::create(cardContainer, loading ? "Caricamento giochi..." : loadError.empty() ? "Nessuna avventura" : "Catalogo non disponibile", UITheme::heading(),
+        auto *title = Label::create(cardContainer, loading ? tr(Text::LoadingGames) : loadError.empty() ? tr(Text::NoAdventures) : tr(Text::CatalogUnavailable), UITheme::heading(),
                                     LV_TEXT_ALIGN_CENTER, LV_PCT(100));
         lv_obj_set_style_pad_top(title, 20, 0);
-        auto *help = Label::create(cardContainer, loading ? "Puoi tornare al menu mentre preparo il catalogo." : loadError.empty() ? "Gli scenari sulla microSD appariranno qui." : loadError.c_str(),
+        auto *help = Label::create(cardContainer, loading ? tr(Text::CatalogLoadingHint) : loadError.empty() ? tr(Text::CatalogEmptyHint) : loadError.c_str(),
                                    &lv_font_montserrat_12, LV_TEXT_ALIGN_CENTER, LV_PCT(100));
         lv_obj_align_to(help, title, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
         UITheme::muted(help);
         lv_label_set_text(pageLabel, "0 / 0");
         lv_obj_set_state(btnStart, LV_STATE_DISABLED, loading || loadError.empty());
         Label::setText(lv_obj_get_child(btnStart, 0), loadError.empty() ? LV_SYMBOL_PLAY : LV_SYMBOL_REFRESH);
-        Label::setText(lv_obj_get_child(btnStart, 1), loadError.empty() ? "Avvia" : "Riprova");
+        Label::setText(lv_obj_get_child(btnStart, 1), loadError.empty() ? tr(Text::Start) : tr(Text::Retry));
         lv_obj_add_state(btnPrev, LV_STATE_DISABLED);
         lv_obj_add_state(btnNext, LV_STATE_DISABLED);
         return;
     }
     lv_obj_remove_state(btnStart, LV_STATE_DISABLED);
     Label::setText(lv_obj_get_child(btnStart, 0), LV_SYMBOL_PLAY);
-    Label::setText(lv_obj_get_child(btnStart, 1), "Avvia");
+    Label::setText(lv_obj_get_child(btnStart, 1), tr(Text::Start));
     lv_obj_set_state(btnPrev, LV_STATE_DISABLED, games.size() < 2);
     lv_obj_set_state(btnNext, LV_STATE_DISABLED, games.size() < 2);
     lv_obj_scroll_to_y(lv_obj_get_parent(cardContainer), 0, LV_ANIM_OFF);
@@ -99,7 +100,7 @@ void GameListView::rebuildCurrentCard()
 
     if (loading || !loadError.empty())
     {
-        auto *status = Label::create(cardContainer, loading ? "Aggiornamento in corso..." : loadError.c_str(),
+        auto *status = Label::create(cardContainer, loading ? tr(Text::Refreshing) : loadError.c_str(),
                                     &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
         UITheme::muted(status);
         lv_obj_set_style_pad_bottom(status, 6, 0);
