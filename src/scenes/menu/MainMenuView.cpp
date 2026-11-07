@@ -48,10 +48,7 @@ void MainMenuView::create()
     UITheme::secondary(btnSettings);
     UITheme::secondary(btnAbout);
 
-    if (musicChannelId == 0)
-    {
-        musicChannelId = playAudioFile(AUDIO_MAIN_THEME_FILE, true, AudioChannel::Music);
-    }
+    musicRequestAt = lv_tick_get(); musicRetryDelay = 160;
 }
 
 void MainMenuView::setStorageState(StorageState state)
@@ -62,7 +59,16 @@ void MainMenuView::setStorageState(StorageState state)
     lv_obj_set_state(btnNewGame, LV_STATE_DISABLED, unavailable);
 }
 
-void MainMenuView::update() {}
+void MainMenuView::update()
+{
+    // A departing game stops its audio in SCREEN_UNLOADED, after this view's
+    // create(). Start after that cleanup so it cannot cancel the new theme.
+    if (!isAudioSourcePlaying(musicChannelId) && uint32_t(lv_tick_get()-musicRequestAt) >= musicRetryDelay)
+    {
+        musicRequestAt = lv_tick_get(); musicRetryDelay = 1000;
+        musicChannelId = playAudioFile(AUDIO_MAIN_THEME_FILE,true,AudioChannel::Music);
+    }
+}
 void MainMenuView::destroy()
 {
     screen = brandImg = menuContainer = nullptr;

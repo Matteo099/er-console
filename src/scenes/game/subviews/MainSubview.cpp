@@ -102,7 +102,7 @@ void MainSubview::update()
 {
     uint32_t now = lv_tick_get();
 
-    if (remainingSeconds <= WARNING_THRESHOLD_SEC)
+    if (remainingSeconds && remainingSeconds <= WARNING_THRESHOLD_SEC)
     {
         if (now - lastBlinkMs >= 500)
         {
@@ -114,15 +114,13 @@ void MainSubview::update()
                 0);
         }
 
-        if (!tickingClockSource && !paused && UIFeedback::soundEnabled() && now-clockRequestAt >= 500)
-        {
-            clockRequestAt = now;
-            Log::info(TAG, "Starting ticking clock warning audio");
-            tickingClockSource = playAudioFile(AUDIO_TICKING_CLOCK_FILE,true,AudioChannel::Effects);
-        }
     }
+    updateClockAudio();
+}
 
-    if (paused || !UIFeedback::soundEnabled())
+void MainSubview::updateClockAudio()
+{
+    if (paused || !remainingSeconds || remainingSeconds > WARNING_THRESHOLD_SEC || !UIFeedback::soundEnabled())
     {
         if (tickingClockSource)
         {
@@ -130,12 +128,23 @@ void MainSubview::update()
             stopAudioSource(tickingClockSource);
             tickingClockSource = 0;
         }
+        clockAttempted = false;
+        return;
+    }
+    if (tickingClockSource && !isAudioSourcePlaying(tickingClockSource)) tickingClockSource = 0;
+    const auto now = lv_tick_get();
+    if (!tickingClockSource && (!clockAttempted || uint32_t(now-clockRequestAt) >= 500))
+    {
+        clockRequestAt = now; clockAttempted = true;
+        Log::info(TAG, "Starting ticking clock warning audio");
+        tickingClockSource = playAudioFile(AUDIO_TICKING_CLOCK_FILE,true,AudioChannel::Effects);
     }
 }
 
 void MainSubview::setTime(uint32_t seconds)
 {
     remainingSeconds = seconds;
+    updateClockAudio();
 
     char buf[16];
 
@@ -171,6 +180,7 @@ void MainSubview::setRunning(bool running)
     }
 
     paused = !running;
+    updateClockAudio();
 
     if (pauseOverlay)
     {

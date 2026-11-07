@@ -103,10 +103,9 @@ void VictorySubview::destroy()
 void VictorySubview::show()
 {
     Log::debug(TAG, "Showing victory subview");
+    if (!root || !lv_obj_has_flag(root,LV_OBJ_FLAG_HIDDEN)) return;
+    lv_obj_clear_flag(root, LV_OBJ_FLAG_HIDDEN);
     playAudioFile(AUDIO_VICTORY_FILE, false, AudioChannel::Effects);
-
-    if (root)
-        lv_obj_clear_flag(root, LV_OBJ_FLAG_HIDDEN);
 }
 
 void VictorySubview::hide()

@@ -86,6 +86,8 @@ di file unici attivi, esclusi header e metadati. Piu' sorgenti sullo stesso file
 condividono i dati ma mantengono cursori e guadagni separati.
 
 I file in uso, inclusi i loop sospesi, non vengono eliminati dalla cache.
+Le Scene di gioco possono anche prenotare file non ancora in riproduzione:
+[precaricamento, tempi e gestione della cache](AUDIO_PRELOAD.md).
 Se il budget non basta, la nuova riproduzione fallisce senza rimuovere quelle
 attive. I file inattivi possono essere sostituiti. Il caricamento a freddo
 resta sincrono nel task audio e puo' interrompere brevemente l'uscita: richiedere

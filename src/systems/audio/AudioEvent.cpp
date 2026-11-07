@@ -11,6 +11,11 @@ bool stopAudioSource(AudioSourceId id)
     auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
     return audio && audio->stopSource(id);
 }
+bool isAudioSourcePlaying(AudioSourceId id)
+{
+    auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
+    return audio && audio->isPlaying(id);
+}
 
 bool sendAudioEvent(const char *path, AudioEventType type, AudioChannel channel)
 {

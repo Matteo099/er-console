@@ -4,6 +4,7 @@
 #include "systems/input/InputSystem.h"
 #include "GameView.h"
 #include "GameState.h"
+#include "GameAudioAssets.h"
 #include <string>
 #include "GameInfo.h"
 #include "systems/ui/localization/I18n.h"
@@ -68,6 +69,7 @@ private:
 
     // View
     GameView view;
+    GameAudioAssets audioAssets;
 
     // Lua system integration
     LuaSystem *luaSystem = nullptr;
@@ -79,6 +81,7 @@ private:
     uint32_t remainingSec = 3600;
     uint32_t lastTickMs = 0;
     bool loadRequested = false;
+    bool audioPreparing = false;
     uint32_t loadRequestedAt = 0;
     bool exitConfirmationOpen = false;
     bool resumeAfterConfirmation = false;

@@ -23,6 +23,7 @@ struct AudioEvent
     AudioEventType type;
     AudioChannel channel = AudioChannel::Effects;
     AudioSourceId source = 0;
+    uint32_t queuedAt = 0;
 
     union
     {
@@ -47,3 +48,4 @@ struct AudioEvent
 bool sendAudioEvent(const char *pathToFile, AudioEventType type = AudioEventType::PLAY_WAV, AudioChannel channel = AudioChannel::All);
 AudioSourceId playAudioFile(const char *path, bool loop = false, AudioChannel channel = AudioChannel::All, uint8_t volume = 100);
 bool stopAudioSource(AudioSourceId id);
+bool isAudioSourcePlaying(AudioSourceId id);

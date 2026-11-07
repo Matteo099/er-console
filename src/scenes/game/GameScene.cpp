@@ -8,6 +8,7 @@
 
 #include "core/SystemEventBus.h"
 #include "config/Assets.h"
+#include "systems/audio/AudioSystem.h"
 #include <Arduino.h>
 #include <algorithm>
 
@@ -32,6 +33,10 @@ void GameScene::onEnter()
     loadState = GameLoadState::Loading;
     loadRequested = true;
     loadRequestedAt = lv_tick_get();
+    auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
+    if (audio) audio->stop(); // Release menu voices before reserving the game cache.
+    audioPreparing = false;
+    view.setLoadingMessage(tr(Text::PrepareAudio));
 }
 
 void GameScene::postGameObjects(std::vector<GameObjectSubview::ObjectData> objects)
@@ -46,8 +51,16 @@ void GameScene::onUpdate()
     // Let the loading screen render and the previous scene unload before I/O.
     if (loadRequested && lv_tick_get() - loadRequestedAt >= 160)
     {
-        loadRequested = false;
-        loadGameScript();
+        if (!audioPreparing)
+        {
+            auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
+            audioAssets.begin(audio,lv_tick_get()); audioPreparing = true;
+        }
+        if (audioAssets.prepared(lv_tick_get()))
+        {
+            loadRequested = false;
+            loadGameScript();
+        }
     }
     std::vector<GameObjectSubview::ObjectData> objects;
     bool applyObjects = false;
@@ -95,6 +108,7 @@ void GameScene::onUpdate()
 void GameScene::onExit()
 {
     stopGame();
+    audioAssets.release();
     view.destroy();
 }
 
@@ -109,9 +123,8 @@ void GameScene::completeGame()
     luaSystem->pause();
     view.setRunning(false);
     view.setVictoryStats(getVictoryStats());
-    view.showVictory();
     sendAudioEvent(nullptr, AudioEventType::STOP);
-    sendAudioEvent(AUDIO_VICTORY_FILE, AudioEventType::PLAY_WAV);
+    view.showVictory(); // The subview owns its one playback request.
 }
 
 SceneRequest GameScene::getRequest() const
@@ -206,11 +219,13 @@ bool GameScene::handleUIEvent(const UIEvent &event)
     /* FailSubview */
     if (clicked.buttonId == "retry")
     {
+        stopGame();
         view.showLoading();
         view.setLoadingMessage(tr(Text::PrepareGame));
         loadState = GameLoadState::Loading;
         loadRequested = true;
         loadRequestedAt = lv_tick_get();
+        audioPreparing = false;
         return true;
     }
     if (clicked.buttonId == "back")

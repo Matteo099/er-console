@@ -52,6 +52,7 @@ void AudioSystem::update()
 }
 bool AudioSystem::enqueue(AudioEvent &event, uint8_t level)
 {
+    event.queuedAt = millis();
     {
         TaskMutex::Guard lock(controls);
         event.source = sources.reserve(event.channel,std::min<uint8_t>(100,level));
@@ -82,6 +83,22 @@ bool AudioSystem::preload(const char *path)
     AudioEvent event{}; event.type = AudioEventType::PRELOAD; std::strcpy(event.wav.path,path);
     return xQueueSend(queueHandle(),&event,0) == pdPASS;
 }
+AudioAssetId AudioSystem::retainAsset(const char *path)
+{
+    TaskMutex::Guard lock(controls);
+    bool created = false;
+    const auto id = preloads.retain(path,created);
+    if (!id || !created) return id;
+    AudioEvent event{}; event.type = AudioEventType::PRELOAD; event.source = id;
+    std::strcpy(event.wav.path,path);
+    if (queueHandle() && xQueueSend(queueHandle(),&event,0) == pdPASS) return id;
+    preloads.release(id); return 0;
+}
+AudioAssetState AudioSystem::assetState(AudioAssetId id) const
+{
+    TaskMutex::Guard lock(controls); return preloads.state(id);
+}
+void AudioSystem::releaseAsset(AudioAssetId id) { TaskMutex::Guard lock(controls); preloads.release(id); }
 void AudioSystem::release(AudioSourceId id) { TaskMutex::Guard lock(controls); sources.release(id); }
 void AudioSystem::stop(AudioChannel channel) { TaskMutex::Guard lock(controls); sources.stop(channel); }
 bool AudioSystem::stopSource(AudioSourceId id) { TaskMutex::Guard lock(controls); return sources.release(id); }
@@ -121,7 +138,22 @@ void AudioSystem::process(const AudioEvent &event)
 {
     if (event.type == AudioEventType::SET_VOLUME) { setVolume(event.volume.volume); return; }
     if (event.type == AudioEventType::STOP) { stop(event.channel); return; }
-    if (event.type == AudioEventType::PRELOAD) { if (!findCache(event.wav.path)) loadCache(event.wav.path); return; }
+    if (event.type == AudioEventType::PRELOAD)
+    {
+        if (event.source)
+        {
+            TaskMutex::Guard lock(controls);
+            if (!preloads.find(event.source)) return; // Scene left before this queued load.
+        }
+        auto *entry = findCache(event.wav.path);
+        if (!entry) entry = loadCache(event.wav.path);
+        if (event.source)
+        {
+            TaskMutex::Guard lock(controls); preloads.finish(event.source,entry != nullptr);
+        }
+        Log::debug(Log::AUDIO_TAG,"Preload %s: %s",event.wav.path,entry ? "ready" : "failed");
+        return;
+    }
     {
         TaskMutex::Guard lock(controls);
         if (!sources.find(event.source)) return;
@@ -150,17 +182,21 @@ void AudioSystem::playFile(const AudioEvent &event)
         release(event.source); return;
     }
     auto *entry = findCache(event.wav.path);
+    const bool cacheHit = entry != nullptr;
     if (!entry) entry = loadCache(event.wav.path);
     syncControls(); // A stop may have arrived while SD was being read.
-    TaskMutex::Guard lock(controls);
-    auto *source = sources.find(event.source);
-    if (!source) return;
-    if (entry && mixer.play(entry->data,entry->size,event.channel,loop,event.source,source->volume)) source->started = true;
-    else
     {
-        Log::warn(Log::AUDIO_TAG,"Cannot play WAV source %lu: %s (file I/O, PCM format or source limit)",static_cast<unsigned long>(event.source),event.wav.path);
-        sources.release(event.source);
+        TaskMutex::Guard lock(controls);
+        auto *source = sources.find(event.source);
+        if (!source) return;
+        if (entry && mixer.play(entry->data,entry->size,event.channel,loop,event.source,source->volume)) source->started = true;
+        else
+        {
+            Log::warn(Log::AUDIO_TAG,"Cannot play WAV source %lu: %s (file I/O, PCM format or source limit)",static_cast<unsigned long>(event.source),event.wav.path);
+            sources.release(event.source); return;
+        }
     }
+    Log::debug(Log::AUDIO_TAG,"WAV started: %s cache=%s delay=%lu ms",event.wav.path,cacheHit ? "hit" : "miss",static_cast<unsigned long>(millis()-event.queuedAt));
 }
 AudioCacheEntry *AudioSystem::findCache(const char *path)
 {
@@ -174,9 +210,14 @@ AudioCacheEntry *AudioSystem::evictableCache()
     for (auto &entry : cache)
     {
         if (!entry.data) return &entry;
-        if (!mixer.references(entry.data) && (!slot || entry.lastUsed < slot->lastUsed)) slot = &entry;
+        if (evictable(entry) && (!slot || entry.lastUsed < slot->lastUsed)) slot = &entry;
     }
     return slot;
+}
+bool AudioSystem::evictable(const AudioCacheEntry &entry)
+{
+    if (mixer.references(entry.data)) return false;
+    TaskMutex::Guard lock(controls); return !preloads.retained(entry.path);
 }
 void AudioSystem::evict(AudioCacheEntry &entry)
 {
@@ -185,36 +226,46 @@ void AudioSystem::evict(AudioCacheEntry &entry)
 AudioCacheEntry *AudioSystem::loadCache(const char *path)
 {
     if (!storage || !cacheBudget) return nullptr;
-    SPIBusLock::Guard guard;
-    IFile *file = storage->open(path);
-    if (!file) return nullptr;
-    const size_t expected = file->length();
+    IFile *file = nullptr;
+    size_t expected = 0;
+    {
+        SPIBusLock::Guard guard;
+        file = storage->open(path);
+        if (!file) return nullptr;
+        expected = file->length();
+    }
+    const auto closeFile = [&]() { SPIBusLock::Guard guard; file->close(); delete file; };
     auto *slot = evictableCache();
     if (!expected || expected > cacheBudget || !slot)
     {
         Log::warn(Log::AUDIO_TAG,"WAV exceeds available cache: %s (%u bytes; budget %u)",path,unsigned(expected),unsigned(cacheBudget));
-        file->close(); delete file; return nullptr;
+        closeFile(); return nullptr;
     }
     evict(*slot);
     while (cacheBytes + expected > cacheBudget)
     {
         AudioCacheEntry *oldest = nullptr;
         for (auto &entry : cache)
-            if (entry.data && !mixer.references(entry.data) && (!oldest || entry.lastUsed < oldest->lastUsed)) oldest = &entry;
-        if (!oldest) { file->close(); delete file; return nullptr; }
+            if (entry.data && evictable(entry) && (!oldest || entry.lastUsed < oldest->lastUsed)) oldest = &entry;
+        if (!oldest) { closeFile(); return nullptr; }
         evict(*oldest);
     }
     const uint32_t caps = MALLOC_CAP_8BIT | (psramFound() ? MALLOC_CAP_SPIRAM : MALLOC_CAP_INTERNAL);
     auto *data = static_cast<uint8_t *>(heap_caps_malloc(expected,caps));
-    size_t length = 0;
+    size_t length = 0, yieldedAt = 0;
     while (data && length < expected)
     {
         const size_t requested = std::min<size_t>(1024,expected-length);
-        const int count = file->read(data+length,requested);
+        int count;
+        // Let display/touch/other storage clients run between SD blocks.
+        { SPIBusLock::Guard guard; count = file->read(data+length,requested); }
         if (count <= 0 || size_t(count) > requested) break;
         length += count;
+        // SD SPI transfers can busy-wait. A batch of several large WAVs must
+        // periodically let this core's idle task feed the task watchdog.
+        if (length-yieldedAt >= 32*1024) { vTaskDelay(1); yieldedAt = length; }
     }
-    file->close(); delete file;
+    closeFile();
     if (!data || length != expected)
     {
         if (data) storage->noteIOFailure();
@@ -222,6 +273,12 @@ AudioCacheEntry *AudioSystem::loadCache(const char *path)
         heap_caps_free(data); return nullptr;
     }
     storage->noteIOSuccess();
+    AudioMixer validator(AUDIO_SAMPLE_RATE);
+    if (!validator.play(data,length,AudioChannel::Effects,false))
+    {
+        Log::warn(Log::AUDIO_TAG,"Invalid WAV preload: %s",path);
+        heap_caps_free(data); return nullptr;
+    }
     slot->data = data; slot->size = length; slot->lastUsed = millis();
     std::strcpy(slot->path,path); cacheBytes += length;
     return slot;

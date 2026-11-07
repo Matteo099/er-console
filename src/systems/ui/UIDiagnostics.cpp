@@ -9,6 +9,7 @@
 #include "systems/ui/UIFrameStats.h"
 #include "systems/ui/UIFeedback.h"
 #include "systems/audio/AudioEvent.h"
+#include "systems/audio/AudioSystem.h"
 #include "services/DeviceConfigRepository.h"
 #include "scenes/menu/MainMenuScene.h"
 #include "scenes/settings/SettingsScene.h"
@@ -25,6 +26,7 @@
 #include "AudioDiagnostics.h"
 #include "ScrollDiagnostics.h"
 #include "VolumeFeedbackDiagnostics.h"
+#include "AudioPreloadDiagnostics.h"
 #include "drivers/display/TouchController.h"
 #include "GameFixtureDiagnostics.h"
 #include "services/GameMetadata.h"
@@ -381,11 +383,20 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui audio-test") runAudioDiagnostics();
         else if (command == "ui scroll-test") runScrollDiagnostics();
         else if (command == "ui volume-test") runVolumeFeedbackDiagnostics();
+        else if (command == "ui preload-test") runAudioPreloadDiagnostics();
+        else if (command == "ui preload-preview") scenes.changeScene(createAudioPreloadPreview(),SceneTransition::None);
+        else if (command.startsWith("ui preload-event ")) audioPreloadAction(command.substring(17).c_str());
         else if (command == "ui preferences")
         {
             DeviceConfig config; DeviceConfigRepository().loadCached(config);
             Serial.printf("@PREFERENCES theme=%s language=%s music=%u/%u effects=%u/%u\n", config.ui.theme.c_str(), config.locale.language.c_str(),
                 config.audio.music.enabled, config.audio.music.volume, config.audio.effects.enabled, config.audio.effects.volume);
+        }
+        else if (command.startsWith("ui audio-master "))
+        {
+            auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
+            const int level = command.substring(16).toInt();
+            if (audio && level >= 0 && level <= 100) audio->setVolume(level);
         }
         else if (command == "ui quiet on" || command == "ui quiet off")
         {

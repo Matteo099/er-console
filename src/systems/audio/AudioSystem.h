@@ -5,6 +5,7 @@
 #include "drivers/audio/AudioDriver.h"
 #include "AudioEvent.h"
 #include "AudioMixer.h"
+#include "AudioPreloads.h"
 #include <atomic>
 #include "core/TaskMutex.h"
 
@@ -36,6 +37,9 @@ public:
     bool getSourceVolume(AudioSourceId id, uint8_t &volume) const;
     bool isPlaying(AudioSourceId id) const;
     bool preload(const char *path);
+    AudioAssetId retainAsset(const char *path);
+    AudioAssetState assetState(AudioAssetId id) const;
+    void releaseAsset(AudioAssetId id);
     void configure(const AudioPreferences &preferences);
 
     void setVolume(uint8_t volume);
@@ -52,6 +56,7 @@ private:
     void release(AudioSourceId id);
     mutable TaskMutex controls;
     AudioSources sources;
+    mutable AudioPreloads preloads;
     AudioMixer mixer;
     AudioPreferences preferences;
     QueueHandle_t preferencesQueue = nullptr;
@@ -65,6 +70,7 @@ private:
     size_t cacheBytes = 0, cacheBudget = 0;
     AudioCacheEntry *evictableCache();
     void evict(AudioCacheEntry &entry);
+    bool evictable(const AudioCacheEntry &entry);
 
     std::atomic<uint8_t> volume{100};
     uint8_t appliedVolume = 100;

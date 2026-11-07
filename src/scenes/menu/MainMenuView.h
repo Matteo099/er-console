@@ -36,6 +36,7 @@ private:
     lv_obj_t *btnAbout = nullptr;
 
     static AudioSourceId musicChannelId;
+    uint32_t musicRequestAt = 0, musicRetryDelay = 160;
 
     MainMenuAction pendingAction = MainMenuAction::None;
 

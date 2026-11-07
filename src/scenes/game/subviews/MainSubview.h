@@ -44,6 +44,8 @@ private:
     bool warningBlinkState = false;
     AudioSourceId tickingClockSource = 0;
     uint32_t clockRequestAt = 0;
+    bool clockAttempted = false;
+    void updateClockAudio();
 
     uint32_t remainingSeconds = 0;
     uint32_t lastBlinkMs = 0;
@@ -51,7 +53,7 @@ private:
     lv_obj_t *pauseOverlay = nullptr;
     lv_obj_t *pauseIcon = nullptr;
 
-    bool paused = false;
+    bool paused = true;
 
     lv_obj_t *objectsBtn = nullptr;
 
