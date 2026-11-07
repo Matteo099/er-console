@@ -59,6 +59,7 @@ void FailSubview::destroy()
 void FailSubview::show()
 {
     Log::debug(TAG, "Showing fail subview");
+    playAudioFile(AUDIO_GAME_OVER_FILE, false, AudioChannel::Effects);
 
     if (root)
         lv_obj_clear_flag(root, LV_OBJ_FLAG_HIDDEN);

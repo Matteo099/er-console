@@ -4,6 +4,7 @@
 #include "systems/ui/View.h"
 #include <lvgl.h>
 #include "systems/ui/DeviceStatusBar.h"
+#include "systems/audio/AudioSources.h"
 
 /**
  * @brief Main menu view
@@ -33,6 +34,8 @@ private:
     lv_obj_t *btnNewGame = nullptr;
     lv_obj_t *btnSettings = nullptr;
     lv_obj_t *btnAbout = nullptr;
+
+    static AudioSourceId musicChannelId;
 
     MainMenuAction pendingAction = MainMenuAction::None;
 

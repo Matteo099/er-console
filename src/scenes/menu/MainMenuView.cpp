@@ -9,6 +9,8 @@
 #include "systems/ui/components/Screen.h"
 #include "config/Console.h"
 
+AudioSourceId MainMenuView::musicChannelId = 0;
+
 void MainMenuView::create()
 {
     screen = Screen::create();
@@ -45,11 +47,17 @@ void MainMenuView::create()
     lv_obj_set_flex_grow(btnAbout, 1);
     UITheme::secondary(btnSettings);
     UITheme::secondary(btnAbout);
+
+    if (musicChannelId == 0)
+    {
+        musicChannelId = playAudioFile(AUDIO_MAIN_THEME_FILE, true, AudioChannel::Music);
+    }
 }
 
 void MainMenuView::setStorageState(StorageState state)
 {
-    if (!btnNewGame) return;
+    if (!btnNewGame)
+        return;
     const bool unavailable = state == StorageState::Unavailable || state == StorageState::Error;
     lv_obj_set_state(btnNewGame, LV_STATE_DISABLED, unavailable);
 }
@@ -63,9 +71,13 @@ void MainMenuView::destroy()
 void MainMenuView::onButtonClicked(lv_event_t *e)
 {
     auto *view = static_cast<MainMenuView *>(lv_event_get_user_data(e));
-    if (!view) return;
+    if (!view)
+        return;
     auto *target = static_cast<lv_obj_t *>(lv_event_get_target(e));
-    if (target == view->btnNewGame) view->emitEvent(ButtonClickedEvent("new_game"));
-    else if (target == view->btnSettings) view->emitEvent(ButtonClickedEvent("settings"));
-    else if (target == view->btnAbout) view->emitEvent(ButtonClickedEvent("about"));
+    if (target == view->btnNewGame)
+        view->emitEvent(ButtonClickedEvent("new_game"));
+    else if (target == view->btnSettings)
+        view->emitEvent(ButtonClickedEvent("settings"));
+    else if (target == view->btnAbout)
+        view->emitEvent(ButtonClickedEvent("about"));
 }

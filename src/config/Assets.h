@@ -17,6 +17,7 @@
 #define PORTAL_INDEX_FILE PORTAL_DIR "/index.html"
 
 // Audio files
+// Effects files
 #define AUDIO_STARTUP_FILE AUDIO_DIR "/stage.wav"
 #define AUDIO_CLICK_FILE AUDIO_DIR "/fireball.wav"
 #define AUDIO_CLICK1_FILE AUDIO_DIR "/click1.wav"
@@ -24,6 +25,8 @@
 #define AUDIO_GAME_OVER_FILE AUDIO_DIR "/lose.wav"
 #define AUDIO_VICTORY_FILE AUDIO_DIR "/win.wav"
 #define AUDIO_TICKING_CLOCK_FILE AUDIO_DIR "/tickingclock.wav"
+// Music files
+#define AUDIO_MAIN_THEME_FILE AUDIO_DIR "/main_theme.wav"
 
 
 // Image files
