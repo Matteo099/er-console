@@ -5,6 +5,7 @@
 #include "systems/audio/AudioEvent.h"
 #include "config/Assets.h"
 #include "systems/ui/localization/LocalizedText.h"
+#include "ButtonClickGuard.h"
 
 class Button
 {
@@ -21,6 +22,7 @@ public:
                            lv_coord_t y = 0, const char *icon = nullptr)
     {
         auto *button = lv_button_create(parent);
+        ButtonClickGuard::attach(button);
         lv_obj_set_size(button, width, height < 44 ? 44 : height);
         lv_obj_align(button, align, x, y);
         lv_obj_set_flex_flow(button, LV_FLEX_FLOW_ROW);

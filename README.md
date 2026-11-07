@@ -50,6 +50,8 @@ Architettura, palette, configurazione e acquisizione delle schermate:
 
 Ottimizzazioni dei cambi scena e misure:
 [`docs/UI_PERFORMANCE.md`](docs/UI_PERFORMANCE.md).
+Protezione dei pulsanti durante lo scroll e test degli input:
+[`docs/UI_SCROLL.md`](docs/UI_SCROLL.md).
 Il font dei titoli e il generatore sono descritti in
 [`assets/fonts/README.md`](assets/fonts/README.md).
 
