@@ -44,7 +44,7 @@ void GameScene::onEnter()
     audioSystem = audio; settingsFeedback.bind(audio);
     if (audio) audio->stop(); // Release menu voices before reserving the game cache.
     audioPreparing = false;
-    view.setLoadingMessage(tr(Text::PrepareAudio));
+    view.setLoadingMessage(tr(Text::PrepareAssets));
 }
 
 void GameScene::postGameObjects(std::vector<GameObjectSubview::ObjectData> objects)
@@ -63,12 +63,19 @@ void GameScene::onUpdate()
     // Let the loading screen render and the previous scene unload before I/O.
     if (loadRequested && lv_tick_get() - loadRequestedAt >= 160)
     {
-        if (!audioPreparing)
+        auto &cache=GameAssetCache::instance();
+        if (!assetToken)
+        {
+            auto *storage=static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+            assetToken=cache.begin(storage,getGameDataDirectory());
+        }
+        if (cache.prepared(assetToken) && !audioPreparing)
         {
             auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
-            audioAssets.begin(audio,lv_tick_get()); audioPreparing = true;
+            audioAssets.begin(audio,lv_tick_get(),cache.audioPaths(assetToken)); audioPreparing = true;
+            view.setLoadingMessage(tr(Text::PrepareAudio));
         }
-        if (audioAssets.prepared(lv_tick_get()))
+        if (audioPreparing && audioAssets.prepared(lv_tick_get()))
         {
             loadRequested = false;
             loadGameScript();
@@ -127,6 +134,7 @@ void GameScene::onExit()
     closeSettings();
     stopGame();
     audioAssets.release();
+    GameAssetCache::instance().release(assetToken); assetToken=0;
     view.destroy();
 }
 
@@ -325,6 +333,9 @@ bool GameScene::handleUIEvent(const UIEvent &event)
         loadRequested = true;
         loadRequestedAt = lv_tick_get();
         audioPreparing = false;
+        audioAssets.release();
+        GameAssetCache::instance().release(assetToken); assetToken=0;
+        view.setLoadingMessage(tr(Text::PrepareAssets));
         return true;
     }
     if (clicked.buttonId == "back")

@@ -5,6 +5,7 @@
 #include "GameView.h"
 #include "GameState.h"
 #include "GameAudioAssets.h"
+#include "services/GameAssetCache.h"
 #include "services/DeviceConfigRepository.h"
 #include "systems/ui/VolumeFeedback.h"
 #include "services/StatisticsRepository.h"
@@ -80,6 +81,7 @@ private:
     // View
     GameView view;
     GameAudioAssets audioAssets;
+    GameAssetCache::Token assetToken=0;
     class AudioSystem *audioSystem = nullptr;
     DeviceConfigRepository settingsRepository;
     AudioPreferences settingsAudio;

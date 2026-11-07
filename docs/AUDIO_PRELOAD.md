@@ -1,5 +1,9 @@
 # Precaricamento dei suoni di partita
 
+La preparazione ora comprende anche immagini, script e dati nella cartella
+del gioco, con un budget distinto, e i WAV locali: [Contenuti di gioco](GAME_ASSETS.md).
+Le tre prenotazioni di sistema descritte qui mantengono la stessa priorita'.
+
 La partita prepara `tickingclock.wav`, `lose.wav` e `win.wav` prima di mostrare
 la schermata pronta per Avvia. Il costo della lettura SD viene anticipato alla
 fase di preparazione; gli eventi di gioco riproducono poi i dati dalla PSRAM.

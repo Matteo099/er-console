@@ -7,6 +7,7 @@ class IFile
 {
 public:
     virtual ~IFile() = default;
+    virtual bool isMemoryBacked() const { return false; }
 
     virtual int read(uint8_t *buffer, size_t len) = 0;
     virtual size_t write(const uint8_t *buffer, size_t len) = 0;

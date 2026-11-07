@@ -39,6 +39,10 @@ def run(args):
         if not any('Game loaded: 3-t_loop' in row for row in probe.log[start:]):
             probe.read_until(lambda row: 'Game loaded: 3-t_loop' in row,timeout=35)
         preparation = probe.log[start:]
+        assert any('Game assets prepared: files=2' in row and 'failed=0' in row for row in preparation),preparation
+        state=probe.command('ui assets-state')
+        assert any(re.search(r'@ASSETS files=2 bytes=\d+ hits=[1-9]\d* ',row) for row in state),state
+        print('PASS real GameScene prepares script/configuration and Lua uses cached source',flush=True)
         assert any('Game audio prepared' in row and '(all ready)' in row for row in preparation),preparation
         print('PASS real GameScene stays in preparation until all sounds are ready',flush=True)
         start = len(probe.log)

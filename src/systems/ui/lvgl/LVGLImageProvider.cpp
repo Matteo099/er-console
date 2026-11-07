@@ -4,6 +4,15 @@
 #include "core/SystemEventBus.h"
 #include "systems/storage/StorageSystem.h"
 #include <SD.h>
+#include <memory>
+
+struct ImageFile
+{
+    std::unique_ptr<IFile> file;
+    uint32_t position=0;
+    explicit ImageFile(IFile *value) : file(value) {}
+    ~ImageFile() { if (file) file->close(); }
+};
 
 static StorageSystem *storageService()
 {
@@ -12,8 +21,6 @@ static StorageSystem *storageService()
 
 static void* fs_open(lv_fs_drv_t*, const char* path, lv_fs_mode_t mode)
 {
-    SPIBusLock::Guard guard;
-
     if (!SystemEventBus::systemEvents ||
         !(xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY))
         return nullptr;
@@ -24,27 +31,22 @@ static void* fs_open(lv_fs_drv_t*, const char* path, lv_fs_mode_t mode)
 
     Log::debug(Log::DISPLAY_TAG, "LVGL loading image: %s", path);
     const bool write = (mode & LV_FS_MODE_WR) != 0;
-    File file = storage->openNative(path, write);
+    IFile *file = write ? nullptr : storage->open(path);
     if (!file)
     {
         Log::warn(Log::DISPLAY_TAG, "LVGL image open failed: %s", path);
         return nullptr;
     }
 
-    return new File(file);
+    return new ImageFile(file);
 }
 
 static lv_fs_res_t fs_close(lv_fs_drv_t*, void* file_p)
 {
-    SPIBusLock::Guard guard;
-
     if (!file_p)
         return LV_FS_RES_INV_PARAM;
 
-    File* f = static_cast<File*>(file_p);
-    if (*f)
-        f->close();
-    delete f;
+    delete static_cast<ImageFile*>(file_p);
     return LV_FS_RES_OK;
 }
 
@@ -52,22 +54,21 @@ static lv_fs_res_t fs_read(
     lv_fs_drv_t*, void* file_p,
     void* buf, uint32_t btr, uint32_t* br)
 {
-    SPIBusLock::Guard guard;
-
     if (!file_p || !buf || !br)
         return LV_FS_RES_INV_PARAM;
 
     *br = 0;
-    File* f = static_cast<File*>(file_p);
-    if (!(*f))
+    auto *handle = static_cast<ImageFile*>(file_p);
+    auto *f = handle->file.get();
+    if (!f)
         return LV_FS_RES_NOT_EX;
 
-    const size_t size = f->size();
-    const size_t pos = f->position();
+    const size_t size = f->length();
+    const size_t pos = handle->position;
     const size_t remaining = pos < size ? size - pos : 0;
     const size_t expected = btr < remaining ? btr : remaining;
-    const size_t actual = expected ? f->read((uint8_t*)buf, expected) : 0;
-    if (actual != expected)
+    const int actual = expected ? f->read((uint8_t*)buf, expected) : 0;
+    if (actual < 0 || size_t(actual) != expected)
     {
         if (auto *storage = storageService()) storage->noteIOFailure();
         Log::error(Log::DISPLAY_TAG, "SD short read: offset=%u expected=%u actual=%u",
@@ -75,58 +76,55 @@ static lv_fs_res_t fs_read(
         return LV_FS_RES_FS_ERR;
     }
     *br = actual;
-    if (actual && pos + actual == size)
-        if (auto *storage = storageService()) storage->noteIOSuccess();
+    handle->position += actual;
+    if (actual && pos+actual==size && !f->isMemoryBacked())
+        if (auto *storage=storageService()) storage->noteIOSuccess();
     return LV_FS_RES_OK;
 }
 
 static lv_fs_res_t fs_seek(
     lv_fs_drv_t*, void* file_p, uint32_t pos, lv_fs_whence_t whence)
 {
-    SPIBusLock::Guard guard;
-
     if (!file_p)
         return LV_FS_RES_INV_PARAM;
 
-    File* f = static_cast<File*>(file_p);
-    if (!(*f))
+    auto *handle = static_cast<ImageFile*>(file_p);
+    auto *f = handle->file.get();
+    if (!f)
         return LV_FS_RES_NOT_EX;
 
-    bool ok = false;
+    uint64_t target=pos;
     switch (whence)
     {
     case LV_FS_SEEK_SET:
-        ok = f->seek(pos, SeekSet);
         break;
     case LV_FS_SEEK_CUR:
-        ok = f->seek(pos, SeekCur);
+        target += handle->position;
         break;
     case LV_FS_SEEK_END:
-        ok = f->seek(pos, SeekEnd);
+        target += f->length();
         break;
     default:
         return LV_FS_RES_INV_PARAM;
     }
 
-    if (!ok)
+    if (target > UINT32_MAX || !f->seek(target))
         return LV_FS_RES_UNKNOWN;
-
+    handle->position=target;
     return LV_FS_RES_OK;
 }
 
 static lv_fs_res_t fs_tell(
     lv_fs_drv_t*, void* file_p, uint32_t* pos)
 {
-    SPIBusLock::Guard guard;
-
     if (!file_p || !pos)
         return LV_FS_RES_INV_PARAM;
 
-    File* f = static_cast<File*>(file_p);
-    if (!(*f))
+    auto *handle = static_cast<ImageFile*>(file_p);
+    if (!handle->file)
         return LV_FS_RES_NOT_EX;
 
-    *pos = f->position();
+    *pos = handle->position;
     return LV_FS_RES_OK;
 }
 

@@ -11,6 +11,7 @@
 #include "bindings/CoreBindings.h"
 #include "bindings/LuaConstantsBinding.h"
 #include "bindings/GameSceneBindings.h"
+#include "LuaAssetLoader.h"
 
 LuaSystem::LuaSystem() {}
 
@@ -128,6 +129,7 @@ bool LuaSystem::loadScript(const char *path)
         lua_pop(L, 1);
         return false;
     };
+    installGameAssetLoaders(L,storageSystem,path);
     if (luaL_loadbuffer(L, source.data(), source.size(), path) != LUA_OK)
         return failed(ErrorKind::Syntax, "Lua load error");
     Log::info(Log::LUA_TAG, "Executing Lua script: %s (%u bytes)", path, unsigned(source.size()));

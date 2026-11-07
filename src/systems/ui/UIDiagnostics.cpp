@@ -29,6 +29,7 @@
 #include "AudioPreloadDiagnostics.h"
 #include "InGameSettingsDiagnostics.h"
 #include "StatisticsDiagnostics.h"
+#include "GameAssetDiagnostics.h"
 #include "services/StatisticsRepository.h"
 #include "scenes/game/GameScene.h"
 #include "scenes/statistics/StatisticsScene.h"
@@ -389,6 +390,14 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui scroll-test") runScrollDiagnostics();
         else if (command == "ui volume-test") runVolumeFeedbackDiagnostics();
         else if (command == "ui preload-test") runAudioPreloadDiagnostics();
+        else if (command == "ui assets-test") runGameAssetDiagnostics();
+        else if (command == "ui assets-state")
+        {
+            const auto state=GameAssetCache::instance().status();
+            Serial.printf("@ASSETS files=%u bytes=%u hits=%u skipped=%u failed=%u resident=%u done=%u\n",
+                unsigned(state.files),unsigned(state.bytes),unsigned(state.hits),unsigned(state.skipped),unsigned(state.failed),
+                unsigned(GameAssetCache::residentBytes()),unsigned(state.done));
+        }
         else if (command == "ui ingame-test") runInGameSettingsDiagnostics();
         else if (command=="ui stats-test") runStatisticsDiagnostics();
         else if (command=="ui statistics") scenes.changeScene(new StatisticsScene(),SceneTransition::None);

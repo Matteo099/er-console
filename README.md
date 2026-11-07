@@ -47,6 +47,8 @@ Mixer a otto sorgenti, loop, volumi per file e conversione audio indipendente
 da PlatformIO: [docs/AUDIO.md](docs/AUDIO.md).
 Precaricamento di countdown, sconfitta e vittoria:
 [docs/AUDIO_PRELOAD.md](docs/AUDIO_PRELOAD.md).
+Preparazione di immagini, script e dati con cache limitata in PSRAM:
+[docs/GAME_ASSETS.md](docs/GAME_ASSETS.md).
 Scelta delle reti e inserimento password: [docs/NETWORK_UI.md](docs/NETWORK_UI.md).
 Traduzioni dei giochi e aggiornamento dei file sulla microSD:
 [docs/GAME_LOCALIZATION.md](docs/GAME_LOCALIZATION.md).

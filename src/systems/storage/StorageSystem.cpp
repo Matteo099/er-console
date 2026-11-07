@@ -6,6 +6,7 @@
 #include "config/BoardConfig.h"
 #include "config/Assets.h"
 #include "log/Logger.h"
+#include "services/GameAssetCache.h"
 
 #include <algorithm>
 #include <vector>
@@ -178,6 +179,11 @@ void StorageSystem::listFiles() const
 
 IFile *StorageSystem::open(const char *path, FileMode mode)
 {
+    if (mode==FileMode::Read)
+    {
+        if (auto *cached=GameAssetCache::instance().open(path)) return cached;
+    }
+    else GameAssetCache::instance().invalidate(path);
     if (!ready || !driver || !path) return nullptr;
     errno = 0;
     IFile *file = driver->open(path, mode);
@@ -288,6 +294,7 @@ bool StorageSystem::readTextFile(
         out.append(buffer, r);
     }
 
+    const bool physical=!file->isMemoryBacked();
     file->close();
     delete file;
 
@@ -296,12 +303,13 @@ bool StorageSystem::readTextFile(
         noteIOFailure();
         out.clear();
     }
-    else if (!out.empty()) noteIOSuccess();
+    else if (physical && !out.empty()) noteIOSuccess();
     return complete;
 }
 
 bool StorageSystem::removePath(const char *path)
 {
+    GameAssetCache::instance().invalidate(path);
     if (!ready)
         return false;
 
@@ -313,6 +321,8 @@ bool StorageSystem::movePath(
     const char *destinationPath,
     bool overwrite)
 {
+    GameAssetCache::instance().invalidate(sourcePath);
+    GameAssetCache::instance().invalidate(destinationPath);
     SPIBusLock::Guard guard;
 
     if (!ready)
@@ -501,6 +511,7 @@ bool StorageSystem::writeTextFile(
     const std::string &contents,
     bool overwrite)
 {
+    GameAssetCache::instance().invalidate(path);
     SPIBusLock::Guard guard;
 
     if (!ready || !path)
@@ -550,6 +561,7 @@ File StorageSystem::openNative(
     const char *path,
     bool write)
 {
+    if (write) GameAssetCache::instance().invalidate(path);
     if (!ready || !driver || !path) return File();
     errno = 0;
     File file = static_cast<ESP32SDCardDriver *>(driver)->openNative(path, write);
