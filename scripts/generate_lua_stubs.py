@@ -31,7 +31,7 @@ LUA_PATTERN = re.compile(
     r"//\s*@lua\s+"
     r"([a-zA-Z0-9_.]+)"
     r"\((.*?)\)"
-    r"\s*(?:->\s*([a-zA-Z0-9_]+))?"
+    r"\s*(?:->\s*([a-zA-Z0-9_|?]+))?"
 )
 
 DOC_PATTERN = re.compile(
@@ -66,7 +66,7 @@ VALUE_PATTERN = re.compile(
 
 
 PARAM_SIGNATURE_PATTERN = re.compile(
-    r"([a-zA-Z0-9_]+):([a-zA-Z0-9_]+)(?:=.*)?"
+    r"([a-zA-Z0-9_]+):([a-zA-Z0-9_|?]+)(?:=.*)?"
 )
 
 
@@ -75,6 +75,11 @@ PARAM_SIGNATURE_PATTERN = re.compile(
 # =============================================================================
 
 TYPE_MAP = {
+
+    "boolean": "boolean",
+    "integer": "integer",
+    "number": "number",
+    "nil": "nil",
 
     "uint8": "integer",
     "uint16": "integer",
@@ -109,6 +114,11 @@ api = {}
 enums = {}
 
 structs = {
+    "AudioPlayOptions": {
+        "loop": "boolean?",
+        "channel": "'music'|'effects'|nil",
+        "volume": "integer?",
+    },
     "GameObjectContent": {
         "type": "GameObjectContentType",
         "value": "string?",
@@ -129,6 +139,12 @@ structs = {
 def lua_type_fnc(cpp_type):
 
     cpp_type = cpp_type.strip()
+
+    if "|" in cpp_type:
+        return "|".join(lua_type_fnc(part) for part in cpp_type.split("|"))
+
+    if cpp_type.endswith("?"):
+        return lua_type_fnc(cpp_type[:-1]) + "?"
 
 
     if cpp_type.endswith("[]"):
@@ -559,17 +575,7 @@ with OUTPUT_FILE.open(
                 if ret != "void":
 
 
-                    if ret in TYPE_MAP:
-
-                        lua_ret = TYPE_MAP[ret]
-
-                    elif ret in enums:
-
-                        lua_ret = ret
-
-                    else:
-
-                        lua_ret = "any"
+                    lua_ret = lua_type_fnc(ret)
 
 
 

@@ -6,8 +6,9 @@
 #include "AudioEvent.h"
 #include "AudioMixer.h"
 #include <atomic>
+#include "core/TaskMutex.h"
 
-#define AUDIO_CACHE_SIZE 4
+constexpr size_t AUDIO_CACHE_SIZE = AUDIO_MAX_SOURCES;
 
 struct AudioCacheEntry
 {
@@ -20,16 +21,21 @@ struct AudioCacheEntry
 class AudioSystem : public SystemService
 {
 public:
-    AudioSystem();
+    explicit AudioSystem(QueueHandle_t commandQueue = nullptr);
     ~AudioSystem();
 
     void init(void *params = nullptr) override;
     void update() override;
 
-    void beep(uint16_t freq = 1000, uint16_t ms = 100);
+    AudioSourceId beep(uint16_t freq = 1000, uint16_t ms = 100);
 
-    void play(const char *path, bool loop = false, AudioChannel channel = AudioChannel::All);
+    AudioSourceId play(const char *path, bool loop = false, AudioChannel channel = AudioChannel::All, uint8_t volume = 100);
     void stop(AudioChannel channel = AudioChannel::All);
+    bool stopSource(AudioSourceId id);
+    bool setSourceVolume(AudioSourceId id, uint8_t volume);
+    bool getSourceVolume(AudioSourceId id, uint8_t &volume) const;
+    bool isPlaying(AudioSourceId id) const;
+    bool preload(const char *path);
     void configure(const AudioPreferences &preferences);
 
     void setVolume(uint8_t volume);
@@ -40,17 +46,26 @@ private:
     AudioCacheEntry *loadCache(const char *path);
 
     void process(const AudioEvent &event);
-    void playFile(const char *path, bool loop, AudioChannel channel);
-    void syncStops();
-    uint32_t musicEpoch = 0, effectsEpoch = 0;
+    void playFile(const AudioEvent &event);
+    void syncControls();
+    bool enqueue(AudioEvent &event, uint8_t volume);
+    void release(AudioSourceId id);
+    mutable TaskMutex controls;
+    AudioSources sources;
     AudioMixer mixer;
     AudioPreferences preferences;
     QueueHandle_t preferencesQueue = nullptr;
+    QueueHandle_t commandQueue = nullptr; // Optional externally-owned queue for isolated integration tests.
+    QueueHandle_t queueHandle() const { return commandQueue ? commandQueue : SystemEventBus::audioQueue; }
 
     StorageSystem *storage = nullptr;
     AudioDriver *driver = nullptr;
 
     AudioCacheEntry cache[AUDIO_CACHE_SIZE]{};
+    size_t cacheBytes = 0, cacheBudget = 0;
+    AudioCacheEntry *evictableCache();
+    void evict(AudioCacheEntry &entry);
 
     std::atomic<uint8_t> volume{100};
+    uint8_t appliedVolume = 100;
 };

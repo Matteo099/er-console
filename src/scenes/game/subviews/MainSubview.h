@@ -4,6 +4,7 @@
 #include <string>
 #include <cstdint>
 #include "../GameSubview.h"
+#include "systems/audio/AudioSources.h"
 
 class MainSubview
 {
@@ -41,7 +42,8 @@ private:
     lv_obj_t *cancelBtn = nullptr;
 
     bool warningBlinkState = false;
-    bool tickingClockAudioStarted = false;
+    AudioSourceId tickingClockSource = 0;
+    uint32_t clockRequestAt = 0;
 
     uint32_t remainingSeconds = 0;
     uint32_t lastBlinkMs = 0;

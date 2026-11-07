@@ -64,6 +64,7 @@ void MainSubview::create(lv_obj_t *parent)
 
 void MainSubview::destroy()
 {
+    if (tickingClockSource) { stopAudioSource(tickingClockSource); tickingClockSource = 0; }
     Log::info(TAG, "Destroying main subview");
 
     root = nullptr;
@@ -113,21 +114,21 @@ void MainSubview::update()
                 0);
         }
 
-        if (!tickingClockAudioStarted && !paused && UIFeedback::soundEnabled())
+        if (!tickingClockSource && !paused && UIFeedback::soundEnabled() && now-clockRequestAt >= 500)
         {
+            clockRequestAt = now;
             Log::info(TAG, "Starting ticking clock warning audio");
-            sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::PLAY_LOOP_WAV, AudioChannel::Effects);
-            tickingClockAudioStarted = true;
+            tickingClockSource = playAudioFile(AUDIO_TICKING_CLOCK_FILE,true,AudioChannel::Effects);
         }
     }
 
     if (paused || !UIFeedback::soundEnabled())
     {
-        if (tickingClockAudioStarted)
+        if (tickingClockSource)
         {
             Log::info(TAG, "Stopping ticking clock warning audio");
-            sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::STOP, AudioChannel::Effects);
-            tickingClockAudioStarted = false;
+            stopAudioSource(tickingClockSource);
+            tickingClockSource = 0;
         }
     }
 }

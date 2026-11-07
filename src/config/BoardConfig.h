@@ -117,7 +117,7 @@ GPIO       → LEDs, buttons, actuators
 #define I2S_LRCLK_PIN        17     // Left/Right channel clock (LRC - WS)
 #define I2S_SHUTDOWN_PIN      4     // SD card shutdown control (SD)
 
-#define AUDIO_SAMPLE_RATE    22050  // Standard CD quality sample rate
+#define AUDIO_SAMPLE_RATE    22050  // Console PCM output: mono, 16 bit, 352800 bit/s
 
 /*
 GAIN pin: (do not connect)

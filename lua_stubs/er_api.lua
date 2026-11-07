@@ -39,6 +39,11 @@ TriggerMode = {
     CHANGE = 0x03,
 }
 
+---@class AudioPlayOptions
+---@field loop boolean?
+---@field channel 'music'|'effects'|nil
+---@field volume integer?
+
 ---@class GameObjectContent
 ---@field type GameObjectContentType
 ---@field value string?
@@ -62,6 +67,10 @@ audio = {}
 ---@param duration integer Duration in milliseconds.
 function audio.beep(frequency, duration) end
 
+---@param id integer
+---@return integer|nil
+function audio.getSourceVolume(id) end
+
 --- Get the current audio volume
 ---
 ---
@@ -70,15 +79,38 @@ function audio.beep(frequency, duration) end
 ---@return integer Current volume value (0-100)
 function audio.getVolume() end
 
+--- True while a source is queued or playing; false after EOF, failure or stop.
+---
+---@param id integer
+---@return boolean
+function audio.isPlaying(id) end
+
 --- Play a wav audio file from storage
 ---
 ---
 --- Example:
 --- audio.play("beep.wav")
 --- audio.play("music.wav", true)
+--- local id = audio.play("music.wav", {loop=true, channel="music", volume=40})
 ---@param path string Path to the audio file in storage
----@param loop any Optional. True to loop playback (default: false)
-function audio.play(path, loop) end
+---@param loop boolean|AudioPlayOptions Optional. Boolean or {loop, channel, volume} options (default: false).
+---@param channel string Optional. "music" or "effects"; loops default to music, one-shots to effects.
+---@param volume integer Optional per-source gain, 0-100 (default 100).
+---@return integer|nil Accepted source id, or nil and an error message. Loading happens asynchronously.
+function audio.play(path, loop, channel, volume) end
+
+--- Queue a cache load before starting playback, to avoid cold SD reads later.
+---
+---@param path string
+---@return boolean
+function audio.preload(path) end
+
+--- Change one source's gain; does not change Settings or other sources.
+---
+---@param id integer
+---@param volume integer
+---@return boolean
+function audio.setSourceVolume(id, volume) end
 
 --- Set the audio volume
 ---
@@ -88,12 +120,14 @@ function audio.play(path, loop) end
 ---@param volume integer The volume level (0-100)
 function audio.setVolume(volume) end
 
---- Stop the currently playing audio
+--- Stop a source id, music, effects, or both groups (default).
 ---
 ---
 --- Example:
 --- audio.stop()
-function audio.stop() end
+---@param channel string|integer Optional. Source id, "music", "effects" or "all".
+---@return boolean
+function audio.stop(channel) end
 
 ---@class input
 input = {}
@@ -122,7 +156,7 @@ function input.channels.digitalRead(channel) end
 --- Write a digital value to a pin
 ---
 ---@param channel integer The channel number to write to
----@param value any The value to write (true or false)
+---@param value boolean The value to write (true or false)
 function input.channels.digitalWrite(channel, value) end
 
 --- Set the mode of a digital pin.
@@ -214,7 +248,7 @@ input.rfid = {}
 ---
 --- Example:
 --- local tag = input.rfid.consume()
----@return table A table containing the tag information, or nil if no new tag is available
+---@return table|nil A table containing the tag information, or nil if no new tag is available
 function input.rfid.consume() end
 
 --- Get the last available RFID tag
@@ -222,7 +256,7 @@ function input.rfid.consume() end
 ---
 --- Example:
 --- local tag = input.rfid.last()
----@return table A table containing the tag information, or nil if no tag is available
+---@return table|nil A table containing the tag information, or nil if no tag is available
 function input.rfid.last() end
 
 ---@class input.rgb
@@ -371,6 +405,15 @@ function system.info(msg) end
 ---@return string A string containing the recent logs
 function system.logs() end
 
+--- Resolve an authored game message using the console language, then Italian/English fallback.
+---
+---
+--- Example:
+--- system.translate({it = "Mappa", en = "Map"})
+---@param message table
+---@return string
+function system.translate(message) end
+
 --- Log a warning message to the console
 ---
 ---
@@ -395,7 +438,7 @@ function time.clock() end
 ---
 --- Example:
 --- local delta = time.delta()
----@return any The frame delta time
+---@return number The frame delta time
 function time.delta() end
 
 --- Get the current time in milliseconds since boot
@@ -403,7 +446,7 @@ function time.delta() end
 ---
 --- Example:
 --- local currentTime = time.now()
----@return any The current time in milliseconds since boot
+---@return integer The current time in milliseconds since boot
 function time.now() end
 
 --- Get the current time in seconds since boot
@@ -411,7 +454,7 @@ function time.now() end
 ---
 --- Example:
 --- local currentSeconds = time.seconds()
----@return any The current time in seconds since boot
+---@return number The current time in seconds since boot
 function time.seconds() end
 
 --- Get the uptime in seconds
@@ -419,6 +462,6 @@ function time.seconds() end
 ---
 --- Example:
 --- local uptime = time.uptime()
----@return any The uptime in seconds
+---@return number The uptime in seconds
 function time.uptime() end
 

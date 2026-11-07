@@ -20,6 +20,7 @@ namespace
         std::memcpy(result.data(), "RIFF", 4); std::memcpy(result.data()+8,"WAVEfmt ",8);
         result[4] = 44; result[16] = 16; result[20] = 1; result[22] = 1;
         for (unsigned i=0;i<4;++i) result[24+i] = uint8_t(rate >> (i*8));
+        for (unsigned i=0;i<4;++i) result[28+i] = uint8_t((rate*2) >> (i*8));
         result[32] = 2; result[34] = 16;
         std::memcpy(result.data()+36,"data",4); result[40] = 8;
         for (unsigned i=44;i<52;i+=2) { result[i] = uint8_t(sample); result[i+1] = uint8_t(uint16_t(sample)>>8); }

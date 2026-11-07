@@ -4,6 +4,7 @@
 #include <driver/i2s.h>
 #include <Arduino.h>
 #include <cmath>
+#include <cstring>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include "config/BoardConfig.h"
@@ -29,7 +30,8 @@ bool MAX98357Driver::init()
         .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
         .dma_buf_count = 8,
         .dma_buf_len = 64,
-        .use_apll = false};
+        .use_apll = false,
+        .tx_desc_auto_clear = true};
 
     i2s_pin_config_t pins = {
         .bck_io_num = pinBCLK,
@@ -75,6 +77,16 @@ void MAX98357Driver::update()
         bytesRead,
         &written,
         portMAX_DELAY);
+
+    if (!currentFile->available())
+    {
+        // Flush one full DMA ring before disabling the amplifier, preserving
+        // the final samples still queued at the end of a WAV.
+        static_assert(BUFFER_SIZE >= 8 * 64 * sizeof(int16_t), "Buffer must cover the I2S DMA ring");
+        std::memset(buffer, 0, sizeof(buffer));
+        i2s_write(I2S_PORT, buffer, sizeof(buffer), &written, portMAX_DELAY);
+        stop();
+    }
 }
 
 void MAX98357Driver::playTone(uint16_t freq, uint16_t ms)

@@ -5,7 +5,7 @@
 
 // Set to 1 to restore networking after SD diagnostics.
 #ifndef WIFI_ENABLED
-#define WIFI_ENABLED 0
+#define WIFI_ENABLED 1
 #endif
 #ifndef PORTAL_ENABLED
 #define PORTAL_ENABLED 0

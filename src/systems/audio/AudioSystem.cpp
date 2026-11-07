@@ -1,22 +1,22 @@
 #include "AudioSystem.h"
 #include <algorithm>
 #include <cstring>
-#include <new>
+#include <esp_heap_caps.h>
 #include "config/BoardConfig.h"
 #include "config/Assets.h"
 #include "drivers/audio/MAX98357Driver.h"
 #include "drivers/bus/SPIBusLock.h"
 #include "log/Logger.h"
 
-AudioSystem::AudioSystem() : mixer(AUDIO_SAMPLE_RATE)
+AudioSystem::AudioSystem(QueueHandle_t queue) : mixer(AUDIO_SAMPLE_RATE), commandQueue(queue)
 {
-    driver = new MAX98357Driver(I2S_BCLK_PIN, I2S_LRCLK_PIN, I2S_DOUT_PIN);
-    preferencesQueue = xQueueCreate(1, sizeof(AudioPreferences));
+    driver = new MAX98357Driver(I2S_BCLK_PIN,I2S_LRCLK_PIN,I2S_DOUT_PIN);
+    preferencesQueue = xQueueCreate(1,sizeof(AudioPreferences));
     configASSERT(preferencesQueue);
 }
 AudioSystem::~AudioSystem()
 {
-    for (auto &entry : cache) delete[] entry.data;
+    for (auto &entry : cache) heap_caps_free(entry.data);
     delete driver;
     vQueueDelete(preferencesQueue);
 }
@@ -24,124 +24,200 @@ void AudioSystem::init(void *params)
 {
     storage = static_cast<StorageSystem *>(params);
     if (!storage || !driver->init()) return;
+    cacheBudget = psramFound() ? 4*1024*1024 : std::min<size_t>(128*1024,ESP.getFreeHeap()/3);
     driver->setVolume(volume.load());
-    Log::info(Log::AUDIO_TAG, "Audio system initialized: independent music/effects mixer");
-    sendAudioEvent(AUDIO_CLICK_FILE);
+    appliedVolume = volume.load();
+    Log::info(Log::AUDIO_TAG,"Audio ready: %u sources, %u-byte PCM cache, %u Hz mono",unsigned(AUDIO_MAX_SOURCES),unsigned(cacheBudget),unsigned(AUDIO_SAMPLE_RATE));
+    play(AUDIO_CLICK_FILE);
 }
-void AudioSystem::configure(const AudioPreferences &value) { xQueueOverwrite(preferencesQueue, &value); }
+void AudioSystem::configure(const AudioPreferences &value) { xQueueOverwrite(preferencesQueue,&value); }
 void AudioSystem::update()
 {
     AudioEvent event;
     while (true)
     {
-        if (xQueueReceive(preferencesQueue, &preferences, 0)) mixer.configure(preferences);
-        while (xQueueReceive(SystemEventBus::audioQueue, &event, 0)) { syncStops(); process(event); }
-        syncStops();
-        if (!volume.load() || !mixer.available()) driver->stop();
-        else
+        if (xQueueReceive(preferencesQueue,&preferences,0)) mixer.configure(preferences);
+        // Bound queue work per iteration so effects cannot starve I2S.
+        for (unsigned i=0;i<16 && xQueueReceive(queueHandle(),&event,0);++i)
         {
-            if (!driver->isPlaying()) driver->startWav(&mixer);
-            driver->update();
+            syncControls(); process(event);
         }
+        syncControls();
+        const auto master = volume.load();
+        if (master != appliedVolume) { appliedVolume = master; driver->setVolume(master); }
+        if (!master || !mixer.available()) driver->stop();
+        else { if (!driver->isPlaying()) driver->startWav(&mixer); driver->update(); }
         vTaskDelay(1);
+    }
+}
+bool AudioSystem::enqueue(AudioEvent &event, uint8_t level)
+{
+    {
+        TaskMutex::Guard lock(controls);
+        event.source = sources.reserve(event.channel,std::min<uint8_t>(100,level));
+    }
+    if (!event.source) return false;
+    if (queueHandle() && xQueueSend(queueHandle(),&event,0) == pdPASS) return true;
+    release(event.source); return false;
+}
+AudioSourceId AudioSystem::play(const char *path, bool loop, AudioChannel channel, uint8_t level)
+{
+    if (!path || !*path || std::strlen(path) >= AudioEvent::MAX_PATH_LENGTH) return 0;
+    AudioEvent event{};
+    event.type = loop ? AudioEventType::PLAY_LOOP_WAV : AudioEventType::PLAY_WAV;
+    event.channel = channel == AudioChannel::All ? (loop ? AudioChannel::Music : AudioChannel::Effects) : channel;
+    std::strcpy(event.wav.path,path);
+    return enqueue(event,level) ? event.source : 0;
+}
+AudioSourceId AudioSystem::beep(uint16_t frequency, uint16_t ms)
+{
+    AudioEvent event{}; event.type = AudioEventType::BEEP;
+    event.beep.freq = frequency; event.beep.ms = ms;
+    return enqueue(event,100) ? event.source : 0;
+}
+bool AudioSystem::preload(const char *path)
+{
+    if (!path || !*path || std::strlen(path) >= AudioEvent::MAX_PATH_LENGTH || !queueHandle()) return false;
+    AudioEvent event{}; event.type = AudioEventType::PRELOAD; std::strcpy(event.wav.path,path);
+    return xQueueSend(queueHandle(),&event,0) == pdPASS;
+}
+void AudioSystem::release(AudioSourceId id) { TaskMutex::Guard lock(controls); sources.release(id); }
+void AudioSystem::stop(AudioChannel channel) { TaskMutex::Guard lock(controls); sources.stop(channel); }
+bool AudioSystem::stopSource(AudioSourceId id) { TaskMutex::Guard lock(controls); return sources.release(id); }
+bool AudioSystem::setSourceVolume(AudioSourceId id, uint8_t level)
+{
+    TaskMutex::Guard lock(controls);
+    if (auto *source = sources.find(id)) { source->volume = std::min<uint8_t>(100,level); return true; }
+    return false;
+}
+bool AudioSystem::getSourceVolume(AudioSourceId id, uint8_t &level) const
+{
+    TaskMutex::Guard lock(controls);
+    if (auto *source = sources.find(id)) { level = source->volume; return true; }
+    return false;
+}
+bool AudioSystem::isPlaying(AudioSourceId id) const
+{
+    TaskMutex::Guard lock(controls);
+    return sources.find(id) != nullptr;
+}
+void AudioSystem::setVolume(uint8_t level) { volume.store(std::min<uint8_t>(100,level)); }
+uint8_t AudioSystem::getVolume() const { return volume.load(); }
+void AudioSystem::syncControls()
+{
+    TaskMutex::Guard lock(controls);
+    // Stop is a mailbox operation, not a queue item. A reused slot gets a new
+    // generation, so old queued commands cannot act on its replacement.
+    for (const auto id : mixer.sourceIds()) if (id && !sources.find(id)) mixer.stopSource(id);
+    for (const auto &source : sources.slots())
+    {
+        if (!source.id || !source.started) continue;
+        if (!mixer.isPlaying(source.id)) sources.release(source.id);
+        else mixer.setSourceVolume(source.id,source.volume);
     }
 }
 void AudioSystem::process(const AudioEvent &event)
 {
-    if ((event.type == AudioEventType::PLAY_WAV || event.type == AudioEventType::PLAY_LOOP_WAV || event.type == AudioEventType::BEEP) &&
-        event.epoch != audioEpoch(event.channel).load()) return;
-    switch (event.type)
+    if (event.type == AudioEventType::SET_VOLUME) { setVolume(event.volume.volume); return; }
+    if (event.type == AudioEventType::STOP) { stop(event.channel); return; }
+    if (event.type == AudioEventType::PRELOAD) { if (!findCache(event.wav.path)) loadCache(event.wav.path); return; }
     {
-    case AudioEventType::PLAY_WAV: playFile(event.wav.path, false, event.channel); break;
-    case AudioEventType::PLAY_LOOP_WAV: playFile(event.wav.path, true, event.channel); break;
-    case AudioEventType::BEEP:
-        if (volume.load() && preferences.effects.enabled && preferences.effects.volume) mixer.tone(event.beep.freq, event.beep.ms);
-        break;
-    case AudioEventType::STOP:
-        mixer.stop(event.channel);
-        break;
-    case AudioEventType::SET_VOLUME:
-        volume.store(std::min<uint8_t>(100, event.volume.volume));
-        driver->setVolume(volume.load());
-        if (!volume.load()) driver->stop();
-        break;
+        TaskMutex::Guard lock(controls);
+        if (!sources.find(event.source)) return;
     }
+    if (event.type == AudioEventType::BEEP)
+    {
+        TaskMutex::Guard lock(controls);
+        auto *source = sources.find(event.source);
+        if (!source) return;
+        if (volume.load() && preferences.effects.enabled && preferences.effects.volume &&
+            mixer.tone(event.beep.freq,event.beep.ms,event.source,source->volume)) source->started = true;
+        else sources.release(event.source);
+    }
+    else playFile(event);
 }
-void AudioSystem::beep(uint16_t frequency, uint16_t ms)
+void AudioSystem::playFile(const AudioEvent &event)
 {
-    AudioEvent event{}; event.type = AudioEventType::BEEP;
-    event.epoch = audioEpoch(AudioChannel::Effects).load();
-    event.beep.freq = frequency; event.beep.ms = ms;
-    xQueueSend(SystemEventBus::audioQueue, &event, 0);
-}
-void AudioSystem::play(const char *path, bool loop, AudioChannel channel)
-{
-    sendAudioEvent(path, loop ? AudioEventType::PLAY_LOOP_WAV : AudioEventType::PLAY_WAV, channel);
-}
-void AudioSystem::stop(AudioChannel channel) { sendAudioEvent(nullptr, AudioEventType::STOP, channel); }
-void AudioSystem::setVolume(uint8_t value)
-{
-    AudioEvent event{}; event.type = AudioEventType::SET_VOLUME; event.volume.volume = std::min<uint8_t>(100, value);
-    xQueueSend(SystemEventBus::audioQueue, &event, 0);
-}
-uint8_t AudioSystem::getVolume() const { return volume.load(); }
-void AudioSystem::syncStops()
-{
-    const auto musicNow = audioEpoch(AudioChannel::Music).load(), effectsNow = audioEpoch(AudioChannel::Effects).load();
-    if (musicEpoch != musicNow) { musicEpoch = musicNow; mixer.stop(AudioChannel::Music); }
-    if (effectsEpoch != effectsNow) { effectsEpoch = effectsNow; mixer.stop(AudioChannel::Effects); }
-}
-void AudioSystem::playFile(const char *path, bool loop, AudioChannel channel)
-{
-    const auto &settings = channel == AudioChannel::Music ? preferences.music : preferences.effects;
-    if (!storage || !path || !*path) return;
-    // Remember a music cue started while muted, so enabling Music can resume it.
-    // Muted one-shot effects are discarded instead of playing later.
-    if (channel != AudioChannel::Music && (!volume.load() || !settings.enabled || !settings.volume)) return;
-    auto *entry = findCache(path);
-    if (!entry) entry = loadCache(path);
-    if (entry && !mixer.play(entry->data, entry->size, channel, loop))
-        Log::warn(Log::AUDIO_TAG, "Unsupported WAV (16-bit PCM mono/stereo required): %s", path);
+    const bool loop = event.type == AudioEventType::PLAY_LOOP_WAV;
+    const auto &settings = event.channel == AudioChannel::Music ? preferences.music : preferences.effects;
+    if (!storage || (!loop && event.channel == AudioChannel::Effects && (!volume.load() || !settings.enabled || !settings.volume)))
+    {
+        release(event.source); return;
+    }
+    auto *entry = findCache(event.wav.path);
+    if (!entry) entry = loadCache(event.wav.path);
+    syncControls(); // A stop may have arrived while SD was being read.
+    TaskMutex::Guard lock(controls);
+    auto *source = sources.find(event.source);
+    if (!source) return;
+    if (entry && mixer.play(entry->data,entry->size,event.channel,loop,event.source,source->volume)) source->started = true;
+    else
+    {
+        Log::warn(Log::AUDIO_TAG,"Cannot play WAV source %lu: %s (file I/O, PCM format or source limit)",static_cast<unsigned long>(event.source),event.wav.path);
+        sources.release(event.source);
+    }
 }
 AudioCacheEntry *AudioSystem::findCache(const char *path)
 {
     for (auto &entry : cache)
-        if (entry.data && !std::strcmp(entry.path, path)) { entry.lastUsed = millis(); return &entry; }
+        if (entry.data && !std::strcmp(entry.path,path)) { entry.lastUsed = millis(); return &entry; }
     return nullptr;
+}
+AudioCacheEntry *AudioSystem::evictableCache()
+{
+    AudioCacheEntry *slot = nullptr;
+    for (auto &entry : cache)
+    {
+        if (!entry.data) return &entry;
+        if (!mixer.references(entry.data) && (!slot || entry.lastUsed < slot->lastUsed)) slot = &entry;
+    }
+    return slot;
+}
+void AudioSystem::evict(AudioCacheEntry &entry)
+{
+    cacheBytes -= entry.size; heap_caps_free(entry.data); entry = AudioCacheEntry{};
 }
 AudioCacheEntry *AudioSystem::loadCache(const char *path)
 {
+    if (!storage || !cacheBudget) return nullptr;
     SPIBusLock::Guard guard;
     IFile *file = storage->open(path);
     if (!file) return nullptr;
     const size_t expected = file->length();
-    auto *data = expected ? new (std::nothrow) uint8_t[expected] : nullptr;
+    auto *slot = evictableCache();
+    if (!expected || expected > cacheBudget || !slot)
+    {
+        Log::warn(Log::AUDIO_TAG,"WAV exceeds available cache: %s (%u bytes; budget %u)",path,unsigned(expected),unsigned(cacheBudget));
+        file->close(); delete file; return nullptr;
+    }
+    evict(*slot);
+    while (cacheBytes + expected > cacheBudget)
+    {
+        AudioCacheEntry *oldest = nullptr;
+        for (auto &entry : cache)
+            if (entry.data && !mixer.references(entry.data) && (!oldest || entry.lastUsed < oldest->lastUsed)) oldest = &entry;
+        if (!oldest) { file->close(); delete file; return nullptr; }
+        evict(*oldest);
+    }
+    const uint32_t caps = MALLOC_CAP_8BIT | (psramFound() ? MALLOC_CAP_SPIRAM : MALLOC_CAP_INTERNAL);
+    auto *data = static_cast<uint8_t *>(heap_caps_malloc(expected,caps));
     size_t length = 0;
     while (data && length < expected)
     {
-        const int count = file->read(data + length, std::min<size_t>(1024, expected - length));
-        if (count <= 0) break;
+        const size_t requested = std::min<size_t>(1024,expected-length);
+        const int count = file->read(data+length,requested);
+        if (count <= 0 || size_t(count) > requested) break;
         length += count;
     }
     file->close(); delete file;
     if (!data || length != expected)
     {
         if (data) storage->noteIOFailure();
-        delete[] data;
-        return nullptr;
+        Log::warn(Log::AUDIO_TAG,"Incomplete WAV load: %s (%u/%u bytes)",path,unsigned(length),unsigned(expected));
+        heap_caps_free(data); return nullptr;
     }
     storage->noteIOSuccess();
-    AudioCacheEntry *slot = nullptr;
-    for (auto &entry : cache)
-    {
-        if (mixer.references(entry.data)) continue;
-        if (!slot || !entry.data || entry.lastUsed < slot->lastUsed) slot = &entry;
-        if (!entry.data) break;
-    }
-    if (!slot) { delete[] data; return nullptr; }
-    delete[] slot->data;
     slot->data = data; slot->size = length; slot->lastUsed = millis();
-    std::strncpy(slot->path, path, AudioEvent::MAX_PATH_LENGTH - 1);
-    slot->path[AudioEvent::MAX_PATH_LENGTH - 1] = 0;
+    std::strcpy(slot->path,path); cacheBytes += length;
     return slot;
 }

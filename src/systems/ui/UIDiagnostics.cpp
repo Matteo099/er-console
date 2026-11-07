@@ -22,6 +22,7 @@
 #include "drivers/bus/SPIBusLock.h"
 #include "config/Assets.h"
 #include "SettingsDiagnostics.h"
+#include "AudioDiagnostics.h"
 #include "drivers/display/TouchController.h"
 #include "GameFixtureDiagnostics.h"
 #include "services/GameMetadata.h"
@@ -375,6 +376,7 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui perf reset") UIFrameStats::reset();
         else if (command == "ui perf") UIFrameStats::print();
         else if (command == "ui selftest") runSettingsDiagnostics();
+        else if (command == "ui audio-test") runAudioDiagnostics();
         else if (command == "ui preferences")
         {
             DeviceConfig config; DeviceConfigRepository().loadCached(config);

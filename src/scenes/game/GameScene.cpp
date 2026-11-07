@@ -110,6 +110,7 @@ void GameScene::completeGame()
     view.setRunning(false);
     view.setVictoryStats(getVictoryStats());
     view.showVictory();
+    sendAudioEvent(nullptr, AudioEventType::STOP);
     sendAudioEvent(AUDIO_VICTORY_FILE, AudioEventType::PLAY_WAV);
 }
 

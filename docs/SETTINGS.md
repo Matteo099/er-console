@@ -68,9 +68,9 @@ Controlla anche che i caratteri siano compresi nei font di lettura incorporati.
 `AudioSystem` e' l'unico proprietario di driver, cache e mixer. Le API Lua e le
 Scene inviano eventi senza bloccare il task UI; le preferenze usano una mailbox
 che mantiene l'ultimo valore anche con la coda degli effetti piena. Stop usa
-contatori atomici per scartare riproduzioni precedenti ancora in coda.
+ID con generazione per scartare riproduzioni precedenti ancora in coda.
 
-`AudioMixer` miscela realmente due voci PCM, applica i due volumi, converte mono/
+`AudioMixer` miscela fino a otto voci PCM, applica volumi per sorgente e gruppo, converte mono/
 stereo e frequenza e limita il risultato per evitare overflow. Supporta WAV PCM
 16 bit, 8–96 kHz, con uscita mono a 22050 Hz. Non esegue allocazioni nel render.
 La cache non elimina i file ancora usati dalle voci. Le letture SD a freddo
@@ -86,10 +86,13 @@ audio.stop()                              -- entrambi
 ```
 
 Il suono dei pulsanti, i beep e l'allarme del timer sono effetti. Disattivare gli
-effetti interrompe la voce relativa; disattivare la musica ne conserva la
+effetti interrompe i suoni singoli e sospende i loop; disattivare la musica ne conserva la
 posizione, anche se il brano viene selezionato mentre il canale e' disattivato.
 `audio.setVolume()` rimane il controllo master compatibile con gli
 script esistenti, separato dalle preferenze dei canali.
+
+API per sorgente, limiti della cache e preparazione degli asset:
+[AUDIO.md](AUDIO.md).
 
 ## Rete e diagnostica
 

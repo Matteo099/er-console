@@ -20,4 +20,8 @@ private:
     static int stop(lua_State *L);
     static int setVolume(lua_State *L);
     static int getVolume(lua_State *L);
+    static int setSourceVolume(lua_State *L);
+    static int getSourceVolume(lua_State *L);
+    static int isPlaying(lua_State *L);
+    static int preload(lua_State *L);
 };
