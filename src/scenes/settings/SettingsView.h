@@ -17,6 +17,7 @@ public:
     void setTheme(UIThemeId theme);
     void setPreferenceStatus(Text text);
     void selectTab(Tab tab);
+    Tab currentTab() const { return selectedTab; }
     void translate();
 private:
     static void onTab(lv_event_t *event);

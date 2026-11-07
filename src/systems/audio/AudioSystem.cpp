@@ -69,11 +69,12 @@ AudioSourceId AudioSystem::play(const char *path, bool loop, AudioChannel channe
     std::strcpy(event.wav.path,path);
     return enqueue(event,level) ? event.source : 0;
 }
-AudioSourceId AudioSystem::beep(uint16_t frequency, uint16_t ms)
+AudioSourceId AudioSystem::beep(uint16_t frequency, uint16_t ms, AudioChannel channel, uint8_t level)
 {
     AudioEvent event{}; event.type = AudioEventType::BEEP;
+    event.channel = channel == AudioChannel::All ? AudioChannel::Effects : channel;
     event.beep.freq = frequency; event.beep.ms = ms;
-    return enqueue(event,100) ? event.source : 0;
+    return enqueue(event,level) ? event.source : 0;
 }
 bool AudioSystem::preload(const char *path)
 {
@@ -127,11 +128,15 @@ void AudioSystem::process(const AudioEvent &event)
     }
     if (event.type == AudioEventType::BEEP)
     {
+        // A slider may configure the bus after this iteration's first poll
+        // but before queuing its preview. Use that new gain for the first PCM.
+        if (xQueueReceive(preferencesQueue,&preferences,0)) mixer.configure(preferences);
         TaskMutex::Guard lock(controls);
         auto *source = sources.find(event.source);
         if (!source) return;
-        if (volume.load() && preferences.effects.enabled && preferences.effects.volume &&
-            mixer.tone(event.beep.freq,event.beep.ms,event.source,source->volume)) source->started = true;
+        const auto &settings = event.channel == AudioChannel::Music ? preferences.music : preferences.effects;
+        if (volume.load() && settings.enabled && settings.volume &&
+            mixer.tone(event.beep.freq,event.beep.ms,event.source,source->volume,event.channel)) source->started = true;
         else sources.release(event.source);
     }
     else playFile(event);

@@ -9,7 +9,7 @@
 class AudioPreferenceSubview
 {
 public:
-    void create(lv_obj_t *parent, Text title, std::function<void(AudioChannelPreferences)> changed)
+    void create(lv_obj_t *parent, Text title, std::function<void(AudioChannelPreferences, bool)> changed)
     {
         titleKey = title; callback = std::move(changed);
         auto *card = Container::create(parent, LV_PCT(100), LV_SIZE_CONTENT);
@@ -47,9 +47,9 @@ private:
     static void onChanged(lv_event_t *e)
     {
         auto *self = static_cast<AudioPreferenceSubview *>(lv_event_get_user_data(e));
-        self->updateLabels(); if (self->callback) self->callback(self->value());
+        self->updateLabels(); if (self->callback) self->callback(self->value(), lv_event_get_target(e) == self->slider);
     }
     Text titleKey = Text::None;
     lv_obj_t *toggle = nullptr, *slider = nullptr, *volumeLabel = nullptr, *titleLabel = nullptr;
-    std::function<void(AudioChannelPreferences)> callback;
+    std::function<void(AudioChannelPreferences, bool)> callback;
 };

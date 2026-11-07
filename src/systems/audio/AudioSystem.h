@@ -27,7 +27,7 @@ public:
     void init(void *params = nullptr) override;
     void update() override;
 
-    AudioSourceId beep(uint16_t freq = 1000, uint16_t ms = 100);
+    AudioSourceId beep(uint16_t freq = 1000, uint16_t ms = 100, AudioChannel channel = AudioChannel::Effects, uint8_t volume = 100);
 
     AudioSourceId play(const char *path, bool loop = false, AudioChannel channel = AudioChannel::All, uint8_t volume = 100);
     void stop(AudioChannel channel = AudioChannel::All);

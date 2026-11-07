@@ -91,6 +91,34 @@ posizione, anche se il brano viene selezionato mentre il canale e' disattivato.
 `audio.setVolume()` rimane il controllo master compatibile con gli
 script esistenti, separato dalle preferenze dei canali.
 
+I cursori del volume producono un breve tono di riscontro (750 Hz, 40 ms),
+con volume proporzionale al livello del canale modificato. L'anteprima Musica
+funziona anche con Effetti disattivati e viceversa; zero, OFF e master silenzioso
+restano silenziosi. Il tono ha un guadagno per sorgente del 50% per contenere
+l'intensita', poi attraversa il normale volume del gruppo e il master.
+
+`AudioPreferenceSubview` pubblica l'intento dell'utente; `SettingsScene` applica
+prima la preferenza e usa `VolumeFeedback` per accorpare gli aggiornamenti:
+al massimo un tono ogni 250 ms, con riscontro finale per l'ultimo valore non
+ancora inviato. Non si ripete un livello invariato. Cambiare scheda, uscire dalle
+Impostazioni o disattivare l'audio annulla l'anteprima pendente e la sua sorgente,
+senza fermare le altre riproduzioni. Caricare le preferenze o cambiare il solo
+interruttore non richiede un tono. La generazione PCM non legge la microSD.
+
+Con diagnostica abilitata, `python scripts/ui_volume_feedback.py` verifica
+frequenza delle richieste, ultimo valore, mute, cambi canale, coda piena,
+rollover del timer, eventi degli slider e proporzione dei campioni PCM.
+La suite usa code isolate e non produce suoni ne' modifica le preferenze.
+
+Verifica del 7 novembre 2026: 25 controlli del feedback, 41 del mixer e 30
+generali superati sull'ESP32. `scripts/ui_settings.py --cycles 1` ha verificato
+anche i trascinamenti sui cursori reali, con master silenziato e ripristino delle
+preferenze iniziali. Build finale caricata su COM3 con diagnostica disattivata;
+avvio acquisito per 22 secondi, menu a 1763 ms, senza errori SD o riavvii nel log.
+Log in `.pio/volume-feedback-check/`, `.pio/volume-feedback-settings/`,
+`.pio/volume-feedback-final-upload.log` e `.pio/volume-feedback-final-boot.log`;
+ELF/BIN corrispondenti in `.pio/volume-feedback-symbols/final.*`.
+
 API per sorgente, limiti della cache e preparazione degli asset:
 [AUDIO.md](AUDIO.md).
 

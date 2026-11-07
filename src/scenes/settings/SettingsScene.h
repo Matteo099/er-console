@@ -3,6 +3,7 @@
 #include "systems/ui/Scene.h"
 #include "scenes/settings/SettingsView.h"
 #include "services/DeviceConfigRepository.h"
+#include "systems/ui/VolumeFeedback.h"
 
 class SettingsScene : public Scene
 {
@@ -25,6 +26,8 @@ private:
 
     // ---- Settings state (logic-owned) ----
     class NetworkSystem* network = nullptr;
+    class AudioSystem* audio = nullptr;
+    VolumeFeedback volumeFeedback;
     DeviceConfig config;
     DeviceConfigRepository repository;
     bool dirty = false;

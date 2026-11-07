@@ -42,8 +42,8 @@ void SettingsView::create()
         lv_obj_set_style_bg_color(themeButtons[i], lv_color_hex(UITheme::palette(static_cast<UIThemeId>(i)).accent), 0);
         Label::setFont(lv_obj_get_child(themeButtons[i], 0), &lv_font_montserrat_12);
     }
-    music.create(panels[1], Text::Music, [this](AudioChannelPreferences value) { emitEvent(AudioPreferenceChangedEvent(AudioChannel::Music, value)); });
-    effects.create(panels[1], Text::Effects, [this](AudioChannelPreferences value) { emitEvent(AudioPreferenceChangedEvent(AudioChannel::Effects, value)); });
+    music.create(panels[1], Text::Music, [this](AudioChannelPreferences value, bool preview) { emitEvent(AudioPreferenceChangedEvent(AudioChannel::Music, value, preview)); });
+    effects.create(panels[1], Text::Effects, [this](AudioChannelPreferences value, bool preview) { emitEvent(AudioPreferenceChangedEvent(AudioChannel::Effects, value, preview)); });
     languageHint = Label::create(panels[2], tr(Text::LanguageHint), &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     UITheme::muted(languageHint);
     auto *languageRow = Container::create(panels[2], LV_PCT(100), 44);

@@ -17,9 +17,13 @@ void SettingsScene::onEnter()
     UITheme::select(UITheme::fromName(config.ui.theme.c_str()));
     view.create(); view.selectTab(initialTab); view.setAudio(config.audio); view.setTheme(UITheme::current());
     network = static_cast<NetworkSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
+    audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
+    volumeFeedback.bind(audio);
 }
 void SettingsScene::onUpdate()
 {
+    if (view.currentTab() == SettingsView::Tab::Audio) volumeFeedback.update(millis());
+    else volumeFeedback.stop();
     if (dirty && millis() - changedAt >= 400) savePreferences();
 #if WIFI_ENABLED
     const auto state = network ? network->getStatus().state : NetworkSystem::State::Error;
@@ -29,10 +33,11 @@ void SettingsScene::onUpdate()
     view.setWiFiStatus(tr(Text::WifiDisabled));
 #endif
 }
-void SettingsScene::onExit() { if (dirty) savePreferences(); view.destroy(); }
+void SettingsScene::onExit() { volumeFeedback.stop(); if (dirty) savePreferences(); view.destroy(); }
 void SettingsScene::onPreferencesChanged()
 {
     if (dirty) return;
+    volumeFeedback.stop();
     repository.loadCached(config);
     view.translate(); view.setAudio(config.audio); view.setTheme(UITheme::current());
 }
@@ -42,8 +47,12 @@ bool SettingsScene::handleUIEvent(const UIEvent &event)
     if (event.getType() == AudioPreferenceChangedEvent::TYPE)
     {
         const auto &changed = static_cast<const AudioPreferenceChangedEvent &>(event);
+        const auto previous = changed.channel == AudioChannel::Music ? config.audio.music : config.audio.effects;
         (changed.channel == AudioChannel::Music ? config.audio.music : config.audio.effects) = changed.value;
         applyAudioPreference();
+        if (changed.preview && previous.volume != changed.value.volume && view.currentTab() == SettingsView::Tab::Audio)
+            volumeFeedback.request(changed.channel,changed.value,millis());
+        else if (!changed.value.enabled || !changed.value.volume) volumeFeedback.stop();
     }
     else if (event.getType() == ButtonClickedEvent::TYPE)
     {
@@ -70,7 +79,6 @@ void SettingsScene::applyAudioPreference()
 {
     config.audio.enabled = config.audio.effects.enabled; config.audio.volume = config.audio.effects.volume;
     UIFeedback::setSoundEnabled(config.audio.effects.enabled && config.audio.effects.volume);
-    auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
     if (audio) audio->configure(config.audio);
 }
 void SettingsScene::savePreferences()

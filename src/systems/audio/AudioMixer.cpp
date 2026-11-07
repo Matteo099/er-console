@@ -54,12 +54,13 @@ void AudioMixer::configure(const AudioPreferences &value)
             if (voice.channel == AudioChannel::Effects && !voice.loop) voice = Voice{};
 }
 
-AudioSourceId AudioMixer::tone(uint16_t frequency, uint16_t durationMs, AudioSourceId id, uint8_t volume)
+AudioSourceId AudioMixer::tone(uint16_t frequency, uint16_t durationMs, AudioSourceId id, uint8_t volume, AudioChannel channel)
 {
     auto *voice = freeVoice();
     if (!outputRate || !voice || !durationMs || (id && find(id))) return 0;
     *voice = Voice{};
     voice->id = id ? id : nextId(); voice->volume = std::min<uint8_t>(100,volume);
+    voice->channel = channel == AudioChannel::All ? AudioChannel::Effects : channel;
     voice->toneRemaining = uint32_t(uint64_t(outputRate) * durationMs / 1000);
     voice->toneStep = uint32_t((uint64_t(std::min<uint32_t>(frequency, outputRate / 2)) << 32) / outputRate);
     return voice->id;

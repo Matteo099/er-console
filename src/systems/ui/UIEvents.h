@@ -22,7 +22,8 @@ class AudioPreferenceChangedEvent : public UIEventType<AudioPreferenceChangedEve
 {
 public:
     static constexpr const char *TYPE = "audio_preference_changed";
-    AudioPreferenceChangedEvent(AudioChannel channel, AudioChannelPreferences value) : channel(channel), value(value) {}
+    AudioPreferenceChangedEvent(AudioChannel channel, AudioChannelPreferences value, bool preview = false) : channel(channel), value(value), preview(preview) {}
     AudioChannel channel;
     AudioChannelPreferences value;
+    bool preview; // Slider interaction, rather than a toggle or configuration refresh.
 };

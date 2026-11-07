@@ -24,6 +24,7 @@
 #include "SettingsDiagnostics.h"
 #include "AudioDiagnostics.h"
 #include "ScrollDiagnostics.h"
+#include "VolumeFeedbackDiagnostics.h"
 #include "drivers/display/TouchController.h"
 #include "GameFixtureDiagnostics.h"
 #include "services/GameMetadata.h"
@@ -379,6 +380,7 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui selftest") runSettingsDiagnostics();
         else if (command == "ui audio-test") runAudioDiagnostics();
         else if (command == "ui scroll-test") runScrollDiagnostics();
+        else if (command == "ui volume-test") runVolumeFeedbackDiagnostics();
         else if (command == "ui preferences")
         {
             DeviceConfig config; DeviceConfigRepository().loadCached(config);

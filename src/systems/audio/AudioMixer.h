@@ -9,7 +9,7 @@ class AudioMixer : public IFile
 public:
     explicit AudioMixer(uint32_t outputRate) : outputRate(outputRate) {}
     AudioSourceId play(const uint8_t *wav, size_t length, AudioChannel channel, bool loop, AudioSourceId id = 0, uint8_t volume = 100);
-    AudioSourceId tone(uint16_t frequency, uint16_t durationMs, AudioSourceId id = 0, uint8_t volume = 100);
+    AudioSourceId tone(uint16_t frequency, uint16_t durationMs, AudioSourceId id = 0, uint8_t volume = 100, AudioChannel channel = AudioChannel::Effects);
     void stop(AudioChannel channel = AudioChannel::All);
     bool stopSource(AudioSourceId id);
     bool setSourceVolume(AudioSourceId id, uint8_t volume);
