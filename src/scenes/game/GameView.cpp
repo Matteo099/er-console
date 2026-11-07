@@ -45,15 +45,14 @@ void GameView::create()
     auto layout = SceneLayout::create(screen, 44, 0, false);
     auto *header = BrandHeader::create(layout.top, 100, tr(Text::Game));
     titleLabel = lv_obj_get_child(header, 1);
-    settingsButton = Button::create(header,nullptr,onSettings,this,44,44,LV_ALIGN_CENTER,0,0,LV_SYMBOL_SETTINGS);
-    lv_obj_move_to_index(settingsButton,2); // Before the SD/Wi-Fi status slot.
-    lv_obj_set_style_pad_all(settingsButton,0,0); UITheme::secondary(settingsButton);
     lv_obj_set_style_pad_all(layout.body, 0, 0);
     mainSubview.create(layout.body);
     loadingSubview.create(layout.body);
     victorySubview.create(layout.body);
     failSubview.create(layout.body);
     gameObjectSubview.create(layout.body);
+    settingsButton = Button::create(mainSubview.getControls(),nullptr,onSettings,this,44,44,LV_ALIGN_CENTER,0,0,LV_SYMBOL_SETTINGS);
+    lv_obj_set_style_pad_all(settingsButton,0,0); UITheme::secondary(settingsButton);
 
     auto callback =
         [this](const char *id)
@@ -130,6 +129,10 @@ void GameView::setState(GameSubview state)
     currentState = state;
     hideSettings();
     hidePlayers();
+    // Keep the same action alongside the controls of the selected subview.
+    auto *controls = state == GameSubview::GameObject ? gameObjectSubview.getControls() : mainSubview.getControls();
+    if (lv_obj_get_parent(settingsButton) != controls)
+        lv_obj_set_parent(settingsButton,controls);
     lv_obj_set_flag(settingsButton,LV_OBJ_FLAG_HIDDEN,state != GameSubview::Main && state != GameSubview::GameObject);
 
     mainSubview.hide();

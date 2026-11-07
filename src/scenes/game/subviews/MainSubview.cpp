@@ -30,7 +30,7 @@ void MainSubview::create(lv_obj_t *parent)
     UITheme::accent(pauseIcon);
     lv_obj_add_flag(pauseOverlay, LV_OBJ_FLAG_HIDDEN);
 
-    auto footer = lv_obj_create(root);
+    auto *footer = controls = lv_obj_create(root);
     lv_obj_remove_style_all(footer);
     lv_obj_set_size(footer, LV_PCT(100), 60);
     lv_obj_align(footer, LV_ALIGN_BOTTOM_MID, 0, -10);
@@ -68,6 +68,7 @@ void MainSubview::destroy()
     Log::info(TAG, "Destroying main subview");
 
     root = nullptr;
+    controls = nullptr;
     timerLabel = nullptr;
 
     startPauseBtn = nullptr;

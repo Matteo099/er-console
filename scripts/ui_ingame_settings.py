@@ -20,6 +20,8 @@ def timer(probe):
 
 
 def open_settings(probe):
+    gear=next((button for button in probe.buttons() if '\uf013' in button[0]),None)
+    assert gear and gear[2]>=160,'Settings button must be in the bottom controls'
     start=len(probe.log)
     probe.click('\uf013')
     rows=probe.log[start:]
@@ -75,6 +77,7 @@ def run(args):
             probe.read_until(lambda row:'Game loaded: 3-t_loop' in row,timeout=35)
         probe.click(caption)
         confirm_players(probe)
+        probe.capture('game-controls')
         live_start=len(probe.log)
         rows=open_settings(probe)
         assert any('state=1 ' in row for row in rows),rows

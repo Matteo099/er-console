@@ -67,12 +67,14 @@ public:
     void next();
     void previous();
     const ObjectData *getCurrent() const;
+    lv_obj_t *getControls() const { return controls; }
 
 private:
     lv_obj_t *root = nullptr;
     lv_obj_t *header = nullptr;
     lv_obj_t *body = nullptr;
     lv_obj_t *footer = nullptr;
+    lv_obj_t *controls = nullptr;
     lv_obj_t *titleLabel = nullptr;
     lv_obj_t *content = nullptr;
     lv_obj_t *prevBtn = nullptr;

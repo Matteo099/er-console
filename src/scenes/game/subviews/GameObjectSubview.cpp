@@ -58,7 +58,7 @@ void GameObjectSubview::create(lv_obj_t *parent)
     lv_obj_set_scroll_dir(content, LV_DIR_VER);
     lv_obj_add_flag(content, LV_OBJ_FLAG_SCROLLABLE);
 
-    auto footerRow = lv_obj_create(footer);
+    auto *footerRow = controls = lv_obj_create(footer);
     lv_obj_remove_style_all(footerRow);
     lv_obj_set_size(footerRow, LV_PCT(100), LV_PCT(100));
     lv_obj_set_flex_flow(footerRow, LV_FLEX_FLOW_ROW);
@@ -328,6 +328,7 @@ void GameObjectSubview::destroy()
     header = nullptr;
     body = nullptr;
     footer = nullptr;
+    controls = nullptr;
     titleLabel = nullptr;
     content = nullptr;
     prevBtn = nullptr;

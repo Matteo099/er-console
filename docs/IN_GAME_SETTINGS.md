@@ -1,6 +1,7 @@
 # Impostazioni audio durante la partita
 
-L'ingranaggio nell'intestazione della partita apre un pannello con volume e
+L'ingranaggio nella barra inferiore, accanto agli altri comandi della partita,
+apre un pannello con volume e
 ON/OFF indipendenti per Musica ed Effetti. E' disponibile nella schermata
 principale e nella vista degli oggetti, quando il gioco e' pronto, in corso
 o in pausa. Durante caricamento, conferma di abbandono e schermate finali
@@ -45,8 +46,9 @@ Con build debug e `UI_DIAGNOSTICS_ENABLED=1`:
 python scripts/ui_ingame_settings.py
 ```
 
-La suite `ui ingame-test` esegue 11 controlli LVGL su un display isolato:
-pulsante visibile e dimensionato, emissione degli eventi, identita' della
+La suite `ui ingame-test` esegue 13 controlli LVGL su un display isolato:
+pulsante visibile e dimensionato nella barra inferiore del timer e degli
+oggetti, assenza di sovrapposizioni, emissione degli eventi, identita' della
 schermata, ritorno alla vista principale o degli oggetti, intercettazione
 dell'input e chiusura del pannello sugli stati non giocabili.
 
@@ -68,3 +70,10 @@ Build finale caricata su COM3 con diagnostica disattivata; Wi-Fi `1` e portale
 panic o riavvii durante l'acquisizione. Upload e boot:
 `.pio/ingame-final-upload.log`, `.pio/ingame-final-boot.log`.
 ELF/BIN corrispondenti: `.pio/ingame-symbols/final.*`.
+
+Aggiornamento barra inferiore: 13 controlli LVGL superati, inclusa la
+disposizione completa con il pulsante oggetti, il footer degli oggetti e il
+ritorno al timer. La prova del Test - Ciclo ha confermato volumi immediati,
+conservazione della pausa e chiusura automatica alla scadenza. Preferenze e
+statistiche reali sono state preservate. Log e schermate 320x240, inclusa
+`game-controls.png`: `.pio/ingame-footer-check/`.

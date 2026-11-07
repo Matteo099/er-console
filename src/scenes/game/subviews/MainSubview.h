@@ -21,6 +21,7 @@ public:
     void setTime(uint32_t seconds);
     void setRunning(bool running);
     void setObjectsAvailable(bool available);
+    lv_obj_t *getControls() const { return controls; }
     void setEventCallback(EventCallback callback)
     {
         eventCallback = std::move(callback);
@@ -32,6 +33,7 @@ private:
     static constexpr uint32_t WARNING_THRESHOLD_SEC = 60;
 
     lv_obj_t *root = nullptr;
+    lv_obj_t *controls = nullptr;
 
     lv_obj_t *timerLabel = nullptr;
 

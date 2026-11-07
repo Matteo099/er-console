@@ -23,6 +23,22 @@ namespace
             if (auto *found=findSlider(lv_obj_get_child(root,i))) return found;
         return nullptr;
     }
+    bool fitsFooter(lv_obj_t *button)
+    {
+        if (!button || !lv_obj_is_visible(button)) return false;
+        lv_area_t bounds; lv_obj_get_coords(button,&bounds);
+        if (lv_obj_get_width(button)<44 || lv_obj_get_height(button)<44 ||
+            bounds.x1<0 || bounds.x2>=320 || bounds.y1<160 || bounds.y2>=240) return false;
+        auto *controls=lv_obj_get_parent(button);
+        for (unsigned i=0;i<lv_obj_get_child_count(controls);++i)
+        {
+            auto *other=lv_obj_get_child(controls,i);
+            if (other==button || !lv_obj_is_visible(other)) continue;
+            lv_area_t area; lv_obj_get_coords(other,&area);
+            if (bounds.x1<=area.x2 && area.x1<=bounds.x2 && bounds.y1<=area.y2 && area.y1<=bounds.y2) return false;
+        }
+        return true;
+    }
     struct Capture : UIEventHandler
     {
         unsigned audioChanges=0,settingsRequests=0;
@@ -57,10 +73,10 @@ void runInGameSettingsDiagnostics()
         auto *screen=view.getScreen(); lv_screen_load(screen); lv_obj_update_layout(screen);
         auto *gear=findButton(screen,LV_SYMBOL_SETTINGS);
         check(gear && !lv_obj_is_visible(gear) && !view.settingsVisible(),"loading screen keeps settings unavailable");
+        GameObjectSubview::ObjectData object; object.title="Preview";
+        view.setGameObjectData({object}); // Include all four main controls in the layout check.
         view.setTime(120); view.setRunning(true); view.showMain(); lv_obj_update_layout(screen);
-        lv_area_t bounds{}; if (gear) lv_obj_get_coords(gear,&bounds);
-        check(gear && lv_obj_is_visible(gear) && lv_obj_get_width(gear)>=44 && bounds.x1>=0 && bounds.x2<320 && bounds.y2<44,
-              "game gear has a visible 44-pixel hit target within the header");
+        check(fitsFooter(gear),"game gear fits the footer alongside all other controls with a 44-pixel hit target");
         if (gear) lv_obj_send_event(gear,LV_EVENT_CLICKED,nullptr);
         check(events.settingsRequests == 1,"gear publishes an in-game action without a scene request");
         auto *cancel=findButton(screen,LV_SYMBOL_CLOSE);
@@ -90,8 +106,12 @@ void runInGameSettingsDiagnostics()
         check(view.settingsVisible() && view.getScreen() == screen,"timer updates keep the overlay and scene alive");
         view.hideSettings();
         check(!view.settingsVisible() && view.currentSubview() == GameSubview::Main,"closing settings returns to the existing main subview");
-        view.showGameObject(); view.showSettings(preferences,Text::GameSettingsPaused); view.hideSettings();
+        view.showGameObject(); lv_obj_update_layout(screen);
+        check(fitsFooter(gear),"object view keeps the gear in its footer without overlapping navigation or page count");
+        view.showSettings(preferences,Text::GameSettingsPaused); view.hideSettings();
         check(view.currentSubview() == GameSubview::GameObject && view.getScreen() == screen,"object view remains selected after opening and closing settings");
+        view.showMain(); lv_obj_update_layout(screen);
+        check(fitsFooter(gear),"returning to the timer moves the same gear back beside the game controls");
         view.showSettings(preferences,Text::GameSettingsRunning); view.showLoading();
         check(!view.settingsVisible() && !lv_obj_is_visible(gear),"transition to a non-playable state dismisses settings");
         view.destroy();
