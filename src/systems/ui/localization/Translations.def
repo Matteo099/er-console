@@ -1,6 +1,10 @@
 // X(stable_key, Italian, English). Keep printf placeholders identical in both columns.
 X(None, "", "")
 X(Settings, "Impostazioni", "Settings")
+X(BackToGame, "Torna al gioco", "Back to game")
+X(GameSettingsRunning, "Il gioco continua mentre regoli l'audio.", "The game keeps running while you adjust audio.")
+X(GameSettingsPaused, "La partita resta in pausa.", "The game stays paused.")
+X(GameSettingsReady, "Regola l'audio prima di iniziare.", "Adjust audio before starting.")
 X(Theme, "Tema", "Theme")
 X(Appearance, "Aspetto", "Appearance")
 X(Audio, "Audio", "Audio")

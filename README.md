@@ -39,6 +39,8 @@ La rete resta configurabile anche con radio disabilitata; connessione e portale
 rispettano i flag di avvio.
 
 Configurazione, migrazione e traduzioni: [docs/SETTINGS.md](docs/SETTINGS.md).
+Impostazioni audio senza uscire dalla partita:
+[docs/IN_GAME_SETTINGS.md](docs/IN_GAME_SETTINGS.md).
 Mixer a otto sorgenti, loop, volumi per file e conversione audio indipendente
 da PlatformIO: [docs/AUDIO.md](docs/AUDIO.md).
 Precaricamento di countdown, sconfitta e vittoria:

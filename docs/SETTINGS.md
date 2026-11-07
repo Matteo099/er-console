@@ -4,6 +4,9 @@ La schermata TFT mantiene la struttura Scene/View. `SettingsScene` gestisce
 preferenze e servizi; `SettingsView` dispone quattro schede; i due
 `AudioPreferenceSubview` condividono lo stesso componente per volume e interruttore.
 
+Durante una partita l'ingranaggio apre gli stessi controlli audio sopra la
+GameView, conservando stato, timer e script: [IN_GAME_SETTINGS.md](IN_GAME_SETTINGS.md).
+
 - **Tema**: Menta, Cielo e Corallo, applicati senza ricreare le scene.
 - **Audio**: volume 0–100 e ON/OFF indipendenti per musica ed effetti.
 - **Lingua**: italiano predefinito, inglese selezionabile e applicato subito.

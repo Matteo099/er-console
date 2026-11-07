@@ -7,6 +7,7 @@
 #include "subviews/VictorySubview.h"
 #include "subviews/FailSubview.h"
 #include "subviews/GameObjectSubview.h"
+#include "subviews/InGameSettingsSubview.h"
 #include "systems/ui/components/ConfirmationDialog.h"
 
 #include <string>
@@ -35,6 +36,13 @@ public:
     void setTitle(const std::string &title);
     void showExitConfirmation();
     void hideExitConfirmation();
+    void showSettings(const AudioPreferences &preferences, Text context);
+    void hideSettings() { settingsSubview.hide(); }
+    bool settingsVisible() const { return settingsSubview.visible(); }
+    void setSettingsAudio(const AudioPreferences &value) { settingsSubview.set(value); }
+    void setSettingsStatus(Text value) { settingsSubview.setStatus(value); }
+    void translateSettings() { settingsSubview.translate(); }
+    GameSubview currentSubview() const { return currentState; }
 
     void setLoadingMessage(const std::string &message);
     void setVictoryStats(const VictorySubview::GameStats &stats);
@@ -50,6 +58,8 @@ private:
 
     lv_obj_t *screen = nullptr;
     lv_obj_t *titleLabel = nullptr;
+    lv_obj_t *settingsButton = nullptr;
+    static void onSettings(lv_event_t *event);
     ConfirmationDialog exitDialog;
 
     GameSubview currentState = GameSubview::Main;
@@ -59,4 +69,5 @@ private:
     VictorySubview victorySubview;
     FailSubview failSubview;
     GameObjectSubview gameObjectSubview;
+    InGameSettingsSubview settingsSubview;
 };

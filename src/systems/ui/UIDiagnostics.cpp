@@ -27,6 +27,7 @@
 #include "ScrollDiagnostics.h"
 #include "VolumeFeedbackDiagnostics.h"
 #include "AudioPreloadDiagnostics.h"
+#include "InGameSettingsDiagnostics.h"
 #include "drivers/display/TouchController.h"
 #include "GameFixtureDiagnostics.h"
 #include "services/GameMetadata.h"
@@ -384,6 +385,7 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui scroll-test") runScrollDiagnostics();
         else if (command == "ui volume-test") runVolumeFeedbackDiagnostics();
         else if (command == "ui preload-test") runAudioPreloadDiagnostics();
+        else if (command == "ui ingame-test") runInGameSettingsDiagnostics();
         else if (command == "ui preload-preview") scenes.changeScene(createAudioPreloadPreview(),SceneTransition::None);
         else if (command.startsWith("ui preload-event ")) audioPreloadAction(command.substring(17).c_str());
         else if (command == "ui preferences")

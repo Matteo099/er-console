@@ -45,6 +45,9 @@ void GameView::create()
     auto layout = SceneLayout::create(screen, 44, 0, false);
     auto *header = BrandHeader::create(layout.top, 100, tr(Text::Game));
     titleLabel = lv_obj_get_child(header, 1);
+    settingsButton = Button::create(header,nullptr,onSettings,this,44,44,LV_ALIGN_CENTER,0,0,LV_SYMBOL_SETTINGS);
+    lv_obj_move_to_index(settingsButton,2); // Before the SD/Wi-Fi status slot.
+    lv_obj_set_style_pad_all(settingsButton,0,0); UITheme::secondary(settingsButton);
     lv_obj_set_style_pad_all(layout.body, 0, 0);
     mainSubview.create(layout.body);
     loadingSubview.create(layout.body);
@@ -63,6 +66,7 @@ void GameView::create()
     victorySubview.setEventCallback(callback);
     failSubview.setEventCallback(callback);
     gameObjectSubview.setEventCallback(callback);
+    settingsSubview.create(screen,[this](const UIEvent &event) { emitEvent(event); });
     exitDialog.create(screen, tr(Text::LeaveQuestion), [this](bool leave)
     {
         emitEvent(ButtonClickedEvent(leave ? "confirm_exit" : "continue_game"));
@@ -83,7 +87,8 @@ void GameView::destroy()
     failSubview.destroy();
     gameObjectSubview.destroy();
     exitDialog.destroy();
-    titleLabel = nullptr;
+    settingsSubview.clear();
+    titleLabel = settingsButton = nullptr;
 
     screen = nullptr;
 
@@ -121,6 +126,8 @@ void GameView::setState(GameSubview state)
         stateToString(state));
 
     currentState = state;
+    hideSettings();
+    lv_obj_set_flag(settingsButton,LV_OBJ_FLAG_HIDDEN,state != GameSubview::Main && state != GameSubview::GameObject);
 
     mainSubview.hide();
     loadingSubview.hide();
@@ -188,8 +195,18 @@ void GameView::showLoadError(const char *message)
     setState(GameSubview::Fail);
 }
 void GameView::setTitle(const std::string &title) { Label::setText(titleLabel, title.empty() ? tr(Text::Game) : title.c_str()); }
-void GameView::showExitConfirmation() { exitDialog.show(); }
-void GameView::hideExitConfirmation() { exitDialog.hide(); }
+void GameView::showExitConfirmation() { lv_obj_add_state(settingsButton,LV_STATE_DISABLED); exitDialog.show(); }
+void GameView::hideExitConfirmation() { lv_obj_remove_state(settingsButton,LV_STATE_DISABLED); exitDialog.hide(); }
+void GameView::showSettings(const AudioPreferences &preferences, Text context)
+{
+    if (currentState == GameSubview::Main || currentState == GameSubview::GameObject)
+        settingsSubview.show(preferences,context);
+}
+void GameView::onSettings(lv_event_t *event)
+{
+    auto *self=static_cast<GameView *>(lv_event_get_user_data(event));
+    self->emitEvent(ButtonClickedEvent("game_settings"));
+}
 
 void GameView::showGameObject()
 {
@@ -201,6 +218,7 @@ void GameView::setTime(uint32_t seconds)
 {
     Log::debug(TAG, "Time updated: %lu", static_cast<unsigned long>(seconds));
     mainSubview.setTime(seconds);
+    settingsSubview.setTime(seconds);
 }
 
 void GameView::setRunning(bool running)

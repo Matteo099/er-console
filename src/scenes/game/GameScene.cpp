@@ -9,6 +9,7 @@
 #include "core/SystemEventBus.h"
 #include "config/Assets.h"
 #include "systems/audio/AudioSystem.h"
+#include "systems/ui/UIFeedback.h"
 #include <Arduino.h>
 #include <algorithm>
 
@@ -34,6 +35,7 @@ void GameScene::onEnter()
     loadRequested = true;
     loadRequestedAt = lv_tick_get();
     auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
+    audioSystem = audio; settingsFeedback.bind(audio);
     if (audio) audio->stop(); // Release menu voices before reserving the game cache.
     audioPreparing = false;
     view.setLoadingMessage(tr(Text::PrepareAudio));
@@ -48,6 +50,9 @@ void GameScene::postGameObjects(std::vector<GameObjectSubview::ObjectData> objec
 
 void GameScene::onUpdate()
 {
+    if (view.settingsVisible()) settingsFeedback.update(millis());
+    else settingsFeedback.stop();
+    if (settingsDirty && uint32_t(millis()-settingsChangedAt) >= 400) saveSettings();
     // Let the loading screen render and the previous scene unload before I/O.
     if (loadRequested && lv_tick_get() - loadRequestedAt >= 160)
     {
@@ -93,6 +98,7 @@ void GameScene::onUpdate()
                 view.setTime(remainingSec);
                 if (remainingSec == 0)
                 {
+                    closeSettings();
                     state = GameState::Finished;
                     sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::STOP);
                     luaSystem->pause();
@@ -107,9 +113,50 @@ void GameScene::onUpdate()
 
 void GameScene::onExit()
 {
+    closeSettings();
     stopGame();
     audioAssets.release();
     view.destroy();
+}
+
+void GameScene::openSettings()
+{
+    if (view.settingsVisible()) return;
+    DeviceConfig config; settingsRepository.loadCached(config);
+    settingsAudio=config.audio; settingsDirty=false;
+    view.showSettings(settingsAudio,state == GameState::Paused ? Text::GameSettingsPaused :
+                                    state == GameState::Ready ? Text::GameSettingsReady : Text::GameSettingsRunning);
+    Log::info(Log::GAME_TAG,"In-game settings opened; state=%u remaining=%lu",unsigned(state),static_cast<unsigned long>(remainingSec));
+}
+
+void GameScene::closeSettings()
+{
+    settingsFeedback.stop();
+    if (settingsDirty) saveSettings();
+    if (view.settingsVisible())
+        Log::info(Log::GAME_TAG,"In-game settings closed; state=%u remaining=%lu",unsigned(state),static_cast<unsigned long>(remainingSec));
+    view.hideSettings();
+}
+
+void GameScene::saveSettings()
+{
+    // Merge only audio into the latest preferences. A portal/theme/language
+    // update while playing must not be overwritten by an older game snapshot.
+    DeviceConfig latest; settingsRepository.loadCached(latest);
+    latest.audio.music=settingsAudio.music; latest.audio.effects=settingsAudio.effects;
+    const bool saved=settingsRepository.savePreferences(latest);
+    settingsDirty=false; view.setSettingsStatus(saved ? Text::Saved : Text::Temporary);
+}
+
+void GameScene::onPreferencesChanged()
+{
+    view.setTitle(gameInfo.titleFor(I18n::language() == I18n::Language::English));
+    view.translateSettings();
+    if (view.settingsVisible() && !settingsDirty)
+    {
+        DeviceConfig config; settingsRepository.loadCached(config);
+        settingsAudio=config.audio; view.setSettingsAudio(settingsAudio);
+    }
 }
 
 void GameScene::completeGame()
@@ -118,6 +165,7 @@ void GameScene::completeGame()
         return;
 
     exitConfirmationOpen = false;
+    closeSettings();
     view.hideExitConfirmation();
     state = GameState::Finished;
     luaSystem->pause();
@@ -134,10 +182,31 @@ SceneRequest GameScene::getRequest() const
 
 bool GameScene::handleUIEvent(const UIEvent &event)
 {
+    if (event.getType() == AudioPreferenceChangedEvent::TYPE)
+    {
+        if (!view.settingsVisible() || loadState != GameLoadState::LoadComplete || state == GameState::Finished) return false;
+        const auto &changed=static_cast<const AudioPreferenceChangedEvent &>(event);
+        auto &target=changed.channel == AudioChannel::Music ? settingsAudio.music : settingsAudio.effects;
+        const auto previous=target; target=changed.value;
+        if (audioSystem) audioSystem->configure(settingsAudio);
+        UIFeedback::setSoundEnabled(settingsAudio.effects.enabled && settingsAudio.effects.volume);
+        if (changed.preview && previous.volume != target.volume) settingsFeedback.request(changed.channel,target,millis());
+        else if (!target.enabled || !target.volume) settingsFeedback.stop();
+        settingsDirty=true; settingsChangedAt=millis(); view.setSettingsStatus(Text::Applied);
+        return true;
+    }
     if (event.getType() != ButtonClickedEvent::TYPE)
         return false;
 
     const auto &clicked = static_cast<const ButtonClickedEvent &>(event);
+    if (clicked.buttonId == "close_game_settings") { closeSettings(); return true; }
+    if (clicked.buttonId == "game_settings")
+    {
+        if (loadState == GameLoadState::LoadComplete && state != GameState::Finished && !exitConfirmationOpen)
+            openSettings();
+        return true;
+    }
+    if (view.settingsVisible()) return false; // Background controls cannot change the game through the overlay.
 
     /* MainSubview buttons */
     if (clicked.buttonId == "start_pause")
@@ -275,6 +344,7 @@ bool GameScene::loadGameScript()
 
 void GameScene::failLoad(const char *message)
 {
+    closeSettings();
     loadRequested = false;
     loadState = GameLoadState::LoadFailed;
     stopGame();

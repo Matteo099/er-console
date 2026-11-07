@@ -5,6 +5,8 @@
 #include "GameView.h"
 #include "GameState.h"
 #include "GameAudioAssets.h"
+#include "services/DeviceConfigRepository.h"
+#include "systems/ui/VolumeFeedback.h"
 #include <string>
 #include "GameInfo.h"
 #include "systems/ui/localization/I18n.h"
@@ -26,7 +28,7 @@ public:
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
-    void onPreferencesChanged() override { view.setTitle(gameInfo.titleFor(I18n::language() == I18n::Language::English)); }
+    void onPreferencesChanged() override;
 
     View &getView() override { return view; }
     SceneRequest getRequest() const override;
@@ -70,6 +72,15 @@ private:
     // View
     GameView view;
     GameAudioAssets audioAssets;
+    class AudioSystem *audioSystem = nullptr;
+    DeviceConfigRepository settingsRepository;
+    AudioPreferences settingsAudio;
+    VolumeFeedback settingsFeedback;
+    bool settingsDirty = false;
+    uint32_t settingsChangedAt = 0;
+    void openSettings();
+    void closeSettings();
+    void saveSettings();
 
     // Lua system integration
     LuaSystem *luaSystem = nullptr;
