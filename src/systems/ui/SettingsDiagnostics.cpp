@@ -8,6 +8,9 @@
 #include "services/DeviceConfigRepository.h"
 #include "localization/LocalizedText.h"
 #include "components/Label.h"
+#include "drivers/display/TouchInputState.h"
+#include "services/GameMetadata.h"
+#include "systems/lua/bindings/CoreBindings.h"
 namespace
 {
     std::vector<uint8_t> wav(int16_t sample, uint32_t rate = 22050)
@@ -32,6 +35,14 @@ void runSettingsDiagnostics()
 {
     unsigned passed = 0, failed = 0;
     auto check = [&](bool value, const char *name) { if (value) ++passed; else ++failed; Serial.printf("@CHECK %s %s\n", value ? "PASS" : "FAIL", name); };
+    TouchInputState touch;
+    auto point = touch.update({0, 0, false});
+    check(!point.pressed && point.x == 0 && point.y == 0, "touch starts released");
+    touch.update({95, 160, true});
+    point = touch.update({205, 161, true});
+    check(point.pressed && point.x == 205 && point.y == 161, "touch tracks drag coordinates");
+    point = touch.update({0, 0, false});
+    check(!point.pressed && point.x == 205 && point.y == 161, "release retains final drag position");
     auto music = wav(1000), effects = wav(2000);
     AudioMixer mixer(22050); AudioPreferences preferences;
     preferences.music = {true,50}; preferences.effects = {true,100}; mixer.configure(preferences);
@@ -55,7 +66,25 @@ void runSettingsDiagnostics()
     check(repository.parseJson("{}",config) && config.locale.language=="it-IT" && config.audio.music.volume==50 && config.audio.effects.volume==70, "Italian defaults");
     check(DeviceConfigRepository::validNetwork(std::string(32,'s'),"password") && !DeviceConfigRepository::validNetwork(std::string(33,'s'),"password") && !DeviceConfigRepository::validNetwork("ssid","short"), "Wi-Fi credential boundaries");
     check(DeviceConfigRepository::validNetwork("ssid","") && DeviceConfigRepository::validNetwork("ssid",std::string(64,'a')) && !DeviceConfigRepository::validNetwork("ssid",std::string(64,'z')), "open networks and hex PSK validation");
+    JsonDocument document;
+    deserializeJson(document, "{\"name\":\"Legacy\",\"description\":\"Original\"}");
+    GameInfo game{}; game.id = "legacy";
+    GameMetadata::read(document.as<JsonObjectConst>(), game);
+    check(game.titleFor(false) == "Legacy" && game.titleFor(true) == "Legacy", "legacy game metadata fallback");
+    deserializeJson(document, "{\"name\":\"Legacy\",\"translations\":{\"it\":{\"name\":\"Mappa\",\"description\":\"Indizi\"},\"en\":{\"name\":\"Map\",\"description\":\"Clues\"}}}");
+    GameMetadata::read(document.as<JsonObjectConst>(), game);
+    check(game.titleFor(false) == "Mappa" && game.descriptionFor(true) == "Clues" && game.titleFor(true) == "Map", "bilingual game metadata retained in cache");
     const auto language = I18n::language();
+    auto *vm = luaL_newstate();
+    CoreBindings().registerAPI(vm);
+    I18n::select(I18n::Language::Italian);
+    check(luaL_dostring(vm, "return system.translate({it='Mappa',en='Map'})") == LUA_OK && std::strcmp(lua_tostring(vm,-1), "Mappa") == 0, "Lua game text Italian");
+    lua_settop(vm,0);
+    I18n::select(I18n::Language::English);
+    check(luaL_dostring(vm, "return system.translate({it='Mappa',en='Map'})") == LUA_OK && std::strcmp(lua_tostring(vm,-1), "Map") == 0, "Lua game text English");
+    lua_settop(vm,0);
+    check(luaL_dostring(vm, "return system.translate({it='Mappa'})") == LUA_OK && std::strcmp(lua_tostring(vm,-1), "Mappa") == 0, "Lua missing translation fallback");
+    lua_close(vm);
     I18n::select(I18n::Language::Italian);
     auto *root=lv_obj_create(nullptr); auto *label=Label::create(root,tr(Text::Settings));
     I18n::select(I18n::Language::English); LocalizedText::refresh();

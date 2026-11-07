@@ -50,5 +50,15 @@
         "relays": {
             "enabled": true
         }
+    },
+    "translations": {
+        "it": {
+            "name": "Centrale Nucleare Dolomiti",
+            "description": "La Centrale Nucleare Dolomiti..."
+        },
+        "en": {
+            "name": "Dolomiti Nuclear Power Plant",
+            "description": "The Dolomiti Nuclear Power Plant..."
+        }
     }
 }

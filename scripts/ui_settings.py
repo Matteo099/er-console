@@ -29,7 +29,7 @@ def tab(probe, index):
     probe.command(f'ui click {45 + index * 76} 70')
 
 
-def audio(probe, values):
+def audio(probe, values, drag=False):
     tab(probe, 1)
     for index, (enabled, volume) in enumerate(zip(values[::2], values[1::2])):
         probe.command(f'ui scrollat 160 140 {index * 96}')
@@ -39,11 +39,22 @@ def audio(probe, values):
             if match:
                 x1, y1, x2, y2 = map(int, match.groups()[1:5])
                 if 100 <= (y1 + y2) // 2 < 186:
-                    controls[match[1]] = ((x1+x2)//2, (y1+y2)//2)
+                    controls[match[1]] = (x1, (y1+y2)//2, x2, int(match[6]))
         assert set(controls) == {'SWITCH', 'SLIDER'}, controls
         for kind, value in [('SWITCH', enabled), ('SLIDER', volume)]:
-            x, y = controls[kind]
-            probe.command(f'ui set {x} {y} {value}')
+            x1, y, x2, current = controls[kind]
+            if kind == 'SLIDER' and drag:
+                start = round(x1 + (x2-x1) * current / 100)
+                finish = round(x1 + (x2-x1) * value / 100)
+                probe.command(f'ui touch {start} {y} 1')
+                for step in range(1, 7):
+                    x = round(start + (finish-start) * step / 6)
+                    probe.command(f'ui touch {x} {y} 1')
+                # Emulate the exact resistive-panel release that caused zeroing.
+                probe.command('ui touch 0 0 0')
+                probe.command('ui touch off')
+            else:
+                probe.command(f'ui set {(x1+x2)//2} {y} {value}')
     time.sleep(.5)
 
 
@@ -60,14 +71,14 @@ def run(args):
         probe.command('ui quiet on')
         original = preferences(probe)
         args.output.joinpath('original-preferences.txt').write_text(repr(original), encoding='utf-8')
-        assert any('@SELFTEST passed=19 failed=0' in row for row in probe.command('ui selftest'))
+        assert any(re.search(r'@SELFTEST passed=\d+ failed=0', row) for row in probe.command('ui selftest'))
         probe.command('ui settings')
         language(probe, 'en-GB')
-        audio(probe, (1, 35, 0, 12))
+        audio(probe, (1, 35, 0, 12), drag=True)
         assert preferences(probe)[1:] == ('en-GB', (1, 35, 0, 12))
-        audio(probe, (0, 35, 1, 80))
-        assert preferences(probe)[1:] == ('en-GB', (0, 35, 1, 80))
-        print('PASS independent volumes and toggles through real controls', flush=True)
+        audio(probe, (0, 65, 1, 80), drag=True)
+        assert preferences(probe)[1:] == ('en-GB', (0, 65, 1, 80))
+        print('PASS actual pointer drags, release at (0,0), independent volumes and toggles', flush=True)
         probe.capture('audio-effects-en')
         probe.click('Back')
         assert 'Settings' in labels(probe) and 'Play' in labels(probe)
@@ -77,7 +88,7 @@ def run(args):
             Probe.read_until(probe, lambda row: 'Entering MainMenuScene' in row, timeout=30)
             time.sleep(.5)
             probe.command('ui quiet on')
-            assert preferences(probe)[1:] == ('en-GB', (0, 35, 1, 80))
+            assert preferences(probe)[1:] == ('en-GB', (0, 65, 1, 80))
             assert 'Settings' in labels(probe)
             print('PASS NVS persistence and English boot after hardware reset', flush=True)
         probe.click('Settings')
@@ -102,6 +113,7 @@ def run(args):
             print(f'PASS resources/network return to System {cycle+1}/{args.cycles}', flush=True)
         print('PASS Settings regression', flush=True)
     finally:
+        probe.command('ui touch off')
         if original:
             try:
                 theme, code, values = original

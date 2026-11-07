@@ -74,6 +74,8 @@ void CoreBindings::registerAPI(lua_State *L)
     lua_newtable(L);
     lua_pushcfunction(L, language);
     lua_setfield(L, -2, "language");
+    lua_pushcfunction(L, translate);
+    lua_setfield(L, -2, "translate");
     lua_pushcfunction(L, info);
     lua_setfield(L, -2, "info");
     lua_pushcfunction(L, warn);
@@ -90,3 +92,19 @@ void CoreBindings::registerAPI(lua_State *L)
 }
 
 int CoreBindings::language(lua_State *L) { lua_pushstring(L, I18n::code()); return 1; }
+
+// @doc Resolve an authored game message using the console language, then Italian/English fallback.
+// @example system.translate({it = "Mappa", en = "Map"})
+// @lua system.translate(message:table) -> string
+int CoreBindings::translate(lua_State *L)
+{
+    luaL_checktype(L, 1, LUA_TTABLE);
+    const char *keys[] = {I18n::language() == I18n::Language::English ? "en" : "it", "it", "en"};
+    for (const char *key : keys)
+    {
+        lua_getfield(L, 1, key);
+        if (lua_type(L, -1) == LUA_TSTRING) return 1;
+        lua_pop(L, 1);
+    }
+    return luaL_error(L, "translation needs an it or en string");
+}

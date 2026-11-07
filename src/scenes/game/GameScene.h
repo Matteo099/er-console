@@ -6,6 +6,7 @@
 #include "GameState.h"
 #include <string>
 #include "GameInfo.h"
+#include "systems/ui/localization/I18n.h"
 #include <atomic>
 #include "core/TaskMutex.h"
 
@@ -24,6 +25,7 @@ public:
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
+    void onPreferencesChanged() override { view.setTitle(gameInfo.titleFor(I18n::language() == I18n::Language::English)); }
 
     View &getView() override { return view; }
     SceneRequest getRequest() const override;

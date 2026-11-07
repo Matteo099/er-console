@@ -1,4 +1,5 @@
 #include "GameCatalog.h"
+#include "GameMetadata.h"
 #include "core/TaskMutex.h"
 #include "core/SystemEventBus.h"
 #include "systems/storage/StorageSystem.h"
@@ -131,11 +132,7 @@ GameCatalog::Snapshot GameCatalog::readGames()
 
         GameInfo info;
         info.id = entry.name;
-        info.title = doc["name"].is<const char *>() ? doc["name"].as<const char *>() : entry.name;
-        info.description = doc["description"].as<const char *>() ? doc["description"].as<const char *>() : "";
-        info.author = doc["author"].as<const char *>() ? doc["author"].as<const char *>() : "";
-        info.difficulty = doc["difficulty"] | 1;
-        info.durationMin = doc["durationMin"] | 0;
+        GameMetadata::read(doc.as<JsonObjectConst>(), info);
         info.inputConfig = InputConfig();
         JsonObject inputs = doc["inputs"];
         loadInputConfig(inputs, info.inputConfig);

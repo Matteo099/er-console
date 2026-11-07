@@ -27,5 +27,15 @@
         "relays": {
             "enabled": false
         }
+    },
+    "translations": {
+        "it": {
+            "name": "Centrale Nucleare Dolomiti",
+            "description": "La Centrale Nucleare Dolomiti è una centrale nucleare situata nelle Dolomiti, in Italia. È stata costruita per fornire energia pulita e sostenibile alla regione, contribuendo alla riduzione delle emissioni di carbonio e alla lotta contro il cambiamento climatico. La centrale utilizza tecnologie avanzate per garantire la sicurezza e l'efficienza, e rappresenta un importante passo verso un futuro energetico più verde."
+        },
+        "en": {
+            "name": "Dolomiti Nuclear Power Plant",
+            "description": "The Dolomiti Nuclear Power Plant is located in the Dolomites, Italy. It was built to provide clean, sustainable energy to the region, helping reduce carbon emissions and combat climate change. The plant uses advanced technology to ensure safety and efficiency, marking an important step towards a greener energy future."
+        }
     }
 }

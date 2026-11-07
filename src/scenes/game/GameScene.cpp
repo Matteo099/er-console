@@ -16,7 +16,7 @@ void GameScene::onEnter()
     Log::info(Log::SCENE_TAG, "Entering GameScene: %s", gameInfo.id.c_str());
     view.setEventHandler(this);
     view.create();
-    view.setTitle(gameInfo.title);
+    view.setTitle(gameInfo.titleFor(I18n::language() == I18n::Language::English));
     view.showLoading();
     view.setLoadingMessage(tr(Text::PrepareGame));
     remainingSec = uint32_t(gameInfo.durationMin) * 60;

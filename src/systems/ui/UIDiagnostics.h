@@ -1,3 +1,8 @@
 #pragma once
 class SceneManager;
-namespace UIDiagnostics { void update(SceneManager &scenes); }
+struct TouchPoint;
+namespace UIDiagnostics
+{
+    void update(SceneManager &scenes);
+    bool touchSample(TouchPoint &sample);
+}

@@ -51,9 +51,11 @@ li elimina. Per testi concatenati usare un binding esplicito oppure aggiornare
 il testo in `Scene::onPreferencesChanged()`. Tutte le operazioni LVGL restano nel
 task UI; selezionare la lingua non ricrea la partita o ne azzera il timer.
 
-Le storie, i titoli e i messaggi scritti dagli autori nei giochi rimangono dati
-del gioco. Gli script possono usare `system.language()` (`it-IT` / `en-GB`) per
-scegliere i propri contenuti. Log tecnici e nomi dei protocolli restano stabili.
+Le storie, i titoli e i messaggi scritti dagli autori rimangono dati del gioco:
+i cinque esempi includono ora entrambe le lingue nei metadati e nei dizionari Lua.
+Gli script usano `system.translate({it=..., en=...})` o `system.language()`.
+Schema, compatibilita' e copia sulla scheda: [GAME_LOCALIZATION.md](GAME_LOCALIZATION.md).
+Log tecnici e nomi dei protocolli restano stabili.
 Il portale usa i cataloghi Vue i18n esistenti, con italiano predefinito; la
 selezione della lingua del dispositivo offre italiano e inglese.
 

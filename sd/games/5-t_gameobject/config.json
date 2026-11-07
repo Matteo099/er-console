@@ -1,6 +1,6 @@
 {
-    "name": "Test - GameObjects",
-    "description": "Test game for the GameObjects functionality",
+    "name": "Test - Oggetti",
+    "description": "Gioco di prova di oggetti, indizi e immagini.",
     "version": "1.0",
     "author": "Matteo Romagnoli",
     "durationMin": 5,
@@ -26,6 +26,16 @@
         },
         "relays": {
             "enabled": false
+        }
+    },
+    "translations": {
+        "it": {
+            "name": "Test - Oggetti",
+            "description": "Gioco di prova di oggetti, indizi e immagini."
+        },
+        "en": {
+            "name": "Test - Game Objects",
+            "description": "Test game for objects, clues and images."
         }
     }
 }

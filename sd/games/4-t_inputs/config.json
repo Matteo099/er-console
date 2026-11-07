@@ -1,6 +1,6 @@
 {
-    "name": "Test - Inputs",
-    "description": "Test game for the inputs functionality",
+    "name": "Test - Ingressi",
+    "description": "Gioco di prova degli ingressi e dei pulsanti.",
     "version": "1.0",
     "author": "Matteo Romagnoli",
     "durationMin": 5,
@@ -26,6 +26,16 @@
         },
         "relays": {
             "enabled": false
+        }
+    },
+    "translations": {
+        "it": {
+            "name": "Test - Ingressi",
+            "description": "Gioco di prova degli ingressi e dei pulsanti."
+        },
+        "en": {
+            "name": "Test - Inputs",
+            "description": "Test game for inputs and buttons."
         }
     }
 }

@@ -3,6 +3,9 @@
 #include <Arduino.h>
 #include "systems/ui/UITheme.h"
 #include "systems/ui/UIFrameStats.h"
+#include "drivers/display/TouchInputState.h"
+#include "config/Console.h"
+#include "systems/ui/UIDiagnostics.h"
 
 static const uint32_t LVGL_TICK_PERIOD_MS = 5;
 
@@ -97,7 +100,14 @@ void LVGLContext::touch_read_cb(
     lv_indev_t *indev,
     lv_indev_data_t *data)
 {
-    TouchPoint p = s_touch->read();
+    static TouchInputState touchState;
+    TouchPoint raw;
+#if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
+    if (!UIDiagnostics::touchSample(raw)) raw = s_touch->read();
+#else
+    raw = s_touch->read();
+#endif
+    const TouchPoint p = touchState.update(raw);
 
     data->state = p.pressed
                       ? LV_INDEV_STATE_PRESSED

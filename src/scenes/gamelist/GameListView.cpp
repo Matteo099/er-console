@@ -106,7 +106,8 @@ void GameListView::rebuildCurrentCard()
         lv_obj_set_style_pad_bottom(status, 6, 0);
     }
 
-    GameCard::GameData data{game.title, game.description, game.author, game.difficulty, game.durationMin};
+    const bool english = I18n::language() == I18n::Language::English;
+    GameCard::GameData data{game.titleFor(english), game.descriptionFor(english), game.author, game.difficulty, game.durationMin};
     GameCard::create(cardContainer, data);
     char pageText[32];
     snprintf(pageText, sizeof(pageText), "%u / %u", static_cast<unsigned>(currentIndex + 1), static_cast<unsigned>(games.size()));

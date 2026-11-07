@@ -15,4 +15,5 @@ private:
     static int logs(lua_State *L);
     static int clearLogs(lua_State *L);
     static int language(lua_State *L);
+    static int translate(lua_State *L);
 };

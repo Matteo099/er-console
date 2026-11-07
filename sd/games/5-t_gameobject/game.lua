@@ -1,3 +1,23 @@
+-- Authored game text follows the language selected in Settings.
+local messages = {
+    started = {it = "Test del framework iniziato", en = "Framework test started"},
+    inputsReady = {it = "Ingressi configurati", en = "Inputs configured"},
+    notReady = {it = "Aggiornamento ignorato: inizializzazione non completata", en = "Update ignored: initialization not complete"},
+    channel1 = {it = "Canale 1 PREMUTO", en = "Channel 1 PRESSED"},
+    channel2 = {it = "Canale 2 PREMUTO", en = "Channel 2 PRESSED"},
+    channel3 = {it = "Canale 3 PREMUTO - %d/50", en = "Channel 3 PRESSED - %d/50"},
+    completed = {it = "Test completato, partita risolta", en = "Framework test complete, game unlocked"},
+    heartbeat = {it = "Stato - CH1=%s CH2=%s CH3=%s SBLOCCO=%d/50", en = "Heartbeat - CH1=%s CH2=%s CH3=%s UNLOCK=%d/50"},
+    exiting = {it = "Uscita dal test del framework", en = "Framework test exiting"},
+    map = {it = "Mappa", en = "Map"},
+    mapDescription = {it = "Osserva la mappa e confrontala con gli indizi raccolti. Puoi scorrere il contenuto per esaminare tutte le immagini e le annotazioni.", en = "Study the map and compare it with the clues you have collected. Scroll through the content to examine all images and notes."},
+    mapHint = {it = "Confronta i simboli e i percorsi. Gli oggetti restano disponibili durante la partita: puoi tornare al timer e riaprire questa sezione quando vuoi.", en = "Compare the symbols and paths. These items remain available during the game: return to the timer and reopen this section whenever you need."},
+    board = {it = "Tavola", en = "Board"},
+}
+local function text(key)
+    return system.translate(messages[key])
+end
+
 --------------------------------------------------
 -- FRAMEWORK TEST
 --------------------------------------------------
@@ -21,22 +41,15 @@ local CONFIG = {
 -- INIT
 --------------------------------------------------
 
-function init()
-    system.info("Framework test started")
-
-    input.channels.pinMode(CONFIG.input1, PinMode.INPUT_PULLUP)
-    input.channels.pinMode(CONFIG.input2, PinMode.INPUT_PULLUP)
-    input.channels.pinMode(CONFIG.input3, PinMode.INPUT_PULLUP)
-
-    state.initialized = true
-
+local lastLanguage = nil
+local function publishObjects()
     scene.setGameObjects({
         {
-            title = "Map",
+            title = text("map"),
             content = {
                 {
                     type = GameObjectContentType.TEXT,
-                    value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean molestie arcu non luctus sagittis. In turpis ligula, gravida mollis rutrum ut, convallis ut tortor. Praesent libero lacus, iaculis sed consectetur sed, porta eu mi."
+                    value = text("mapDescription")
                 },
                 {
                     type = GameObjectContentType.IMAGE,
@@ -46,7 +59,7 @@ function init()
                 },
                 {
                     type = GameObjectContentType.TEXT,
-                    value = "Donec commodo felis sed mauris accumsan, et tristique turpis consectetur. Mauris suscipit purus vel aliquam porta. Suspendisse vel est dignissim, tristique nulla ut, pellentesque dui. Cras pharetra risus enim, vel commodo metus blandit in. Ut faucibus nisl id quam tincidunt porttitor. Sed diam urna, maximus a augue eu, viverra placerat justo. Donec id elit orci. Morbi molestie condimentum fermentum."
+                    value = text("mapHint")
                 },
                 {
                     type = GameObjectContentType.IMAGE,
@@ -57,7 +70,7 @@ function init()
             }
         },
         {
-            title = "Tavola",
+            title = text("board"),
             content = {
                 {
                     type = GameObjectContentType.IMAGE,
@@ -69,7 +82,17 @@ function init()
         }
     })
 
-    system.info("Inputs configured")
+    lastLanguage = system.language()
+end
+
+function init()
+    system.info(text("started"))
+    input.channels.pinMode(CONFIG.input1, PinMode.INPUT_PULLUP)
+    input.channels.pinMode(CONFIG.input2, PinMode.INPUT_PULLUP)
+    input.channels.pinMode(CONFIG.input3, PinMode.INPUT_PULLUP)
+    state.initialized = true
+    publishObjects()
+    system.info(text("inputsReady"))
 end
 
 
@@ -78,13 +101,15 @@ end
 --------------------------------------------------
 
 function update(dt, paused)
-    
+    if state.initialized and lastLanguage ~= system.language() then
+        publishObjects()
+    end
     if(paused) then
         return
     end
 
     if not state.initialized then
-        system.warn("Update called before initialization, ignoring")
+        system.warn(text("notReady"))
         return
     end
 
@@ -97,21 +122,21 @@ function update(dt, paused)
     --------------------------------------------------
 
     if ch1 then
-        system.info("Channel 1 PRESSED")
+        system.info(text("channel1"))
     end
 
     if ch2 then
-        system.info("Channel 2 PRESSED")
+        system.info(text("channel2"))
     end
 
     if ch3 then
-        system.info(string.format("Channel 3 PRESSED - %d/50", state.unlockCounter))
+        system.info(string.format(text("channel3"), state.unlockCounter))
         state.unlockCounter = state.unlockCounter + 1
     end
 
 
     if state.unlockCounter >= 50 then
-        system.info("Framework test complete, unlocking game")
+        system.info(text("completed"))
         scene.completeGame()
     end
 
@@ -124,12 +149,12 @@ function update(dt, paused)
     if state.lastLogTime >= 5.0 then
         state.lastLogTime = 0
 
-        system.info(string.format("Heartbeat - CH1=%s CH2=%s CH3=%s UNLOCK=%d/50", tostring(ch1), tostring(ch2), tostring(ch3), state.unlockCounter))
+        system.info(string.format(text("heartbeat"), tostring(ch1), tostring(ch2), tostring(ch3), state.unlockCounter))
     end
 end
 
 
 function exit()
-    system.info("Framework test exiting")
+    system.info(text("exiting"))
     
 end

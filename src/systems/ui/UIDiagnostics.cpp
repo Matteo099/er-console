@@ -22,9 +22,27 @@
 #include "drivers/bus/SPIBusLock.h"
 #include "config/Assets.h"
 #include "SettingsDiagnostics.h"
+#include "drivers/display/TouchController.h"
+#include "GameFixtureDiagnostics.h"
+#include "services/GameMetadata.h"
 
 namespace
 {
+    bool simulatedTouch = false;
+    TouchPoint touchPoint{0, 0, false};
+    std::string contentFixture;
+
+    class CatalogPreview : public Scene
+    {
+        GameListView view;
+        GameInfo game;
+    public:
+        explicit CatalogPreview(const GameInfo &value) : game(value) {}
+        void onEnter() override { view.setCatalog({game}, "", false); view.create(); }
+        void onUpdate() override { view.update(); }
+        void onExit() override { view.destroy(); }
+        View &getView() override { return view; }
+    };
     // Display-only states: no card removal, Wi-Fi disconnect or fake backend health.
     class IndicatorPreview : public Scene
     {
@@ -210,6 +228,12 @@ namespace
     }
 }
 
+bool UIDiagnostics::touchSample(TouchPoint &sample)
+{
+    if (simulatedTouch) sample = touchPoint;
+    return simulatedTouch;
+}
+
 void UIDiagnostics::update(SceneManager &scenes)
 {
     static String command;
@@ -217,7 +241,42 @@ void UIDiagnostics::update(SceneManager &scenes)
     {
         const char value = Serial.read();
         if (value != '\n') { if (value != '\r' && command.length() < 96) command += value; continue; }
-        if (command == "ui home") scenes.changeScene(new MainMenuScene(), SceneTransition::None);
+        if (command == "ui fixture clear") contentFixture.clear();
+        else if (command.startsWith("ui fixture append "))
+        {
+            const auto hex = command.substring(18);
+            auto digit = [](char c) { return c >= '0' && c <= '9' ? c-'0' : c >= 'a' && c <= 'f' ? c-'a'+10 : -1; };
+            bool valid = !(hex.length() & 1) && contentFixture.size() + hex.length()/2 <= 32768;
+            for (unsigned i=0;i<hex.length() && valid;++i) valid = digit(hex[i]) >= 0;
+            if (valid) for (unsigned i=0;i<hex.length();i+=2) contentFixture += char(digit(hex[i])*16+digit(hex[i+1]));
+            else Serial.println("@GAMECHECK FAIL invalid fixture chunk");
+        }
+        else if (command.startsWith("ui fixture lua ") || command.startsWith("ui fixture objects "))
+            checkGameFixture(contentFixture, command.endsWith("en"), command.startsWith("ui fixture objects "));
+        else if (command.startsWith("ui fixture show "))
+        {
+            JsonDocument document;
+            if (deserializeJson(document,contentFixture) == DeserializationError::Ok)
+            {
+                GameInfo game{}; game.id = "fixture";
+                GameMetadata::read(document.as<JsonObjectConst>(),game);
+                I18n::select(command.endsWith("en") ? I18n::Language::English : I18n::Language::Italian);
+                scenes.changeScene(new CatalogPreview(game),SceneTransition::None);
+                Serial.printf("@GAMECHECK PASS metadata language=%s\n",command.endsWith("en") ? "en" : "it");
+            }
+            else Serial.println("@GAMECHECK FAIL metadata JSON");
+        }
+        else if (command == "ui touch off") simulatedTouch = false;
+        else if (command.startsWith("ui touch "))
+        {
+            int x = 0, y = 0, down = 0;
+            if (sscanf(command.c_str(), "ui touch %d %d %d", &x, &y, &down) == 3)
+            {
+                simulatedTouch = true;
+                touchPoint = {x, y, down != 0};
+            }
+        }
+        else if (command == "ui home") scenes.changeScene(new MainMenuScene(), SceneTransition::None);
         else if (command == "ui settings") scenes.changeScene(new SettingsScene(), SceneTransition::None);
         else if (command == "ui games") scenes.changeScene(new GameListScene(), SceneTransition::None);
         else if (command == "ui monitor") scenes.changeScene(new MonitorScene(), SceneTransition::None);
@@ -295,4 +354,5 @@ void UIDiagnostics::update(SceneManager &scenes)
 }
 #else
 void UIDiagnostics::update(SceneManager &) {}
+bool UIDiagnostics::touchSample(TouchPoint &) { return false; }
 #endif

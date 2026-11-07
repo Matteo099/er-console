@@ -1,3 +1,24 @@
+-- Authored game text follows the language selected in Settings.
+local messages = {
+    doorOpening = {it = "Apertura della porta della stanza", en = "Unlocking the escape room door"},
+    doorOpen = {it = "PORTA APERTA", en = "DOOR OPEN"},
+    initializing = {it = "Inizializzazione della stanza", en = "Escape room initialization"},
+    start = {it = "ESCAPE ROOM\nINIZIO", en = "ESCAPE ROOM\nSTART"},
+    started = {it = "Partita iniziata", en = "Game started"},
+    powerRestored = {it = "Alimentazione ripristinata", en = "Power restored"},
+    powerOk = {it = "ALIMENTAZIONE OK", en = "POWER OK"},
+    tagDetected = {it = "RFID rilevato: %s", en = "RFID detected: %s"},
+    cardAccepted = {it = "TESSERA ACCETTATA", en = "CARD ACCEPTED"},
+    correctCard = {it = "RFID corretto", en = "Correct RFID"},
+    wrongCard = {it = "TESSERA ERRATA", en = "WRONG CARD"},
+    invalidCard = {it = "RFID non valido", en = "Invalid RFID"},
+    sequenceSolved = {it = "Sequenza dei pulsanti risolta", en = "Button sequence solved"},
+    buttonsOk = {it = "PULSANTI OK", en = "BUTTONS OK"},
+}
+local function text(key)
+    return system.translate(messages[key])
+end
+
 --------------------------------------------------
 -- ESCAPE ROOM GAME
 -- Prototype
@@ -69,17 +90,17 @@ local function unlockDoor()
         return
     end
 
-    log.info("Unlocking escape room door")
+    log.info(text("doorOpening"))
     input.relays.set(CONFIG.doorRelay, true)
     state.doorUnlocked = true
-    display("DOOR OPEN")
+    display(text("doorOpen"))
 end
 
 --------------------------------------------------
 -- INITIALIZATION
 --------------------------------------------------
 function init()
-    log.info("Escape room initialization")
+    log.info(text("initializing"))
     state.running = true
     state.startTime = time.millis()
 
@@ -94,8 +115,8 @@ function init()
     -- Lock door
     --
     input.relays.set(CONFIG.doorRelay, false)
-    display("ESCAPE ROOM\nSTART")
-    log.info("Game started")
+    display(text("start"))
+    log.info(text("started"))
 end
 
 --------------------------------------------------
@@ -115,9 +136,9 @@ function update(dt, paused)
     if power ~= nil then
         if power.voltage > CONFIG.minVoltage then
             if not state.powerRestored then
-                log.info("Power restored")
+                log.info(text("powerRestored"))
                 state.powerRestored = true
-                display("POWER OK")
+                display(text("powerOk"))
             end
         end
     end
@@ -127,15 +148,15 @@ function update(dt, paused)
     --------------------------------------------------
     local tag = input.rfid.consume()
     if tag ~= nil then
-        log.info("RFID detected %s", tag.uid)
+        log.info(text("tagDetected"), tag.uid)
         state.lastRFID = tag.uid
         if tag.uid == CONFIG.accessCard then
             state.rfidAccepted = true
-            display("CARD ACCEPTED")
-            log.info("Correct RFID")
+            display(text("cardAccepted"))
+            log.info(text("correctCard"))
         else
-            display("WRONG CARD")
-            log.warn("Invalid RFID")
+            display(text("wrongCard"))
+            log.warn(text("invalidCard"))
         end
     end
 
@@ -148,8 +169,8 @@ function update(dt, paused)
     if state.button1 and state.button2 and state.button3 then
         if not state.buttonsSolved then
             state.buttonsSolved = true
-            log.info("Button sequence solved")
-            display("BUTTONS OK")
+            log.info(text("sequenceSolved"))
+            display(text("buttonsOk"))
         end
     end
 

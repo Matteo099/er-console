@@ -39,6 +39,8 @@ La rete resta configurabile anche con radio disabilitata; connessione e portale
 rispettano i flag di avvio.
 
 Configurazione, migrazione e traduzioni: [docs/SETTINGS.md](docs/SETTINGS.md).
+Traduzioni dei giochi e aggiornamento dei file sulla microSD:
+[docs/GAME_LOCALIZATION.md](docs/GAME_LOCALIZATION.md).
 
 Architettura, palette, configurazione e acquisizione delle schermate:
 [`docs/UI_THEME.md`](docs/UI_THEME.md).

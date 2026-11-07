@@ -1,3 +1,16 @@
+-- Authored game text follows the language selected in Settings.
+local messages = {
+    title = {it = "Anno 2039: Centrale Dolomiti", en = "Year 2039: Dolomiti Power Plant"},
+    quit = {it = "ESCI", en = "QUIT"},
+    pause = {it = "PAUSA", en = "PAUSE"},
+    resume = {it = "RIPRENDI", en = "RESUME"},
+    edward = {it = "Edward sa, Edward sa, Edward sa, Edward sa, Edward sa", en = "Edward knows, Edward knows, Edward knows, Edward knows, Edward knows"},
+    loaded = {it = "Anno 2039: script del gioco caricato", en = "Year 2039: game script loaded"},
+}
+local function text(key)
+    return system.translate(messages[key])
+end
+
 -- Anno 2039: Centrale Nucleare Dolomiti - Physical Escape Room Game
 
 local gameState = {
@@ -37,15 +50,15 @@ local pins = {
 }
 
 function init()
-    display.text(10, 10, "Anno 2039: CND Escape Room", 16, 0xFFD700)
+    display.text(10, 10, text("title"), 16, 0xFFD700)
     
     -- Quit button bottom left
     display.rect(10, 270, 100, 40, 0xFF0000, true)
-    display.text(20, 280, "QUIT", 14, 0xFFFFFF)
+    display.text(20, 280, text("quit"), 14, 0xFFFFFF)
     
     -- Pause/Resume button bottom right
     display.rect(210, 270, 100, 40, 0x00FF00, true)
-    display.text(220, 280, "PAUSE", 14, 0xFFFFFF)
+    display.text(220, 280, text("pause"), 14, 0xFFFFFF)
     
     -- Set background black
     display.clear()
@@ -155,7 +168,7 @@ function checkEnigma3()
     
     if allHigh and not gameState.enigma3Solved then
         gameState.enigma3Solved = true
-        input.oledPrint("Edward knows, Edward knows, Edward knows, Edward knows, Edward knows")
+        input.oledPrint(text("edward"))
         audio.beep(800, 1000)
     end
 end
@@ -169,8 +182,8 @@ function onButtonPress(buttonId)
         game.quit()
     elseif buttonId == buttons.pause then
         gameState.paused = not gameState.paused
-        display.text(220, 280, gameState.paused and "RESUME" or "PAUSE", 14, 0xFFFFFF)
+        display.text(220, 280, gameState.paused and text("resume") or text("pause"), 14, 0xFFFFFF)
     end
 end
 
-print("Anno 2039: game script loaded")
+print(text("loaded"))
