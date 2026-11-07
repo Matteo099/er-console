@@ -28,6 +28,10 @@
 #include "VolumeFeedbackDiagnostics.h"
 #include "AudioPreloadDiagnostics.h"
 #include "InGameSettingsDiagnostics.h"
+#include "StatisticsDiagnostics.h"
+#include "services/StatisticsRepository.h"
+#include "scenes/game/GameScene.h"
+#include "scenes/statistics/StatisticsScene.h"
 #include "drivers/display/TouchController.h"
 #include "GameFixtureDiagnostics.h"
 #include "services/GameMetadata.h"
@@ -386,6 +390,11 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui volume-test") runVolumeFeedbackDiagnostics();
         else if (command == "ui preload-test") runAudioPreloadDiagnostics();
         else if (command == "ui ingame-test") runInGameSettingsDiagnostics();
+        else if (command=="ui stats-test") runStatisticsDiagnostics();
+        else if (command=="ui statistics") scenes.changeScene(new StatisticsScene(),SceneTransition::None);
+        else if (command=="ui stats-data") Serial.printf("@STATS %s\n",StatisticsRepository::encode(StatisticsRepository::instance().records()).c_str());
+        else if (command.startsWith("ui stats-sandbox ")) Serial.printf("@STATSSANDBOX %s\n",statisticsSandbox(command.endsWith("on")) ? "OK":"BUSY");
+        else if (command=="ui stats-win" && GameScene::diagnosticCurrent) GameScene::diagnosticCurrent->requestCompletion();
         else if (command == "ui preload-preview") scenes.changeScene(createAudioPreloadPreview(),SceneTransition::None);
         else if (command.startsWith("ui preload-event ")) audioPreloadAction(command.substring(17).c_str());
         else if (command == "ui preferences")

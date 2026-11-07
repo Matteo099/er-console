@@ -39,6 +39,8 @@ La rete resta configurabile anche con radio disabilitata; connessione e portale
 rispettano i flag di avvio.
 
 Configurazione, migrazione e traduzioni: [docs/SETTINGS.md](docs/SETTINGS.md).
+Statistiche globali/per gioco e selezione dei giocatori:
+[docs/GAME_STATISTICS.md](docs/GAME_STATISTICS.md).
 Impostazioni audio senza uscire dalla partita:
 [docs/IN_GAME_SETTINGS.md](docs/IN_GAME_SETTINGS.md).
 Mixer a otto sorgenti, loop, volumi per file e conversione audio indipendente

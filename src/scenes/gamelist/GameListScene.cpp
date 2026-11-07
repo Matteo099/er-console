@@ -18,6 +18,7 @@ void GameListScene::refreshCatalog()
     if (!GameCatalog::snapshot(catalogVersion, catalog)) return;
     catalogVersion = catalog.version;
     view.setCatalog(catalog.games, tr(catalog.error), catalog.loading);
+    if (!selection.empty()) { view.selectGame(selection); if (view.getCurrentGame() && view.getCurrentGame()->id==selection) selection.clear(); }
 }
 
 void GameListScene::onUpdate() { refreshCatalog(); view.update(); }
@@ -47,6 +48,11 @@ bool GameListScene::handleUIEvent(const UIEvent &event)
             request = SceneRequest(SceneChange::GoToGame, SceneTransition::SlideLeft, &selectedGame);
         }
         else GameCatalog::request(true);
+        return true;
+    }
+    if (clicked.buttonId=="game_statistics")
+    {
+        if (auto *game=view.getCurrentGame()) { selectedGame=*game; request=SceneRequest(SceneChange::GoToStatistics,SceneTransition::SlideLeft,&selectedGame); }
         return true;
     }
     return false;

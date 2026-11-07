@@ -27,3 +27,12 @@ public:
     AudioChannelPreferences value;
     bool preview; // Slider interaction, rather than a toggle or configuration refresh.
 };
+
+class PlayerCountSelectedEvent : public UIEventType<PlayerCountSelectedEvent>
+{
+public:
+    static constexpr const char *TYPE="player_count_selected";
+    PlayerCountSelectedEvent(bool confirmed,uint16_t players) : confirmed(confirmed),players(players) {}
+    bool confirmed;
+    uint16_t players;
+};

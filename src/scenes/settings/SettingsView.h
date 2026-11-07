@@ -26,7 +26,7 @@ private:
     static void onButton(lv_event_t *event);
     lv_obj_t *screen = nullptr, *titleLabel = nullptr, *themeHint = nullptr, *languageHint = nullptr;
     lv_obj_t *preferenceLabels[4]{}, *panels[4]{}, *tabs[4]{}, *themeButtons[3]{}, *languageButtons[2]{};
-    lv_obj_t *networkButton = nullptr, *resourcesButton = nullptr, *backButton = nullptr, *networkLabel = nullptr;
+    lv_obj_t *networkButton = nullptr, *resourcesButton = nullptr, *statisticsButton = nullptr, *backButton = nullptr, *networkLabel = nullptr;
     Text preferenceText = Text::Saved;
     Tab selectedTab = Tab::Appearance;
     AudioPreferenceSubview music, effects;

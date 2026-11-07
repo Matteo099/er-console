@@ -8,7 +8,7 @@ import argparse
 from pathlib import Path
 import re
 
-from ui_settings import labels, preferences
+from ui_settings import labels, preferences, confirm_players, begin_statistics_sandbox, end_statistics_sandbox
 from ui_stability import StabilityProbe
 
 
@@ -20,8 +20,10 @@ def started(rows, filename):
 def run(args):
     probe = StabilityProbe(args.port,args.output)
     original = None
+    original_stats = None
     try:
         original = preferences(probe)
+        original_stats=begin_statistics_sandbox(probe)
         assert original[2][2] and original[2][3], 'Sound effects must be enabled'
         probe.command('ui audio-master 1')
         probe.command('ui games')
@@ -41,6 +43,7 @@ def run(args):
         print('PASS real GameScene stays in preparation until all sounds are ready',flush=True)
         start = len(probe.log)
         probe.click(caption)
+        confirm_players(probe)
         if not started(probe.log[start:],'tickingclock.wav'):
             probe.read_until(lambda row: 'WAV started:' in row and 'tickingclock.wav' in row,timeout=5)
         tick = started(probe.log[start:],'tickingclock.wav')
@@ -55,6 +58,7 @@ def run(args):
     finally:
         try:
             probe.command('ui home')
+            if original_stats is not None: end_statistics_sandbox(probe,original_stats)
             probe.command('ui audio-master 100')
         finally:
             probe.close('session')

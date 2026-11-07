@@ -55,6 +55,8 @@ void SettingsView::create()
     }
     resourcesButton = Button::create(panels[3], tr(Text::Resources), onButton, this, LV_PCT(100), 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_CHARGE);
     networkButton = Button::create(panels[3], tr(Text::Network), onButton, this, LV_PCT(100), 44, LV_ALIGN_CENTER, 0, 0, LV_SYMBOL_WIFI);
+    statisticsButton=Button::create(panels[3],tr(Text::Statistics),onButton,this,LV_PCT(100),44,LV_ALIGN_CENTER,0,0,LV_SYMBOL_LIST);
+    UITheme::secondary(statisticsButton);
     UITheme::secondary(resourcesButton); UITheme::secondary(networkButton);
     networkLabel = Label::create(panels[3], "", &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     UITheme::muted(networkLabel);
@@ -99,6 +101,7 @@ void SettingsView::translate()
     for (unsigned i = 0; i < 4; ++i) Label::setText(lv_obj_get_child(tabs[i], 0), tr(names[i]));
     Label::setText(themeHint, tr(Text::ThemeHint)); Label::setText(languageHint, tr(Text::LanguageHint));
     Label::setText(lv_obj_get_child(resourcesButton, 1), tr(Text::Resources));
+    Label::setText(lv_obj_get_child(statisticsButton,1),tr(Text::Statistics));
     Label::setText(lv_obj_get_child(networkButton, 1), tr(Text::Network));
     Label::setText(lv_obj_get_child(backButton, 1), tr(Text::Back));
     for (unsigned i = 0; i < 2; ++i) lv_obj_set_state(languageButtons[i], LV_STATE_CHECKED, (I18n::language() == I18n::Language::English) == bool(i));
@@ -108,6 +111,7 @@ void SettingsView::destroy()
 {
     music.clear(); effects.clear(); screen = nullptr;
     titleLabel = themeHint = languageHint = networkButton = resourcesButton = backButton = networkLabel = nullptr;
+    statisticsButton=nullptr;
     for (unsigned i = 0; i < 4; ++i) preferenceLabels[i] = panels[i] = tabs[i] = nullptr;
     for (auto &button : themeButtons) button = nullptr;
     for (auto &button : languageButtons) button = nullptr;
@@ -131,5 +135,6 @@ void SettingsView::onLanguage(lv_event_t *e)
 void SettingsView::onButton(lv_event_t *e)
 {
     auto *v = static_cast<SettingsView *>(lv_event_get_user_data(e));
+    if (lv_event_get_target(e)==v->statisticsButton) { v->emitEvent(ButtonClickedEvent("statistics")); return; }
     v->emitEvent(ButtonClickedEvent(lv_event_get_target(e) == v->backButton ? "back" : lv_event_get_target(e) == v->resourcesButton ? "monitor" : "wifi_settings"));
 }

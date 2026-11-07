@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 import time
 
-from ui_settings import labels, preferences, audio as restore_audio
+from ui_settings import labels, preferences, confirm_players, begin_statistics_sandbox, end_statistics_sandbox, audio as restore_audio
 from ui_stability import StabilityProbe
 
 
@@ -54,8 +54,10 @@ def set_channel(probe,index,enabled,volume,drag=False):
 def run(args):
     probe=StabilityProbe(args.port,args.output)
     original=None
+    original_stats=None
     try:
         original=preferences(probe)
+        original_stats=begin_statistics_sandbox(probe)
         args.output.joinpath('original-preferences.txt').write_text(repr(original),encoding='utf-8')
         rows=probe.command('ui ingame-test')
         assert any(re.search(r'@INGAMETEST passed=\d+ failed=0',row) for row in rows),rows
@@ -72,6 +74,7 @@ def run(args):
         if not any('Game loaded: 3-t_loop' in row for row in probe.log[entered:]):
             probe.read_until(lambda row:'Game loaded: 3-t_loop' in row,timeout=35)
         probe.click(caption)
+        confirm_players(probe)
         live_start=len(probe.log)
         rows=open_settings(probe)
         assert any('state=1 ' in row for row in rows),rows
@@ -116,7 +119,9 @@ def run(args):
                 probe.command('ui settings')
                 restore_audio(probe,original[2])
                 assert preferences(probe)==original,'Preference restoration failed'
-            probe.command('ui home'); probe.command('ui audio-master 100')
+            probe.command('ui home')
+            if original_stats is not None: end_statistics_sandbox(probe,original_stats)
+            probe.command('ui audio-master 100')
         finally:
             probe.close('session')
 

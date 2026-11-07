@@ -15,6 +15,7 @@ public:
         uint32_t pausedSeconds = 0;
         uint32_t hintsUsed = 0;
         uint32_t puzzlesSolved = 0;
+        uint16_t players = 1;
     };
 
     using EventCallback =
@@ -54,4 +55,5 @@ private:
     StatisticRow::Parts pausedRow;
     StatisticRow::Parts hintsRow;
     StatisticRow::Parts solvedRow;
+    StatisticRow::Parts playersRow;
 };

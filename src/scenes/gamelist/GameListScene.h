@@ -8,6 +8,7 @@
 class GameListScene : public Scene
 {
 public:
+    explicit GameListScene(const std::string &selection="") : selection(selection) {}
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
@@ -22,6 +23,7 @@ private:
     GameListView view;
     // int selectedIndex = -1;
     GameInfo selectedGame;
+    std::string selection;
     uint32_t catalogVersion = 0;
     SceneRequest request = SceneRequest();
 

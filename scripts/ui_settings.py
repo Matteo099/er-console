@@ -4,6 +4,7 @@ Requires debug firmware with UI_DIAGNOSTICS_ENABLED=1 and a free COM3.
 No game, Wi-Fi connection, credential update or audible playback is started.
 """
 import argparse
+import json
 from pathlib import Path
 import re
 import time
@@ -23,6 +24,21 @@ def preferences(probe):
 def labels(probe):
     return [match[1] for row in probe.command('ui tree')
             if (match := re.search(r'@LABEL -?\d+ -?\d+ -?\d+ -?\d+ (.*)', row))]
+
+def confirm_players(probe):
+    captions=labels(probe)
+    if any('Quanti giocatori' in text or 'How many players' in text for text in captions):
+        probe.click('Avvia' if any('Quanti giocatori' in text for text in captions) else 'Start')
+
+def begin_statistics_sandbox(probe):
+    original=next(json.loads(row.split('@STATS ',1)[1]) for row in probe.command('ui stats-data') if '@STATS ' in row)
+    assert any('@STATSSANDBOX OK' in row for row in probe.command('ui stats-sandbox on'))
+    return original
+
+def end_statistics_sandbox(probe,original):
+    assert any('@STATSSANDBOX OK' in row for row in probe.command('ui stats-sandbox off'))
+    restored=next(json.loads(row.split('@STATS ',1)[1]) for row in probe.command('ui stats-data') if '@STATS ' in row)
+    assert restored==original,'User statistics changed during sandbox test'
 
 
 def tab(probe, index):

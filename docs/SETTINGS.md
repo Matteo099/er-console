@@ -11,6 +11,8 @@ GameView, conservando stato, timer e script: [IN_GAME_SETTINGS.md](IN_GAME_SETTI
 - **Audio**: volume 0–100 e ON/OFF indipendenti per musica ed effetti.
 - **Lingua**: italiano predefinito, inglese selezionabile e applicato subito.
 - **Sistema**: risorse CPU/RAM/PSRAM/SD e configurazione della rete.
+- **Statistiche**: riepiloghi globali dalla scheda Sistema e per gioco dal
+  catalogo; [GAME_STATISTICS.md](GAME_STATISTICS.md).
 
 Indietro da Risorse o Rete torna alla scheda Sistema. Il contenuto delle schede
 scorre, mentre intestazione, selettore delle schede e Indietro restano visibili.

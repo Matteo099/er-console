@@ -9,6 +9,7 @@
 #include "subviews/GameObjectSubview.h"
 #include "subviews/InGameSettingsSubview.h"
 #include "systems/ui/components/ConfirmationDialog.h"
+#include "systems/ui/components/PlayerSelectorDialog.h"
 
 #include <string>
 
@@ -36,6 +37,9 @@ public:
     void setTitle(const std::string &title);
     void showExitConfirmation();
     void hideExitConfirmation();
+    void showPlayers(uint16_t initial) { lv_obj_add_state(settingsButton,LV_STATE_DISABLED); playerSelector.show(initial); }
+    void hidePlayers() { playerSelector.hide(); lv_obj_remove_state(settingsButton,LV_STATE_DISABLED); }
+    bool playersVisible() const { return playerSelector.visible(); }
     void showSettings(const AudioPreferences &preferences, Text context);
     void hideSettings() { settingsSubview.hide(); }
     bool settingsVisible() const { return settingsSubview.visible(); }
@@ -61,6 +65,7 @@ private:
     lv_obj_t *settingsButton = nullptr;
     static void onSettings(lv_event_t *event);
     ConfirmationDialog exitDialog;
+    PlayerSelectorDialog playerSelector;
 
     GameSubview currentState = GameSubview::Main;
 

@@ -12,9 +12,15 @@
 #include "systems/ui/UIFeedback.h"
 #include <Arduino.h>
 #include <algorithm>
+#if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
+GameScene *GameScene::diagnosticCurrent=nullptr;
+#endif
 
 void GameScene::onEnter()
 {
+#if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
+    diagnosticCurrent=this;
+#endif
     Log::info(Log::SCENE_TAG, "Entering GameScene: %s", gameInfo.id.c_str());
     view.setEventHandler(this);
     view.create();
@@ -50,6 +56,7 @@ void GameScene::postGameObjects(std::vector<GameObjectSubview::ObjectData> objec
 
 void GameScene::onUpdate()
 {
+    sessionClock.tick(millis());
     if (view.settingsVisible()) settingsFeedback.update(millis());
     else settingsFeedback.stop();
     if (settingsDirty && uint32_t(millis()-settingsChangedAt) >= 400) saveSettings();
@@ -79,7 +86,7 @@ void GameScene::onUpdate()
         }
     }
     if (applyObjects && loadState == GameLoadState::LoadComplete) view.setGameObjectData(objects);
-    if (!exitConfirmationOpen && completionPending.exchange(false) && loadState == GameLoadState::LoadComplete)
+    if (statisticsSessionId && !exitConfirmationOpen && completionPending.exchange(false) && loadState == GameLoadState::LoadComplete)
         completeGame();
     if (loadState == GameLoadState::LoadComplete && state != GameState::Finished && !luaSystem->isScriptLoaded())
         failLoad(tr(Text::GameStopped));
@@ -98,6 +105,7 @@ void GameScene::onUpdate()
                 view.setTime(remainingSec);
                 if (remainingSec == 0)
                 {
+                    recordOutcome(GameOutcome::Lost);
                     closeSettings();
                     state = GameState::Finished;
                     sendAudioEvent(AUDIO_TICKING_CLOCK_FILE, AudioEventType::STOP);
@@ -113,6 +121,9 @@ void GameScene::onUpdate()
 
 void GameScene::onExit()
 {
+#if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
+    if (diagnosticCurrent==this) diagnosticCurrent=nullptr;
+#endif
     closeSettings();
     stopGame();
     audioAssets.release();
@@ -161,11 +172,12 @@ void GameScene::onPreferencesChanged()
 
 void GameScene::completeGame()
 {
-    if (state == GameState::Finished || loadState != GameLoadState::LoadComplete)
+    if (!statisticsSessionId || state == GameState::Finished || loadState != GameLoadState::LoadComplete)
         return;
 
     exitConfirmationOpen = false;
     closeSettings();
+    recordOutcome(GameOutcome::Won);
     view.hideExitConfirmation();
     state = GameState::Finished;
     luaSystem->pause();
@@ -182,6 +194,20 @@ SceneRequest GameScene::getRequest() const
 
 bool GameScene::handleUIEvent(const UIEvent &event)
 {
+    if (event.getType()==PlayerCountSelectedEvent::TYPE)
+    {
+        if (!view.playersVisible() || state!=GameState::Ready || loadState!=GameLoadState::LoadComplete) return false;
+        const auto &chosen=static_cast<const PlayerCountSelectedEvent &>(event);
+        view.hidePlayers();
+        if (!chosen.confirmed || !chosen.players) return true;
+        selectedPlayers=chosen.players;
+        statisticsSessionId=StatisticsRepository::instance().start(gameInfo.id,selectedPlayers);
+        startTimer(); state=GameState::Running; lastTickMs=lv_tick_get();
+        luaSystem->resume(); view.setRunning(true);
+        Log::info(Log::GAME_TAG,"Session started: id=%llu players=%u",static_cast<unsigned long long>(statisticsSessionId),unsigned(selectedPlayers));
+        return true;
+    }
+    if (view.playersVisible()) return false;
     if (event.getType() == AudioPreferenceChangedEvent::TYPE)
     {
         if (!view.settingsVisible() || loadState != GameLoadState::LoadComplete || state == GameState::Finished) return false;
@@ -212,7 +238,11 @@ bool GameScene::handleUIEvent(const UIEvent &event)
     if (clicked.buttonId == "start_pause")
     {
         if (loadState != GameLoadState::LoadComplete || exitConfirmationOpen) return true;
-        if (state == GameState::Ready || state == GameState::Paused)
+        if (state == GameState::Ready)
+        {
+            view.showPlayers(selectedPlayers);
+        }
+        else if (state == GameState::Paused)
         {
             state = GameState::Running;
             lastTickMs = lv_tick_get();
@@ -311,7 +341,8 @@ bool GameScene::loadGameScript()
     stopGame();
     loadState = GameLoadState::Loading;
     state = GameState::Ready;
-    statistics = GameStatistics{};
+    statistics = SessionDisplayStatistics{};
+    sessionClock=GameSessionClock{};
     view.setGameObjectData({});
     remainingSec = uint32_t(gameInfo.durationMin) * 60;
     view.setTime(remainingSec);
@@ -355,6 +386,8 @@ void GameScene::failLoad(const char *message)
 
 void GameScene::stopGame()
 {
+    recordOutcome(GameOutcome::Abandoned);
+    view.hidePlayers();
     loadRequested = false;
     exitConfirmationOpen = false;
     completionPending.store(false);
@@ -371,8 +404,9 @@ void GameScene::stopGame()
 
 void GameScene::startTimer()
 {
-    statistics = GameStatistics();
+    statistics = SessionDisplayStatistics();
     statistics.startMs = millis();
+    sessionClock.start(statistics.startMs);
 }
 
 void GameScene::pauseTimer()
@@ -381,26 +415,40 @@ void GameScene::pauseTimer()
         return;
     statistics.paused = true;
     statistics.pauseStartMs = millis();
+    sessionClock.pause(statistics.pauseStartMs);
 }
 
 void GameScene::resumeTimer()
 {
     if (!statistics.paused)
     {
-        if (statistics.startMs == 0)
+        if (!sessionClock.isStarted())
             startTimer();
         return;
     }
     uint32_t now = millis();
     statistics.pausedSeconds += (now - statistics.pauseStartMs) / 1000;
     statistics.paused = false;
+    sessionClock.resume(now);
+}
+
+void GameScene::recordOutcome(GameOutcome outcome)
+{
+    if (!statisticsSessionId) return;
+    sessionClock.stop(millis());
+    auto duration=sessionClock.elapsed(millis());
+    if (outcome==GameOutcome::Lost && gameInfo.durationMin) duration=std::min<uint64_t>(duration,uint64_t(gameInfo.durationMin)*60000);
+    StatisticsRepository::instance().finish(statisticsSessionId,outcome,duration);
+    Log::info(Log::GAME_TAG,"Session finished: id=%llu outcome=%u players=%u duration=%llu ms",static_cast<unsigned long long>(statisticsSessionId),unsigned(outcome),unsigned(selectedPlayers),static_cast<unsigned long long>(duration));
+    statisticsSessionId=0;
 }
 
 VictorySubview::GameStats GameScene::getVictoryStats() const
 {
     VictorySubview::GameStats stats;
-    stats.elapsedSeconds = statistics.elapsedSeconds;
-    stats.pausedSeconds = statistics.pausedSeconds;
+    stats.elapsedSeconds = sessionClock.elapsed(millis())/1000;
+    stats.pausedSeconds = sessionClock.paused(millis())/1000;
+    stats.players=selectedPlayers;
     stats.hintsUsed = statistics.hintsUsed;
     stats.puzzlesSolved = statistics.puzzlesSolved;
     return stats;

@@ -67,6 +67,7 @@ void GameView::create()
     failSubview.setEventCallback(callback);
     gameObjectSubview.setEventCallback(callback);
     settingsSubview.create(screen,[this](const UIEvent &event) { emitEvent(event); });
+    playerSelector.create(screen,[this](bool confirmed,uint16_t players) { emitEvent(PlayerCountSelectedEvent(confirmed,players)); });
     exitDialog.create(screen, tr(Text::LeaveQuestion), [this](bool leave)
     {
         emitEvent(ButtonClickedEvent(leave ? "confirm_exit" : "continue_game"));
@@ -88,6 +89,7 @@ void GameView::destroy()
     gameObjectSubview.destroy();
     exitDialog.destroy();
     settingsSubview.clear();
+    playerSelector.clear();
     titleLabel = settingsButton = nullptr;
 
     screen = nullptr;
@@ -127,6 +129,7 @@ void GameView::setState(GameSubview state)
 
     currentState = state;
     hideSettings();
+    hidePlayers();
     lv_obj_set_flag(settingsButton,LV_OBJ_FLAG_HIDDEN,state != GameSubview::Main && state != GameSubview::GameObject);
 
     mainSubview.hide();

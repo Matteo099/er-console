@@ -8,6 +8,7 @@
 #include "scenes/monitor/MonitorScene.h"
 #include "scenes/network/NetworkScene.h"
 #include "scenes/game/GameScene.h"
+#include "scenes/statistics/StatisticsScene.h"
 #include "core/SystemEventBus.h"
 #include "config/Console.h"
 #include "UIFrameStats.h"
@@ -116,7 +117,10 @@ void SceneManager::update()
             break;
 
         case SceneChange::GoToGameList:
-            changeScene(new GameListScene(), req.transition);
+            changeScene(new GameListScene(req.params ? static_cast<GameInfo *>(req.params)->id:""), req.transition);
+            break;
+        case SceneChange::GoToStatistics:
+            changeScene(req.params ? new StatisticsScene(*static_cast<GameInfo *>(req.params)) : new StatisticsScene(),req.transition);
             break;
 
         case SceneChange::GoToSettings:

@@ -7,6 +7,7 @@
 #include "GameAudioAssets.h"
 #include "services/DeviceConfigRepository.h"
 #include "systems/ui/VolumeFeedback.h"
+#include "services/StatisticsRepository.h"
 #include <string>
 #include "GameInfo.h"
 #include "systems/ui/localization/I18n.h"
@@ -24,6 +25,9 @@ enum class GameLoadState
 class GameScene : public Scene
 {
 public:
+#if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
+    static GameScene *diagnosticCurrent;
+#endif
     // Scene interface
     void onEnter() override;
     void onUpdate() override;
@@ -50,7 +54,7 @@ public:
     }
 
 private:
-    struct GameStatistics
+    struct SessionDisplayStatistics
     {
         uint32_t elapsedSeconds = 0;
         uint32_t pausedSeconds = 0;
@@ -64,7 +68,11 @@ private:
         bool paused = false;
     };
 
-    GameStatistics statistics;
+    SessionDisplayStatistics statistics;
+    GameSessionClock sessionClock;
+    uint64_t statisticsSessionId=0;
+    uint16_t selectedPlayers=1;
+    void recordOutcome(GameOutcome outcome);
 
     // Game identification
     GameInfo gameInfo;

@@ -19,6 +19,8 @@ void GameListView::create()
     auto layout = SceneLayout::create(screen);
 
     header = BrandHeader::create(layout.top, 100, tr(Text::Adventures));
+    btnStatistics=Button::create(header,nullptr,onStatistics,this,44,44,LV_ALIGN_CENTER,0,0,LV_SYMBOL_LIST);
+    lv_obj_move_to_index(btnStatistics,2); lv_obj_set_style_pad_all(btnStatistics,0,0); UITheme::secondary(btnStatistics);
 
     cardContainer = lv_obj_create(layout.body);
     lv_obj_remove_style_all(cardContainer);
@@ -74,6 +76,7 @@ void GameListView::rebuildCurrentCard()
 
     if (games.empty())
     {
+        lv_obj_add_state(btnStatistics,LV_STATE_DISABLED);
         auto *title = Label::create(cardContainer, loading ? tr(Text::LoadingGames) : loadError.empty() ? tr(Text::NoAdventures) : tr(Text::CatalogUnavailable), UITheme::heading(),
                                     LV_TEXT_ALIGN_CENTER, LV_PCT(100));
         lv_obj_set_style_pad_top(title, 20, 0);
@@ -90,6 +93,7 @@ void GameListView::rebuildCurrentCard()
         return;
     }
     lv_obj_remove_state(btnStart, LV_STATE_DISABLED);
+    lv_obj_remove_state(btnStatistics,LV_STATE_DISABLED);
     Label::setText(lv_obj_get_child(btnStart, 0), LV_SYMBOL_PLAY);
     Label::setText(lv_obj_get_child(btnStart, 1), tr(Text::Start));
     lv_obj_set_state(btnPrev, LV_STATE_DISABLED, games.size() < 2);
@@ -149,6 +153,11 @@ GameInfo *GameListView::getCurrentGame()
 
     return &games[currentIndex];
 }
+void GameListView::selectGame(const std::string &id)
+{
+    for (size_t i=0;i<games.size();++i) if (games[i].id==id) { currentIndex=i; rebuildCurrentCard(); break; }
+}
+void GameListView::onStatistics(lv_event_t *event) { static_cast<GameListView *>(lv_event_get_user_data(event))->emitEvent(ButtonClickedEvent("game_statistics")); }
 
 void GameListView::onNextClicked(lv_event_t *e)
 {
@@ -194,7 +203,7 @@ void GameListView::destroy()
     btnBack = nullptr;
     btnPrev = nullptr;
     btnNext = nullptr;
-    btnStart = btnRefresh = nullptr;
+    btnStart = btnRefresh = btnStatistics = nullptr;
 
     pageLabel = nullptr;
 

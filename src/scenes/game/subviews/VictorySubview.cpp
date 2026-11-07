@@ -67,6 +67,7 @@ void VictorySubview::create(lv_obj_t *parent)
     pausedRow  = StatisticRow::create(statsContainer, tr(Text::Pause));
     hintsRow   = StatisticRow::create(statsContainer, tr(Text::Hints));
     solvedRow  = StatisticRow::create(statsContainer, tr(Text::Objectives));
+    playersRow = StatisticRow::create(statsContainer,tr(Text::Players));
 
     // ----------------------------
     // FOOTER (Button)
@@ -124,6 +125,8 @@ void VictorySubview::setEventCallback(EventCallback callback)
 
 void VictorySubview::setStats(const GameStats &stats)
 {
+    char players[8]; lv_snprintf(players,sizeof(players),"%u",unsigned(stats.players));
+    StatisticRow::setValue(playersRow,players);
     Log::info(
         TAG,
         "Updating stats: elapsed=%lu paused=%lu hints=%lu solved=%lu",
