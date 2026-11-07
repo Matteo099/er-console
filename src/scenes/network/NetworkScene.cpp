@@ -21,6 +21,8 @@ void NetworkScene::onEnter()
     network = static_cast<NetworkSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
     portal = static_cast<PortalSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_PORTAL));
     refreshNetworkStatus();
+    if (network) network->requestScan();
+    refreshScan(true);
 }
 
 void NetworkScene::onUpdate()
@@ -29,6 +31,7 @@ void NetworkScene::onUpdate()
         refreshNetworkStatus();
 
     view.update();
+    refreshScan();
 }
 
 void NetworkScene::onExit()
@@ -47,9 +50,16 @@ bool NetworkScene::handleUIEvent(const UIEvent& event)
         return false;
 
     const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
+    if (clicked.buttonId == "scan_networks")
+    {
+        if (network) network->requestScan();
+        refreshScan(true); return true;
+    }
     if (clicked.buttonId == "save_network")
     {
-        if (view.ssid().empty() || !DeviceConfigRepository::validNetwork(view.ssid(), view.secret()))
+        if (view.requiresPassword() && view.secret().empty())
+            view.setMessage(Text::PasswordRequired);
+        else if (view.ssid().empty() || !DeviceConfigRepository::validNetwork(view.ssid(), view.secret()))
             view.setMessage(Text::NetworkInvalid);
         else if (!DeviceConfigRepository().saveNetworkPreferences(view.ssid(), view.secret()))
             view.setMessage(Text::NetworkSaveFailed);
@@ -85,6 +95,21 @@ bool NetworkScene::handleUIEvent(const UIEvent& event)
     }
 
     return false;
+}
+
+void NetworkScene::refreshScan(bool force)
+{
+    WifiScanSnapshot snapshot;
+    if (network)
+    {
+        if (!network->scanSnapshot(force ? 0 : scanRevision,snapshot)) return;
+    }
+    else snapshot.state = WifiScanState::Error;
+    if (force || snapshot.revision != scanRevision)
+    {
+        scanRevision = snapshot.revision;
+        view.setScanResults(snapshot);
+    }
 }
 
 void NetworkScene::refreshNetworkStatus()

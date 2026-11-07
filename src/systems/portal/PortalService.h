@@ -43,13 +43,6 @@ struct PortalStatusData
     std::string batteryShuntVoltage = "N/A";
 };
 
-struct WifiScanEntry
-{
-    std::string ssid;
-    int signal = 0;
-    bool secure = false;
-    std::string authMode;
-};
 
 class PortalService
 {

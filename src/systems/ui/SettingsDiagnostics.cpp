@@ -11,6 +11,7 @@
 #include "drivers/display/TouchInputState.h"
 #include "services/GameMetadata.h"
 #include "systems/lua/bindings/CoreBindings.h"
+#include "systems/network/NetworkSystem.h"
 namespace
 {
     std::vector<uint8_t> wav(int16_t sample, uint32_t rate = 22050)
@@ -35,6 +36,16 @@ void runSettingsDiagnostics()
 {
     unsigned passed = 0, failed = 0;
     auto check = [&](bool value, const char *name) { if (value) ++passed; else ++failed; Serial.printf("@CHECK %s %s\n", value ? "PASS" : "FAIL", name); };
+    check(WifiScan::signalBars(-40)==4 && WifiScan::signalBars(-65)==3 && WifiScan::signalBars(-75)==2 && WifiScan::signalBars(-90)==1 && WifiScan::signalBars(0)==0, "Wi-Fi RSSI signal levels");
+    std::vector<WifiScanEntry> networks = {{"Lab",-90,true,"wpa2"},{"",-20,false,"open"},{"Guest",-75,false,"open"},{"Lab",-42,true,"wpa2"},{"Lab",-60,false,"open"}};
+    WifiScan::normalize(networks);
+    check(networks.size()==3 && networks[0].ssid=="Lab" && networks[0].signal==-42 && networks[1].ssid=="Lab" && !networks[1].secure && networks[2].ssid=="Guest", "Wi-Fi strongest duplicates, hidden SSIDs and security");
+    networks.clear(); for (unsigned i=0;i<40;++i) networks.push_back({std::to_string(i),-40-int(i),true,"wpa2"});
+    WifiScan::normalize(networks); check(networks.size()==24 && networks.back().signal==-63, "Wi-Fi results bounded to 24 strongest networks");
+#if !WIFI_ENABLED
+    NetworkSystem offline;
+    check(!offline.requestScan() && offline.getScanSnapshot().state==WifiScanState::Disabled, "Wi-Fi build flag prevents scan requests");
+#endif
     TouchInputState touch;
     auto point = touch.update({0, 0, false});
     check(!point.pressed && point.x == 0 && point.y == 0, "touch starts released");

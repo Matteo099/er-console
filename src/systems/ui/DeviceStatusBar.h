@@ -1,7 +1,7 @@
 #pragma once
 #include "components/StatusBadge.h"
 
-// One controller updates the current screen; each screen owns its floating view.
+// One persistent view on LVGL's top layer stays above scenes and dialogs.
 class DeviceStatusBar
 {
 public:

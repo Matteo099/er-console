@@ -37,9 +37,17 @@ void NetworkView::create()
     messageLabel = Label::create(form, "", &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     editor.create(screen, [this](const std::string &value)
     {
-        if (editingPassword) password = value; else selectedSsid = value;
+        password = value;
         setCredentials(selectedSsid, password);
     });
+    picker.create(screen, [this](WifiScanEntry entry)
+    {
+        if (entry.ssid != selectedSsid || !entry.secure) password.clear();
+        passwordRequired = entry.secure;
+        setCredentials(entry.ssid,password);
+        setMessage(Text::None);
+        if (entry.secure && password.empty()) editor.show(tr(Text::Password),password,true);
+    }, [this]() { emitEvent(ButtonClickedEvent("scan_networks")); });
 #if WIFI_ENABLED && PORTAL_ENABLED
     portalCard = Container::create(container, LV_PCT(100), LV_SIZE_CONTENT);
     UITheme::card(portalCard);
@@ -92,6 +100,7 @@ void NetworkView::update() {}
 void NetworkView::destroy()
 {
     editor.clear();
+    picker.clear();
     screen = brandImg = container = statusCard = statusLabel = ssidLabel = ipLabel = signalLabel = nullptr;
     portalLabel = portalCard = qrCode = qrHelp = btnPortal = btnBack = qrOverlay = nullptr;
     ssidButton = passwordButton = saveButton = disconnectButton = messageLabel = nullptr;
@@ -100,8 +109,11 @@ void NetworkView::destroy()
 void NetworkView::setCredentials(const std::string &ssid, const std::string &secret)
 {
     selectedSsid = ssid; password = secret;
-    Label::setText(lv_obj_get_child(ssidButton, 0), ssid.empty() ? tr(Text::NoNetwork) : ssid.c_str());
-    Label::setText(lv_obj_get_child(passwordButton, 0), secret.empty() ? tr(Text::EnterPassword) : "********");
+    picker.setSelected(selectedSsid,passwordRequired);
+    Label::setText(lv_obj_get_child(ssidButton, 0), ssid.empty() ? tr(Text::ChooseNetwork) : ssid.c_str());
+    Label::setText(lv_obj_get_child(passwordButton, 0), !passwordRequired ? tr(Text::OpenNetwork) : secret.empty() ? tr(Text::EnterPassword) : "********");
+    lv_obj_set_state(passwordButton,LV_STATE_DISABLED,ssid.empty() || !passwordRequired);
+    lv_obj_set_state(saveButton,LV_STATE_DISABLED,ssid.empty() || (passwordRequired && secret.empty()));
 }
 void NetworkView::setStatus(const std::string &status, const std::string &ssid, const std::string &ip, int signal)
 {
@@ -115,8 +127,13 @@ void NetworkView::setMessage(Text text) { Label::setText(messageLabel, tr(text))
 void NetworkView::onEdit(lv_event_t *e)
 {
     auto *v = static_cast<NetworkView *>(lv_event_get_user_data(e));
-    v->editingPassword = lv_event_get_target(e) == v->passwordButton;
-    v->editor.show(v->editingPassword ? tr(Text::Password) : "SSID", v->editingPassword ? v->password : v->selectedSsid, v->editingPassword);
+    if (lv_event_get_target(e) == v->passwordButton)
+        v->editor.show(tr(Text::Password),v->password,true);
+    else
+    {
+        v->picker.show();
+        v->emitEvent(ButtonClickedEvent("scan_networks"));
+    }
 }
 void NetworkView::onSave(lv_event_t *e) { auto *v = static_cast<NetworkView *>(lv_event_get_user_data(e)); v->emitEvent(ButtonClickedEvent("save_network")); }
 void NetworkView::onDisconnect(lv_event_t *e) { auto *v = static_cast<NetworkView *>(lv_event_get_user_data(e)); v->emitEvent(ButtonClickedEvent("disconnect_network")); }

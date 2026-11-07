@@ -25,12 +25,44 @@
 #include "drivers/display/TouchController.h"
 #include "GameFixtureDiagnostics.h"
 #include "services/GameMetadata.h"
+#include "systems/ui/UIEvents.h"
 
 namespace
 {
     bool simulatedTouch = false;
     TouchPoint touchPoint{0, 0, false};
     std::string contentFixture;
+    class NetworkPreview;
+    NetworkPreview *activeNetworkPreview = nullptr;
+
+    class NetworkPreview : public Scene
+    {
+        NetworkView view;
+        WifiScanSnapshot scan;
+    public:
+        explicit NetworkPreview(WifiScanState state, bool empty = false)
+        {
+            scan.state = state;
+            if (!empty && (state == WifiScanState::Ready || state == WifiScanState::Scanning))
+                scan.networks = {{"Studio",-42,true,"wpa2"},{"Laboratorio",-66,true,"wpa2"},{"Guest",-85,false,"open"}};
+        }
+        void onEnter() override
+        {
+            activeNetworkPreview = this;
+            view.setEventHandler(this); view.create();
+            view.setCredentials("Studio","demo12345");
+            view.setStatus(tr(Text::Disconnected),"Studio",""); view.setScanResults(scan);
+        }
+        void onUpdate() override { view.update(); }
+        void onExit() override { if (activeNetworkPreview == this) activeNetworkPreview = nullptr; view.destroy(); }
+        View &getView() override { return view; }
+        bool handleUIEvent(const UIEvent &event) override
+        {
+            if (event.getType() == ButtonClickedEvent::TYPE && static_cast<const ButtonClickedEvent &>(event).buttonId == "scan_networks") view.setScanResults(scan);
+            return true; // Preview never writes credentials or connects a radio.
+        }
+        void printDraft() { Serial.printf("@WIFI-DRAFT ssid=%s secure=%u password_bytes=%u\n",view.ssid().c_str(),view.requiresPassword(),unsigned(view.secret().size())); }
+    };
 
     class CatalogPreview : public Scene
     {
@@ -98,14 +130,23 @@ namespace
 
     lv_obj_t *buttonAt(lv_obj_t *obj, int x, int y)
     {
-        if (!lv_obj_is_visible(obj)) return nullptr;
-        lv_area_t area;
-        lv_obj_get_coords(obj, &area);
-        if (x < area.x1 || x > area.x2 || y < area.y1 || y > area.y2) return nullptr;
-        for (int i = int(lv_obj_get_child_count(obj)) - 1; i >= 0; --i)
-            if (auto *found = buttonAt(lv_obj_get_child(obj, i), x, y)) return found;
-        return lv_obj_check_type(obj, &lv_button_class) ? obj : nullptr;
+        lv_point_t point{x,y};
+        auto *hit = lv_indev_search_obj(obj,&point);
+        while (hit)
+        {
+            if (lv_obj_check_type(hit,&lv_button_class)) return hit;
+            hit = lv_obj_get_parent(hit);
+        }
+        return nullptr;
     }
+
+    void buttonCaption(lv_obj_t *obj, String &caption)
+    {
+        if (!lv_obj_is_visible(obj) || lv_obj_check_type(obj,&lv_textarea_class)) return;
+        if (lv_obj_check_type(obj,&lv_label_class)) { caption += lv_label_get_text(obj); caption += ' '; }
+        else for (uint32_t i=0;i<lv_obj_get_child_count(obj);++i) buttonCaption(lv_obj_get_child(obj,i),caption);
+    }
+
 
     lv_obj_t *scrollAt(lv_obj_t *obj, int x, int y)
     {
@@ -133,11 +174,13 @@ namespace
         if (!lv_obj_is_visible(obj)) return;
         lv_area_t a;
         lv_obj_get_coords(obj, &a);
+        if (lv_obj_check_type(obj,&lv_textarea_class))
+            Serial.printf("@TEXTAREA %d %d %d %d masked=%d bytes=%u\n",a.x1,a.y1,a.x2,a.y2,lv_textarea_get_password_mode(obj),unsigned(strlen(lv_textarea_get_text(obj))));
         if (lv_obj_check_type(obj, &lv_switch_class))
             Serial.printf("@SWITCH %d %d %d %d value=%d\n", a.x1, a.y1, a.x2, a.y2, lv_obj_has_state(obj, LV_STATE_CHECKED));
         if (lv_obj_check_type(obj, &lv_slider_class))
             Serial.printf("@SLIDER %d %d %d %d value=%d\n", a.x1, a.y1, a.x2, a.y2, int(lv_slider_get_value(obj)));
-        if (lv_obj_check_type(obj, &lv_button_class))
+        if (lv_obj_check_type(obj, &lv_button_class) && buttonAt(lv_screen_active(),(a.x1+a.x2)/2,(a.y1+a.y2)/2) == obj)
         {
             char prefix[96];
             snprintf(prefix, sizeof(prefix), "@BUTTON %d %d %d %d disabled=%d ", a.x1, a.y1, a.x2, a.y2,
@@ -146,13 +189,17 @@ namespace
             for (uint32_t i = 0; i < lv_obj_get_child_count(obj); ++i)
             {
                 auto *child = lv_obj_get_child(obj, i);
-                if (lv_obj_check_type(child, &lv_label_class)) { row += lv_label_get_text(child); row += ' '; }
+                buttonCaption(child,row);
             }
             Serial.println(row);
         }
         if (lv_obj_check_type(obj, &lv_label_class))
         {
-            String text = lv_label_get_text(obj);
+            bool inputLabel = false;
+            for (auto *parent = lv_obj_get_parent(obj); parent; parent = lv_obj_get_parent(parent))
+                if (lv_obj_check_type(parent,&lv_textarea_class)) { inputLabel = true; break; }
+            // Password visibility is a user action; serial inspection still redacts it.
+            String text = inputLabel ? "<input>" : lv_label_get_text(obj);
             text.replace("\n", " / ");
             Serial.printf("@LABEL %d %d %d %d %s\n", a.x1, a.y1, a.x2, a.y2, text.c_str());
         }
@@ -164,6 +211,27 @@ namespace
         auto *buffer = lv_snapshot_take(lv_screen_active(), LV_COLOR_FORMAT_RGB565);
         if (!buffer) { Serial.println("@SNAPSHOT ERROR allocation"); return; }
         const unsigned width = buffer->header.w, height = buffer->header.h;
+        // The actual display composites the top layer after the active screen.
+        // Capture it separately with alpha so serial screenshots match the TFT.
+        auto *overlay = lv_snapshot_take(lv_layer_top(),LV_COLOR_FORMAT_ARGB8888);
+        if (!overlay) { lv_draw_buf_destroy(buffer); Serial.println("@SNAPSHOT ERROR overlay allocation"); return; }
+        for (unsigned y=0;y<height && y<overlay->header.h;++y)
+        {
+            auto *dst = buffer->data + y*buffer->header.stride;
+            const auto *src = reinterpret_cast<const lv_color32_t *>(overlay->data + y*overlay->header.stride);
+            for (unsigned x=0;x<width && x<overlay->header.w;++x)
+            {
+                const unsigned a = src[x].alpha;
+                if (!a) continue;
+                const unsigned color = dst[x*2] | (unsigned(dst[x*2+1])<<8);
+                const unsigned r = (unsigned(src[x].red)*a + ((color>>11)&31)*255/31*(255-a)+127)/255;
+                const unsigned g = (unsigned(src[x].green)*a + ((color>>5)&63)*255/63*(255-a)+127)/255;
+                const unsigned b = (unsigned(src[x].blue)*a + (color&31)*255/31*(255-a)+127)/255;
+                const unsigned mixed = ((r>>3)<<11) | ((g>>2)<<5) | (b>>3);
+                dst[x*2] = uint8_t(mixed); dst[x*2+1] = uint8_t(mixed>>8);
+            }
+        }
+        lv_draw_buf_destroy(overlay);
         Serial.printf("@SNAPSHOT BEGIN %u %u\n", width, height);
         char line[205];
         unsigned used = 4;
@@ -241,7 +309,17 @@ void UIDiagnostics::update(SceneManager &scenes)
     {
         const char value = Serial.read();
         if (value != '\n') { if (value != '\r' && command.length() < 96) command += value; continue; }
-        if (command == "ui fixture clear") contentFixture.clear();
+        if (command.startsWith("ui preview-language ")) I18n::select(command.endsWith("en") ? I18n::Language::English : I18n::Language::Italian);
+        else if (command.startsWith("ui wifi-preview "))
+        {
+            WifiScanState state = command.endsWith("ready") ? WifiScanState::Ready :
+                command.endsWith("empty") ? WifiScanState::Ready : command.endsWith("error") ? WifiScanState::Error :
+                command.endsWith("busy") ? WifiScanState::Busy : command.endsWith("scanning") ? WifiScanState::Scanning : WifiScanState::Disabled;
+            auto *preview = new NetworkPreview(state,command.endsWith("empty"));
+            scenes.changeScene(preview,SceneTransition::None);
+        }
+        else if (command == "ui wifi-draft" && activeNetworkPreview) activeNetworkPreview->printDraft();
+        else if (command == "ui fixture clear") contentFixture.clear();
         else if (command.startsWith("ui fixture append "))
         {
             const auto hex = command.substring(18);
@@ -293,7 +371,7 @@ void UIDiagnostics::update(SceneManager &scenes)
             scenes.previewIndicators(mode);
         }
         else if (command == "ui snapshot") snapshot();
-        else if (command == "ui tree") tree(lv_screen_active());
+        else if (command == "ui tree") { tree(lv_screen_active()); tree(lv_layer_top()); }
         else if (command == "ui perf reset") UIFrameStats::reset();
         else if (command == "ui perf") UIFrameStats::print();
         else if (command == "ui selftest") runSettingsDiagnostics();

@@ -93,7 +93,8 @@ script esistenti, separato dalle preferenze dei canali.
 
 ## Rete e diagnostica
 
-SSID e password sono modificabili con tastiera a schermo; la password e'
+L'SSID si seleziona dalla lista delle reti disponibili, con segnale e protezione.
+La password usa una tastiera con occhio, Annulla e Conferma; viene inizialmente
 mascherata. Salva valida SSID (massimo 32 byte), password aperta/vuota, 8–63 byte
 oppure PSK esadecimale di 64 cifre. Le credenziali sono un record NVS separato
 `console-net/credentials` e restano utilizzabili senza SD.
@@ -103,6 +104,8 @@ rete. La pagina mostra stato, SSID, IP e segnale RSSI; il timeout e' 10 secondi.
 Disconnetti preserva l'access point del portale. QR e URL richiedono anche
 `PORTAL_ENABLED=1` e il servizio avviato. I flag restano attualmente a zero per
 l'isolamento dei brownout con alimentazione USB del PC.
+Per la selezione delle reti, i controlli e la scansione asincrona vedere
+[NETWORK_UI.md](NETWORK_UI.md).
 
 Con build debug e `UI_DIAGNOSTICS_ENABLED=1`, `ui selftest` verifica mixer,
 migrazione, validazione credenziali e traduzione live senza audio o scritture NVS.

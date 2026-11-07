@@ -16,25 +16,6 @@ namespace
         return value.substr(left, right - left + 1);
     }
 
-    static std::string wifiAuthModeToString(wifi_auth_mode_t mode)
-    {
-        switch (mode)
-        {
-            case WIFI_AUTH_OPEN: return "open";
-            case WIFI_AUTH_WEP: return "wep";
-            case WIFI_AUTH_WPA_PSK: return "wpa";
-            case WIFI_AUTH_WPA2_PSK: return "wpa2";
-            case WIFI_AUTH_WPA_WPA2_PSK: return "wpa_wpa2";
-            case WIFI_AUTH_WPA2_ENTERPRISE: return "wpa2_enterprise";
-#ifdef WIFI_AUTH_WPA3_PSK
-            case WIFI_AUTH_WPA3_PSK: return "wpa3";
-#endif
-#ifdef WIFI_AUTH_WPA2_WPA3_PSK
-            case WIFI_AUTH_WPA2_WPA3_PSK: return "wpa2_wpa3";
-#endif
-            default: return "unknown";
-        }
-    }
 }
 
 PortalService::PortalService(StorageSystem* storage, NetworkSystem* network, InputSystem* input)
@@ -178,30 +159,18 @@ bool PortalService::ensureDirectory(const std::string& path) const
 
 std::vector<WifiScanEntry> PortalService::scanWifiNetworks() const
 {
-    std::vector<WifiScanEntry> results;
-
-    int networksFound = WiFi.scanNetworks(false, true);
-    if (networksFound <= 0)
+    if (!networkSystem) return {};
+    networkSystem->requestScan();
+    const auto started = millis();
+    auto scan = networkSystem->getScanSnapshot();
+    // Preserve the synchronous HTTP contract while the network task owns the
+    // asynchronous SDK scan. LVGL keeps running on its own task.
+    while (scan.state == WifiScanState::Scanning && millis() - started < 10000)
     {
-        WiFi.scanDelete();
-        return results;
+        vTaskDelay(pdMS_TO_TICKS(20));
+        networkSystem->scanSnapshot(scan.revision,scan);
     }
-
-    results.reserve(static_cast<std::size_t>(networksFound));
-
-    for (int i = 0; i < networksFound; ++i)
-    {
-        WifiScanEntry entry;
-        entry.ssid = WiFi.SSID(i).c_str();
-        entry.signal = WiFi.RSSI(i);
-        entry.secure = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
-        entry.authMode = wifiAuthModeToString(WiFi.encryptionType(i));
-        if (!entry.ssid.empty())
-            results.push_back(entry);
-    }
-
-    WiFi.scanDelete();
-    return results;
+    return scan.networks;
 }
 
 std::string PortalService::portalUrl() const

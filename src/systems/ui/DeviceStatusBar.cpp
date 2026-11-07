@@ -8,7 +8,12 @@
 
 void DeviceStatusBar::attachTo(lv_obj_t *screen)
 {
-    root = Container::create(screen, Width, 22, LV_ALIGN_TOP_RIGHT, -12, 11);
+    if (root) { previewing = false; update(true); return; }
+    auto *layer = lv_display_get_layer_top(lv_obj_get_display(screen));
+    lv_obj_set_style_bg_opa(layer,LV_OPA_TRANSP,0);
+    lv_obj_remove_flag(layer,LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_remove_flag(layer,LV_OBJ_FLAG_SCROLLABLE);
+    root = Container::create(layer, Width, 22, LV_ALIGN_TOP_RIGHT, -12, 11);
     lv_obj_add_flag(root, LV_OBJ_FLAG_FLOATING);
     lv_obj_clear_flag(root, LV_OBJ_FLAG_CLICKABLE);
     Container::setFlex(root, LV_FLEX_FLOW_ROW, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER);
@@ -22,7 +27,7 @@ void DeviceStatusBar::attachTo(lv_obj_t *screen)
 void DeviceStatusBar::update(bool force)
 {
     if (!root) return;
-    // Dialogs may move in front of the screen; keep status above their backdrop.
+    // Top-layer children are composited after the active screen and its modals.
     auto *parent = lv_obj_get_parent(root);
     if (lv_obj_get_index(root) != int32_t(lv_obj_get_child_count(parent)) - 1) lv_obj_move_foreground(root);
     if (previewing || (!force && millis() - lastRefresh < 500)) return;

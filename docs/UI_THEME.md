@@ -42,7 +42,8 @@ trasparente; il portale usa le esportazioni `escaperiom*.svg` in
 `frontend/src/assets/images`. Dopo una modifica al portale eseguire
 `npm run build` in `frontend` e copiare `sd/.core/portal` sulla scheda fisica.
 
-`SceneManager` gestisce `DeviceStatusBar`, presente in alto a destra in tutte
+`SceneManager` gestisce un'unica `DeviceStatusBar` sul layer superiore LVGL,
+presente in alto a destra in tutte
 le schermate, anche sopra QR e conferme. Lo stato si aggiorna ogni 500 ms.
 `BrandHeader` riserva lo spazio necessario al gruppo. I colori semantici restano
 gli stessi nei tre temi: verde per disponibile, giallo per attesa/degrado,
@@ -88,7 +89,9 @@ configurato sul dispositivo.
   avviene in un task dedicato e il risultato viene conservato dal servizio
   storage; Aggiorna richiede una nuova lettura. Se fallisce compare uno stato
   esplicito, senza mostrare zero come spazio occupato.
-- Rete: stato connessione; accesso al portale e QR solo con entrambi i flag
+- Rete: selezione SSID da elenco ordinato per segnale, barre RSSI e lucchetti
+  aperto/chiuso. Password con occhio, Annulla e Conferma. Vedere
+  [NETWORK_UI.md](NETWORK_UI.md). Accesso al portale e QR solo con entrambi i flag
   `WIFI_ENABLED` e `PORTAL_ENABLED` attivi e con il portale effettivamente avviato.
   Un servizio disabilitato non produce URL o QR dimostrativi.
   Il pulsante QR Wi-Fi resta nella barra inferiore; la finestra QR e' un
