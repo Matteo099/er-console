@@ -1,5 +1,22 @@
 # EscapeRoom Console
 
+## Build e release automatiche
+
+Push e pull request producono build di sviluppo con firmware, portale e pacchetto
+SD. Dopo il merge su `main`, Semantic Release determina versione e release note
+dai Conventional Commits e pubblica solo dopo il completamento dei controlli.
+I feature branch producono artifact di sviluppo, senza creare GitHub Releases.
+Procedura e convenzioni: [wiki/CI-CD.md](wiki/CI-CD.md),
+[wiki/Conventional-Commits.md](wiki/Conventional-Commits.md).
+
+## Aggiornamenti firmware OTA
+
+Impostazioni > Sistema > Aggiornamenti permette di verificare e installare
+firmware dalle GitHub Releases, con progresso, verifica SHA-256 e rollback.
+Serve una connessione Wi-Fi a Internet; per il repository privato inserire
+un token GitHub con accesso Contents in sola lettura dalla schermata dedicata.
+Compatibilita', formato delle release e procedura: [wiki/OTA.md](wiki/OTA.md).
+
 ## Diagnostica microSD / TFT / touch
 
 Le opzioni di isolamento sono in [`src/config/Console.h`](src/config/Console.h):
@@ -14,9 +31,10 @@ Le opzioni di isolamento sono in [`src/config/Console.h`](src/config/Console.h):
 #define UI_DIAGNOSTICS_ENABLED 0
 ```
 
-Wi-Fi e portale sono attualmente disabilitati per isolare i reset brownout
-osservati con alimentazione USB del PC. Riportare entrambi i flag a `1` per
-riattivarli; con Wi-Fi disabilitato anche il portale rimane spento.
+L'esempio sopra disabilita Wi-Fi e portale per isolare i reset brownout
+osservati con alimentazione USB del PC. La configurazione corrente abilita
+il Wi-Fi e mantiene il portale disabilitato; fanno fede i flag in `Console.h`.
+Con Wi-Fi disabilitato anche il portale rimane spento e l'OTA non e' disponibile.
 Il precedente `ER_DISABLE_WIFI` della sola build debug
 e' stato sostituito da queste opzioni.
 

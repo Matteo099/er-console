@@ -13,6 +13,8 @@ GameView, conservando stato, timer e script: [IN_GAME_SETTINGS.md](IN_GAME_SETTI
 - **Sistema**: risorse CPU/RAM/PSRAM/SD e configurazione della rete.
 - **Statistiche**: riepiloghi globali dalla scheda Sistema e per gioco dal
   catalogo; [GAME_STATISTICS.md](GAME_STATISTICS.md).
+- **Aggiornamenti**: versione installata, GitHub Releases, download e
+  installazione OTA dalla scheda Sistema; [wiki/OTA.md](../wiki/OTA.md).
 
 Indietro da Risorse o Rete torna alla scheda Sistema. Il contenuto delle schede
 scorre, mentre intestazione, selettore delle schede e Indietro restano visibili.

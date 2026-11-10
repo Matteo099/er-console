@@ -30,6 +30,8 @@
 #include "InGameSettingsDiagnostics.h"
 #include "StatisticsDiagnostics.h"
 #include "GameAssetDiagnostics.h"
+#include "UpdateDiagnostics.h"
+#include "scenes/update/UpdateScene.h"
 #include "services/StatisticsRepository.h"
 #include "scenes/game/GameScene.h"
 #include "scenes/statistics/StatisticsScene.h"
@@ -371,6 +373,19 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui monitor") scenes.changeScene(new MonitorScene(), SceneTransition::None);
         else if (command == "ui about") scenes.changeScene(new AboutScene(), SceneTransition::None);
         else if (command == "ui network") scenes.changeScene(new NetworkScene(), SceneTransition::None);
+        else if (command == "ui updates") scenes.changeScene(new UpdateScene(),SceneTransition::None);
+        else if (command == "ui ota-test") runUpdateDiagnostics();
+        else if (command.startsWith("ui ota-native "))
+        {
+            unsigned bytes=0; char digest[65]{};
+            if (sscanf(command.c_str()+14,"%u %64s",&bytes,digest)==2) runNativeUpdateFlashDiagnostics(bytes,digest);
+        }
+        else if (command.startsWith("ui ota-preview")) scenes.changeScene(createUpdatePreview(command.endsWith("progress") ? 1 : command.endsWith("error") ? 2 : command.endsWith("installing") ? 3:0),SceneTransition::None);
+        else if (command == "ui ota-status")
+        {
+            const auto value=UpdateSystem::instance().snapshot();
+            Serial.printf("@OTA state=%u error=%u downloaded=%u written=%u total=%u token=%u\n",unsigned(value.state),unsigned(value.error),unsigned(value.downloaded),unsigned(value.written),unsigned(value.total),unsigned(value.hasToken));
+        }
         else if (command == "ui game") scenes.changeScene(new GamePreview(0), SceneTransition::None);
         else if (command == "ui victory") scenes.changeScene(new GamePreview(1), SceneTransition::None);
         else if (command == "ui fail") scenes.changeScene(new GamePreview(2), SceneTransition::None);

@@ -11,3 +11,4 @@ sd/.core/portal/**
 !sd/.core/portal/**/*.md
 
 node_modules
+/dist/

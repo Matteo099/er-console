@@ -1,46 +1,31 @@
 Import("env")
-import subprocess
-from datetime import datetime
+import importlib.util
+import re
+import hashlib
+from pathlib import Path
 
-def run(cmd):
-    try:
-        return subprocess.check_output(cmd).decode().strip()
-    except:
-        return None
-
-def get_git_hash():
-    return run(["git", "rev-parse", "--short", "HEAD"]) or "unknown"
-
-def get_branch():
-    branch = run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-    return branch or "unknown"
-
-git_hash = get_git_hash()
-branch = get_branch()
-
-# DEV MODE RULE
-is_dev = branch != "main"
-
-dev_flag = "true" if is_dev else "false"
-
-# Get version from build flags
-version = "unknown"
-for flag in env.get("BUILD_FLAGS", []):
-    if "APP_VERSION" in flag:
-        version = flag.split("=")[1].replace('\\"', '').replace('"', '')
-
-env.Append(
-    CPPDEFINES=[
-        ("GIT_HASH", '\\"%s\\"' % git_hash),
-        ("GIT_BRANCH", '\\"%s\\"' % branch),
-        ("DEV_MODE", dev_flag)
-    ]
-)
-
-print("\n========== BUILD INFO ==========")
-print(f"Version : {version}")
-print(f"Branch  : {branch}")
-print(f"Git     : {git_hash}")
-print(f"DevMode : {dev_flag}")
-print(f"Time    : {datetime.now()}")
-print("================================\n")
+root = Path(env['PROJECT_DIR'])
+spec = importlib.util.spec_from_file_location('ci_build_metadata', root/'scripts/ci/build_metadata.py')
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+info = module.metadata(root)
+# Quote branch names as data; Git branch names must not become compiler options.
+branch = re.sub(r'[^A-Za-z0-9._/-]', '-', info['branch'])
+env.Append(CPPDEFINES=[
+    ('APP_VERSION', '\\"%s\\"' % info['version']),
+    ('GIT_HASH', '\\"%s\\"' % info['commit'][:12]),
+    ('GIT_BRANCH', '\\"%s\\"' % branch),
+    ('DEV_MODE', 'true' if info['dev_mode'] else 'false'),
+    ('OTA_HARDWARE_ID', '\\"%s\\"' % module.HARDWARE),
+])
+framework = Path(env.PioPlatform().get_package_dir('framework-arduinoespressif32'))
+partition_name = env.GetProjectOption('board_build.partitions', env.BoardConfig().get('build.arduino.partitions', 'default.csv'))
+partition_file = Path(partition_name)
+if not partition_file.is_absolute():
+    partition_file = root/partition_name if (root/partition_name).is_file() else framework/'tools/partitions'/partition_name
+partition_hash = hashlib.sha256(partition_file.read_bytes()).hexdigest()
+env.Append(CPPDEFINES=[('OTA_PARTITION_TABLE_SHA256', '\\"%s\\"' % partition_hash)])
+print('\n========== BUILD INFO ==========')
+for key in ('version', 'branch', 'commit', 'channel', 'dev_mode'):
+    print(f'{key}: {info[key]}')
+print('================================\n')

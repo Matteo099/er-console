@@ -36,3 +36,11 @@ public:
     bool confirmed;
     uint16_t players;
 };
+
+class UpdateTokenChangedEvent : public UIEventType<UpdateTokenChangedEvent>
+{
+public:
+    static constexpr const char *TYPE="update_token_changed";
+    explicit UpdateTokenChangedEvent(const std::string &value) : token(value) {}
+    std::string token;
+};

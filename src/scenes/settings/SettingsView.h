@@ -28,6 +28,7 @@ private:
     lv_obj_t *preferenceLabels[4]{}, *panels[4]{}, *tabs[4]{}, *themeButtons[3]{}, *languageButtons[2]{};
     lv_obj_t *networkButton = nullptr, *resourcesButton = nullptr, *statisticsButton = nullptr, *backButton = nullptr, *networkLabel = nullptr;
     Text preferenceText = Text::Saved;
+    lv_obj_t *updatesButton=nullptr;
     Tab selectedTab = Tab::Appearance;
     AudioPreferenceSubview music, effects;
 };
