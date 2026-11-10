@@ -387,14 +387,19 @@ void UpdateSystem::beginBootVerification()
     }
     Preferences preferences;
     std::string expected;
+    bool interrupted = false;
     if (preferences.begin(NVS, true))
     {
         expected = preferences.getString("pending", "").c_str();
+        interrupted = preferences.getUChar("result", 0) == 3;
         TaskMutex::Guard lock(mutex);
         status.confirmedUpdate = preferences.getUChar("result", 0) == 2 && preferences.getString("last", "") == FW_VERSION;
     }
     if (!pendingBoot() && expected.empty())
+    {
+        if (interrupted) fail(UpdateError::Interrupted);
         return;
+    }
     if (!pendingBoot() && expected != FW_VERSION)
     {
         recordBoot(false);
