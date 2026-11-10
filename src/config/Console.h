@@ -3,6 +3,11 @@
 #define LOG_STORAGE_ENABLED 0
 #define RECOVERY_STORAGE_SYSTEM_ENABLED 0
 
+// OTA checks/installations also require WIFI_ENABLED.
+#ifndef OTA_ENABLED
+#define OTA_ENABLED 1
+#endif
+
 // Set to 1 to restore networking after SD diagnostics.
 #ifndef WIFI_ENABLED
 #define WIFI_ENABLED 1

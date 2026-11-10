@@ -1,4 +1,5 @@
 #include "EscapeOS.h"
+#include "systems/update/UpdateSystem.h"
 
 #include "core/SystemEventBus.h"
 #include "log/Logger.h"
@@ -64,7 +65,7 @@ void xTaskRainbowLed(void *params)
 
     while (os->isRunning())
     {
-        rainbow->update();
+        if (!UpdateSystem::flashInProgress()) rainbow->update();
         vTaskDelayUntil(&lastWakeTime, frameDelay);
     }
 
@@ -254,7 +255,7 @@ void EscapeOS::init()
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_AUDIO, &audioSystem);
     SystemEventBus::instance().registerService(SystemEventBus::SERVICE_LUA, &luaSystem);
     running = true;
-
+    UpdateSystem::instance().beginBootVerification();
     createTasks();
 }
 

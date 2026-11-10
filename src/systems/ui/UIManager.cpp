@@ -1,4 +1,5 @@
 #include "UIManager.h"
+#include "systems/update/UpdateSystem.h"
 
 #include "log/Logger.h"
 #include "scenes/boot/BootScene.h"
@@ -67,6 +68,7 @@ void UIManager::update()
     // Advance scene logic (non-blocking)
     scenes.update();
     UIDiagnostics::update(scenes);
+    UpdateSystem::instance().uiHeartbeat();
 }
 
 void UIManager::loadPreferences()

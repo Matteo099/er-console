@@ -1,4 +1,5 @@
 #include "AudioSystem.h"
+#include "systems/update/UpdateSystem.h"
 #include <algorithm>
 #include <cstring>
 #include <esp_heap_caps.h>
@@ -37,6 +38,20 @@ void AudioSystem::update()
     while (true)
     {
         if (xQueueReceive(preferencesQueue,&preferences,0)) mixer.configure(preferences);
+        if (UpdateSystem::flashInProgress())
+        {
+            stop(); syncControls(); driver->stop();
+            while (xQueueReceive(queueHandle(),&event,0))
+            {
+                if (event.type==AudioEventType::PRELOAD && event.source)
+                { TaskMutex::Guard lock(controls); preloads.finish(event.source,false); }
+                else if (event.type==AudioEventType::SET_VOLUME) setVolume(event.volume.volume);
+                else if (event.source) release(event.source);
+            }
+            flashQuiescent.store(true);
+            vTaskDelay(1); continue;
+        }
+        flashQuiescent.store(false);
         // Bound queue work per iteration so effects cannot starve I2S.
         for (unsigned i=0;i<16 && xQueueReceive(queueHandle(),&event,0);++i)
         {

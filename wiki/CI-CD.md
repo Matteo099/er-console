@@ -82,8 +82,8 @@ packaging. `.core` contents are added explicitly in Python, so shell globs and
 artifact hidden-file defaults cannot accidentally remove them.
 
 The `.bin` is an **application image**, not a merged USB/factory flash image.
-The manifest and checksums prepare the release format for the future OTA client;
-this workflow does not implement OTA installation or cryptographic signing.
+The manifest and checksums are consumed by the [device OTA client](OTA.md).
+The workflow does not cryptographically sign firmware.
 Copy SD assets deliberately when updating an existing card; bundled games are
 the repository examples and can replace files with the same names. Existing
 configuration, credentials and NVS statistics are not part of the archive.
