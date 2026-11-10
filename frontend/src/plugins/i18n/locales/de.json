@@ -1,0 +1,231 @@
+{
+    "erConsole": {
+        "common": {
+            "na": "k.A.",
+            "unknown": "Unbekannt",
+            "save": "Speichern",
+            "reload": "Neu laden",
+            "select": "Auswahlen",
+            "upload": "Hochladen",
+            "cancel": "Abbrechen",
+            "apply": "Anwenden"
+        },
+        "app": {
+            "language": "Sprache",
+            "menu": {
+                "dashboard": "Dashboard",
+                "config": "ESP32 Konfig",
+                "esp32s3r8n16": "ESP32 Verdrahtung",
+                "files": "Dateibrowser",
+                "logsAudit": "Logs und Audit",
+                "about": "Info"
+            },
+            "status": {
+                "wifiConnected": "WiFi verbunden",
+                "wifiDisconnected": "WiFi getrennt",
+                "lastRefresh": "Letzte Aktualisierung: {value}"
+            },
+            "actions": {
+                "lightMode": "Heller Modus",
+                "darkMode": "Dunkler Modus",
+                "refreshStatus": "Status aktualisieren"
+            },
+            "notifications": {
+                "deviceStatusRefreshed": "Geratestatus aktualisiert"
+            }
+        },
+        "dashboard": {
+            "title": "Geraete-Dashboard",
+            "subtitle": "Live-Ubersicht uber Status und Diagramme",
+            "sections": {
+                "storage": "Speicher",
+                "memory": "Arbeitsspeicher",
+                "cpuUptime": "CPU / Laufzeit",
+                "power": "Leistungsmonitor",
+                "portal": "Portal",
+                "deviceControls": "Geraetesteuerung"
+            },
+            "labels": {
+                "state": "Status",
+                "ssid": "SSID",
+                "ip": "IP",
+                "signal": "Signal",
+                "used": "Belegt",
+                "free": "Frei",
+                "total": "Gesamt",
+                "heapInUse": "Genutzter Heap",
+                "cpu": "CPU",
+                "freeHeap": "Freier Heap",
+                "freePsram": "Freier PSRAM",
+                "uptime": "Laufzeit",
+                "monitor": "Monitor",
+                "voltage": "Spannung",
+                "current": "Strom",
+                "power": "Leistung",
+                "loadVoltage": "Lastspannung",
+                "shuntVoltage": "Shunt-Spannung",
+                "sampleAge": "Alter der Messung",
+                "portalUrl": "Portal-URL",
+                "portalSsid": "Portal-SSID",
+                "portalIp": "Portal-IP"
+            },
+            "power": {
+                "unsupported": "INA219 nicht erkannt",
+                "waitingSample": "Warten auf erste Messung",
+                "online": "Telemetrie aktiv",
+                "overflow": "Uberlauf erkannt"
+            },
+            "deviceControlsDescription": "ESP32 von diesem Dashboard neu starten oder herunterfahren.",
+            "actions": {
+                "reboot": "Neu starten",
+                "shutdown": "Herunterfahren"
+            },
+            "notifications": {
+                "statusRefreshed": "Dashboard-Status aktualisiert",
+                "rebootSent": "Neustartbefehl gesendet",
+                "shutdownSent": "Herunterfahren-Befehl gesendet"
+            },
+            "errors": {
+                "rebootFailed": "Neustart des Gerats fehlgeschlagen",
+                "shutdownFailed": "Herunterfahren des Gerats fehlgeschlagen"
+            }
+        },
+        "config": {
+            "title": "ESP32 Konfiguration",
+            "subtitle": "Sprache, Design und WiFi konfigurieren",
+            "sections": {
+                "device": "Gerat",
+                "developer": "Entwicklung",
+                "wifiConnection": "WiFi-Verbindung",
+                "locale": "Region",
+                "maintenance": "Wartung"
+            },
+            "labels": {
+                "deviceName": "Geratename",
+                "developerMode": "Entwicklungsmodus aktivieren",
+                "uiTheme": "UI-Design",
+                "ssid": "SSID",
+                "password": "Passwort",
+                "language": "Sprache",
+                "timezone": "Zeitzone",
+                "dateFormat": "Datumsformat",
+                "wifiPassword": "WiFi-Passwort"
+            },
+            "table": {
+                "ssid": "SSID",
+                "signal": "Signal",
+                "security": "Sicherheit",
+                "auth": "Auth"
+            },
+            "actions": {
+                "scanWifi": "WiFi scannen",
+                "resetChanges": "Anderungen zurucksetzen",
+                "factoryReset": "Werkseinstellungen",
+                "confirmReset": "Zurucksetzen bestatigen"
+            },
+            "noWifiConfigured": "Kein WiFi konfiguriert. Wahlen Sie unten ein Netzwerk aus.",
+            "connectToWifi": "Verbinden mit {ssid}",
+            "maintenanceDescription": "Geraetekonfiguration auf Werkseinstellungen zurucksetzen.",
+            "developerDescription": "Aktiviert erweiterte Seiten (ESP32 Verdrahtung, Dateibrowser und Logs und Audit) fur Diagnose und Entwicklung.",
+            "confirmFactoryResetTitle": "Werkseinstellungen bestatigen",
+            "confirmFactoryResetText": "Dadurch wird die Konfiguration auf Werkseinstellungen zuruckgesetzt. Fortfahren?",
+            "notifications": {
+                "saved": "Konfiguration erfolgreich gespeichert",
+                "localChangesReverted": "Lokale Anderungen verworfen",
+                "factoryResetDone": "Konfiguration auf Werkseinstellungen zuruckgesetzt"
+            },
+            "errors": {
+                "saveFailed": "Speichern der Konfiguration fehlgeschlagen",
+                "wifiScanUnavailable": "WiFi-Scan im Backend nicht verfugbar",
+                "factoryResetFailed": "Werkreset fehlgeschlagen"
+            }
+        },
+        "files": {
+            "title": "Dateibrowser",
+            "subtitle": "Dateien im ESP32-Dateisystem durchsuchen, hochladen, loschen und verschieben",
+            "sections": {
+                "files": "Dateien"
+            },
+            "labels": {
+                "currentPath": "Aktueller Pfad",
+                "uploadFile": "Datei hochladen",
+                "sourcePath": "Quellpfad",
+                "destinationPath": "Zielpfad"
+            },
+            "table": {
+                "name": "Name",
+                "path": "Pfad",
+                "size": "Grosse",
+                "actions": "Aktionen"
+            },
+            "actions": {
+                "up": "Nach oben",
+                "move": "Verschieben"
+            },
+            "moveRenameEntry": "Eintrag verschieben / umbenennen",
+            "moveRequiresBackend": "Diese Aktion erfordert Backend-Unterstutzung fur /api/files/move.",
+            "notifications": {
+                "fileUploaded": "Datei hochgeladen",
+                "entryDeleted": "Eintrag geloscht",
+                "entryMoved": "Eintrag verschoben"
+            },
+            "errors": {
+                "uploadFailed": "Hochladen fehlgeschlagen",
+                "deleteFailed": "Loschen fehlgeschlagen",
+                "moveUnavailable": "Verschieben ist im Backend nicht verfugbar"
+            }
+        },
+        "logs": {
+            "title": "Logs und Audit",
+            "subtitle": "Systemlogs und lokale Audit-Ereignisse prufen",
+            "sections": {
+                "systemLogs": "Systemlogs",
+                "auditTrail": "Audit-Protokoll (UI)"
+            },
+            "labels": {
+                "logLines": "Log-Zeilen"
+            },
+            "actions": {
+                "refreshLogs": "Logs aktualisieren",
+                "clearLogs": "Logs leeren",
+                "clearAudit": "Audit leeren"
+            },
+            "noLogDataYet": "Noch keine Log-Daten",
+            "audit": {
+                "loadedLines": "{count} Zeilen aus den Systemlogs geladen",
+                "clearedSystemLogs": "Systemlogs geleert"
+            },
+            "notifications": {
+                "logsCleared": "Logs geleert"
+            },
+            "errors": {
+                "unableToLoadLogs": "Logs konnten nicht geladen werden",
+                "unableToClearLogs": "Logs konnten nicht geleert werden"
+            }
+        },
+        "about": {
+            "title": "Uber das Gerat",
+            "application": "Anwendung",
+            "version": "Version {value}",
+            "frontendBuildVersion": "Frontend-Build-Version",
+            "device": "Gerat",
+            "portalUrl": "Portal-URL",
+            "language": "Sprache",
+            "timezone": "Zeitzone"
+        },
+        "hardware": {
+            "title": "ESP32-S3 N16R8 Verdrahtungsplan",
+            "subtitle": "Schreibgeschutzte Ansicht zum schnellen Nachbau interner Verbindungen.",
+            "readOnly": "Schreibgeschutzte Referenz",
+            "mapTitle": "Board- und Peripherie-Verbindungen",
+            "legendTitle": "Bus-Legende",
+            "legendDescription": "Diese Ansicht als visuelle Checkliste nutzen, um Jumper im Gehause neu zu stecken.",
+            "connectionTableTitle": "Pin-Verbindungstabelle",
+            "columns": {
+                "device": "Gerat",
+                "signal": "Signal",
+                "gpio": "GPIO"
+            }
+        }
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "emeraldwalk.runonsave": {
+        "commands": [
+            {
+                "match": ".*Bindings\\.cpp$",
+                "cmd": "python scripts/generate_lua_stubs.py"
+            }
+        ]
+    }
+}

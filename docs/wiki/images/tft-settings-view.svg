@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="760" viewBox="0 0 480 760" role="img" aria-label="Settings scene mockup">
+  <rect width="480" height="760" fill="#111827"/>
+  <rect x="80" y="40" width="320" height="680" rx="26" fill="#0f172a" stroke="#334155" stroke-width="4"/>
+  <rect x="120" y="80" width="240" height="26" rx="4" fill="#1e293b"/>
+  <text x="240" y="98" fill="#9ca3af" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Brand Header</text>
+
+  <rect x="130" y="190" width="220" height="250" rx="12" fill="#111827" stroke="#374151"/>
+
+  <rect x="142" y="212" width="196" height="44" rx="9" fill="#2563eb"/>
+  <text x="240" y="240" fill="#eff6ff" text-anchor="middle" font-size="16" font-family="Segoe UI, Arial">Wi-Fi</text>
+  <text x="240" y="274" fill="#9ca3af" text-anchor="middle" font-size="12" font-family="Segoe UI, Arial">Wi-Fi status: Connected</text>
+
+  <rect x="142" y="306" width="196" height="44" rx="9" fill="#374151"/>
+  <text x="240" y="334" fill="#f9fafb" text-anchor="middle" font-size="16" font-family="Segoe UI, Arial">Sound: OFF</text>
+
+  <rect x="102" y="622" width="74" height="34" rx="8" fill="#374151"/>
+  <text x="139" y="644" fill="#f3f4f6" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Back</text>
+
+  <text x="240" y="700" fill="#94a3b8" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Expected Settings Scene</text>
+</svg>

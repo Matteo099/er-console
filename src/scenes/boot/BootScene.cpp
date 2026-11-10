@@ -1,23 +1,41 @@
 #include "BootScene.h"
+#include "log/Logger.h"
 
-BootScene::BootScene(Display* d) : display(d), view(d) {}
+#include "os/BootEvent.h"
+#include "core/SystemEventBus.h"
 
-void BootScene::onEnter() {
-    display->clear(0x0000);  // pulizia display base
-    view.create();            // crea la UI LVGL
+void BootScene::onEnter()
+{
+    Log::info(Log::SCENE_TAG, "Entering BootScene");
+    view.create();
 }
 
-void BootScene::onUpdate() {
+void BootScene::onUpdate()
+{
+    // ---- Consume boot events ----
     BootEvent evt;
-    while (xQueueReceive(EscapeOS::bootQueue, &evt, 0) == pdTRUE) {
-        progress = evt.progress;
-        label = evt.label;
+    while (xQueueReceive(SystemEventBus::bootQueue, &evt, 0) == pdTRUE)
+    {
+        view.setProgress(evt.progress, evt.label);
+
+        if (evt.progress >= 100)
+            bootCompleted = true;
     }
 
-    // aggiorna solo la UI, non ridisegna tutto a mano
-    view.update(progress, label);
+    if(bootCompleted && bootCompleteDelayTick > 0)
+        bootCompleteDelayTick--; // assuming ~60 FPS
+
+    view.update();
 }
 
-void BootScene::onExit() {
-    // eventuale pulizia se necessaria
+void BootScene::onExit()
+{
+    view.destroy();
+}
+
+SceneRequest BootScene::getRequest() const
+{
+    return bootCompleted && bootCompleteDelayTick <= 0
+               ? SceneRequest(SceneChange::GoToMainMenu, SceneTransition::Fade)
+               : SceneRequest();
 }

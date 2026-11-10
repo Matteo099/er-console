@@ -1,0 +1,41 @@
+{
+    "name": "Test - Ingressi",
+    "description": "Gioco di prova degli ingressi e dei pulsanti.",
+    "version": "1.0",
+    "author": "Matteo Romagnoli",
+    "durationMin": 5,
+    "difficulty": 2,
+    "inputs": {
+        "power": {
+            "enabled": false
+        },
+        "rfid": {
+            "enabled": false
+        },
+        "oled": {
+            "enabled": false
+        },
+        "channels": {
+            "enabled": true
+        },
+        "rgb": {
+            "enabled": false
+        },
+        "sevenSegment": {
+            "enabled": false
+        },
+        "relays": {
+            "enabled": false
+        }
+    },
+    "translations": {
+        "it": {
+            "name": "Test - Ingressi",
+            "description": "Gioco di prova degli ingressi e dei pulsanti."
+        },
+        "en": {
+            "name": "Test - Inputs",
+            "description": "Test game for inputs and buttons."
+        }
+    }
+}

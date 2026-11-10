@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="760" viewBox="0 0 480 760" role="img" aria-label="Game list scene mockup">
+  <rect width="480" height="760" fill="#0b1220"/>
+  <rect x="80" y="40" width="320" height="680" rx="26" fill="#0f172a" stroke="#334155" stroke-width="4"/>
+  <rect x="120" y="80" width="240" height="26" rx="4" fill="#1e293b"/>
+  <text x="240" y="98" fill="#9ca3af" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Brand Header</text>
+  <rect x="110" y="146" width="260" height="460" rx="12" fill="#111827" stroke="#374151"/>
+  <rect x="124" y="164" width="232" height="118" rx="10" fill="#1f2937"/>
+  <text x="138" y="194" fill="#f9fafb" font-size="16" font-family="Segoe UI, Arial">The Abandoned Lab</text>
+  <text x="138" y="218" fill="#cbd5e1" font-size="12" font-family="Segoe UI, Arial">Difficulty: 3  Duration: 45m</text>
+  <rect x="265" y="238" width="80" height="28" rx="8" fill="#2563eb"/>
+  <text x="305" y="257" fill="#eff6ff" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Start</text>
+  <rect x="124" y="294" width="232" height="118" rx="10" fill="#1f2937"/>
+  <text x="138" y="324" fill="#f9fafb" font-size="16" font-family="Segoe UI, Arial">The Forgotten Vault</text>
+  <text x="138" y="348" fill="#cbd5e1" font-size="12" font-family="Segoe UI, Arial">Difficulty: 4  Duration: 60m</text>
+  <rect x="102" y="622" width="74" height="34" rx="8" fill="#374151"/>
+  <text x="139" y="644" fill="#f3f4f6" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Back</text>
+  <text x="240" y="688" fill="#94a3b8" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Expected Game List Scene</text>
+</svg>

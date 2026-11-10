@@ -1,0 +1,231 @@
+{
+    "erConsole": {
+        "common": {
+            "na": "n/d",
+            "unknown": "Inconnu",
+            "save": "Enregistrer",
+            "reload": "Recharger",
+            "select": "Selectionner",
+            "upload": "Televerser",
+            "cancel": "Annuler",
+            "apply": "Appliquer"
+        },
+        "app": {
+            "language": "Langue",
+            "menu": {
+                "dashboard": "Tableau de bord",
+                "config": "Config ESP32",
+                "esp32s3r8n16": "Schema ESP32",
+                "files": "Explorateur de Fichiers",
+                "logsAudit": "Journaux et Audit",
+                "about": "A propos"
+            },
+            "status": {
+                "wifiConnected": "WiFi connecte",
+                "wifiDisconnected": "WiFi deconnecte",
+                "lastRefresh": "Derniere mise a jour : {value}"
+            },
+            "actions": {
+                "lightMode": "Mode clair",
+                "darkMode": "Mode sombre",
+                "refreshStatus": "Actualiser l'etat"
+            },
+            "notifications": {
+                "deviceStatusRefreshed": "Etat de l'appareil actualise"
+            }
+        },
+        "dashboard": {
+            "title": "Tableau de Bord Appareil",
+            "subtitle": "Vue d'ensemble en direct de l'etat et des graphiques",
+            "sections": {
+                "storage": "Stockage",
+                "memory": "Memoire",
+                "cpuUptime": "CPU / Uptime",
+                "power": "Moniteur de Puissance",
+                "portal": "Portail",
+                "deviceControls": "Commandes Appareil"
+            },
+            "labels": {
+                "state": "Etat",
+                "ssid": "SSID",
+                "ip": "IP",
+                "signal": "Signal",
+                "used": "Utilise",
+                "free": "Libre",
+                "total": "Total",
+                "heapInUse": "Heap utilise",
+                "cpu": "CPU",
+                "freeHeap": "Heap libre",
+                "freePsram": "PSRAM libre",
+                "uptime": "Uptime",
+                "monitor": "Moniteur",
+                "voltage": "Tension",
+                "current": "Courant",
+                "power": "Puissance",
+                "loadVoltage": "Tension de charge",
+                "shuntVoltage": "Tension shunt",
+                "sampleAge": "Age de l'echantillon",
+                "portalUrl": "URL du Portail",
+                "portalSsid": "SSID du Portail",
+                "portalIp": "IP du Portail"
+            },
+            "power": {
+                "unsupported": "INA219 non detecte",
+                "waitingSample": "En attente du premier echantillon",
+                "online": "Telemetrie active",
+                "overflow": "Depassement detecte"
+            },
+            "deviceControlsDescription": "Redemarrez ou eteignez l'ESP32 depuis ce tableau de bord.",
+            "actions": {
+                "reboot": "Redemarrer",
+                "shutdown": "Eteindre"
+            },
+            "notifications": {
+                "statusRefreshed": "Etat du tableau de bord actualise",
+                "rebootSent": "Commande de redemarrage envoyee",
+                "shutdownSent": "Commande d'arret envoyee"
+            },
+            "errors": {
+                "rebootFailed": "Echec du redemarrage de l'appareil",
+                "shutdownFailed": "Echec de l'arret de l'appareil"
+            }
+        },
+        "config": {
+            "title": "Configuration ESP32",
+            "subtitle": "Configurez la langue, le theme et le WiFi",
+            "sections": {
+                "device": "Appareil",
+                "developer": "Developpement",
+                "wifiConnection": "Connexion WiFi",
+                "locale": "Parametres regionaux",
+                "maintenance": "Maintenance"
+            },
+            "labels": {
+                "deviceName": "Nom de l'appareil",
+                "developerMode": "Activer le mode developpement",
+                "uiTheme": "Theme UI",
+                "ssid": "SSID",
+                "password": "Mot de passe",
+                "language": "Langue",
+                "timezone": "Fuseau horaire",
+                "dateFormat": "Format de date",
+                "wifiPassword": "Mot de passe WiFi"
+            },
+            "table": {
+                "ssid": "SSID",
+                "signal": "Signal",
+                "security": "Securite",
+                "auth": "Auth"
+            },
+            "actions": {
+                "scanWifi": "Scanner le WiFi",
+                "resetChanges": "Reinitialiser les modifications",
+                "factoryReset": "Reinitialisation usine",
+                "confirmReset": "Confirmer la reinitialisation"
+            },
+            "noWifiConfigured": "Aucun WiFi configure. Selectionnez un reseau dans la liste ci-dessous.",
+            "connectToWifi": "Se connecter a {ssid}",
+            "maintenanceDescription": "Restaurez la configuration de l'appareil aux parametres d'usine.",
+            "developerDescription": "Active les pages avancees (Schema ESP32, Explorateur de Fichiers et Journaux et Audit) pour diagnostic et developpement.",
+            "confirmFactoryResetTitle": "Confirmer la reinitialisation usine",
+            "confirmFactoryResetText": "Cette action restaurera la configuration aux parametres d'usine. Continuer ?",
+            "notifications": {
+                "saved": "Configuration enregistree avec succes",
+                "localChangesReverted": "Modifications locales annulees",
+                "factoryResetDone": "Configuration restauree aux parametres d'usine"
+            },
+            "errors": {
+                "saveFailed": "Echec de l'enregistrement de la configuration",
+                "wifiScanUnavailable": "Scan WiFi indisponible depuis le backend",
+                "factoryResetFailed": "Echec de la reinitialisation usine"
+            }
+        },
+        "files": {
+            "title": "Explorateur de Fichiers",
+            "subtitle": "Naviguez, televersez, supprimez et deplacez des fichiers dans le systeme ESP32",
+            "sections": {
+                "files": "Fichiers"
+            },
+            "labels": {
+                "currentPath": "Chemin actuel",
+                "uploadFile": "Televerser un fichier",
+                "sourcePath": "Chemin source",
+                "destinationPath": "Chemin de destination"
+            },
+            "table": {
+                "name": "Nom",
+                "path": "Chemin",
+                "size": "Taille",
+                "actions": "Actions"
+            },
+            "actions": {
+                "up": "Monter",
+                "move": "Deplacer"
+            },
+            "moveRenameEntry": "Deplacer / Renommer l'entree",
+            "moveRequiresBackend": "Cette action necessite un support backend pour /api/files/move.",
+            "notifications": {
+                "fileUploaded": "Fichier televerse",
+                "entryDeleted": "Entree supprimee",
+                "entryMoved": "Entree deplacee"
+            },
+            "errors": {
+                "uploadFailed": "Echec du televersement",
+                "deleteFailed": "Echec de la suppression",
+                "moveUnavailable": "Le deplacement n'est pas disponible sur le backend"
+            }
+        },
+        "logs": {
+            "title": "Journaux et Audit",
+            "subtitle": "Inspectez les journaux systeme et les evenements d'audit locaux",
+            "sections": {
+                "systemLogs": "Journaux Systeme",
+                "auditTrail": "Piste d'Audit (UI)"
+            },
+            "labels": {
+                "logLines": "Lignes de log"
+            },
+            "actions": {
+                "refreshLogs": "Actualiser les journaux",
+                "clearLogs": "Effacer les journaux",
+                "clearAudit": "Effacer l'audit"
+            },
+            "noLogDataYet": "Aucune donnee de journal pour le moment",
+            "audit": {
+                "loadedLines": "{count} lignes chargees depuis les journaux systeme",
+                "clearedSystemLogs": "Journaux systeme effaces"
+            },
+            "notifications": {
+                "logsCleared": "Journaux effaces"
+            },
+            "errors": {
+                "unableToLoadLogs": "Impossible de charger les journaux",
+                "unableToClearLogs": "Impossible d'effacer les journaux"
+            }
+        },
+        "about": {
+            "title": "A Propos de l'Appareil",
+            "application": "Application",
+            "version": "Version {value}",
+            "frontendBuildVersion": "Version de build frontend",
+            "device": "Appareil",
+            "portalUrl": "URL du Portail",
+            "language": "Langue",
+            "timezone": "Fuseau horaire"
+        },
+        "hardware": {
+            "title": "Carte de Cablage ESP32-S3 N16R8",
+            "subtitle": "Vue en lecture seule pour reconstruire rapidement les liaisons internes.",
+            "readOnly": "Reference en lecture seule",
+            "mapTitle": "Connexions Carte et Peripheriques",
+            "legendTitle": "Legende des Bus",
+            "legendDescription": "Utilisez cette vue comme checklist visuelle en recreant les cavaliers dans le boitier.",
+            "connectionTableTitle": "Table des Connexions Pin",
+            "columns": {
+                "device": "Appareil",
+                "signal": "Signal",
+                "gpio": "GPIO"
+            }
+        }
+    }
+}

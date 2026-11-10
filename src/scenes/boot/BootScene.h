@@ -1,21 +1,20 @@
 #pragma once
-#include "devices/display/Display.h"
-#include "BootView.h"
-#include "os/BootEvent.h"
-#include "os/EscapeOS.h"
-#include "ui/Scene.h"
 
-class BootScene : public Scene {
-public:
-    BootScene(Display* display);
+#include "systems/ui/Scene.h"
+#include "scenes/boot/BootView.h"
 
+class BootScene : public Scene
+{
+public:    
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
 
+    View& getView() override { return view; }
+    SceneRequest getRequest() const override;
+
 private:
-    Display* display;
-    BootView view;       // interfaccia LVGL
-    uint8_t progress = 0;
-    const char* label = "Starting";
+    BootView view;
+    bool bootCompleted = false;
+    short bootCompleteDelayTick = 30;
 };

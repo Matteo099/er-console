@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="760" viewBox="0 0 480 760" role="img" aria-label="About scene mockup">
+  <rect width="480" height="760" fill="#0f172a"/>
+  <rect x="80" y="40" width="320" height="680" rx="26" fill="#111827" stroke="#334155" stroke-width="4"/>
+  <rect x="120" y="80" width="240" height="26" rx="4" fill="#1e293b"/>
+  <text x="240" y="98" fill="#9ca3af" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Brand Header</text>
+
+  <rect x="120" y="178" width="240" height="320" rx="12" fill="#0b1324" stroke="#2b3648"/>
+  <text x="240" y="218" fill="#64B5F6" text-anchor="middle" font-size="36" font-family="Segoe UI, Arial">📄</text>
+  <text x="240" y="256" fill="#e5e7eb" text-anchor="middle" font-size="18" font-family="Segoe UI, Arial">EscapeOS</text>
+  <text x="240" y="286" fill="#cbd5e1" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Portable escape-room platform</text>
+
+  <text x="240" y="330" fill="#d1d5db" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Version 1.0.0</text>
+  <text x="240" y="352" fill="#d1d5db" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Build: 2026-04-15</text>
+  <text x="240" y="374" fill="#d1d5db" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Commit: abcdef0</text>
+
+  <rect x="102" y="622" width="74" height="34" rx="8" fill="#374151"/>
+  <text x="139" y="644" fill="#f3f4f6" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Back</text>
+
+  <text x="240" y="700" fill="#94a3b8" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Expected About Scene</text>
+</svg>

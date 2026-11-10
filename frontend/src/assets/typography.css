@@ -1,0 +1,22 @@
+@font-face {
+  font-family: 'Escaperiom Display';
+  src: url('./fonts/EscaperiomDisplay.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+h1, h2, h3, h4,
+.v-application .v-toolbar-title,
+.v-application .v-card-title,
+.v-application .text-h1,
+.v-application .text-h2,
+.v-application .text-h3,
+.v-application .text-h4,
+.v-application .text-h5,
+.v-application .text-h6 {
+  font-family: 'Escaperiom Display', sans-serif !important;
+  font-weight: 400;
+  letter-spacing: 0.025em !important;
+  line-height: 1.35;
+}

@@ -1,0 +1,41 @@
+{
+    "name": "Test - Oggetti",
+    "description": "Gioco di prova di oggetti, indizi e immagini.",
+    "version": "1.0",
+    "author": "Matteo Romagnoli",
+    "durationMin": 5,
+    "difficulty": 2,
+    "inputs": {
+        "power": {
+            "enabled": false
+        },
+        "rfid": {
+            "enabled": false
+        },
+        "oled": {
+            "enabled": false
+        },
+        "channels": {
+            "enabled": true
+        },
+        "rgb": {
+            "enabled": false
+        },
+        "sevenSegment": {
+            "enabled": false
+        },
+        "relays": {
+            "enabled": false
+        }
+    },
+    "translations": {
+        "it": {
+            "name": "Test - Oggetti",
+            "description": "Gioco di prova di oggetti, indizi e immagini."
+        },
+        "en": {
+            "name": "Test - Game Objects",
+            "description": "Test game for objects, clues and images."
+        }
+    }
+}

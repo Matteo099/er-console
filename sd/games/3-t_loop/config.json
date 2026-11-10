@@ -1,0 +1,41 @@
+{
+    "name": "Test - Ciclo",
+    "description": "Gioco di prova del ciclo di aggiornamento.",
+    "version": "1.0",
+    "author": "Matteo Romagnoli",
+    "durationMin": 1,
+    "difficulty": 2,
+    "inputs": {
+        "power": {
+            "enabled": false
+        },
+        "rfid": {
+            "enabled": false
+        },
+        "oled": {
+            "enabled": false
+        },
+        "channels": {
+            "enabled": false
+        },
+        "rgb": {
+            "enabled": false
+        },
+        "sevenSegment": {
+            "enabled": false
+        },
+        "relays": {
+            "enabled": false
+        }
+    },
+    "translations": {
+        "it": {
+            "name": "Test - Ciclo",
+            "description": "Gioco di prova del ciclo di aggiornamento."
+        },
+        "en": {
+            "name": "Test - Loop",
+            "description": "Test game for the update loop."
+        }
+    }
+}

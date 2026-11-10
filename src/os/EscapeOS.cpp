@@ -1,173 +1,352 @@
 #include "EscapeOS.h"
-#include "os/BootManager.h"
-#include "scenes/boot/BootScene.h"
-#include "scenes/boot/BootView.h"
-#include "os/BootEvent.h"
-#include "ui/lvgl/LVGLManager.h"
-#include "devices/display/XPT2046Touch.h"
+#include "systems/update/UpdateSystem.h"
 
-// Handle eventi globali
-EventGroupHandle_t EscapeOS::systemEvents = nullptr;
-QueueHandle_t EscapeOS::bootQueue = nullptr;
+#include "core/SystemEventBus.h"
+#include "log/Logger.h"
+#include "drivers/bus/SPIBusManager.h"
+#include "log/LogStorageWriter.h"
+#include "config/Console.h"
+#include "config/BoardConfig.h"
 
-void EscapeOS::bootTask(void *param)
+void xTaskPortal(void *params)
 {
+    Log::info(Log::OS_TAG, "Starting task 'xTaskPortal'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
 
-    BootManager boot;
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_STORAGE_READY | EVT_NETWORK_READY,
+                        pdFALSE,
+                        pdTRUE,
+                        portMAX_DELAY);
+    PortalSystem *portal = os->getPortalSystem();
+    portal->init();
+
+#if WIFI_ENABLED && PORTAL_ENABLED
+    while (os->isRunning())
+    {
+        portal->update();
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+#endif
+
+    vTaskDelete(nullptr);
+}
+
+void xTaskBoot(void *params)
+{
+    Log::info(Log::OS_TAG, "Starting task 'xTaskBoot'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
+    BootManager *boot = os->getBootManager();
 
     // Run full boot sequence
-    boot.run();
-
-    // Notify system that boot is completed
-    xEventGroupSetBits(systemEvents, EVT_BOOT_DONE);
+    boot->run();
 
     // Boot task finished, delete itself
     vTaskDelete(nullptr);
 }
 
-void EscapeOS::uiTask(void* param) {
+void xTaskRainbowLed(void *params)
+{
+    Log::info(Log::OS_TAG, "Starting task 'xTaskRainbowLed'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
 
-    LVGLManager::init();
-    XPT2046Touch touch(TOUCH_CS_PIN);
-    touch.init();
-    lvgl_register_touch(&touch);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_RAINBOWLED_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
+    RainbowPixel *rainbow = os->getRainbowPixel();
 
-    BootView bootView;
-    bootView.create();
+    rainbow->init();
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_RAINBOWLED_READY);
 
-    while (!(xEventGroupGetBits(systemEvents) & EVT_BOOT_DONE)) {
+    const TickType_t frameDelay = pdMS_TO_TICKS(16); // ~60 FPS
+    TickType_t lastWakeTime = xTaskGetTickCount();
 
-        BootEvent evt;
-        while (xQueueReceive(bootQueue, &evt, 0) == pdTRUE) {
-            bootView.update(evt.progress, evt.label);
-        }
-
-        lv_timer_handler();
-        vTaskDelay(pdMS_TO_TICKS(16));
+    while (os->isRunning())
+    {
+        if (!UpdateSystem::flashInProgress()) rainbow->update();
+        vTaskDelayUntil(&lastWakeTime, frameDelay);
     }
 
     vTaskDelete(nullptr);
 }
 
-void EscapeOS::inputTask(void *param)
+void xTaskUI(void *params)
 {
+    Log::info(Log::OS_TAG, "Starting task 'xTaskUI'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_UI_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
 
-    xEventGroupWaitBits(
-        systemEvents,
-        EVT_BOOT_DONE,
-        pdFALSE,
-        pdTRUE,
-        portMAX_DELAY);
+    UIManager *ui = os->getUIManager();
+    ui->init();
 
-    Serial.println("[INPUT] Ready");
+#if SD_INIT_BEFORE_DISPLAY && SD_READ_DIAGNOSTICS_ENABLED
+    os->getStorageSystem()->runReadDiagnostics("after display init");
+#endif
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_UI_READY);
 
-    while (true)
+    while (os->isRunning())
     {
-        // scan pulsanti
-        // read touch raw
+        ui->update();
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+
+    vTaskDelete(nullptr);
+}
+
+void xTaskStorage(void *params)
+{
+    Log::info(Log::OS_TAG, "Starting task 'xTaskStorage'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
+
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_STORAGE_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
+
+    StorageSystem *storage = os->getStorageSystem();
+    storage->init();
+#if SD_READ_DIAGNOSTICS_ENABLED
+    Log::info(Log::STORAGE_TAG, "Storage task minimum free stack: %u bytes",
+              (unsigned)uxTaskGetStackHighWaterMark(nullptr));
+#endif
+#if LOG_STORAGE_ENABLED
+    LogStorageWriter::instance().start(storage);
+#endif
+
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_STORAGE_READY);
+
+    vTaskDelete(nullptr);
+}
+
+void xTaskNetwork(void *params)
+{
+    Log::info(Log::OS_TAG, "Starting task 'xTaskNetwork'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
+
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_NETWORK_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
+
+    NetworkSystem *network = os->getNetworkSystem();
+    StorageSystem *storage = os->getStorageSystem();
+    network->init(storage);
+
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_NETWORK_READY);
+
+#if WIFI_ENABLED
+    while (os->isRunning())
+    {
+        network->update();
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+#endif
+
+    vTaskDelete(nullptr);
+}
+
+void xTaskInput(void *params)
+{
+    Log::info(Log::OS_TAG, "Starting task 'xTaskInput'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_INPUT_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
+
+    InputSystem *input = os->getInputSystem();
+    input->init();
+
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_INPUT_READY);
+
+    while (os->isRunning())
+    {
+        input->update();
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
-void EscapeOS::audioTask(void *param)
+void xTaskAudio(void *params)
 {
+    Log::info(Log::OS_TAG, "Starting task 'xTaskAudio'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_AUDIO_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
 
-    xEventGroupWaitBits(
-        systemEvents,
-        EVT_BOOT_DONE,
-        pdFALSE,
-        pdTRUE,
-        portMAX_DELAY);
+    AudioSystem *audio = os->getAudioSystem();
+    StorageSystem *storage = os->getStorageSystem();
+    audio->init(storage);
 
-    Serial.println("[AUDIO] Ready");
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_AUDIO_READY);
 
-    while (true)
+    while (os->isRunning())
     {
-        // wait for audio queue
+        audio->update();
         vTaskDelay(pdMS_TO_TICKS(20));
     }
 }
 
-void EscapeOS::luaTask(void *param)
+void xTaskLua(void *params)
 {
+    Log::info(Log::OS_TAG, "Starting task 'xTaskLua'");
+    EscapeOS *os = static_cast<EscapeOS *>(params);
+    xEventGroupWaitBits(SystemEventBus::systemEvents,
+                        EVT_LUA_INIT_REQ,
+                        pdTRUE,
+                        pdTRUE,
+                        portMAX_DELAY);
 
-    xEventGroupWaitBits(
-        systemEvents,
-        EVT_BOOT_DONE,
-        pdFALSE,
-        pdTRUE,
-        portMAX_DELAY);
+    LuaSystem *lua = os->getLuaSystem();
 
-    Serial.println("[LUA] Initializing VM");
+    lua->setStorageSystem(os->getStorageSystem());
+    lua->setInputSystem(os->getInputSystem());
+    lua->setAudioSystem(os->getAudioSystem());
 
-    // init lua VM
-    // load scripts from SD
+    lua->init();
 
-    xEventGroupSetBits(systemEvents, EVT_LUA_READY);
+    xEventGroupSetBits(SystemEventBus::systemEvents, EVT_LUA_READY);
 
-    while (true)
+    while (os->isRunning())
     {
-        // execute logic
+        lua->update();
         vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 
 void EscapeOS::init()
 {
-    systemEvents = xEventGroupCreate();
-    bootQueue = xQueueCreate(8, sizeof(BootEvent));
+    Log::init(Log::Level::DEBUG);
+    Log::info(Log::OS_TAG, "EscapeOS initializing...");
+    Log::info(Log::OS_TAG, "Firmware built: %s %s", __DATE__, __TIME__);
+    Log::info(Log::OS_TAG, "Config: WIFI=%d PORTAL=%d SD_BEFORE_DISPLAY=%d SD_READ_CHECKS=%d",
+              WIFI_ENABLED, PORTAL_ENABLED, SD_INIT_BEFORE_DISPLAY, SD_READ_DIAGNOSTICS_ENABLED);
+
+    // Deselect all SPI peripherals before starting either SPI host.
+    pinMode(SD_CS_PIN, OUTPUT);
+    digitalWrite(SD_CS_PIN, HIGH);
+    pinMode(TFT_CS_PIN, OUTPUT);
+    digitalWrite(TFT_CS_PIN, HIGH);
+    pinMode(TOUCH_CS_PIN, OUTPUT);
+    digitalWrite(TOUCH_CS_PIN, HIGH);
+
+    if (!SPIBusManager::init())
+    {
+        Log::error(Log::OS_TAG, "SPI bus initialization failed");
+        return;
+    }
+
+    SystemEventBus::init();
+    SystemEventBus::instance().registerService(SystemEventBus::SERVICE_STORAGE, &storageSystem);
+    SystemEventBus::instance().registerService(SystemEventBus::SERVICE_INPUT, &inputSystem);
+    SystemEventBus::instance().registerService(SystemEventBus::SERVICE_NETWORK, &networkSystem);
+    SystemEventBus::instance().registerService(SystemEventBus::SERVICE_PORTAL, &portalSystem);
+    SystemEventBus::instance().registerService(SystemEventBus::SERVICE_AUDIO, &audioSystem);
+    SystemEventBus::instance().registerService(SystemEventBus::SERVICE_LUA, &luaSystem);
+    running = true;
+    UpdateSystem::instance().beginBootVerification();
     createTasks();
 }
 
 void EscapeOS::createTasks()
 {
+    // RainbowLed Task (core 0)
+    xTaskCreatePinnedToCore(
+        xTaskRainbowLed,
+        "RainbowLedTask",
+        4096,
+        this,
+        configMAX_PRIORITIES - 2,
+        nullptr,
+        0);
 
     // Boot Task (core 0)
     xTaskCreatePinnedToCore(
-        bootTask,
+        xTaskBoot,
         "BootTask",
         4096,
-        nullptr,
+        this,
         configMAX_PRIORITIES - 1,
         nullptr,
         0);
 
     // UI Task (core 1)
     xTaskCreatePinnedToCore(
-        uiTask,
+        xTaskUI,
         "UITask",
         8192,
-        nullptr,
+        this,
         3,
+        nullptr,
+        1);
+
+    // Storage Task
+    xTaskCreatePinnedToCore(
+        xTaskStorage,
+        "StorageTask",
+        8192,
+        this,
+        2,
+        nullptr,
+        1);
+
+    // Network Task
+    xTaskCreatePinnedToCore(
+        xTaskNetwork,
+        "NetworkTask",
+        8192,
+        this,
+        2,
+        nullptr,
+        0);
+
+    // Portal Task
+    xTaskCreatePinnedToCore(
+        xTaskPortal,
+        "PortalTask",
+        8192,
+        this,
+        2,
         nullptr,
         1);
 
     // Input Task
     xTaskCreatePinnedToCore(
-        inputTask,
+        xTaskInput,
         "InputTask",
-        4096,
-        nullptr,
+        8192,
+        this,
         3,
         nullptr,
         1);
 
     // Audio Task
     xTaskCreatePinnedToCore(
-        audioTask,
+        xTaskAudio,
         "AudioTask",
-        4096,
-        nullptr,
+        8192,
+        this,
         2,
         nullptr,
         0);
 
     // Lua Task
     xTaskCreatePinnedToCore(
-        luaTask,
+        xTaskLua,
         "LuaTask",
         8192,
-        nullptr,
+        this,
         1,
         nullptr,
         0);

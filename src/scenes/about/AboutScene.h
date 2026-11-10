@@ -1,0 +1,22 @@
+#pragma once
+
+#include "systems/ui/Scene.h"
+#include "scenes/about/AboutView.h"
+#include "AboutView.h"
+
+class AboutScene : public Scene
+{
+public:    
+    void onEnter() override;
+    void onUpdate() override;
+    void onExit() override;
+
+    View& getView() override { return view; }
+    SceneRequest getRequest() const override;
+
+    bool handleUIEvent(const UIEvent& event) override;
+
+private:
+    AboutView view;
+    SceneRequest request = SceneRequest();
+};

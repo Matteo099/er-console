@@ -1,0 +1,256 @@
+{
+    "erConsole": {
+        "common": {
+            "na": "n/a",
+            "unknown": "Unknown",
+            "save": "Save",
+            "reload": "Reload",
+            "select": "Select",
+            "upload": "Upload",
+            "cancel": "Cancel",
+            "apply": "Apply"
+        },
+        "app": {
+            "language": "Language",
+            "menu": {
+                "dashboard": "Dashboard",
+                "config": "ESP32 Config",
+                "esp32s3r8n16": "ESP32 Wiring",
+                "files": "File Browser",
+                "logsAudit": "Logs & Audit",
+                "about": "About"
+            },
+            "status": {
+                "wifiConnected": "WiFi connected",
+                "wifiDisconnected": "WiFi disconnected",
+                "lastRefresh": "Last refresh: {value}"
+            },
+            "actions": {
+                "lightMode": "Light mode",
+                "darkMode": "Dark mode",
+                "refreshStatus": "Refresh status"
+            },
+            "notifications": {
+                "deviceStatusRefreshed": "Device status refreshed"
+            }
+        },
+        "dashboard": {
+            "title": "Device Dashboard",
+            "subtitle": "Live status and charts overview",
+            "sections": {
+                "storage": "Storage",
+                "memory": "Memory",
+                "cpuUptime": "CPU / Uptime",
+                "power": "Power Monitor",
+                "portal": "Portal",
+                "deviceControls": "Device Controls"
+            },
+            "labels": {
+                "state": "State",
+                "ssid": "SSID",
+                "ip": "IP",
+                "signal": "Signal",
+                "used": "Used",
+                "free": "Free",
+                "total": "Total",
+                "heapInUse": "Heap in use",
+                "cpu": "CPU",
+                "freeHeap": "Free Heap",
+                "freePsram": "Free PSRAM",
+                "uptime": "Uptime",
+                "monitor": "Monitor",
+                "voltage": "Voltage",
+                "current": "Current",
+                "power": "Power",
+                "loadVoltage": "Load Voltage",
+                "shuntVoltage": "Shunt Voltage",
+                "sampleAge": "Sample Age",
+                "portalUrl": "Portal URL",
+                "portalSsid": "Portal SSID",
+                "portalIp": "Portal IP"
+            },
+            "power": {
+                "unsupported": "INA219 not detected",
+                "waitingSample": "Waiting for first sample",
+                "online": "Telemetry active",
+                "overflow": "Overflow detected"
+            },
+            "deviceControlsDescription": "Reboot or shutdown the ESP32 from this dashboard.",
+            "actions": {
+                "reboot": "Reboot",
+                "shutdown": "Shutdown"
+            },
+            "notifications": {
+                "statusRefreshed": "Dashboard status refreshed",
+                "rebootSent": "Reboot command sent",
+                "shutdownSent": "Shutdown command sent"
+            },
+            "errors": {
+                "rebootFailed": "Failed to reboot device",
+                "shutdownFailed": "Failed to shutdown device"
+            }
+        },
+        "config": {
+            "title": "ESP32 Configuration",
+            "subtitle": "Configure language, theme, and WiFi settings",
+            "sections": {
+                "device": "Device",
+                "developer": "Developer",
+                "wifiConnection": "WiFi Connection",
+                "locale": "Locale",
+                "maintenance": "Maintenance"
+            },
+            "labels": {
+                "deviceName": "Device Name",
+                "developerMode": "Enable developer mode",
+                "uiTheme": "UI Theme",
+                "ssid": "SSID",
+                "password": "Password",
+                "language": "Language",
+                "timezone": "Timezone",
+                "dateFormat": "Date Format",
+                "wifiPassword": "WiFi Password"
+            },
+            "table": {
+                "ssid": "SSID",
+                "signal": "Signal",
+                "security": "Security",
+                "auth": "Auth"
+            },
+            "actions": {
+                "scanWifi": "Scan WiFi",
+                "connect": "Connect",
+                "resetChanges": "Reset changes",
+                "factoryReset": "Factory reset",
+                "confirmReset": "Confirm reset"
+            },
+            "currentWifiConfigured": "Configured WiFi: {ssid}",
+            "noWifiConfigured": "No WiFi configured. Select a network from the list below.",
+            "connectToWifi": "Connect to {ssid}",
+            "wifiDialog": {
+                "title": "Connect to {ssid}",
+                "authMode": "Authentication",
+                "secured": "Secured",
+                "open": "Open",
+                "passwordHint": "For WPA/WPA2/WPA3 networks, use at least 8 characters.",
+                "openNetworkInfo": "This network does not require a password.",
+                "disconnectFirstNotice": "Current network '{ssid}' will be disconnected before connecting to the new one."
+            },
+            "maintenanceDescription": "Restore device configuration to factory defaults.",
+            "developerDescription": "Enable advanced pages (ESP32 Wiring, File Browser, and Logs & Audit) intended for diagnostics and development workflows.",
+            "confirmFactoryResetTitle": "Confirm Factory Reset",
+            "confirmFactoryResetText": "This will restore configuration to factory defaults. Continue?",
+            "notifications": {
+                "saved": "Configuration saved successfully",
+                "localChangesReverted": "Local changes reverted",
+                "disconnectedCurrentNetwork": "Disconnected from '{ssid}'",
+                "connectedToNetwork": "Connected to '{ssid}'",
+                "factoryResetDone": "Configuration reset to factory defaults"
+            },
+            "errors": {
+                "saveFailed": "Failed to save configuration",
+                "connectFailed": "Failed to connect to WiFi network",
+                "wifiScanUnavailable": "WiFi scan unavailable from backend",
+                "factoryResetFailed": "Factory reset failed"
+            },
+            "audio": {
+                "title": "Audio",
+                "music": "Music",
+                "effects": "Sound effects",
+                "volume": "Volume"
+            },
+            "themes": {
+                "mint": "Mint",
+                "sky": "Sky",
+                "coral": "Coral"
+            }
+        },
+        "files": {
+            "title": "File Browser",
+            "subtitle": "Navigate, upload, delete, and move files in the ESP32 filesystem",
+            "sections": {
+                "files": "Files"
+            },
+            "labels": {
+                "currentPath": "Current path",
+                "uploadFile": "Upload file",
+                "sourcePath": "Source path",
+                "destinationPath": "Destination path"
+            },
+            "table": {
+                "name": "Name",
+                "path": "Path",
+                "size": "Size",
+                "actions": "Actions"
+            },
+            "actions": {
+                "up": "Up",
+                "move": "Move"
+            },
+            "moveRenameEntry": "Move / Rename Entry",
+            "moveRequiresBackend": "This action requires backend support for /api/files/move.",
+            "notifications": {
+                "fileUploaded": "File uploaded",
+                "entryDeleted": "Entry deleted",
+                "entryMoved": "Entry moved"
+            },
+            "errors": {
+                "uploadFailed": "Upload failed",
+                "deleteFailed": "Delete failed",
+                "moveUnavailable": "Move is not available on backend"
+            }
+        },
+        "logs": {
+            "title": "Logs & Audit",
+            "subtitle": "Inspect system logs and local audit events",
+            "sections": {
+                "systemLogs": "System Logs",
+                "auditTrail": "Audit Trail (UI)"
+            },
+            "labels": {
+                "logLines": "Log lines"
+            },
+            "actions": {
+                "refreshLogs": "Refresh logs",
+                "clearLogs": "Clear logs",
+                "clearAudit": "Clear audit"
+            },
+            "noLogDataYet": "No log data yet",
+            "audit": {
+                "loadedLines": "Loaded {count} lines from system logs",
+                "clearedSystemLogs": "Cleared system logs"
+            },
+            "notifications": {
+                "logsCleared": "Logs cleared"
+            },
+            "errors": {
+                "unableToLoadLogs": "Unable to load logs",
+                "unableToClearLogs": "Unable to clear logs"
+            }
+        },
+        "about": {
+            "title": "About Device",
+            "application": "Application",
+            "version": "Version {value}",
+            "frontendBuildVersion": "Frontend build version",
+            "device": "Device",
+            "portalUrl": "Portal URL",
+            "language": "Language",
+            "timezone": "Timezone"
+        },
+        "hardware": {
+            "title": "ESP32-S3 N16R8 Wiring Map",
+            "subtitle": "Read-only board layout to quickly rebuild internal wiring connections.",
+            "readOnly": "Read-only reference",
+            "mapTitle": "Board + Peripheral Connections",
+            "legendTitle": "Bus Legend",
+            "legendDescription": "Use this view as a visual checklist while recreating jumper wiring inside the enclosure.",
+            "connectionTableTitle": "Pin Connection Table",
+            "columns": {
+                "device": "Device",
+                "signal": "Signal",
+                "gpio": "GPIO"
+            }
+        }
+    }
+}

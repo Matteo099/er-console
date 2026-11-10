@@ -1,0 +1,256 @@
+{
+    "erConsole": {
+        "common": {
+            "na": "n/d",
+            "unknown": "Sconosciuto",
+            "save": "Salva",
+            "reload": "Ricarica",
+            "select": "Seleziona",
+            "upload": "Carica",
+            "cancel": "Annulla",
+            "apply": "Applica"
+        },
+        "app": {
+            "language": "Lingua",
+            "menu": {
+                "dashboard": "Dashboard",
+                "config": "Config ESP32",
+                "esp32s3r8n16": "Schema ESP32",
+                "files": "File Browser",
+                "logsAudit": "Log e Audit",
+                "about": "Informazioni"
+            },
+            "status": {
+                "wifiConnected": "WiFi connesso",
+                "wifiDisconnected": "WiFi disconnesso",
+                "lastRefresh": "Ultimo aggiornamento: {value}"
+            },
+            "actions": {
+                "lightMode": "Tema chiaro",
+                "darkMode": "Tema scuro",
+                "refreshStatus": "Aggiorna stato"
+            },
+            "notifications": {
+                "deviceStatusRefreshed": "Stato dispositivo aggiornato"
+            }
+        },
+        "dashboard": {
+            "title": "Dashboard Dispositivo",
+            "subtitle": "Panoramica live di stato e grafici",
+            "sections": {
+                "storage": "Archiviazione",
+                "memory": "Memoria",
+                "cpuUptime": "CPU / Uptime",
+                "power": "Monitor Potenza",
+                "portal": "Portale",
+                "deviceControls": "Controlli Dispositivo"
+            },
+            "labels": {
+                "state": "Stato",
+                "ssid": "SSID",
+                "ip": "IP",
+                "signal": "Segnale",
+                "used": "Usato",
+                "free": "Libero",
+                "total": "Totale",
+                "heapInUse": "Heap in uso",
+                "cpu": "CPU",
+                "freeHeap": "Heap libero",
+                "freePsram": "PSRAM libera",
+                "uptime": "Uptime",
+                "monitor": "Monitor",
+                "voltage": "Tensione",
+                "current": "Corrente",
+                "power": "Potenza",
+                "loadVoltage": "Tensione di carico",
+                "shuntVoltage": "Tensione shunt",
+                "sampleAge": "Eta campione",
+                "portalUrl": "URL Portale",
+                "portalSsid": "SSID Portale",
+                "portalIp": "IP Portale"
+            },
+            "power": {
+                "unsupported": "INA219 non rilevato",
+                "waitingSample": "In attesa del primo campione",
+                "online": "Telemetria attiva",
+                "overflow": "Overflow rilevato"
+            },
+            "deviceControlsDescription": "Riavvia o spegni l'ESP32 da questa dashboard.",
+            "actions": {
+                "reboot": "Riavvia",
+                "shutdown": "Spegni"
+            },
+            "notifications": {
+                "statusRefreshed": "Stato dashboard aggiornato",
+                "rebootSent": "Comando di riavvio inviato",
+                "shutdownSent": "Comando di spegnimento inviato"
+            },
+            "errors": {
+                "rebootFailed": "Riavvio dispositivo non riuscito",
+                "shutdownFailed": "Spegnimento dispositivo non riuscito"
+            }
+        },
+        "config": {
+            "title": "Configurazione ESP32",
+            "subtitle": "Configura lingua, tema e WiFi",
+            "sections": {
+                "device": "Dispositivo",
+                "developer": "Sviluppatore",
+                "wifiConnection": "Connessione WiFi",
+                "locale": "Localizzazione",
+                "maintenance": "Manutenzione"
+            },
+            "labels": {
+                "deviceName": "Nome dispositivo",
+                "developerMode": "Abilita modalita sviluppo",
+                "uiTheme": "Tema UI",
+                "ssid": "SSID",
+                "password": "Password",
+                "language": "Lingua",
+                "timezone": "Fuso orario",
+                "dateFormat": "Formato data",
+                "wifiPassword": "Password WiFi"
+            },
+            "table": {
+                "ssid": "SSID",
+                "signal": "Segnale",
+                "security": "Sicurezza",
+                "auth": "Auth"
+            },
+            "actions": {
+                "scanWifi": "Scansiona WiFi",
+                "connect": "Connetti",
+                "resetChanges": "Reimposta modifiche",
+                "factoryReset": "Ripristino di fabbrica",
+                "confirmReset": "Conferma ripristino"
+            },
+            "currentWifiConfigured": "WiFi configurato: {ssid}",
+            "noWifiConfigured": "Nessun WiFi configurato. Seleziona una rete dall'elenco qui sotto.",
+            "connectToWifi": "Connetti a {ssid}",
+            "wifiDialog": {
+                "title": "Connetti a {ssid}",
+                "authMode": "Autenticazione",
+                "secured": "Protetta",
+                "open": "Aperta",
+                "passwordHint": "Per reti WPA/WPA2/WPA3 usa almeno 8 caratteri.",
+                "openNetworkInfo": "Questa rete non richiede password.",
+                "disconnectFirstNotice": "La rete corrente '{ssid}' verra disconnessa prima della nuova connessione."
+            },
+            "maintenanceDescription": "Ripristina la configurazione del dispositivo ai valori di fabbrica.",
+            "developerDescription": "Abilita pagine avanzate (Schema ESP32, File Browser e Log e Audit) pensate per diagnostica e sviluppo.",
+            "confirmFactoryResetTitle": "Conferma ripristino di fabbrica",
+            "confirmFactoryResetText": "Questa operazione ripristinerà la configurazione ai valori di fabbrica. Continuare?",
+            "notifications": {
+                "saved": "Configurazione salvata con successo",
+                "localChangesReverted": "Modifiche locali annullate",
+                "disconnectedCurrentNetwork": "Disconnesso da '{ssid}'",
+                "connectedToNetwork": "Connesso a '{ssid}'",
+                "factoryResetDone": "Configurazione ripristinata ai valori di fabbrica"
+            },
+            "errors": {
+                "saveFailed": "Salvataggio configurazione non riuscito",
+                "connectFailed": "Connessione alla rete WiFi non riuscita",
+                "wifiScanUnavailable": "Scansione WiFi non disponibile dal backend",
+                "factoryResetFailed": "Ripristino di fabbrica non riuscito"
+            },
+            "audio": {
+                "title": "Audio",
+                "music": "Musica",
+                "effects": "Effetti sonori",
+                "volume": "Volume"
+            },
+            "themes": {
+                "mint": "Menta",
+                "sky": "Cielo",
+                "coral": "Corallo"
+            }
+        },
+        "files": {
+            "title": "File Browser",
+            "subtitle": "Naviga, carica, elimina e sposta file nel filesystem ESP32",
+            "sections": {
+                "files": "File"
+            },
+            "labels": {
+                "currentPath": "Percorso corrente",
+                "uploadFile": "Carica file",
+                "sourcePath": "Percorso sorgente",
+                "destinationPath": "Percorso destinazione"
+            },
+            "table": {
+                "name": "Nome",
+                "path": "Percorso",
+                "size": "Dimensione",
+                "actions": "Azioni"
+            },
+            "actions": {
+                "up": "Su",
+                "move": "Sposta"
+            },
+            "moveRenameEntry": "Sposta / Rinomina voce",
+            "moveRequiresBackend": "Questa azione richiede il supporto backend per /api/files/move.",
+            "notifications": {
+                "fileUploaded": "File caricato",
+                "entryDeleted": "Voce eliminata",
+                "entryMoved": "Voce spostata"
+            },
+            "errors": {
+                "uploadFailed": "Caricamento non riuscito",
+                "deleteFailed": "Eliminazione non riuscita",
+                "moveUnavailable": "Spostamento non disponibile sul backend"
+            }
+        },
+        "logs": {
+            "title": "Log e Audit",
+            "subtitle": "Ispeziona i log di sistema e gli eventi audit locali",
+            "sections": {
+                "systemLogs": "Log di Sistema",
+                "auditTrail": "Audit Trail (UI)"
+            },
+            "labels": {
+                "logLines": "Righe log"
+            },
+            "actions": {
+                "refreshLogs": "Aggiorna log",
+                "clearLogs": "Pulisci log",
+                "clearAudit": "Pulisci audit"
+            },
+            "noLogDataYet": "Nessun log disponibile",
+            "audit": {
+                "loadedLines": "Caricate {count} righe dai log di sistema",
+                "clearedSystemLogs": "Log di sistema puliti"
+            },
+            "notifications": {
+                "logsCleared": "Log puliti"
+            },
+            "errors": {
+                "unableToLoadLogs": "Impossibile caricare i log",
+                "unableToClearLogs": "Impossibile pulire i log"
+            }
+        },
+        "about": {
+            "title": "Informazioni Dispositivo",
+            "application": "Applicazione",
+            "version": "Versione {value}",
+            "frontendBuildVersion": "Versione build frontend",
+            "device": "Dispositivo",
+            "portalUrl": "URL Portale",
+            "language": "Lingua",
+            "timezone": "Fuso orario"
+        },
+        "hardware": {
+            "title": "Mappa Cablaggio ESP32-S3 N16R8",
+            "subtitle": "Layout readonly della scheda per ricreare rapidamente i collegamenti interni.",
+            "readOnly": "Riferimento readonly",
+            "mapTitle": "Connessioni Scheda + Periferiche",
+            "legendTitle": "Legenda Bus",
+            "legendDescription": "Usa questa vista come checklist visiva mentre ricrei i jumper nel box.",
+            "connectionTableTitle": "Tabella Connessioni Pin",
+            "columns": {
+                "device": "Dispositivo",
+                "signal": "Segnale",
+                "gpio": "GPIO"
+            }
+        }
+    }
+}

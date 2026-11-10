@@ -1,5 +1,86 @@
 # EscapeRoom Console
 
+## Build e release automatiche
+
+Push e pull request producono build di sviluppo con firmware, portale e pacchetto
+SD. Dopo il merge su `main`, Semantic Release determina versione e release note
+dai Conventional Commits e pubblica solo dopo il completamento dei controlli.
+I feature branch producono artifact di sviluppo, senza creare GitHub Releases.
+Procedura e convenzioni: [wiki/CI-CD.md](wiki/CI-CD.md),
+[wiki/Conventional-Commits.md](wiki/Conventional-Commits.md).
+
+## Aggiornamenti firmware OTA
+
+Impostazioni > Sistema > Aggiornamenti permette di verificare e installare
+firmware dalle GitHub Releases, con progresso, verifica SHA-256 e rollback.
+Serve una connessione Wi-Fi a Internet; per il repository privato inserire
+un token GitHub con accesso Contents in sola lettura dalla schermata dedicata.
+Compatibilita', formato delle release e procedura: [wiki/OTA.md](wiki/OTA.md).
+
+## Diagnostica microSD / TFT / touch
+
+Le opzioni di isolamento sono in [`src/config/Console.h`](src/config/Console.h):
+
+```cpp
+#define WIFI_ENABLED 0
+#define PORTAL_ENABLED 0
+#define SD_INIT_BEFORE_DISPLAY 1
+#define SD_READ_DIAGNOSTICS_ENABLED 0
+#define STORAGE_BOOT_LIST_ENABLED 0
+#define UI_SCENE_ANIMATIONS_ENABLED 0
+#define UI_DIAGNOSTICS_ENABLED 0
+```
+
+L'esempio sopra disabilita Wi-Fi e portale per isolare i reset brownout
+osservati con alimentazione USB del PC. La configurazione corrente abilita
+il Wi-Fi e mantiene il portale disabilitato; fanno fede i flag in `Console.h`.
+Con Wi-Fi disabilitato anche il portale rimane spento e l'OTA non e' disponibile.
+Il precedente `ER_DISABLE_WIFI` della sola build debug
+e' stato sostituito da queste opzioni.
+
+La configurazione attuale inizializza SD prima del display. I controlli ripetuti
+dei file e la scansione ricorsiva al boot sono opt-in, per evitare attese inutili.
+Per ripristinare l'ordine di boot precedente impostare
+`SD_INIT_BEFORE_DISPLAY=0`. L'ambiente predefinito PlatformIO e' quello debug,
+cosi' upload e monitor senza selezione esplicita usano lo stesso ELF.
+
+Per il confronto dei bus e la procedura A/B vedere
+[`docs/SD_DIAGNOSTICS.md`](docs/SD_DIAGNOSTICS.md).
+
+## Interfaccia TFT
+
+La UI usa tre temi pastello, **Menta**, **Cielo** e **Corallo**, selezionabili da
+Impostazioni > Tema. Le schede Audio, Lingua e Sistema centralizzano le altre
+preferenze: musica ed effetti indipendenti, italiano/inglese, rete e monitoraggio.
+Tema, lingua, audio e credenziali Wi-Fi vengono conservati nella memoria interna.
+La rete resta configurabile anche con radio disabilitata; connessione e portale
+rispettano i flag di avvio.
+
+Configurazione, migrazione e traduzioni: [docs/SETTINGS.md](docs/SETTINGS.md).
+Statistiche globali/per gioco e selezione dei giocatori:
+[docs/GAME_STATISTICS.md](docs/GAME_STATISTICS.md).
+Impostazioni audio senza uscire dalla partita:
+[docs/IN_GAME_SETTINGS.md](docs/IN_GAME_SETTINGS.md).
+Mixer a otto sorgenti, loop, volumi per file e conversione audio indipendente
+da PlatformIO: [docs/AUDIO.md](docs/AUDIO.md).
+Precaricamento di countdown, sconfitta e vittoria:
+[docs/AUDIO_PRELOAD.md](docs/AUDIO_PRELOAD.md).
+Preparazione di immagini, script e dati con cache limitata in PSRAM:
+[docs/GAME_ASSETS.md](docs/GAME_ASSETS.md).
+Scelta delle reti e inserimento password: [docs/NETWORK_UI.md](docs/NETWORK_UI.md).
+Traduzioni dei giochi e aggiornamento dei file sulla microSD:
+[docs/GAME_LOCALIZATION.md](docs/GAME_LOCALIZATION.md).
+
+Architettura, palette, configurazione e acquisizione delle schermate:
+[`docs/UI_THEME.md`](docs/UI_THEME.md).
+
+Ottimizzazioni dei cambi scena e misure:
+[`docs/UI_PERFORMANCE.md`](docs/UI_PERFORMANCE.md).
+Protezione dei pulsanti durante lo scroll e test degli input:
+[`docs/UI_SCROLL.md`](docs/UI_SCROLL.md).
+Il font dei titoli e il generatore sono descritti in
+[`assets/fonts/README.md`](assets/fonts/README.md).
+
 # 1️⃣ Stack software – visione d’insieme
 
 Il tuo stack è corretto e lo formalizziamo così:
@@ -119,3 +200,45 @@ Prossimi step:
 2️⃣ Transizione Boot → Loading → Main Menu
 3️⃣ Error handling visuale (boot fail → safe mode)
 4️⃣ Persistenza log su SD (ring buffer)
+
+## compilare
+
+edit platform.ini:
+
+``` ini
+build_flags =
+    -Isrc
+    -Iinclude
+```
+
+run commands:
+
+```
+cp include\lv_conf.h .pio\libdeps\esp32-s3-devkitc-1-n16r8v
+cp include\User_Setup.h .pio\libdeps\esp32-s3-devkitc-1-n16r8v\TFT_eSPI\User_Setup.h
+```
+
+
+## Esempio di utilizzo di LVGL
+
+https://randomnerdtutorials.com/lvgl-cheap-yellow-display-esp32-2432s028r/
+
+## Lua
+
+https://github.dev/Sasszem/ESP8266-Arduino-Lua
+
+## Captive portal
+
+The network screen now focuses on connection status and QR onboarding for the ESP32 access point.
+All device configuration is stored in `/.core/config.json` on the SD card, and the portal is served from `sd/.core/portal`.
+
+Frontend source lives under `frontend/` as a Vue 3 + Vuetify SPA.
+Build it with:
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+The portal API exposes status, configuration, file browsing, upload, delete, and reboot endpoints over REST.

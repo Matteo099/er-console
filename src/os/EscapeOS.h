@@ -4,26 +4,44 @@
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 
-class EscapeOS {
+#include "os/BootManager.h"
+#include "systems/ui/UIManager.h"
+#include "systems/storage/StorageSystem.h"
+#include "systems/input/InputSystem.h"
+#include "systems/audio/AudioSystem.h"
+#include "systems/lua/LuaSystem.h"
+#include "systems/rainbowpixel/RainbowPixel.h"
+#include "systems/network/NetworkSystem.h"
+#include "systems/portal/PortalSystem.h"
+
+class EscapeOS
+{
 public:
     void init();
+    bool isRunning() { return running; }
 
-    // Eventi di sistema
-    static EventGroupHandle_t systemEvents;
-    static QueueHandle_t bootQueue;
-
-    // Bit di stato
-    static constexpr EventBits_t EVT_BOOT_DONE   = (1 << 0);
-    static constexpr EventBits_t EVT_UI_READY    = (1 << 1);
-    static constexpr EventBits_t EVT_LUA_READY   = (1 << 2);
+    BootManager* getBootManager() { return &bootManager; }
+    UIManager* getUIManager() { return &uiManager; }
+    StorageSystem* getStorageSystem() { return &storageSystem; }
+    InputSystem* getInputSystem() { return &inputSystem; }
+    AudioSystem* getAudioSystem() { return &audioSystem; }
+    LuaSystem* getLuaSystem() { return &luaSystem; }
+    RainbowPixel* getRainbowPixel() { return &rainbowPixel; }
+    NetworkSystem* getNetworkSystem() { return &networkSystem; }
+    PortalSystem* getPortalSystem() { return &portalSystem; }
 
 private:
-    // Task entry point
-    static void bootTask(void* param);
-    static void uiTask(void* param);
-    static void inputTask(void* param);
-    static void audioTask(void* param);
-    static void luaTask(void* param);
+    bool running = false;
+
+    BootManager bootManager;
+    RainbowPixel rainbowPixel;
+    UIManager uiManager;
+    StorageSystem storageSystem;
+    InputSystem inputSystem;
+    AudioSystem audioSystem;
+    LuaSystem luaSystem;
+    NetworkSystem networkSystem;
+    PortalSystem portalSystem;
 
     void createTasks();
 };

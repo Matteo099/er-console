@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="760" viewBox="0 0 480 760" role="img" aria-label="Boot scene mockup">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b1220" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+  </defs>
+  <rect width="480" height="760" fill="#0f172a"/>
+  <rect x="80" y="40" width="320" height="680" rx="26" fill="url(#bg)" stroke="#334155" stroke-width="4"/>
+  <rect x="120" y="80" width="240" height="26" rx="4" fill="#1e293b"/>
+  <text x="240" y="98" fill="#9ca3af" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Brand Header</text>
+  <circle cx="240" cy="290" r="62" fill="#0b1324" stroke="#38bdf8" stroke-width="6"/>
+  <text x="240" y="298" fill="#e5e7eb" text-anchor="middle" font-size="14" font-family="Segoe UI, Arial">LOGO</text>
+  <rect x="150" y="460" width="180" height="18" rx="8" fill="#1f2937"/>
+  <rect x="150" y="460" width="126" height="18" rx="8" fill="#22c55e"/>
+  <text x="240" y="505" fill="#d1d5db" text-anchor="middle" font-size="16" font-family="Segoe UI, Arial">Initializing storage...</text>
+  <text x="240" y="544" fill="#94a3b8" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Expected Boot Scene (240x320 logical)</text>
+</svg>

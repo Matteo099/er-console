@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Escaperiom"><g transform="translate(20,20)" fill="none" stroke-width="10" stroke-linecap="butt" stroke-linejoin="miter">
+    
+    <path d="M75 5 H5 V115 H115 V55" stroke="#2D6652" />
+    
+    <path d="M85 55 V85 H35 V35 H65" stroke="#2D6652" />
+    
+    <path d="M60 85 V115" stroke="#2D6652" />
+    
+    <rect x="50" y="50" width="20" height="20" fill="#C8E7D8" stroke="none" />
+  </g>
+
+  
+  </svg>

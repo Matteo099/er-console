@@ -5,10 +5,10 @@ EscapeOS os;
 
 void setup()
 {
-    os.init();
+  os.init();
 }
 
 void loop()
 {
-    vTaskDelay(portMAX_DELAY);
+  vTaskDelay(portMAX_DELAY);
 }

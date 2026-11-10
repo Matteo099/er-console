@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "description": "Reproducible bitmap conversion for Escaperiom headings",
+  "devDependencies": { "lv_font_conv": "1.5.3" }
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="760" viewBox="0 0 480 760" role="img" aria-label="Main menu scene mockup">
+  <rect width="480" height="760" fill="#111827"/>
+  <rect x="80" y="40" width="320" height="680" rx="26" fill="#0f172a" stroke="#334155" stroke-width="4"/>
+  <rect x="120" y="80" width="240" height="26" rx="4" fill="#1e293b"/>
+  <text x="240" y="98" fill="#9ca3af" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Brand Header</text>
+  <rect x="140" y="220" width="200" height="52" rx="10" fill="#1d4ed8"/>
+  <text x="240" y="252" fill="#eff6ff" text-anchor="middle" font-size="19" font-family="Segoe UI, Arial">New Game</text>
+  <rect x="140" y="296" width="200" height="52" rx="10" fill="#047857"/>
+  <text x="240" y="328" fill="#ecfdf5" text-anchor="middle" font-size="19" font-family="Segoe UI, Arial">Settings</text>
+  <rect x="140" y="372" width="200" height="52" rx="10" fill="#6b7280"/>
+  <text x="240" y="404" fill="#f3f4f6" text-anchor="middle" font-size="19" font-family="Segoe UI, Arial">About</text>
+  <text x="240" y="510" fill="#94a3b8" text-anchor="middle" font-size="13" font-family="Segoe UI, Arial">Expected Main Menu Scene</text>
+</svg>
