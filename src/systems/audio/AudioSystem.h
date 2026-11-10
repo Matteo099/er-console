@@ -44,6 +44,7 @@ public:
 
     void setVolume(uint8_t volume);
     uint8_t getVolume() const;
+    bool quiescentForFlash() const { return flashQuiescent.load(); }
 
 private:
     AudioCacheEntry *findCache(const char *path);
@@ -73,5 +74,6 @@ private:
     bool evictable(const AudioCacheEntry &entry);
 
     std::atomic<uint8_t> volume{100};
+    std::atomic<bool> flashQuiescent{false};
     uint8_t appliedVolume = 100;
 };

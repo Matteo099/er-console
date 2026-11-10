@@ -23,6 +23,7 @@ enum class SceneChange
     GoToGame,
     GoToSettingsSystem,
     GoToStatistics,
+    GoToUpdates,
 };
 
 struct SceneRequest

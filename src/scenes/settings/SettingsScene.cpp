@@ -70,6 +70,7 @@ bool SettingsScene::handleUIEvent(const UIEvent &event)
         else if (id == "wifi_settings") { request = SceneRequest(SceneChange::GoToNetwork, SceneTransition::SlideLeft); return true; }
         else if (id == "monitor") { request = SceneRequest(SceneChange::GoToMonitor, SceneTransition::SlideLeft); return true; }
         else if (id == "statistics") { request=SceneRequest(SceneChange::GoToStatistics,SceneTransition::SlideLeft); return true; }
+        else if (id == "updates") { request=SceneRequest(SceneChange::GoToUpdates,SceneTransition::SlideLeft); return true; }
         else if (id == "back") { request = SceneRequest(SceneChange::GoToMainMenu, SceneTransition::SlideRight); return true; }
         else return false;
     }
