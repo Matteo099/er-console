@@ -1,5 +1,14 @@
 # EscapeRoom Console
 
+## Build e release automatiche
+
+Push e pull request producono build di sviluppo con firmware, portale e pacchetto
+SD. Dopo il merge su `main`, Semantic Release determina versione e release note
+dai Conventional Commits e pubblica solo dopo il completamento dei controlli.
+I feature branch producono artifact di sviluppo, senza creare GitHub Releases.
+Procedura e convenzioni: [wiki/CI-CD.md](wiki/CI-CD.md),
+[wiki/Conventional-Commits.md](wiki/Conventional-Commits.md).
+
 ## Diagnostica microSD / TFT / touch
 
 Le opzioni di isolamento sono in [`src/config/Console.h`](src/config/Console.h):

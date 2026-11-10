@@ -14,7 +14,7 @@ local messages = {
     valves = {it = "CRIOSTATO OFFLINE. Aprire i circuiti criogenici nell'ordine corretto.", en = "CRYOSTAT OFFLINE. Open the cryogenic circuits in order."},
     reset = {it = "Sequenza errata. Riportare i comandi alla posizione iniziale.", en = "Incorrect sequence. Return controls to their initial positions."},
     badge = {it = "CRIOSTATO STABILIZZATO. Inserire il badge operatore.", en = "CRYOSTAT STABILIZED. Scan the operator badge."},
-    cabinet = {it = "ARCHIVIO TECNICO: lega superconduttrice Nb₃Sn. Aprire l'armadio.", en = "TECHNICAL ARCHIVE: superconductor Nb₃Sn. Open the cabinet."},
+    cabinet = {it = "ARCHIVIO TECNICO: lega superconduttrice Nb3Sn. Aprire l'armadio.", en = "TECHNICAL ARCHIVE: superconductor Nb3Sn. Open the cabinet."},
     fuse = {it = "ALIMENTAZIONE MAGNETI INTERROTTA. Inserire il fusibile e il codice tecnico.", en = "MAGNET POWER INTERRUPTED. Insert the fuse and technical code."},
     modules = {it = "SETTORI DANNEGGIATI: TF-2, TF-5, TF-7. Sostituire i moduli indicati.", en = "DAMAGED SECTORS: TF-2, TF-5, TF-7. Replace the indicated modules."},
     coils = {it = "MODULI RIPRISTINATI. Riallineare le bobine opposte.", en = "MODULES RESTORED. Align the opposing coils."},
