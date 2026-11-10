@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve, dirname, basename } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { createRequire } from 'node:module'
+import { pathToFileURL } from 'node:url'
 import { PassThrough } from 'node:stream'
 import semanticRelease from 'semantic-release'
 
@@ -56,7 +57,7 @@ async function fixture(message, expected, fail) {
     const quiet = new PassThrough()
     quiet.resume()
     const invoke = () => semanticRelease({
-      branches: ['main'], repositoryUrl: remote, tagFormat: 'v${version}', ci: false,
+      branches: ['main'], repositoryUrl: pathToFileURL(remote).href, tagFormat: 'v${version}', ci: false,
       plugins: [
         [require.resolve('@semantic-release/commit-analyzer'), { preset: 'conventionalcommits' }],
         [require.resolve('@semantic-release/release-notes-generator'), { preset: 'conventionalcommits', linkCompare: false, linkReferences: false }],
