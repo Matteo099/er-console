@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import re
 
-catalog = Path(__file__).resolve().parents[1] / 'src/systems/ui/localization/Translations.def'
+catalog = Path(__file__).resolve().parents[2] / 'src/systems/ui/localization/Translations.def'
 row = re.compile(r'X\((\w+),\s*("(?:[^"\\]|\\.)*"),\s*("(?:[^"\\]|\\.)*")\)')
 printf = re.compile(r'%(?:[-+ #0]*\d*(?:\.\d+)?(?:hh|ll|[hljztL])?[diuoxXfFeEgGaAcsp]|%)')
 keys = set()

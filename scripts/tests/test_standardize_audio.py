@@ -10,7 +10,7 @@ import tempfile
 import unittest
 import wave
 
-SCRIPT = Path(__file__).resolve().parents[1] / 'standardize_audio.py'
+SCRIPT = Path(__file__).resolve().parents[1] / 'audio' / 'standardize_audio.py'
 spec = importlib.util.spec_from_file_location('standardize_audio', SCRIPT)
 audio = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(audio)

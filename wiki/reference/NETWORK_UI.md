@@ -49,7 +49,7 @@ immagini SD o dipendenze da glifi.
 Con build debug e `UI_DIAGNOSTICS_ENABLED=1`:
 
 ```powershell
-python scripts/ui_network.py
+python scripts/diagnostics/ui_network.py
 ```
 
 La prova usa reti/password dimostrative e tocca i controlli attraverso il

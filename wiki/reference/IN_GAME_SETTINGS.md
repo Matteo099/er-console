@@ -43,7 +43,7 @@ Il pannello non impedisce quindi il completamento o la scadenza della partita.
 Con build debug e `UI_DIAGNOSTICS_ENABLED=1`:
 
 ```powershell
-python scripts/ui_ingame_settings.py
+python scripts/diagnostics/ui_ingame_settings.py
 ```
 
 La suite `ui ingame-test` esegue 13 controlli LVGL su un display isolato:

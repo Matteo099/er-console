@@ -112,7 +112,7 @@ redundant OTA data records and rollback process, not by rewriting the old slot.
 Build the debug environment with `UI_DIAGNOSTICS_ENABLED=1`, upload it and run:
 
 ```powershell
-python scripts/ui_ota.py --port COM3 --output .pio/ota-check
+python scripts/diagnostics/ui_ota.py --port COM3 --output .pio/ota-check
 ```
 
 This exercises SemVer, metadata and manifest validation, redirect/credential
@@ -125,7 +125,7 @@ To additionally test real flash erase/write/native image validation using the
 currently built application:
 
 ```powershell
-python scripts/ui_ota.py --port COM3 --output .pio/ota-native `
+python scripts/diagnostics/ui_ota.py --port COM3 --output .pio/ota-native `
   --native-image .pio/build/esp32-s3-devkitc-1-n16r8v-debug/firmware.bin
 ```
 

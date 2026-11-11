@@ -79,7 +79,7 @@ perse al reset. Non e' presente un comando pubblico di cancellazione dei dati.
 Con build debug e `UI_DIAGNOSTICS_ENABLED=1`:
 
 ```powershell
-python scripts/ui_statistics.py
+python scripts/diagnostics/ui_statistics.py
 ```
 
 `ui stats-test` verifica il modello, i record, la media, i gruppi, i casi limite

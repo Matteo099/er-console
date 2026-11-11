@@ -68,7 +68,7 @@ incrementano questo limite e i file attivi restano a loro volta protetti.
 I tre WAV attuali occupano 2794986 byte: restano circa 1,33 MiB per altri file
 unici durante una partita. Se non basta, la nuova richiesta fallisce senza
 espellere i suoni prenotati o in uso. La conversione al formato canonico con
-`scripts/standardize_audio.py` riduce il costo degli originali stereo/48 kHz;
+`scripts/audio/standardize_audio.py` riduce il costo degli originali stereo/48 kHz;
 gli output vanno copiati separatamente sulla microSD.
 
 ## Prove e limiti delle misure
@@ -76,8 +76,8 @@ gli output vanno copiati separatamente sulla microSD.
 Con build debug e `UI_DIAGNOSTICS_ENABLED=1`:
 
 ```powershell
-python scripts/audio_preload.py
-python scripts/audio_preload_game.py
+python scripts/diagnostics/audio_preload.py
+python scripts/diagnostics/audio_preload_game.py
 ```
 
 Il primo comando verifica prenotazioni, condivisione, rilasci, ID riutilizzati,

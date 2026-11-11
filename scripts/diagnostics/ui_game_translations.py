@@ -26,7 +26,7 @@ def fixture(probe, path):
 
 
 def run(args):
-    root = Path(__file__).resolve().parents[1] / 'sd/games'
+    root = Path(__file__).resolve().parents[2] / 'sd/games'
     probe = StabilityProbe(args.port,args.output)
     original = None
     try:
