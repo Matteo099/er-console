@@ -14,7 +14,7 @@ const event = process.env.GITHUB_EVENT_PATH
   ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : {}
 let failed = false
 function lint(message, label) {
-  const result = spawnSync(process.execPath, [cli, '--verbose', '--config', resolve(root, 'scripts/ci/commitlint.config.cjs')], { input: message, encoding: 'utf8' })
+  const result = spawnSync(process.execPath, [cli, '--verbose', '--config', resolve(root, 'scripts/ci/package.json')], { input: message, encoding: 'utf8' })
   console.log(label, result.stdout, result.stderr)
   failed ||= result.status !== 0
 }

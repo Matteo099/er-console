@@ -46,7 +46,7 @@ linting only; Semantic Release analyzes history since the latest release tag.
 
 ```sh
 npm ci --prefix scripts/ci
-echo 'feat(audio): mix game music and effects' | node scripts/ci/node_modules/@commitlint/cli/cli.js --config scripts/ci/commitlint.config.cjs
+echo 'feat(audio): mix game music and effects' | node scripts/ci/node_modules/@commitlint/cli/cli.js --config scripts/ci/package.json
 npm run check:commits --prefix scripts/ci
 ```
 
