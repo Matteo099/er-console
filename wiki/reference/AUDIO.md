@@ -101,7 +101,7 @@ preparare i file nel formato canonico seguente.
 
 ## Script indipendente da PlatformIO
 
-`scripts/standardize_audio.py` usa Python 3.9+ e la libreria standard. FFmpeg
+`scripts/audio/standardize_audio.py` usa Python 3.9+ e la libreria standard. FFmpeg
 serve solo per convertire file non conformi; non e' necessario per validare
 o copiare WAV gia' conformi. Non importa PlatformIO e non scarica dipendenze.
 
@@ -116,13 +116,13 @@ o copiare WAV gia' conformi. Non importa PlatformIO e non scarica dipendenze.
 
 ```powershell
 # Controllare ricorsivamente, incluse cartelle nascoste come .core.
-python scripts/standardize_audio.py --check sd --report audio-check.json
+python scripts/audio/standardize_audio.py --check sd --report audio-check.json
 
 # Convertire in una directory separata, conservando i percorsi relativi.
-python scripts/standardize_audio.py sd --output audio-standardized --report audio-report.json
+python scripts/audio/standardize_audio.py sd --output audio-standardized --report audio-report.json
 
 # Percorso esplicito di FFmpeg, se non presente nel PATH.
-python scripts/standardize_audio.py sd --output audio-standardized --ffmpeg 'C:/Tools/ffmpeg.exe'
+python scripts/audio/standardize_audio.py sd --output audio-standardized --ffmpeg 'C:/Tools/ffmpeg.exe'
 ```
 
 Sono riconosciuti WAV, MP3, FLAC, OGG, OPUS, M4A, AAC, AIF/AIFF, WMA, CAF e W64.
@@ -162,7 +162,7 @@ I test di conversione sono saltati se FFmpeg non e' installato.
 
 Con build debug e `UI_DIAGNOSTICS_ENABLED=1`, `ui audio-test` esegue 41 controlli
 su campioni PCM, loop, somme, clipping, resampling, controlli con coda piena e
-API Lua. `python scripts/audio_check.py` li esegue via COM3 insieme a
+API Lua. `python scripts/diagnostics/audio_check.py` li esegue via COM3 insieme a
 `ui selftest`. Non produce suoni e non certifica la qualita' acustica dello
 speaker. Ripristinare il flag diagnostico a zero dopo le prove.
 

@@ -75,7 +75,7 @@ preparazione per aggiornare lo snapshot.
 Con build debug e `UI_DIAGNOSTICS_ENABLED=1`:
 
 ```powershell
-python scripts/ui_game_assets.py
+python scripts/diagnostics/ui_game_assets.py
 ```
 
 `ui assets-test` controlla la cache con gli asset reali di Test - Oggetti senza

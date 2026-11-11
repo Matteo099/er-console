@@ -143,7 +143,7 @@ def main():
                  'ER_BUILD_BRANCH': info['branch'], 'VITE_APP_VERSION': info['version'],
                  'SOURCE_DATE_EPOCH': str(info['source_date_epoch'])}
     for script in ('check_translations.py', 'check_game_translations.py'):
-        subprocess.run([sys.executable, str(root/'scripts'/script)], cwd=root, env=build_env, check=True)
+        subprocess.run([sys.executable, str(root/'scripts'/'checks'/script)], cwd=root, env=build_env, check=True)
     subprocess.run([*npm_command(), 'run', 'build'], cwd=root/'frontend', env=build_env, check=True)
     subprocess.run([sys.executable, '-m', 'platformio', 'run', '--environment', HARDWARE], cwd=root, env=build_env, check=True)
     core = Path(os.environ.get('PLATFORMIO_CORE_DIR', Path.home()/'.platformio'))

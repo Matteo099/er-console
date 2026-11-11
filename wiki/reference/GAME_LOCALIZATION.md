@@ -65,7 +65,7 @@ richiedono il firmware che espone `system.translate`.
 ## Verifiche
 
 ```powershell
-python scripts/check_game_translations.py
+python scripts/checks/check_game_translations.py
 ```
 
 Il controllo verifica i cinque metadati bilingui, tutti i messaggi Lua, chiavi,
@@ -74,8 +74,8 @@ placeholder printf e caratteri supportati dai font di lettura.
 Con build debug e `UI_DIAGNOSTICS_ENABLED=1`:
 
 ```powershell
-python scripts/ui_settings.py --reset --cycles 3
-python scripts/ui_game_translations.py
+python scripts/diagnostics/ui_settings.py --reset --cycles 3
+python scripts/diagnostics/ui_game_translations.py
 ```
 
 Il primo test trascina gli slider attraverso il lettore touch LVGL e rilascia

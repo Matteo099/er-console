@@ -29,7 +29,7 @@ proprieta' degli oggetti e il ciclo Scene/View restano invariati.
 Con build debug e `UI_DIAGNOSTICS_ENABLED=1`:
 
 ```powershell
-python scripts/ui_scroll.py
+python scripts/diagnostics/ui_scroll.py
 ```
 
 In alternativa inviare `ui scroll-test` dal monitor seriale. La suite crea

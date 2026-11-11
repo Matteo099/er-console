@@ -66,7 +66,7 @@ Log tecnici e nomi dei protocolli restano stabili.
 Il portale usa i cataloghi Vue i18n esistenti, con italiano predefinito; la
 selezione della lingua del dispositivo offre italiano e inglese.
 
-Verificare il catalogo con `python scripts/check_translations.py`: controlla
+Verificare il catalogo con `python scripts/checks/check_translations.py`: controlla
 chiavi duplicate, traduzioni mancanti e firme printf.
 Controlla anche che i caratteri siano compresi nei font di lettura incorporati.
 
@@ -112,13 +112,13 @@ Impostazioni o disattivare l'audio annulla l'anteprima pendente e la sua sorgent
 senza fermare le altre riproduzioni. Caricare le preferenze o cambiare il solo
 interruttore non richiede un tono. La generazione PCM non legge la microSD.
 
-Con diagnostica abilitata, `python scripts/ui_volume_feedback.py` verifica
+Con diagnostica abilitata, `python scripts/diagnostics/ui_volume_feedback.py` verifica
 frequenza delle richieste, ultimo valore, mute, cambi canale, coda piena,
 rollover del timer, eventi degli slider e proporzione dei campioni PCM.
 La suite usa code isolate e non produce suoni ne' modifica le preferenze.
 
 Verifica del 7 novembre 2026: 25 controlli del feedback, 41 del mixer e 30
-generali superati sull'ESP32. `scripts/ui_settings.py --cycles 1` ha verificato
+generali superati sull'ESP32. `scripts/diagnostics/ui_settings.py --cycles 1` ha verificato
 anche i trascinamenti sui cursori reali, con master silenziato e ripristino delle
 preferenze iniziali. Build finale caricata su COM3 con diagnostica disattivata;
 avvio acquisito per 22 secondi, menu a 1763 ms, senza errori SD o riavvii nel log.
@@ -151,11 +151,11 @@ migrazione, validazione credenziali e traduzione live senza audio o scritture NV
 sui controlli LVGL reali e pubblica il relativo evento. Ripristinare il flag a
 zero dopo le prove.
 
-La regressione completa e' `python scripts/ui_settings.py --reset`: usa i
+La regressione completa e' `python scripts/diagnostics/ui_settings.py --reset`: usa i
 controlli LVGL reali, verifica i due canali, cambia lingua, riavvia per verificare
 NVS e prova il ritorno da Risorse/Rete alla scheda Sistema. Salva le preferenze
 iniziali nel log e tenta di ripristinarle anche in caso di errore. Il comando
-storico `scripts/ui_stability.py` usa la stessa procedura senza riavvio.
+storico `scripts/diagnostics/ui_stability.py` usa la stessa procedura senza riavvio.
 
 ## Verifiche del 6 novembre 2026
 

@@ -62,7 +62,7 @@ la preferenza salvata. I comandi non salvano queste modifiche in NVS.
 Per ripetere le misure con il monitor PlatformIO chiuso:
 
 ```powershell
-python scripts/ui_performance.py --port COM3 --quiet --output .pio/ui-performance
+python scripts/diagnostics/ui_performance.py --port COM3 --quiet --output .pio/ui-performance
 ```
 
 ## Misure del 4 novembre 2026

@@ -133,7 +133,7 @@ Per ispezionare l'interfaccia dalla seriale, impostare temporaneamente
 
 ```powershell
 pio run -e esp32-s3-devkitc-1-n16r8v-debug -t upload --upload-port COM3
-& "$env:USERPROFILE/.platformio/penv/Scripts/python.exe" scripts/ui_capture.py --port COM3 --reset --command "ui settings" --tree --snapshot settings
+& "$env:USERPROFILE/.platformio/penv/Scripts/python.exe" scripts/diagnostics/ui_capture.py --port COM3 --reset --command "ui settings" --tree --snapshot settings
 ```
 
 Chiudere il monitor seriale prima di acquisire. Lo script usa pyserial
@@ -174,4 +174,4 @@ sono comunque esclusi. Per la storia delle anomalie SD e i limiti delle
 verifiche vedere [SD_DIAGNOSTICS.md](SD_DIAGNOSTICS.md).
 
 Per la prova di regressione monitor CPU + salvataggi NVS vedere
-[UI_STABILITY.md](UI_STABILITY.md) e `scripts/ui_stability.py`.
+[UI_STABILITY.md](UI_STABILITY.md) e `scripts/diagnostics/ui_stability.py`.

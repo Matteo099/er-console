@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import re
 
-root = Path(__file__).resolve().parents[1] / 'sd/games'
+root = Path(__file__).resolve().parents[2] / 'sd/games'
 pair = re.compile(r'^\s*(\w+)\s*=\s*\{it\s*=\s*("(?:[^"\\]|\\.)*"),\s*en\s*=\s*("(?:[^"\\]|\\.)*")\},?$', re.M)
 printf = re.compile(r'%(?:[-+ #0]*\d*(?:\.\d+)?(?:hh|ll|[hljztL])?[diuoxXfFeEgGaAcsp]|%)')
 count = 0

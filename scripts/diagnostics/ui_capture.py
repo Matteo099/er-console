@@ -2,7 +2,7 @@
 
 Requires UI_DIAGNOSTICS_ENABLED=1 and pyserial (included in PlatformIO's Python).
 Does not flash firmware, access the SD directly or execute game scripts.
-Example: python scripts/ui_capture.py --command "ui settings" --snapshot settings --tree
+Example: python scripts/diagnostics/ui_capture.py --command "ui settings" --snapshot settings --tree
 """
 import argparse
 import re
