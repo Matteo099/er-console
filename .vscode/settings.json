@@ -3,7 +3,7 @@
         "commands": [
             {
                 "match": ".*Bindings\\.cpp$",
-                "cmd": "python scripts/generate_lua_stubs.py"
+                "cmd": "python scripts/extension/generate_lua_stubs.py"
             }
         ]
     }
