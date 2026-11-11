@@ -1,7 +1,6 @@
 #include "UpdateSystem.h"
 #include "UpdateMetadata.h"
 #include "UpdateHttp.h"
-#include "UpdateCredentials.h"
 #include "config/Updates.h"
 #include "config/Console.h"
 #include "config/Environment.h"
@@ -45,10 +44,6 @@ namespace
         esp_ota_img_states_t state;
         const auto *running = esp_ota_get_running_partition();
         return running && esp_ota_get_state_partition(running, &state) == ESP_OK && state == ESP_OTA_IMG_PENDING_VERIFY;
-    }
-    std::string token()
-    {
-        return UpdateCredentials().load();
     }
     void recordBoot(bool success)
     {
@@ -204,22 +199,6 @@ void UpdateSystem::cancel()
     status.cancelling = true;
     ++status.revision;
 }
-bool UpdateSystem::saveToken(const std::string &value)
-{
-    TaskMutex::Guard lock(mutex);
-    if (working || !UpdateMetadata::validToken(value))
-        return false;
-    const bool saved = UpdateCredentials().save(value);
-    if (saved)
-    {
-        status.hasToken = !value.empty();
-        status.release = UpdateRelease{};
-        status.state = UpdateState::Idle;
-        status.error = UpdateError::None;
-        ++status.revision;
-    }
-    return saved;
-}
 void UpdateSystem::progress(UpdateState state, size_t downloaded, size_t written)
 {
     TaskMutex::Guard lock(mutex);
@@ -261,7 +240,6 @@ void UpdateSystem::run()
             return;
         }
     }
-    std::string credential = token();
     UpdateHttp http([this]()
                     { return stopped(); });
     if (!installRequested)
@@ -269,13 +247,13 @@ void UpdateSystem::run()
         UpdateRelease release;
         UpdateBuffer buffer;
         size_t size = 0;
-        auto error = http.json(apiBase() + "/releases/latest", credential, UpdateConfig::JSON_LIMIT, buffer, size);
+        auto error = http.json(apiBase() + "/releases/latest", UpdateConfig::JSON_LIMIT, buffer, size);
         if (error == UpdateError::None)
             error = UpdateMetadata::parseRelease(buffer.get(), size, release);
         buffer.reset();
         if (error == UpdateError::None)
         {
-            error = http.json(assetUrl(release.manifestId), credential, UpdateConfig::MANIFEST_LIMIT, buffer, size, true);
+            error = http.json(assetUrl(release.manifestId), UpdateConfig::MANIFEST_LIMIT, buffer, size, true);
             if (error == UpdateError::None)
             {
                 const auto *slot = updateSlot();
@@ -305,7 +283,7 @@ void UpdateSystem::run()
         fail(UpdateError::Incompatible);
         return;
     }
-    if (!http.open(assetUrl(release.firmwareId), credential, true))
+    if (!http.open(assetUrl(release.firmwareId), true))
     {
         fail(http.error());
         return;
@@ -381,10 +359,6 @@ UpdateError UpdateSystem::validateInactiveForDiagnostics(UpdateInput &input, con
 #endif
 void UpdateSystem::beginBootVerification()
 {
-    {
-        TaskMutex::Guard lock(mutex);
-        status.hasToken = !token().empty();
-    }
     Preferences preferences;
     std::string expected;
     bool interrupted = false;

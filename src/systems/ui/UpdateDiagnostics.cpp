@@ -3,7 +3,6 @@
 #include "UpdateDiagnostics.h"
 #include "systems/update/UpdateEngine.h"
 #include "systems/update/UpdateMetadata.h"
-#include "systems/update/UpdateCredentials.h"
 #include "systems/update/UpdateSystem.h"
 #include <esp_ota_ops.h>
 #include "config/Updates.h"
@@ -134,7 +133,6 @@ namespace
             if (id=="back") request=SceneRequest(SceneChange::GoToSettingsSystem,SceneTransition::SlideRight);
             else if (id=="install") view.askInstall(state.release.version);
             else if (id=="confirm_install") { state=preview(1); view.render(state); }
-            else if (id=="token") view.editToken();
             else if (id=="check" && state.busy()) { state=preview(0); state.state=UpdateState::Cancelled; view.render(state); }
             return true;
         }
@@ -185,8 +183,7 @@ void runUpdateDiagnostics()
     check(compareVersions("1.10.0","1.9.9")>0 && compareVersions("2.0.0","1.99.99")>0,"version comparison is numeric, not lexical");
     check(compareVersions("1.2.3","1.2.3-dev.1")>0 && compareVersions("1.2.3-dev.10","1.2.3-dev.2")>0 && compareVersions("1.2.3+a","1.2.3+b")==0,"prerelease precedence and ignored build metadata match SemVer");
     check(!trustedDownloadUrl("http://api.github.com/data") && !trustedDownloadUrl("https://api.github.com.evil.invalid/data") && !trustedDownloadUrl("https://api.github.com@evil.invalid/data"),"redirects reject plaintext, lookalike hosts and userinfo tricks");
-    check(trustedDownloadUrl("https://release-assets.githubusercontent.com/data?signature=example") && !authenticatedUrl("https://release-assets.githubusercontent.com/data") && authenticatedUrl("https://api.github.com/repos/example/repo/releases"),"CDN downloads are allowed without forwarding the GitHub credential");
-    check(validToken(std::string(256,'a')) && !validToken(std::string(257,'a')) && !validToken("secret\r\nHeader:value"),"tokens have bounded length and cannot inject HTTP headers");
+    check(trustedDownloadUrl("https://release-assets.githubusercontent.com/data?signature=example") && trustedDownloadUrl("https://api.github.com/repos/example/repo/releases"),"public GitHub API and release CDN downloads are allowed");
     bool cut=false; const auto notes=readable("Release \xf0\x9f\x9a\x80: \xe2\x80\x99 notes",20,cut);
     check(notes.find("\xf0")==std::string::npos && notes.find("'")!=std::string::npos,"release notes strip unsupported emoji and normalize readable punctuation");
     readable("long release notes",4,cut); check(cut,"long release notes are explicitly truncated");
@@ -240,11 +237,6 @@ void runUpdateDiagnostics()
       check(UpdateEngine::install(input,flash,candidate,quiet,never)==UpdateError::Image && !flash.activated,"native image validation failure cannot activate firmware"); }
     { Input input(data); Flash flash; flash.failActivate=true;
       check(UpdateEngine::install(input,flash,candidate,quiet,never)==UpdateError::Persistence && !flash.activated,"activation/persistence failure leaves the boot selection unchanged"); }
-    { UpdateCredentials credentials("ota-check"); const auto value=std::string("github_pat_")+std::string(180,'a');
-      bool okay=credentials.save(value) && credentials.load()==value;
-      okay &= !credentials.save("invalid\r\ntoken") && credentials.load()==value;
-      okay &= credentials.save("") && credentials.load().empty();
-      check(okay,"isolated NVS token storage persists, rejects invalid edits and clears without touching user credentials"); }
     const bool sound=UIFeedback::soundEnabled(); UIFeedback::setSoundEnabled(false);
     auto *original=lv_display_get_default(); auto *display=lv_display_create(320,240); lv_display_set_default(display);
     {
@@ -263,8 +255,7 @@ void runUpdateDiagnostics()
         check(cancel && lv_obj_has_state(cancel,LV_STATE_DISABLED),"cancellation is disabled during final activation");
         auto current=preview(0); current.state=UpdateState::UpToDate; view.render(current);
         check(lv_obj_has_state(install,LV_STATE_DISABLED),"up-to-date firmware cannot be installed again");
-        view.editToken(); lv_obj_update_layout(screen); auto *input=textarea(screen);
-        check(input && lv_textarea_get_password_mode(input) && lv_textarea_get_max_length(input)==256,"GitHub token editor masks secrets and supports full fine-grained tokens");
+        check(!textarea(screen),"public update UI contains no credential input or keyboard");
         view.destroy();
     }
     lv_display_delete(display); lv_display_set_default(original); UIFeedback::setSoundEnabled(sound);

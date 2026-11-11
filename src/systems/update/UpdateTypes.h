@@ -23,7 +23,6 @@ enum class UpdateError : uint8_t
     Disabled,
     Network,
     Clock,
-    Access,
     NotFound,
     RateLimit,
     Http,
@@ -64,6 +63,6 @@ struct UpdateSnapshot
     UpdateRelease release;
     size_t downloaded = 0, written = 0, total = 0;
     uint32_t revision = 0;
-    bool hasToken = false, cancelling = false, confirmedUpdate = false;
+    bool cancelling = false, confirmedUpdate = false;
     bool busy() const { return state == UpdateState::Checking || state == UpdateState::Downloading || state == UpdateState::Verifying || state == UpdateState::Installing || state == UpdateState::Success; }
 };

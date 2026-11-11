@@ -46,10 +46,10 @@ public:
         lv_obj_add_event_cb(keyboard, onCancel, LV_EVENT_CANCEL, this);
         hide();
     }
-    void show(const char *caption, const std::string &value, bool password, uint32_t maximumLength=0)
+    void show(const char *caption, const std::string &value, bool password)
     {
         Label::setText(title, caption);
-        lv_textarea_set_max_length(input, maximumLength ? maximumLength : password ? 64 : 32);
+        lv_textarea_set_max_length(input, password ? 64 : 32);
         lv_textarea_set_password_mode(input, password);
         lv_textarea_set_password_show_time(input, 0);
         lv_textarea_set_text(input, value.c_str());

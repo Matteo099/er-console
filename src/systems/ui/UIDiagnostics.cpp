@@ -386,7 +386,7 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui ota-status")
         {
             const auto value=UpdateSystem::instance().snapshot();
-            Serial.printf("@OTA state=%u error=%u downloaded=%u written=%u total=%u token=%u\n",unsigned(value.state),unsigned(value.error),unsigned(value.downloaded),unsigned(value.written),unsigned(value.total),unsigned(value.hasToken));
+            Serial.printf("@OTA state=%u error=%u downloaded=%u written=%u total=%u\n",unsigned(value.state),unsigned(value.error),unsigned(value.downloaded),unsigned(value.written),unsigned(value.total));
         }
         else if (command == "ui game") scenes.changeScene(new GamePreview(0), SceneTransition::None);
         else if (command == "ui victory") scenes.changeScene(new GamePreview(1), SceneTransition::None);

@@ -158,18 +158,12 @@ int UpdateMetadata::compareVersions(const std::string &left, const std::string &
     return a.pre.size() == b.pre.size() ? 0 : a.pre.size() < b.pre.size() ? -1
                                                                           : 1;
 }
-bool UpdateMetadata::validToken(const std::string &value)
-{
-    return value.size() <= UpdateConfig::TOKEN_LIMIT && std::all_of(value.begin(), value.end(), [](unsigned char ch)
-                                                                    { return std::isalnum(ch) || ch == '_'; });
-}
 bool UpdateMetadata::trustedDownloadUrl(const std::string &url)
 {
     const auto name = host(url);
     return name == "api.github.com" || name == "github.com" || name == "release-assets.githubusercontent.com" ||
            name == "objects.githubusercontent.com" || name == "github-releases.githubusercontent.com";
 }
-bool UpdateMetadata::authenticatedUrl(const std::string &url) { return host(url) == "api.github.com"; }
 std::string UpdateMetadata::readable(const char *text, size_t limit, bool &truncated)
 {
     std::string result;

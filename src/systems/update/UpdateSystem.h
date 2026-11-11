@@ -19,7 +19,6 @@ public:
     bool check();
     bool install();
     void cancel();
-    bool saveToken(const std::string &value);
     void beginBootVerification();
     void uiHeartbeat();
     static bool flashInProgress() { return flashing.load(); }
