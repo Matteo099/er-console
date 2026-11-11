@@ -40,10 +40,10 @@
 
 ## Scripts
 
-- `scripts/platformio/`: pre-build hooks selected in `platformio.ini`.
+- `scripts/platformio/`: pre-build hooks selected in `platformio.ini`, plus the inactive TFT_eSPI setup helper `update_user_setup.py`.
 - `scripts/ci/`: release packaging and CI checks.
 - `scripts/checks/`: translation validation used in CI.
 - `scripts/diagnostics/`: serial capture and hardware regression tools; these require a device and are not CI unit tests.
 - `scripts/audio/`: audio generation and conversion utilities; `scripts/tests/` contains the conversion unit tests.
 - `scripts/fonts/`: font generators and pinned LVGL conversion dependencies.
-- `scripts/legacy/`: inactive TFT_eSPI setup helper retained for reference.
+- `scripts/extension/`: Lua API stub generator used by the editor.

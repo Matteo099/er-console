@@ -6,7 +6,7 @@ from pathlib import Path
 # Paths
 # =============================================================================
 
-PROJECT_DIR = Path(__file__).parent.parent
+PROJECT_DIR = Path(__file__).resolve().parents[2]
 
 BINDINGS_DIR = (
     PROJECT_DIR
