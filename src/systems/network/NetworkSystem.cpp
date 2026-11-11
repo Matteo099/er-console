@@ -31,7 +31,11 @@ void NetworkSystem::init(void *params)
 #if WIFI_ENABLED
     WiFi.persistent(false);
     WiFi.mode(WIFI_STA);
-    reloadFromStorage(static_cast<StorageSystem *>(params));
+    if (reloadFromStorage(static_cast<StorageSystem *>(params)))
+    {
+        // Queue association for update(); boot must not wait for the network.
+        connect();
+    }
 #else
     WiFi.mode(WIFI_OFF);
     setState(State::Idle, "Disabled by build configuration");

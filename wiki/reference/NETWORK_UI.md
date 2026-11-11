@@ -24,10 +24,17 @@ e inglesi e palette seguono le preferenze dell'interfaccia.
 
 ## Configurazione e architettura
 
+All'accensione o al riavvio, con `WIFI_ENABLED=1`, `NetworkSystem` carica le
+credenziali salvate e richiede automaticamente la connessione se l'SSID non e'
+vuoto. Sono supportate anche reti aperte, senza password. Senza credenziali
+non viene tentata alcuna connessione. L'associazione avviene nel task rete:
+l'avvio e il funzionamento della console proseguono anche se la rete non e'
+disponibile. Dopo 10 secondi senza connessione viene segnalato il timeout;
+si puo' riprovare dalla pagina Rete.
+
 La scansione richiede `WIFI_ENABLED=1` in `src/config/Console.h`; il portale puo'
 restare spento. Con Wi-Fi disabilitato la lista mostra lo stato esplicito,
-Aggiorna e' disabilitato e nessuna scansione SDK parte. Entrambi i flag sono
-rimasti a zero per conservare la configurazione precedente.
+Aggiorna e' disabilitato e nessuna scansione SDK parte.
 
 `NetworkSystem` esegue scansioni asincrone e conserva i risultati. Il task rete
 e' l'unico proprietario del buffer Arduino: anche il portale usa questa cache,
