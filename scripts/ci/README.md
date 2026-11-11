@@ -1,5 +1,16 @@
 # Strumenti CI e release
 
+Il flusso della pipeline segue tre passaggi:
+
+```text
+push / pull request
+  -> validate: commit, test e traduzioni
+  -> build: firmware + portale + pacchetto SD di sviluppo
+  -> release: solo su main, versione e pacchetto stabile, poi pubblicazione
+```
+
+`ci.yml` coordina i passaggi; Python compila e prepara i pacchetti, mentre Node gestisce Commitlint e Semantic Release. JSON contiene dati e dipendenze, non è un ulteriore linguaggio di esecuzione. Le regole Commitlint sono in `package.json`.
+
 Dalla radice del repository:
 
 ```sh
