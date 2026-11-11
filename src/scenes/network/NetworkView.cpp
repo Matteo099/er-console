@@ -39,6 +39,7 @@ void NetworkView::create()
     {
         password = value;
         setCredentials(selectedSsid, password);
+        emitEvent(ButtonClickedEvent("save_network"));
     });
     picker.create(screen, [this](WifiScanEntry entry)
     {
@@ -123,7 +124,15 @@ void NetworkView::setStatus(const std::string &status, const std::string &ssid, 
     Label::setText(signalLabel, I18n::format(Text::Signal, signal).c_str());
     lv_obj_set_flag(signalLabel, LV_OBJ_FLAG_HIDDEN, ip.empty());
 }
-void NetworkView::setMessage(Text text) { Label::setText(messageLabel, tr(text)); }
+void NetworkView::showStatus()
+{
+    lv_obj_scroll_to_view_recursive(statusCard, LV_ANIM_OFF);
+}
+void NetworkView::setMessage(Text text)
+{
+    Label::setText(messageLabel, tr(text));
+    if (text != Text::None) lv_obj_scroll_to_view_recursive(messageLabel, LV_ANIM_OFF);
+}
 void NetworkView::onEdit(lv_event_t *e)
 {
     auto *v = static_cast<NetworkView *>(lv_event_get_user_data(e));

@@ -12,7 +12,7 @@ portal is not required; `WIFI_ENABLED=1` and `OTA_ENABLED=1` in
 [`Console.h`](../src/config/Console.h) are required. Network settings remain in
 the existing Network screen. Checking for updates does not install anything.
 
-## Release source and private repositories
+## Public release source
 
 [`Updates.h`](../src/config/Updates.h) selects `Matteo099/er-console` at build
 time. The client requests GitHub's latest published, non-draft, non-prerelease
@@ -20,22 +20,12 @@ release. Feature branch Actions artifacts and development builds are not offered
 as updates. Semantic versions are compared numerically, including prerelease
 precedence; equal or older releases cannot be installed through this screen.
 
-Public releases work without authentication. This repository is currently
-private: use **GitHub access** in the Updates screen to enter a fine-grained
-personal access token restricted to this repository with **Contents: read**.
-Use a dedicated, expiring token. The field is masked, has a visibility button
-and Cancel, and accepts up to 256 characters. **Remove token** switches back to
-unauthenticated access. A private repository and an absent release can both
-produce GitHub's 404 response, so the screen does not mistake this for an
-up-to-date firmware.
-
-The token is stored in the `ota-updates` NVS namespace, separate from SD/portal
-configuration. It is never compiled into firmware, shown again in the editor,
-exported in the SD bundle, included in diagnostics, or copied from PC Git
-credentials. NVS encryption is not enabled by this project: someone with
-physical flash access can extract stored credentials. The token is sent only
-to `api.github.com`; redirected asset downloads start a new request without
-the Authorization header. Only explicit GitHub HTTPS hosts are accepted.
+The repository and release assets must be public. All requests are anonymous;
+the firmware has no access-token configuration, credential storage or login UI.
+The latest release is retrieved from GitHub's public API, and the manifest and
+firmware are downloaded from its release assets. HTTPS redirects to the GitHub
+asset CDN are supported. A missing repository, release or asset produces a
+public-release-unavailable message rather than an up-to-date result.
 
 There must be a stable release produced by the [release pipeline](CI-CD.md).
 The OTA client does not create releases. Publishing/merging the pipeline and
@@ -79,7 +69,7 @@ HTTPS validates the server certificate using the SDK root bundle. A bounded
 NTP synchronization establishes the clock before TLS when necessary. There is
 no insecure-certificate fallback. I/O stalls time out after 15 seconds, each
 blocking connection operation is bounded, and an update operation has a
-10-minute limit. The UI reports network, clock, authentication, rate-limit,
+10-minute limit. The UI reports network, clock, rate-limit,
 metadata, memory, compatibility, integrity and flash errors separately.
 
 Installation is refused while a game is loaded. Before erasing flash, audio
@@ -94,7 +84,7 @@ The complete streamed SHA-256 and native `esp_ota_end` validation must succeed
 before the new partition is selected. The running application is not
 overwritten. Interrupted downloads, failed writes and hash mismatches leave
 the previous application bootable. This is integrity verification over
-authenticated HTTPS, not independent firmware signing or Secure Boot.
+HTTPS with server-certificate validation, not independent firmware signing or Secure Boot.
 
 The ESP-IDF rollback-enabled bootloader starts the new image pending
 verification. The Arduino early-confirmation hook is overridden. After boot,
@@ -115,11 +105,11 @@ Build the debug environment with `UI_DIAGNOSTICS_ENABLED=1`, upload it and run:
 python scripts/diagnostics/ui_ota.py --port COM3 --output .pio/ota-check
 ```
 
-This exercises SemVer, metadata and manifest validation, redirect/credential
-policy, SHA-256, interrupted framing, cancellation, injected flash failures,
-isolated credential storage and LVGL controls. Preview screens do not perform
+This exercises SemVer, metadata and manifest validation, allowed HTTPS hosts,
+SHA-256, interrupted framing, cancellation, injected flash failures and LVGL
+controls, including the absence of an update credential editor. Preview screens do not perform
 an installation. The script also checks the real network/error path and return
-to the System tab, while preserving preferences, statistics and credentials.
+to the System tab, while preserving preferences and statistics.
 
 To additionally test real flash erase/write/native image validation using the
 currently built application:
@@ -134,11 +124,17 @@ This diagnostic writes the inactive slot and validates the supplied image but
 boot selection is unchanged. The serial-only helper and synthetic preview
 commands are excluded from normal builds. Restore `UI_DIAGNOSTICS_ENABLED=0`
 after testing. End-to-end HTTPS installation and post-update rollback still
-need an accessible stable release, an Internet-connected console and, for
-this private repository, a suitable token.
+need a public stable release and an Internet-connected console.
+
+On 11 November 2026, the public client passed 37 on-device engine/UI checks.
+The ESP32 anonymously retrieved release `v1.0.0` and downloaded/validated its
+manifest, including board, partition layout and firmware asset metadata.
+The installed development version `1.0.1-dev...` was newer, so the UI correctly
+disabled installation of `1.0.0`. No downgrade or boot-partition change was
+performed. Logs/screenshots: `.pio/ota-public-check/`.
 
 Implementation: [`systems/update`](../src/systems/update) contains transport,
-metadata validation, a separately testable streaming engine, NVS credentials
+metadata validation, a separately testable streaming engine
 and the worker/boot verification service. [`scenes/update`](../src/scenes/update)
 keeps UI and navigation in the existing View/Scene structure. All interface
 messages use the central Italian/English translation catalog.

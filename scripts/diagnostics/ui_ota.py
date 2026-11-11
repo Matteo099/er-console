@@ -2,8 +2,7 @@
 
 Requires debug diagnostics. Default probes never install or reboot firmware.
 --native-image writes/verifies that binary in the inactive OTA slot, without
-changing boot selection. Preferences, real GitHub credentials and statistics
-are preserved; the isolated NVS fixture namespace is ota-check.
+changing boot selection. User preferences and statistics are preserved.
 """
 import argparse
 import hashlib
@@ -43,17 +42,18 @@ def native(probe,path):
 
 def run(args):
     probe=StabilityProbe(args.port,args.output)
-    original=None; stats=None; token=None
+    original=None; stats=None
     try:
         original=preferences(probe)
         stats=next(row.split('@STATS ',1)[1] for row in probe.command('ui stats-data') if '@STATS ' in row)
-        token=next(re.search(r'token=(\d)',row)[1] for row in probe.command('ui ota-status') if '@OTA ' in row)
+        probe.command('ui wifi-log off')
         probe.command('ui audio-master 0'); probe.command('ui home')
         rows=probe.command('ui ota-test')
         result=next((row for row in rows if '@OTATEST' in row),'')
         assert re.search(r'passed=\d+ failed=0',result),rows
         print(result,flush=True)
         probe.command('ui ota-preview'); probe.capture('available')
+        assert not any('@TEXTAREA' in row for row in probe.command('ui tree'))
         install='Installa' if original[1].startswith('it') else 'Install'
         cancel='Annulla' if original[1].startswith('it') else 'Cancel'
         back='Indietro' if original[1].startswith('it') else 'Back'
@@ -69,7 +69,7 @@ def run(args):
         probe.click('Aggiornamenti' if original[1].startswith('it') else 'Updates')
         probe.capture('settings-updates')
         probe.click('Verifica' if original[1].startswith('it') else 'Check')
-        # A connected console may need SNTP/TLS; do not change its credentials.
+        # A connected console may need SNTP/TLS; no installation is requested.
         deadline=time.monotonic()+40
         while time.monotonic()<deadline:
             rows=probe.command('ui ota-status')
@@ -85,12 +85,10 @@ def run(args):
         assert preferences(probe)==original
         current=next(row.split('@STATS ',1)[1] for row in probe.command('ui stats-data') if '@STATS ' in row)
         assert current==stats,'User game statistics changed'
-        current=next(re.search(r'token=(\d)',row)[1] for row in probe.command('ui ota-status') if '@OTA ' in row)
-        assert current==token,'User GitHub credential configuration changed'
         print('PASS OTA views, confirmation/cancellation, real bounded check and Settings return; user data preserved',flush=True)
     finally:
         try:
-            probe.command('ui home'); probe.command('ui audio-master 100')
+            probe.command('ui home'); probe.command('ui audio-master 100'); probe.command('ui wifi-log on')
         finally:
             probe.close('session')
 

@@ -29,14 +29,6 @@ public:
     bool handleUIEvent(const UIEvent &event) override
     {
         auto &system = UpdateSystem::instance();
-        if (event.getType() == UpdateTokenChangedEvent::TYPE)
-        {
-            if (!system.saveToken(static_cast<const UpdateTokenChangedEvent &>(event).token))
-                view.showTokenError();
-            else
-                refresh();
-            return true;
-        }
         if (event.getType() != ButtonClickedEvent::TYPE)
             return false;
         const auto &id = static_cast<const ButtonClickedEvent &>(event).buttonId;
@@ -54,13 +46,6 @@ public:
             view.askInstall(state.release.version);
         else if (id == "confirm_install")
             system.install();
-        else if (id == "token")
-            view.editToken();
-        else if (id == "clear_token")
-        {
-            if (!system.saveToken(""))
-                view.showTokenError();
-        }
         else if (id == "back")
             request = SceneRequest(SceneChange::GoToSettingsSystem, SceneTransition::SlideRight);
         else if (id == "wifi_settings")

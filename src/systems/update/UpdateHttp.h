@@ -15,8 +15,8 @@ class UpdateHttp : public UpdateInput
 public:
     explicit UpdateHttp(UpdateEngine::Cancel cancel);
     ~UpdateHttp();
-    bool open(const std::string &url, const std::string &token, bool binary);
-    UpdateError json(const std::string &url, const std::string &token, size_t maximum, UpdateBuffer &buffer, size_t &size, bool asset = false);
+    bool open(const std::string &url, bool binary);
+    UpdateError json(const std::string &url, size_t maximum, UpdateBuffer &buffer, size_t &size, bool asset = false);
     int read(uint8_t *data, size_t capacity) override;
     bool complete() const override;
     int64_t contentLength() const override { return length; }

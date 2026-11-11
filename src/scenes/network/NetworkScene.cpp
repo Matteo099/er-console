@@ -65,7 +65,7 @@ bool NetworkScene::handleUIEvent(const UIEvent& event)
             view.setMessage(Text::NetworkSaveFailed);
         else
         {
-            view.setMessage(Text::NetworkSaved);
+            view.setMessage(WIFI_ENABLED ? Text::None : Text::NetworkSaved);
             if (network)
             {
                 network->setCredentials(view.ssid(), view.secret());
@@ -73,6 +73,11 @@ bool NetworkScene::handleUIEvent(const UIEvent& event)
                 network->connect();
 #endif
             }
+            refreshNetworkStatus();
+#if WIFI_ENABLED
+            view.showStatus();
+#endif
+            return true;
         }
         refreshNetworkStatus(); return true;
     }

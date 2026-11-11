@@ -37,6 +37,7 @@
 #include "scenes/statistics/StatisticsScene.h"
 #include "drivers/display/TouchController.h"
 #include "GameFixtureDiagnostics.h"
+#include "NetworkConnectionDiagnostics.h"
 #include "services/GameMetadata.h"
 #include "systems/ui/UIEvents.h"
 
@@ -332,6 +333,7 @@ void UIDiagnostics::update(SceneManager &scenes)
             scenes.changeScene(preview,SceneTransition::None);
         }
         else if (command == "ui wifi-draft" && activeNetworkPreview) activeNetworkPreview->printDraft();
+        else if (command == "ui wifi-status" || command.startsWith("ui wifi-fixture ") || command.startsWith("ui wifi-log ")) networkConnectionDiagnostics(command.c_str());
         else if (command == "ui fixture clear") contentFixture.clear();
         else if (command.startsWith("ui fixture append "))
         {
@@ -384,7 +386,7 @@ void UIDiagnostics::update(SceneManager &scenes)
         else if (command == "ui ota-status")
         {
             const auto value=UpdateSystem::instance().snapshot();
-            Serial.printf("@OTA state=%u error=%u downloaded=%u written=%u total=%u token=%u\n",unsigned(value.state),unsigned(value.error),unsigned(value.downloaded),unsigned(value.written),unsigned(value.total),unsigned(value.hasToken));
+            Serial.printf("@OTA state=%u error=%u downloaded=%u written=%u total=%u\n",unsigned(value.state),unsigned(value.error),unsigned(value.downloaded),unsigned(value.written),unsigned(value.total));
         }
         else if (command == "ui game") scenes.changeScene(new GamePreview(0), SceneTransition::None);
         else if (command == "ui victory") scenes.changeScene(new GamePreview(1), SceneTransition::None);

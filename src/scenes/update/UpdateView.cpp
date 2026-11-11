@@ -24,8 +24,6 @@ namespace
             return Text::OtaNeedsWifi;
         case UpdateError::Clock:
             return Text::OtaClockError;
-        case UpdateError::Access:
-            return Text::OtaAccessError;
         case UpdateError::NotFound:
             return Text::OtaNotFound;
         case UpdateError::RateLimit:
@@ -118,19 +116,8 @@ void UpdateView::create()
     available = Label::create(details, "", &lv_font_montserrat_14, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     auto *repository = Label::create(details, OTA_GITHUB_OWNER "/" OTA_GITHUB_REPOSITORY, &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     UITheme::muted(repository);
-    tokenStatus = Label::create(details, "", &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
-    auto *access = Container::create(details, LV_PCT(100), 44);
-    Container::setFlex(access, LV_FLEX_FLOW_ROW);
-    lv_obj_set_style_pad_column(access, 6, 0);
-    tokenButton = Button::create(access, tr(Text::OtaAccess), onButton, this, 0, 44);
-    lv_obj_set_flex_grow(tokenButton, 1);
-    clearButton = Button::create(access, tr(Text::OtaClearToken), onButton, this, 0, 44);
-    lv_obj_set_flex_grow(clearButton, 1);
-    UITheme::secondary(tokenButton);
-    UITheme::secondary(clearButton);
     networkButton = Button::create(details, tr(Text::Network), onButton, this, LV_PCT(100), 44);
     UITheme::secondary(networkButton);
-    Label::create(details, tr(Text::OtaTokenHint), &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     releaseTitle = Label::create(details, "", UITheme::heading(18), LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     notes = Label::create(details, "", &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     Container::setFlex(layout.footer, LV_FLEX_FLOW_ROW, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER);
@@ -138,8 +125,6 @@ void UpdateView::create()
     UITheme::secondary(backButton);
     checkButton = Button::create(layout.footer, tr(Text::OtaCheck), onButton, this, 104, 44);
     installButton = Button::create(layout.footer, tr(Text::OtaInstall), onButton, this, 104, 44);
-    editor.create(screen, [this](const std::string &value)
-                  { emitEvent(UpdateTokenChangedEvent(value)); });
     confirmation.create(screen, "", [this](bool accepted)
                         {
         confirmation.hide(); if (accepted) emitEvent(ButtonClickedEvent("confirm_install")); }, Text::OtaConfirmTitle, Text::OtaInstall, Text::Cancel);
@@ -165,15 +150,12 @@ void UpdateView::render(const UpdateSnapshot &value)
     text(available, value.release.version.empty() ? "" : std::string(tr(Text::OtaLatest)) + ": " + value.release.version);
     text(releaseTitle, value.release.title.empty() ? "" : value.release.title);
     text(notes, value.release.notes + (value.release.notesTruncated ? std::string("\n") + tr(Text::OtaNotesTruncated) : ""));
-    text(tokenStatus, tr(value.hasToken ? Text::OtaTokenSaved : Text::OtaNoToken));
     const bool busy = value.busy();
     const bool cancellable = busy && value.state != UpdateState::Installing && value.state != UpdateState::Success && !value.cancelling;
     text(lv_obj_get_child(checkButton, 0), tr(busy ? Text::Cancel : Text::OtaCheck));
     lv_obj_set_state(checkButton, LV_STATE_DISABLED, busy ? !cancellable : !OTA_ENABLED || !WIFI_ENABLED);
     lv_obj_set_state(backButton, LV_STATE_DISABLED, busy);
     lv_obj_set_state(installButton, LV_STATE_DISABLED, busy || !value.release.firmwareId || value.state == UpdateState::UpToDate);
-    lv_obj_set_state(tokenButton, LV_STATE_DISABLED, busy);
-    lv_obj_set_state(clearButton, LV_STATE_DISABLED, busy || !value.hasToken);
     lv_obj_set_state(networkButton, LV_STATE_DISABLED, busy);
 }
 void UpdateView::askInstall(const std::string &version)
@@ -183,18 +165,11 @@ void UpdateView::askInstall(const std::string &version)
     confirmation.setQuestion(message);
     confirmation.show();
 }
-void UpdateView::editToken() { editor.show(tr(Text::OtaToken), "", true, UpdateConfig::TOKEN_LIMIT); }
-void UpdateView::showTokenError()
-{
-    text(statusLabel, tr(Text::OtaTokenError));
-    UITheme::danger(statusLabel);
-}
 void UpdateView::destroy()
 {
-    editor.clear();
     confirmation.destroy();
-    screen = title = statusLabel = progressBar = transferLabel = installed = available = releaseTitle = notes = tokenStatus = nullptr;
-    checkButton = installButton = backButton = tokenButton = clearButton = networkButton = nullptr;
+    screen = title = statusLabel = progressBar = transferLabel = installed = available = releaseTitle = notes = nullptr;
+    checkButton = installButton = backButton = networkButton = nullptr;
 }
 void UpdateView::onButton(lv_event_t *event)
 {
@@ -202,8 +177,6 @@ void UpdateView::onButton(lv_event_t *event)
     auto *button = lv_event_get_target(event);
     const char *id = button == self->backButton ? "back" : button == self->checkButton ? "check"
                                                        : button == self->installButton ? "install"
-                                                       : button == self->tokenButton   ? "token"
-                                                       : button == self->clearButton   ? "clear_token"
                                                                                        : "wifi_settings";
     self->emitEvent(ButtonClickedEvent(id));
 }

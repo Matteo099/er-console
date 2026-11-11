@@ -17,6 +17,6 @@
 
 namespace UpdateConfig
 {
-    constexpr size_t JSON_LIMIT = 64 * 1024, MANIFEST_LIMIT = 8 * 1024, TOKEN_LIMIT = 256;
+    constexpr size_t JSON_LIMIT = 64 * 1024, MANIFEST_LIMIT = 8 * 1024;
     constexpr uint32_t IO_TIMEOUT_MS = 15000, OPERATION_TIMEOUT_MS = 10 * 60 * 1000;
 }

@@ -15,7 +15,7 @@ extern "C" esp_err_t esp_crt_bundle_attach(void *configuration);
 void UpdateBufferFree::operator()(char *value) const { heap_caps_free(value); }
 UpdateHttp::UpdateHttp(UpdateEngine::Cancel cancel) : cancelled(std::move(cancel))
 {
-    // SDK debug logs must not print Authorization request headers.
+    // Keep transfer logging from flooding the serial port.
     esp_log_level_set("HTTP_CLIENT", ESP_LOG_WARN);
     esp_log_level_set("TRANSPORT_BASE", ESP_LOG_WARN);
     esp_log_level_set("esp-tls", ESP_LOG_WARN);
@@ -40,7 +40,7 @@ esp_err_t UpdateHttp::event(esp_http_client_event_t *value)
         self.rateLimited = true;
     return ESP_OK;
 }
-bool UpdateHttp::open(const std::string &initial, const std::string &token, bool binary)
+bool UpdateHttp::open(const std::string &initial, bool binary)
 {
     std::string url = initial;
     for (unsigned redirects = 0; redirects < 6; ++redirects)
@@ -84,12 +84,8 @@ bool UpdateHttp::open(const std::string &initial, const std::string &token, bool
         esp_http_client_set_header(client, "User-Agent", "Escaperiom-OTA");
         esp_http_client_set_header(client, "Accept", binary ? "application/octet-stream" : "application/vnd.github+json");
         esp_http_client_set_header(client, "Accept-Encoding", "identity");
-        if (UpdateMetadata::authenticatedUrl(url))
-        {
+        if (url.compare(0, 23, "https://api.github.com/") == 0)
             esp_http_client_set_header(client, "X-GitHub-Api-Version", "2022-11-28");
-            if (!token.empty())
-                esp_http_client_set_header(client, "Authorization", ("Bearer " + token).c_str());
-        }
         const auto opened = esp_http_client_open(client, 0);
         if (opened != ESP_OK)
         {
@@ -111,14 +107,13 @@ bool UpdateHttp::open(const std::string &initial, const std::string &token, bool
                 return false;
             }
             url = location;
-            continue; // Each hop creates new headers; credentials never reach CDN hosts.
+            continue;
         }
         if (statusCode != 200)
         {
-            problem = statusCode == 401 ? UpdateError::Access : statusCode == 404                                     ? UpdateError::NotFound
-                                                            : statusCode == 429 || (statusCode == 403 && rateLimited) ? UpdateError::RateLimit
-                                                            : statusCode == 403                                       ? UpdateError::Access
-                                                                                                                      : UpdateError::Http;
+            problem = statusCode == 404 ? UpdateError::NotFound
+                      : statusCode == 429 || (statusCode == 403 && rateLimited) ? UpdateError::RateLimit
+                                                                             : UpdateError::Http;
             return false;
         }
         lastData = millis();
@@ -165,10 +160,10 @@ int UpdateHttp::read(uint8_t *data, size_t capacity)
     }
     return -1;
 }
-UpdateError UpdateHttp::json(const std::string &url, const std::string &token, size_t maximum, UpdateBuffer &buffer, size_t &size, bool asset)
+UpdateError UpdateHttp::json(const std::string &url, size_t maximum, UpdateBuffer &buffer, size_t &size, bool asset)
 {
     size = 0;
-    if (!open(url, token, asset))
+    if (!open(url, asset))
         return problem;
     if (length > int64_t(maximum))
         return UpdateError::Metadata;
