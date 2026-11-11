@@ -10,13 +10,21 @@ Gli SSID nascosti non compaiono e non vengono aggiunti manualmente.
 
 Scegliendo una rete protetta diversa, la vecchia password viene rimossa dalla
 bozza e si apre l'editor. Per una rete aperta non viene richiesta una password.
-Le credenziali precedenti rimangono salvate finche' non si preme Salva e connetti.
+Le credenziali precedenti rimangono salvate finche' non si conferma la password
+o si preme Salva e connetti.
 
 - L'occhio mostra/nasconde il testo. Ogni apertura ripristina la maschera.
 - Annulla scarta l'inserimento e torna alla pagina Rete.
-- Conferma aggiorna la bozza della pagina; l'azione finale per salvare e
-  collegarsi rimane Salva e connetti.
+- Conferma salva le credenziali e richiede subito la connessione, anche quando
+  si usa il tasto di conferma della tastiera. Salva e connetti resta disponibile
+  per riprovare o per una rete aperta.
 - Conferma e annulla della tastiera restano utilizzabili.
+
+Dopo l'invio, la pagina mostra la scheda di stato con Connessione in corso,
+Connesso e indirizzo IP, oppure l'errore di connessione/timeout. Password vuote
+per reti protette, credenziali non valide e problemi di salvataggio mostrano
+un messaggio senza avviare la connessione. Annulla non salva e non connette.
+Con `WIFI_ENABLED=0`, Conferma salva soltanto e il Wi-Fi resta disabilitato.
 
 Intestazione e indicatori SD/Wi-Fi restano visibili. Su TFT 320x240 l'editor
 usa campo e occhio da 44 px, azioni da 44 px e tastiera da 108 px. Testi italiani

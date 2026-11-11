@@ -16,6 +16,7 @@ public:
     lv_obj_t *getScreen() override { return screen; };
 
     void setStatus(const std::string &statusText, const std::string &ssid, const std::string &ip, int signal = 0);
+    void showStatus();
     void setCredentials(const std::string &ssid, const std::string &password);
     void setMessage(Text text);
     void setScanResults(const WifiScanSnapshot &scan) { picker.setSnapshot(scan); }
