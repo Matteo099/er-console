@@ -45,9 +45,9 @@ linting only; Semantic Release analyzes history since the latest release tag.
 ## Local validation
 
 ```sh
-npm ci
-echo 'feat(audio): mix game music and effects' | npx commitlint
-npm run check:commits
+npm ci --prefix scripts/ci
+echo 'feat(audio): mix game music and effects' | node scripts/ci/node_modules/@commitlint/cli/cli.js --config scripts/ci/commitlint.config.cjs
+npm run check:commits --prefix scripts/ci
 ```
 
 The final command compares the current branch to `origin/main` outside Actions.

@@ -9,7 +9,7 @@
 - `sd/`: sample SD card content (games and assets)
 - `frontend/`: web portal SPA source
 - `scripts/`: build/pre-build helper scripts
-- `docs/`: project documentation
+- `wiki/`: project documentation
 
 ## Firmware Source Layout (`src/`)
 

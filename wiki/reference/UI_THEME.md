@@ -29,7 +29,7 @@ Titoli e intestazioni usano `UITheme::heading`: Escaperiom Display a 22 px;
 18 px per i capitoletti e 26 px per i titoli principali. Il font comprende
 gli accenti italiani e usa forme maiuscole anche per le minuscole. Testi lunghi
 e pulsanti conservano i font di lettura. Generatore, TTF/WOFF2 e rigenerazione
-dei bitmap sono descritti in [assets/fonts/README.md](../assets/fonts/README.md).
+dei bitmap sono descritti in [assets/fonts/README.md](Fonts.md).
 La dipendenza dal descrittore privato del tema LVGL 9.4 e' isolata in
 `UITheme.cpp`: verificarla prima di aggiornare la versione di LVGL.
 

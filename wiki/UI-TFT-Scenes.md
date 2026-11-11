@@ -10,15 +10,6 @@ This page documents the on-device TFT user experience (LVGL-based), scene naviga
 - UI framework: LVGL
 - Default transition duration: 300ms (`lv_scr_load_anim`)
 
-## Runtime Note (Current Branch)
-
-`UIManager` currently starts with `SampleScene` for development:
-
-- `scenes.changeScene(new SampleScene());`
-- `BootScene` startup is present but commented out.
-
-Expected production UX flow is still boot-first, as documented below.
-
 ## Scene Flow
 
 ```mermaid

@@ -7,9 +7,10 @@ import { execFileSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { PassThrough } from 'node:stream'
-import semanticRelease from 'semantic-release'
+const tooling = createRequire(new URL('./package.json', import.meta.url))
+const { default: semanticRelease } = await import(pathToFileURL(tooling.resolve('semantic-release')).href)
 
-const require = createRequire(import.meta.url)
+const require = tooling
 for (const [message, expected] of [
   ['fix(audio): correct playback', '1.2.4'],
   ['feat(ui): add settings', '1.3.0'],

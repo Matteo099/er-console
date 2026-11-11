@@ -6,7 +6,7 @@ import tempfile
 import unittest
 import zipfile
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]/'scripts/ci'))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_bundle import package, verify, slot_size
 from build_metadata import metadata, dev_version, valid_version, HARDWARE
 

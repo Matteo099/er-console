@@ -13,8 +13,8 @@ GitHub Wikis are stored in a separate git repository named:
 git clone https://github.com/<owner>/<repo>.wiki.git
 ```
 
-3. Copy the markdown files from `docs/wiki/` into the cloned wiki folder
-4. Copy the `docs/wiki/images/` folder too (required by UI visual pages)
+3. Copy the markdown files from `wiki/` into the cloned wiki folder
+4. Copy the `wiki/images/` folder too (required by UI visual pages)
 
 ## Required Page Names
 
@@ -29,7 +29,7 @@ These are already included in this project wiki draft.
 
 ```bash
 cd <repo>.wiki.git
-# copy files from main repo docs/wiki/* here
+# copy files from main repo wiki/* here
 git add .
 git commit -m "Initial project wiki"
 git push

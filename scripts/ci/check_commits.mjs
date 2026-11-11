@@ -1,16 +1,20 @@
 import { execFileSync, spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
+
+const root = fileURLToPath(new URL('../..', import.meta.url))
+process.chdir(root)
 
 // Adopt the convention from this change onwards; do not rewrite legacy history.
 const baseline = '8c3b294af7f3704f3c597e135fa0701d0bde2be4'
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim()
-const cli = fileURLToPath(new URL('../../node_modules/@commitlint/cli/cli.js', import.meta.url))
+const cli = fileURLToPath(new URL('./node_modules/@commitlint/cli/cli.js', import.meta.url))
 const event = process.env.GITHUB_EVENT_PATH
   ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : {}
 let failed = false
 function lint(message, label) {
-  const result = spawnSync(process.execPath, [cli, '--verbose'], { input: message, encoding: 'utf8' })
+  const result = spawnSync(process.execPath, [cli, '--verbose', '--config', resolve(root, 'scripts/ci/commitlint.config.cjs')], { input: message, encoding: 'utf8' })
   console.log(label, result.stdout, result.stderr)
   failed ||= result.status !== 0
 }

@@ -20,7 +20,7 @@ class StandardizeAudioTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix='console audio ')
         self.addCleanup(self.temporary.cleanup)
-        self.root = Path(self.temporary.name)
+        self.root = Path(self.temporary.name).resolve()
         self.input = self.root / 'input'
         self.input.mkdir()
 

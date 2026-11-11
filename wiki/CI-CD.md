@@ -92,14 +92,14 @@ configuration, credentials and NVS statistics are not part of the archive.
 
 Use Node from `.nvmrc`, Python 3.11+ locally (3.12 in CI), Git and the project
 toolchain. The CI requirements pin PlatformIO; the platform and Lua revision are
-pinned in `platformio.ini`. npm installations use both committed lockfiles.
+pinned in `platformio.ini`. npm installations use the committed tooling and frontend lockfiles.
 
 ```sh
-npm ci
+npm ci --prefix scripts/ci
 npm ci --prefix frontend
 python -m pip install -r scripts/ci/requirements.txt
-npm test
-python -m unittest discover -s tests/ci -p 'test_*.py' -v
+npm test --prefix scripts/ci
+python -m unittest discover -s scripts/ci -p 'test_*.py' -v
 python scripts/ci/build_bundle.py --channel dev
 ```
 

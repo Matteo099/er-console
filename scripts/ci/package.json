@@ -2,11 +2,13 @@
   "name": "escaperiom-release-tools",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=24.10.0" },
+  "engines": {
+    "node": ">=24.10.0"
+  },
   "scripts": {
-    "check:commits": "node scripts/ci/check_commits.mjs",
-    "test": "node --test tests/ci/*.test.mjs",
-    "release": "semantic-release"
+    "check:commits": "node check_commits.mjs",
+    "test": "node --test *.test.mjs",
+    "release": "node release.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.4",

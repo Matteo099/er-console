@@ -5,8 +5,6 @@ const dir = "../sd/.core/portal";
 
 if (fs.existsSync(dir)) {
   for (const file of fs.readdirSync(dir)) {
-    if (file !== "README.md") {
-      fs.rmSync(path.join(dir, file), { recursive: true, force: true });
-    }
+    fs.rmSync(path.join(dir, file), { recursive: true, force: true });
   }
 }

@@ -1,1 +1,0 @@
-This directory contains the built output of the website. It is automatically generated and updated whenever the command `npm run build` is executed.
