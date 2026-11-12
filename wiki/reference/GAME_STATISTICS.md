@@ -10,6 +10,10 @@ nel catalogo, secondo il punto di ingresso.
 Premendo Avvia nella schermata pronta della partita compare un selettore con
 frecce su e giu', Annulla e Avvia. Il valore minimo e' sempre 1; il tipo salvato
 e' un intero a 16 bit, con limite superiore 65535 e freccia disabilitata al limite.
+Ogni tap sulle frecce varia il numero di una unita'. Tenendo premuto, la prima
+variazione avviene dopo 300 ms e si ripete ogni 300 ms: 1500 ms corrispondono a
+cinque variazioni, senza un passo aggiuntivo al rilascio. Rilascio, annullamento,
+trascinamento o chiusura del selettore interrompono la ripetizione.
 Solo confermando il selettore viene creata la sessione e avviato il timer/Lua.
 Preparazione, caricamento e attesa nel selettore non consumano tempo di gioco.
 Annulla non crea statistiche. Riprendere dalla pausa non chiede nuovamente il
@@ -80,12 +84,20 @@ Con build debug e `UI_DIAGNOSTICS_ENABLED=1`:
 
 ```powershell
 python scripts/diagnostics/ui_statistics.py
+python scripts/diagnostics/ui_players.py
 ```
 
 `ui stats-test` verifica il modello, i record, la media, i gruppi, i casi limite
 del selettore, pause frazionarie, rollover, recupero dopo riapertura, snapshot
 invalidi e scritture fallite. Il test di persistenza usa soltanto il namespace
 NVS `stats-check` e pulisce la propria chiave `snapshot` alla fine.
+
+`ui players-test` verifica tap consecutivi e alternati, soglia e cadenza di
+300 ms, rilascio, annullamento, trascinamento, riapertura, limiti e rollover
+su un display LVGL isolato con puntatore reale e tempo simulato. Lo script
+`ui_players.py` aggiunge prove attraverso il driver touch e il display fisico,
+senza avviare Lua o partite, confrontando preferenze e statistiche prima e dopo.
+`--native-only` esegue solo i controlli isolati.
 
 Le prove UI usano il vero Test - Ciclo con input hardware disattivati e un
 archivio statistico in RAM selezionato solo dalla diagnostica. Verificano una

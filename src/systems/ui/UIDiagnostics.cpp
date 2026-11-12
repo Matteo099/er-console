@@ -25,6 +25,7 @@
 #include "SettingsDiagnostics.h"
 #include "AudioDiagnostics.h"
 #include "ScrollDiagnostics.h"
+#include "PlayerSelectorDiagnostics.h"
 #include "VolumeFeedbackDiagnostics.h"
 #include "AudioPreloadDiagnostics.h"
 #include "InGameSettingsDiagnostics.h"
@@ -187,6 +188,8 @@ class GamePreview : public Scene {
         } else {
             view.showMain();
             view.setRunning(false);
+            if (mode == 4)
+                view.showPlayers(1);
         }
     }
 
@@ -514,6 +517,8 @@ void UIDiagnostics::update(SceneManager& scenes) {
                           unsigned(value.written), unsigned(value.total));
         } else if (command == "ui game")
             scenes.changeScene(new GamePreview(0), SceneTransition::None);
+        else if (command == "ui players")
+            scenes.changeScene(new GamePreview(4), SceneTransition::None);
         else if (command == "ui victory")
             scenes.changeScene(new GamePreview(1), SceneTransition::None);
         else if (command == "ui fail")
@@ -542,6 +547,8 @@ void UIDiagnostics::update(SceneManager& scenes) {
             runAudioDiagnostics();
         else if (command == "ui scroll-test")
             runScrollDiagnostics();
+        else if (command == "ui players-test")
+            runPlayerSelectorDiagnostics();
         else if (command == "ui volume-test")
             runVolumeFeedbackDiagnostics();
         else if (command == "ui preload-test")
