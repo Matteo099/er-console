@@ -14,23 +14,51 @@
 #include "systems/network/NetworkSystem.h"
 #include "systems/portal/PortalSystem.h"
 
-class EscapeOS
-{
-public:
+class EscapeOS {
+  public:
     void init();
-    bool isRunning() { return running; }
 
-    BootManager* getBootManager() { return &bootManager; }
-    UIManager* getUIManager() { return &uiManager; }
-    StorageSystem* getStorageSystem() { return &storageSystem; }
-    InputSystem* getInputSystem() { return &inputSystem; }
-    AudioSystem* getAudioSystem() { return &audioSystem; }
-    LuaSystem* getLuaSystem() { return &luaSystem; }
-    RainbowPixel* getRainbowPixel() { return &rainbowPixel; }
-    NetworkSystem* getNetworkSystem() { return &networkSystem; }
-    PortalSystem* getPortalSystem() { return &portalSystem; }
+    bool isRunning() {
+        return running;
+    }
 
-private:
+    BootManager* getBootManager() {
+        return &bootManager;
+    }
+
+    UIManager* getUIManager() {
+        return &uiManager;
+    }
+
+    StorageSystem* getStorageSystem() {
+        return &storageSystem;
+    }
+
+    InputSystem* getInputSystem() {
+        return &inputSystem;
+    }
+
+    AudioSystem* getAudioSystem() {
+        return &audioSystem;
+    }
+
+    LuaSystem* getLuaSystem() {
+        return &luaSystem;
+    }
+
+    RainbowPixel* getRainbowPixel() {
+        return &rainbowPixel;
+    }
+
+    NetworkSystem* getNetworkSystem() {
+        return &networkSystem;
+    }
+
+    PortalSystem* getPortalSystem() {
+        return &portalSystem;
+    }
+
+  private:
     bool running = false;
 
     BootManager bootManager;

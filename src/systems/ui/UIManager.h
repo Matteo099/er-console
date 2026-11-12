@@ -5,9 +5,8 @@
 #include "systems/ui/SceneManager.h"
 #include "drivers/display/TFTDisplay.h"
 
-class UIManager : public SystemService
-{
-private:
+class UIManager : public SystemService {
+  private:
     TFTDisplay display;
     LVGLContext lvgl;
     SceneManager scenes;
@@ -15,9 +14,11 @@ private:
     uint32_t preferencesRevision = 0, localeRevision = 0;
     void loadPreferences();
 
-public:
-    void init(void *params = nullptr) override;
+  public:
+    void init(void* params = nullptr) override;
     void update() override;
 
-    SceneManager &sceneManager() { return scenes; }
+    SceneManager& sceneManager() {
+        return scenes;
+    }
 };

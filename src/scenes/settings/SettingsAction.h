@@ -1,7 +1,3 @@
 #pragma once
 
-enum class SettingsAction {
-    None,
-    ToggleSound,
-    Back
-};
+enum class SettingsAction { None, ToggleSound, Back };

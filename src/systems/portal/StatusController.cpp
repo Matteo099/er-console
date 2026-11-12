@@ -5,46 +5,56 @@
 #include <esp_sleep.h>
 #include "log/Logger.h"
 
-namespace
-{
-    static const char* wifiStateToApiValue(NetworkSystem::State state)
-    {
-        switch (state)
-        {
-            case NetworkSystem::State::Connected: return "connected";
-            case NetworkSystem::State::Connecting: return "connecting";
-            case NetworkSystem::State::Disconnected: return "disconnected";
-            case NetworkSystem::State::Error: return "error";
-            case NetworkSystem::State::Idle:
-            default:
-                return "idle";
-        }
+namespace {
+static const char* wifiStateToApiValue(NetworkSystem::State state) {
+    switch (state) {
+        case NetworkSystem::State::Connected:
+            return "connected";
+        case NetworkSystem::State::Connecting:
+            return "connecting";
+        case NetworkSystem::State::Disconnected:
+            return "disconnected";
+        case NetworkSystem::State::Error:
+            return "error";
+        case NetworkSystem::State::Idle:
+        default:
+            return "idle";
     }
 }
+}  // namespace
 
-StatusController::StatusController(PortalService& service)
-    : service(service)
-{
+StatusController::StatusController(PortalService& service) : service(service) {
 }
 
-void StatusController::registerRoutes(WebServer& server)
-{
-    server.on("/api/status", HTTP_GET, [&server, this]() { sendStatus(server); });
-    server.on("/api/wifi/scan", HTTP_GET, [&server, this]() { scanWifi(server); });
-    server.on("/api/system/reboot", HTTP_POST, [&server, this]() { rebootSystem(server); });
-    server.on("/api/system/shutdown", HTTP_POST, [&server, this]() { shutdownSystem(server); });
-    server.on("/api/system/logs", HTTP_GET, [&server, this]() { getLogs(server); });
-    server.on("/api/system/logs", HTTP_DELETE, [&server, this]() { clearLogs(server); });
+void StatusController::registerRoutes(WebServer& server) {
+    server.on("/api/status", HTTP_GET, [&server, this]() {
+        sendStatus(server);
+    });
+    server.on("/api/wifi/scan", HTTP_GET, [&server, this]() {
+        scanWifi(server);
+    });
+    server.on("/api/system/reboot", HTTP_POST, [&server, this]() {
+        rebootSystem(server);
+    });
+    server.on("/api/system/shutdown", HTTP_POST, [&server, this]() {
+        shutdownSystem(server);
+    });
+    server.on("/api/system/logs", HTTP_GET, [&server, this]() {
+        getLogs(server);
+    });
+    server.on("/api/system/logs", HTTP_DELETE, [&server, this]() {
+        clearLogs(server);
+    });
 }
 
-void StatusController::sendStatus(WebServer& server)
-{
+void StatusController::sendStatus(WebServer& server) {
     const PortalStatusData status = service.getStatus();
 
     JsonDocument doc;
     JsonObject wifi = doc["wifi"].to<JsonObject>();
     wifi["connected"] = status.wifiConnected;
-    wifi["state"] = service.network() ? wifiStateToApiValue(service.network()->getStatus().state) : "idle";
+    wifi["state"] =
+        service.network() ? wifiStateToApiValue(service.network()->getStatus().state) : "idle";
     wifi["message"] = status.wifiState;
     wifi["ssid"] = status.wifiSsid;
     wifi["ip"] = status.wifiIp;
@@ -96,14 +106,12 @@ void StatusController::sendStatus(WebServer& server)
     server.send(200, "application/json", body.c_str());
 }
 
-void StatusController::scanWifi(WebServer& server)
-{
+void StatusController::scanWifi(WebServer& server) {
     const std::vector<WifiScanEntry> networks = service.scanWifiNetworks();
 
     JsonDocument doc;
     JsonArray items = doc["networks"].to<JsonArray>();
-    for (const WifiScanEntry& network : networks)
-    {
+    for (const WifiScanEntry& network : networks) {
         JsonObject item = items.add<JsonObject>();
         item["ssid"] = network.ssid;
         item["signal"] = network.signal;
@@ -116,11 +124,9 @@ void StatusController::scanWifi(WebServer& server)
     server.send(200, "application/json", body.c_str());
 }
 
-void StatusController::getLogs(WebServer& server)
-{
+void StatusController::getLogs(WebServer& server) {
     std::size_t lines = 100;
-    if (server.hasArg("lines"))
-    {
+    if (server.hasArg("lines")) {
         long requested = server.arg("lines").toInt();
         if (requested > 0)
             lines = static_cast<std::size_t>(requested);
@@ -130,21 +136,18 @@ void StatusController::getLogs(WebServer& server)
     server.send(200, "text/plain", logs.c_str());
 }
 
-void StatusController::clearLogs(WebServer& server)
-{
+void StatusController::clearLogs(WebServer& server) {
     Log::clearRecentLogs();
     server.send(200, "application/json", "{\"success\":true,\"message\":\"Logs cleared\"}");
 }
 
-void StatusController::rebootSystem(WebServer& server)
-{
+void StatusController::rebootSystem(WebServer& server) {
     server.send(200, "application/json", "{\"success\":true,\"message\":\"Reboot scheduled\"}");
     delay(150);
     ESP.restart();
 }
 
-void StatusController::shutdownSystem(WebServer& server)
-{
+void StatusController::shutdownSystem(WebServer& server) {
     server.send(200, "application/json", "{\"success\":true,\"message\":\"Shutdown scheduled\"}");
     delay(150);
     esp_deep_sleep_start();

@@ -2,22 +2,15 @@
 
 #include <lvgl.h>
 
-class ProgressBar
-{
-public:
-    static lv_obj_t *create(
-        lv_obj_t *parent,
-        lv_coord_t width = 220,
-        lv_coord_t height = 14,
-        lv_align_t align = LV_ALIGN_CENTER,
-        lv_coord_t x = 0,
-        lv_coord_t y = 0,
-        uint16_t animTime = 300)
-    {
+class ProgressBar {
+  public:
+    static lv_obj_t* create(lv_obj_t* parent, lv_coord_t width = 220, lv_coord_t height = 14,
+                            lv_align_t align = LV_ALIGN_CENTER, lv_coord_t x = 0, lv_coord_t y = 0,
+                            uint16_t animTime = 300) {
         if (!parent)
             return nullptr;
 
-        lv_obj_t *bar = lv_bar_create(parent);
+        lv_obj_t* bar = lv_bar_create(parent);
         if (!bar)
             return nullptr;
 
@@ -44,27 +37,21 @@ public:
         return bar;
     }
 
-    static void setValue(lv_obj_t *bar, uint32_t value, lv_anim_enable_t anim = LV_ANIM_ON)
-    {
+    static void setValue(lv_obj_t* bar, uint32_t value, lv_anim_enable_t anim = LV_ANIM_ON) {
         if (!bar)
             return;
 
         lv_bar_set_value(bar, value, anim);
     }
 
-    static uint32_t getValue(lv_obj_t *bar)
-    {
+    static uint32_t getValue(lv_obj_t* bar) {
         if (!bar)
             return 0;
 
         return lv_bar_get_value(bar);
     }
 
-    static void setColors(
-        lv_obj_t *bar,
-        lv_color_t bgColor,
-        lv_color_t indicatorColor)
-    {
+    static void setColors(lv_obj_t* bar, lv_color_t bgColor, lv_color_t indicatorColor) {
         if (!bar)
             return;
 

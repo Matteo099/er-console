@@ -2,10 +2,10 @@
 #include "log/Logger.h"
 #include "config/BoardConfig.h"
 
-TFTDisplay::TFTDisplay() : lgfx() {}
+TFTDisplay::TFTDisplay() : lgfx() {
+}
 
-void TFTDisplay::init()
-{
+void TFTDisplay::init() {
     Log::info(Log::DISPLAY_TAG, "Initializing TFTDisplay with LovyanGFX");
 
     // Initialize LovyanGFX
@@ -24,10 +24,9 @@ void TFTDisplay::init()
     Log::debug(Log::DISPLAY_TAG, "Rotation: %d", rotation);
 
     // Access panel configuration
-    auto *panel = lgfx.getPanel();
-    if (panel)
-    {
-        auto cfg = panel->config(); // Panel_Config struct
+    auto* panel = lgfx.getPanel();
+    if (panel) {
+        auto cfg = panel->config();  // Panel_Config struct
 
         Log::debug(Log::DISPLAY_TAG, "Panel CS pin: %d", cfg.pin_cs);
         Log::debug(Log::DISPLAY_TAG, "Panel RST pin: %d", cfg.pin_rst);
@@ -43,43 +42,39 @@ void TFTDisplay::init()
     Log::info(Log::DISPLAY_TAG, "Display debug info printed successfully");
 }
 
-void TFTDisplay::flush(
-    int32_t x1, int32_t y1,
-    int32_t x2, int32_t y2,
-    uint8_t *colorMap)
-{
+void TFTDisplay::flush(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint8_t* colorMap) {
     int32_t w = x2 - x1 + 1;
     int32_t h = y2 - y1 + 1;
 
     waitForFlush();
     // Match the panel's wire byte order once, then DMA the LVGL buffer directly.
     // rgb565_t would make LovyanGFX convert/copy it in small internal chunks.
-    auto *pixels = reinterpret_cast<uint16_t *>(colorMap);
-    for (int32_t i = 0; i < w * h; ++i) pixels[i] = __builtin_bswap16(pixels[i]);
+    auto* pixels = reinterpret_cast<uint16_t*>(colorMap);
+    for (int32_t i = 0; i < w * h; ++i)
+        pixels[i] = __builtin_bswap16(pixels[i]);
     lgfx.startWrite();
     lgfx.setAddrWindow(x1, y1, w, h);
-    lgfx.writePixelsDMA(reinterpret_cast<lgfx::swap565_t *>(colorMap), w * h);
+    lgfx.writePixelsDMA(reinterpret_cast<lgfx::swap565_t*>(colorMap), w * h);
     dmaPending = true;
 }
 
-void TFTDisplay::waitForFlush()
-{
-    if (!dmaPending) return;
+void TFTDisplay::waitForFlush() {
+    if (!dmaPending)
+        return;
     lgfx.waitDMA();
     lgfx.endWrite();
     dmaPending = false;
 }
 
-int TFTDisplay::width()
-{
+int TFTDisplay::width() {
     auto panel = lgfx.getPanel();
     if (panel)
         return panel->config().panel_width;
     else
         return 240;
 }
-int TFTDisplay::height()
-{
+
+int TFTDisplay::height() {
     auto panel = lgfx.getPanel();
     if (panel)
         return panel->config().panel_height;
@@ -87,13 +82,11 @@ int TFTDisplay::height()
         return 320;
 }
 
-TouchPoint TFTDisplay::read()
-{
-    waitForFlush(); // Touch shares SPI2 with the panel.
+TouchPoint TFTDisplay::read() {
+    waitForFlush();  // Touch shares SPI2 with the panel.
     TouchPoint p{0, 0, false};
     int x, y;
-    if (lgfx.getTouch(&x, &y))
-    {
+    if (lgfx.getTouch(&x, &y)) {
         p.x = x;
         p.y = y;
         p.pressed = true;

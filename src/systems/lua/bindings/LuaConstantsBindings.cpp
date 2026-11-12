@@ -16,8 +16,7 @@
 // @value OPEN_DRAIN        0x10
 // @value OUTPUT_OPEN_DRAIN 0x13
 // @value ANALOG            0xC0
-void LuaConstantsBinding::registerPinMode(lua_State *L)
-{
+void LuaConstantsBinding::registerPinMode(lua_State* L) {
     lua_newtable(L);
     lua_pushinteger(L, INPUT);
     lua_setfield(L, -2, "INPUT");
@@ -47,8 +46,7 @@ void LuaConstantsBinding::registerPinMode(lua_State *L)
 // @enum DigitalValue
 // @value LOW 0x0
 // @value HIGH 0x1
-void LuaConstantsBinding::registerDigitalValue(lua_State *L)
-{
+void LuaConstantsBinding::registerDigitalValue(lua_State* L) {
     lua_newtable(L);
     lua_pushinteger(L, LOW);
     lua_setfield(L, -2, "LOW");
@@ -65,8 +63,7 @@ void LuaConstantsBinding::registerDigitalValue(lua_State *L)
 // @value RISING 0x01
 // @value FALLING 0x02
 // @value CHANGE 0x03
-void LuaConstantsBinding::registerTriggerMode(lua_State *L)
-{
+void LuaConstantsBinding::registerTriggerMode(lua_State* L) {
     lua_newtable(L);
     lua_pushinteger(L, RISING);
     lua_setfield(L, -2, "RISING");
@@ -84,8 +81,7 @@ void LuaConstantsBinding::registerTriggerMode(lua_State *L)
 // @enum GameObjectContentType
 // @value TEXT  Text paragraph content
 // @value IMAGE Image content loaded from storage path
-void LuaConstantsBinding::registerGameObjectContentType(lua_State *L)
-{
+void LuaConstantsBinding::registerGameObjectContentType(lua_State* L) {
     lua_newtable(L);
 
     lua_pushstring(L, "text");
@@ -101,8 +97,7 @@ void LuaConstantsBinding::registerGameObjectContentType(lua_State *L)
 // Main registration
 // ============================================================
 
-void LuaConstantsBinding::registerAPI(lua_State *L)
-{
+void LuaConstantsBinding::registerAPI(lua_State* L) {
     registerPinMode(L);
     registerDigitalValue(L);
     registerTriggerMode(L);

@@ -1,0 +1,68 @@
+
+BasedOnStyle: LLVM
+
+Language: Cpp
+
+# Indentazione
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+IndentCaseLabels: true
+IndentGotoLabels: true
+
+# Lunghezza massima riga
+ColumnLimit: 100
+
+# Parentesi graffe
+BreakBeforeBraces: Attach
+BraceWrapping:
+  AfterClass: false
+  AfterControlStatement: Never
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+
+# Spazi
+PointerAlignment: Left
+DerivePointerAlignment: false
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpaceInEmptyParentheses: false
+SpaceAroundPointerQualifiers: Before
+SpaceAfterCStyleCast: false
+
+# Allineamento
+AlignAfterOpenBracket: Align
+AlignOperands: Align
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignTrailingComments: false
+
+# Funzioni e blocchi
+AllowShortFunctionsOnASingleLine: None
+AllowShortBlocksOnASingleLine: Never
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortLambdasOnASingleLine: None
+
+# Righe vuote
+SeparateDefinitionBlocks: Always
+EmptyLineAfterAccessModifier: Never
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+
+# Commenti
+ReflowComments: false
+CommentPragmas: '^'
+SpacesBeforeTrailingComments: 2
+
+# Include
+SortIncludes: Never
+
+# Operatori e condizioni
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: true
+PenaltyBreakBeforeFirstCallParameter: 100
+PenaltyReturnTypeOnItsOwnLine: 100

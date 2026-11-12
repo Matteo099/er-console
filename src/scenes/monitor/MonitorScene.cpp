@@ -9,50 +9,48 @@
 #include "systems/storage/StorageSystem.h"
 #include "core/CpuMonitor.h"
 
-void MonitorScene::onEnter()
-{
+void MonitorScene::onEnter() {
     view.setEventHandler(this);
     view.create();
 
     CpuMonitor::begin();
 
-    input = static_cast<InputSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
-    storage = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
-    if (storage) storage->requestSpaceUsage();
+    input = static_cast<InputSystem*>(
+        SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
+    storage = static_cast<StorageSystem*>(
+        SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+    if (storage)
+        storage->requestSpaceUsage();
 
     refreshTelemetry();
 }
 
-void MonitorScene::onUpdate()
-{
-    if (millis() - lastRefreshMs >= 1000) refreshTelemetry();
+void MonitorScene::onUpdate() {
+    if (millis() - lastRefreshMs >= 1000)
+        refreshTelemetry();
     view.update();
 }
 
-void MonitorScene::onExit()
-{
+void MonitorScene::onExit() {
     view.destroy();
 }
 
-SceneRequest MonitorScene::getRequest() const
-{
+SceneRequest MonitorScene::getRequest() const {
     return request;
 }
 
-bool MonitorScene::handleUIEvent(const UIEvent &event)
-{
+bool MonitorScene::handleUIEvent(const UIEvent& event) {
     if (event.getType() != ButtonClickedEvent::TYPE)
         return false;
 
-    const auto &clicked = static_cast<const ButtonClickedEvent &>(event);
-    if (clicked.buttonId == "refresh_sd")
-    {
-        if (storage) storage->requestSpaceUsage();
+    const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
+    if (clicked.buttonId == "refresh_sd") {
+        if (storage)
+            storage->requestSpaceUsage();
         view.setSdUsagePending(false);
         return true;
     }
-    if (clicked.buttonId == "back")
-    {
+    if (clicked.buttonId == "back") {
         request = SceneRequest(SceneChange::GoToSettingsSystem, SceneTransition::SlideRight);
         return true;
     }
@@ -60,27 +58,21 @@ bool MonitorScene::handleUIEvent(const UIEvent &event)
     return false;
 }
 
-void MonitorScene::refreshTelemetry()
-{
+void MonitorScene::refreshTelemetry() {
     lastRefreshMs = millis();
     //
     // Power
     //
-    if (!input || !input->hasPower())
-    {
+    if (!input || !input->hasPower()) {
         view.setPowerAvailable(false);
-    }
-    else
-    {
+    } else {
         const auto power = input->power();
-        if (!power || !power->isSupported())
-        {
+        if (!power || !power->isSupported()) {
             view.setPowerAvailable(false);
-        }
-        else
-        {
+        } else {
             view.setPowerAvailable(true);
-            view.setPower(power->getMetrics().loadVoltageV, power->getMetrics().currentMa, power->getMetrics().powerMw);
+            view.setPower(power->getMetrics().loadVoltageV, power->getMetrics().currentMa,
+                          power->getMetrics().powerMw);
         }
     }
 
@@ -127,14 +119,15 @@ void MonitorScene::refreshTelemetry()
     //
     // SD Card
     //
-    if (!storage || !storage->isReady())
-    {
+    if (!storage || !storage->isReady()) {
         view.setSdCapacity(0);
         return;
     }
 
     view.setSdCapacity(static_cast<uint32_t>(storage->capacityBytes() / (1024ULL * 1024ULL)));
     const auto usage = storage->spaceUsage();
-    if (usage.state == StorageSystem::SpaceUsage::State::Ready) view.setSdUsage(usage.total, usage.used);
-    else view.setSdUsagePending(usage.state == StorageSystem::SpaceUsage::State::Failed);
+    if (usage.state == StorageSystem::SpaceUsage::State::Ready)
+        view.setSdUsage(usage.total, usage.used);
+    else
+        view.setSdUsagePending(usage.state == StorageSystem::SpaceUsage::State::Failed);
 }

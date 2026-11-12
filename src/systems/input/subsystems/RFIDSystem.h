@@ -8,10 +8,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
 
-class RFIDSystem : public ISubsystem
-{
-public:
-    explicit RFIDSystem(IRFIDReader &reader);
+class RFIDSystem : public ISubsystem {
+  public:
+    explicit RFIDSystem(IRFIDReader& reader);
 
     bool init() override;
 
@@ -21,18 +20,17 @@ public:
 
     bool isSupported() const;
 
-    bool getLastTag(RFIDTag &tag) const;
+    bool getLastTag(RFIDTag& tag) const;
 
-    bool consumeTag(RFIDTag &tag);
+    bool consumeTag(RFIDTag& tag);
 
-private:
+  private:
     void poll();
 
-private:
-    IRFIDReader &reader;
+  private:
+    IRFIDReader& reader;
 
-    mutable portMUX_TYPE lock =
-        portMUX_INITIALIZER_UNLOCKED;
+    mutable portMUX_TYPE lock = portMUX_INITIALIZER_UNLOCKED;
 
     bool supported = false;
 

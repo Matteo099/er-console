@@ -4,12 +4,11 @@
 
 class InputSystem;
 
-class InputBindings : public LuaBinding
-{
-public:
-    explicit InputBindings(InputSystem *input);
-    void registerAPI(lua_State *L) override;
+class InputBindings : public LuaBinding {
+  public:
+    explicit InputBindings(InputSystem* input);
+    void registerAPI(lua_State* L) override;
 
-private:
-    InputSystem *input;
+  private:
+    InputSystem* input;
 };

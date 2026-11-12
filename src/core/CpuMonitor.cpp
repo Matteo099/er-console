@@ -12,39 +12,34 @@ DRAM_ATTR volatile uint32_t CpuMonitor::tickCount[2] = {0, 0};
 DRAM_ATTR volatile uint32_t CpuMonitor::idleCount[2] = {0, 0};
 
 uint8_t CpuMonitor::cpuUsage[2] = {0, 0};
-int64_t  CpuMonitor::lastUpdateMs = 0;
+int64_t CpuMonitor::lastUpdateMs = 0;
 bool CpuMonitor::initialized = false;
 
 // ------------------------------
 // FreeRTOS hooks
 // ------------------------------
-static bool IRAM_ATTR idleHook0()
-{
+static bool IRAM_ATTR idleHook0() {
     CpuMonitor::idleCount[0]++;
     return true;
 }
 
-static bool IRAM_ATTR idleHook1()
-{
+static bool IRAM_ATTR idleHook1() {
     CpuMonitor::idleCount[1]++;
     return true;
 }
 
-static void IRAM_ATTR tickHook0()
-{
+static void IRAM_ATTR tickHook0() {
     CpuMonitor::tickCount[0]++;
 }
 
-static void IRAM_ATTR tickHook1()
-{
+static void IRAM_ATTR tickHook1() {
     CpuMonitor::tickCount[1]++;
 }
 
 // ------------------------------
 // Init
 // ------------------------------
-void CpuMonitor::begin()
-{
+void CpuMonitor::begin() {
     if (initialized)
         return;
 
@@ -59,17 +54,15 @@ void CpuMonitor::begin()
     initialized = true;
 }
 
-void CpuMonitor::update()
-{
+void CpuMonitor::update() {
     int64_t now = esp_timer_get_time();
 
-    if (now - lastUpdateMs < 500000) // Update every 0.5 seconds
+    if (now - lastUpdateMs < 500000)  // Update every 0.5 seconds
         return;
 
     lastUpdateMs = now;
 
-    for (int c = 0; c < 2; c++)
-    {
+    for (int c = 0; c < 2; c++) {
         uint32_t ticks = tickCount[c];
         uint32_t idle = idleCount[c];
 
@@ -79,8 +72,7 @@ void CpuMonitor::update()
 
         float load = 0;
 
-        if (ticks > 0)
-        {
+        if (ticks > 0) {
             float idleRatio = (float)idle / (float)ticks;
             load = 100.0f * (1.0f - idleRatio);
         }
@@ -94,17 +86,14 @@ void CpuMonitor::update()
     }
 }
 
-uint8_t CpuMonitor::usagePercentCore0()
-{
+uint8_t CpuMonitor::usagePercentCore0() {
     return cpuUsage[0];
 }
 
-uint8_t CpuMonitor::usagePercentCore1()
-{
+uint8_t CpuMonitor::usagePercentCore1() {
     return cpuUsage[1];
 }
 
-uint8_t CpuMonitor::usagePercentAvg()
-{
+uint8_t CpuMonitor::usagePercentAvg() {
     return (cpuUsage[0] + cpuUsage[1]) / 2;
 }

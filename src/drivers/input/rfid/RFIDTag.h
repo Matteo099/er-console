@@ -3,8 +3,7 @@
 #include <stdint.h>
 #include <string>
 
-struct RFIDTag
-{
+struct RFIDTag {
     bool valid = false;
 
     std::string uid;

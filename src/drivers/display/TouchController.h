@@ -7,7 +7,7 @@ struct TouchPoint {
 };
 
 class TouchController {
-public:
+  public:
     virtual ~TouchController() = default;
     virtual void init() = 0;
     virtual TouchPoint read() = 0;

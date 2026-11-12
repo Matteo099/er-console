@@ -1,7 +1,3 @@
 #pragma once
 
-enum class GameListAction {
-    None,
-    Back,
-    StartGame
-};
+enum class GameListAction { None, Back, StartGame };

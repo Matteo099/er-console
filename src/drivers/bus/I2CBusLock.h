@@ -2,36 +2,27 @@
 
 #include "I2CBusManager.h"
 
-class I2CBusLock
-{
-public:
-    class Guard
-    {
-    public:
-        Guard()
-        {
+class I2CBusLock {
+  public:
+    class Guard {
+      public:
+        Guard() {
             auto mutex = I2CBusManager::mutex();
 
-            if (mutex)
-            {
-                xSemaphoreTake(
-                    mutex,
-                    portMAX_DELAY);
+            if (mutex) {
+                xSemaphoreTake(mutex, portMAX_DELAY);
             }
         }
 
-        ~Guard()
-        {
+        ~Guard() {
             auto mutex = I2CBusManager::mutex();
 
-            if (mutex)
-            {
-                xSemaphoreGive(
-                    mutex);
+            if (mutex) {
+                xSemaphoreGive(mutex);
             }
         }
 
-        Guard(const Guard &) = delete;
-        Guard &operator=(const Guard &) = delete;
+        Guard(const Guard&) = delete;
+        Guard& operator=(const Guard&) = delete;
     };
 };

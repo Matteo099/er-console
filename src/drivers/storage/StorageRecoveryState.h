@@ -2,8 +2,7 @@
 
 #include <Arduino.h>
 
-enum class StorageFailureReason : uint8_t
-{
+enum class StorageFailureReason : uint8_t {
     None = 0,
     MountFailed,
     ConsecutiveIOFailures,
@@ -11,8 +10,7 @@ enum class StorageFailureReason : uint8_t
     CorruptionDetected
 };
 
-struct StorageRecoveryState
-{
+struct StorageRecoveryState {
     StorageFailureReason reason;
     uint32_t bootCount;
     uint32_t failureCount;

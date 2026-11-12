@@ -11,41 +11,35 @@ static unsigned maxResponseClocks = 0;
 static uint32_t suspectSector = UINT32_MAX;
 static uint32_t rawSector = 0;
 
-static uint16_t little16(const uint8_t *p)
-{
+static uint16_t little16(const uint8_t* p) {
     return uint16_t(p[0]) | (uint16_t(p[1]) << 8);
 }
 
-static uint32_t little32(const uint8_t *p)
-{
+static uint32_t little32(const uint8_t* p) {
     return uint32_t(p[0]) | (uint32_t(p[1]) << 8) | (uint32_t(p[2]) << 16) | (uint32_t(p[3]) << 24);
 }
 
-static bool readSector(uint32_t lba, uint8_t *buffer, const char *label)
-{
-    if (lba >= SD.numSectors())
-    {
-        Serial.printf("FAT PROBE invalid address %s LBA=%lu card_sectors=%lu\n",
-                      label, (unsigned long)lba, (unsigned long)SD.numSectors());
+static bool readSector(uint32_t lba, uint8_t* buffer, const char* label) {
+    if (lba >= SD.numSectors()) {
+        Serial.printf("FAT PROBE invalid address %s LBA=%lu card_sectors=%lu\n", label,
+                      (unsigned long)lba, (unsigned long)SD.numSectors());
         return false;
     }
     const bool ok = SD.readRAW(buffer, lba);
-    Serial.printf("FAT PROBE %s LBA=%lu read=%s\n", label, (unsigned long)lba, ok ? "OK" : "FAILED");
+    Serial.printf("FAT PROBE %s LBA=%lu read=%s\n", label, (unsigned long)lba,
+                  ok ? "OK" : "FAILED");
     if (!ok && suspectSector == UINT32_MAX)
         suspectSector = lba;
     return ok;
 }
 
-static uint32_t findDirectory(uint32_t lba, uint8_t sectors, const char *name)
-{
+static uint32_t findDirectory(uint32_t lba, uint8_t sectors, const char* name) {
     uint8_t buffer[512];
-    for (unsigned i = 0; i < sectors; ++i)
-    {
+    for (unsigned i = 0; i < sectors; ++i) {
         if (!readSector(lba + i, buffer, "directory"))
             return 0;
-        for (unsigned offset = 0; offset < sizeof(buffer); offset += 32)
-        {
-            const uint8_t *entry = buffer + offset;
+        for (unsigned offset = 0; offset < sizeof(buffer); offset += 32) {
+            const uint8_t* entry = buffer + offset;
             if (entry[0] == 0)
                 return 0;
             if (entry[0] == 0xe5 || entry[11] == 0x0f || !(entry[11] & 0x10))
@@ -57,16 +51,14 @@ static uint32_t findDirectory(uint32_t lba, uint8_t sectors, const char *name)
     return 0;
 }
 
-static void checkGameDirectorySectors()
-{
+static void checkGameDirectorySectors() {
     uint8_t buffer[512];
     if (!readSector(0, buffer, "MBR"))
         return;
     const uint32_t partition = little32(buffer + 446 + 8);
     if (!partition || !readSector(partition, buffer, "partition boot"))
         return;
-    if (little16(buffer + 11) != 512 || little16(buffer + 17) != 0 || little16(buffer + 22) != 0)
-    {
+    if (little16(buffer + 11) != 512 || little16(buffer + 17) != 0 || little16(buffer + 22) != 0) {
         Serial.println("FAT PROBE: layout is not FAT32/512; skipping directory-sector probe");
         return;
     }
@@ -85,23 +77,22 @@ static void checkGameDirectorySectors()
     if (lab < 2)
         return;
     const uint32_t first = data + (lab - 2) * sectors;
-    if (readSector(first, buffer, "/games/1-lab first sector"))
-    {
+    if (readSector(first, buffer, "/games/1-lab first sector")) {
         for (unsigned offset = 0; offset < sizeof(buffer) && buffer[offset]; offset += 32)
             if (buffer[offset] != 0xe5 && buffer[offset + 11] != 0x0f)
-                Serial.printf("FAT PROBE lab entry: %.11s attr=%02x\n", buffer + offset, buffer[offset + 11]);
+                Serial.printf("FAT PROBE lab entry: %.11s attr=%02x\n", buffer + offset,
+                              buffer[offset + 11]);
     }
     if (readSector(fat + lab / 128, buffer, "lab FAT link"))
-        Serial.printf("FAT PROBE lab_next_cluster=%08lx\n", (unsigned long)(little32(buffer + (lab % 128) * 4) & 0x0fffffff));
+        Serial.printf("FAT PROBE lab_next_cluster=%08lx\n",
+                      (unsigned long)(little32(buffer + (lab % 128) * 4) & 0x0fffffff));
 }
-static uint8_t commandCrc(const uint8_t *data)
-{
+
+static uint8_t commandCrc(const uint8_t* data) {
     uint8_t crc = 0;
-    for (unsigned i = 0; i < 5; ++i)
-    {
+    for (unsigned i = 0; i < 5; ++i) {
         uint8_t value = data[i];
-        for (unsigned bit = 0; bit < 8; ++bit)
-        {
+        for (unsigned bit = 0; bit < 8; ++bit) {
             crc <<= 1;
             if ((value ^ crc) & 0x80)
                 crc ^= 0x09;
@@ -111,10 +102,9 @@ static uint8_t commandCrc(const uint8_t *data)
     return (crc << 1) | 1;
 }
 
-static uint8_t sendCommand(SPIClass &bus, uint8_t cmd, uint32_t arg)
-{
-    uint8_t packet[] = {uint8_t(0x40 | cmd), uint8_t(arg >> 24),
-                        uint8_t(arg >> 16), uint8_t(arg >> 8), uint8_t(arg), 0};
+static uint8_t sendCommand(SPIClass& bus, uint8_t cmd, uint32_t arg) {
+    uint8_t packet[] = {uint8_t(0x40 | cmd), uint8_t(arg >> 24), uint8_t(arg >> 16),
+                        uint8_t(arg >> 8),   uint8_t(arg),       0};
     packet[5] = commandCrc(packet);
     bus.transfer(0xff);
     if (bulkCommands)
@@ -123,11 +113,9 @@ static uint8_t sendCommand(SPIClass &bus, uint8_t cmd, uint32_t arg)
         for (uint8_t value : packet)
             bus.transfer(value);
     uint8_t response = 0xff;
-    for (unsigned i = 0; i < 32; ++i)
-    {
+    for (unsigned i = 0; i < 32; ++i) {
         response = bus.transfer(0xff);
-        if (!(response & 0x80))
-        {
+        if (!(response & 0x80)) {
             maxResponseClocks = max(maxResponseClocks, i + 1);
             break;
         }
@@ -135,21 +123,18 @@ static uint8_t sendCommand(SPIClass &bus, uint8_t cmd, uint32_t arg)
     return response;
 }
 
-static void deselect(SPIClass &bus)
-{
+static void deselect(SPIClass& bus) {
     digitalWrite(SD_CS_PIN, HIGH);
     if (idleClocks)
         bus.transfer(0xff);
     bus.endTransaction();
 }
 
-static uint8_t rawCommand(SPIClass &bus, uint8_t cmd, uint32_t arg, uint32_t *extra = nullptr)
-{
+static uint8_t rawCommand(SPIClass& bus, uint8_t cmd, uint32_t arg, uint32_t* extra = nullptr) {
     bus.beginTransaction(SPISettings(400000, MSBFIRST, SPI_MODE0));
     digitalWrite(SD_CS_PIN, LOW);
     const uint8_t response = sendCommand(bus, cmd, arg);
-    if (extra && response <= 1)
-    {
+    if (extra && response <= 1) {
         *extra = 0;
         for (unsigned i = 0; i < 4; ++i)
             *extra = (*extra << 8) | bus.transfer(0xff);
@@ -158,8 +143,7 @@ static uint8_t rawCommand(SPIClass &bus, uint8_t cmd, uint32_t arg, uint32_t *ex
     return response;
 }
 
-static void rawProbe(SPIClass &bus, bool crcEnabled)
-{
+static void rawProbe(SPIClass& bus, bool crcEnabled) {
     maxResponseClocks = 0;
     Serial.printf("RAW PROBE CRC=%s bulk=%u idle_clocks=%u CMD17 LBA=%lu\n",
                   crcEnabled ? "on" : "off", bulkCommands, idleClocks, (unsigned long)rawSector);
@@ -178,8 +162,7 @@ static void rawProbe(SPIClass &bus, bool crcEnabled)
     Serial.printf("RAW CMD59=%02x\n", rawCommand(bus, 59, crcEnabled ? 1 : 0));
     uint8_t ready = 1;
     const uint32_t start = millis();
-    while (ready == 1 && millis() - start < 2000)
-    {
+    while (ready == 1 && millis() - start < 2000) {
         rawCommand(bus, 55, 0);
         ready = rawCommand(bus, 41, 0x40000000);
         delay(10);
@@ -193,17 +176,18 @@ static void rawProbe(SPIClass &bus, bool crcEnabled)
 
     bus.beginTransaction(SPISettings(400000, MSBFIRST, SPI_MODE0));
     digitalWrite(SD_CS_PIN, LOW);
-    const uint8_t response = sendCommand(bus, 17, (extra & (1UL << 30)) ? rawSector : rawSector * 512);
+    const uint8_t response =
+        sendCommand(bus, 17, (extra & (1UL << 30)) ? rawSector : rawSector * 512);
     uint8_t token = 0xff;
     const uint32_t waitStart = millis();
     if (response == 0)
-        do { token = bus.transfer(0xff); } while (token == 0xff && millis() - waitStart < 1000);
-    if (response == 0 && token == 0xfe)
-    {
+        do {
+            token = bus.transfer(0xff);
+        } while (token == 0xff && millis() - waitStart < 1000);
+    if (response == 0 && token == 0xfe) {
         uint8_t sector[512];
         uint16_t checksum = 0;
-        for (unsigned i = 0; i < sizeof(sector); ++i)
-        {
+        for (unsigned i = 0; i < sizeof(sector); ++i) {
             sector[i] = bus.transfer(0xff);
             checksum ^= uint16_t(sector[i]) << 8;
             for (unsigned bit = 0; bit < 8; ++bit)
@@ -212,31 +196,26 @@ static void rawProbe(SPIClass &bus, bool crcEnabled)
         uint16_t received = uint16_t(bus.transfer(0xff)) << 8;
         received |= bus.transfer(0xff);
         Serial.printf("RAW READ %s signature=%02x%02x CRC=%04x calculated=%04x max_R1_bytes=%u\n",
-                      received == checksum ? "OK" : "CRC_MISMATCH",
-                      sector[510], sector[511], received, checksum, maxResponseClocks);
-    }
-    else
-        Serial.printf("RAW READ FAILED CMD17=%02x token=%02x max_R1_bytes=%u\n",
-                      response, token, maxResponseClocks);
+                      received == checksum ? "OK" : "CRC_MISMATCH", sector[510], sector[511],
+                      received, checksum, maxResponseClocks);
+    } else
+        Serial.printf("RAW READ FAILED CMD17=%02x token=%02x max_R1_bytes=%u\n", response, token,
+                      maxResponseClocks);
     deselect(bus);
 }
 
-static void checkFile(const char *path)
-{
+static void checkFile(const char* path) {
     uint8_t buffer[512];
-    for (unsigned pass = 1; pass <= 2; ++pass)
-    {
+    for (unsigned pass = 1; pass <= 2; ++pass) {
         File file = SD.open(path, FILE_READ);
-        if (!file)
-        {
+        if (!file) {
             Serial.printf("PROBE file missing/unreadable: %s\n", path);
             return;
         }
         const size_t expected = file.size();
         size_t total = 0;
         uint32_t hash = 2166136261u;
-        while (total < expected)
-        {
+        while (total < expected) {
             const size_t chunk = min(sizeof(buffer), expected - total);
             const size_t count = file.read(buffer, chunk);
             if (!count || count > chunk)
@@ -246,26 +225,23 @@ static void checkFile(const char *path)
             total += count;
         }
         file.close();
-        Serial.printf("PROBE %s pass=%u bytes=%u/%u fnv1a=%08lx\n",
-                      path, pass, (unsigned)total, (unsigned)expected, (unsigned long)hash);
+        Serial.printf("PROBE %s pass=%u bytes=%u/%u fnv1a=%08lx\n", path, pass, (unsigned)total,
+                      (unsigned)expected, (unsigned long)hash);
     }
 }
 
-static void checkHost(uint8_t host, const char *name)
-{
+static void checkHost(uint8_t host, const char* name) {
     SPIClass bus(host);
     bus.begin(SPI3_SCLK_PIN, SPI3_MISO_PIN, SPI3_MOSI_PIN, -1);
     const uint32_t frequencies[] = {400000, 1000000, 4000000};
-    for (uint32_t frequency : frequencies)
-    {
-        Serial.printf("\nPROBE host=%s frequency=%lu SCK=%d MISO=%d MOSI=%d CS=%d\n",
-                      name, (unsigned long)frequency,
-                      SPI3_SCLK_PIN, SPI3_MISO_PIN, SPI3_MOSI_PIN, SD_CS_PIN);
+    for (uint32_t frequency : frequencies) {
+        Serial.printf("\nPROBE host=%s frequency=%lu SCK=%d MISO=%d MOSI=%d CS=%d\n", name,
+                      (unsigned long)frequency, SPI3_SCLK_PIN, SPI3_MISO_PIN, SPI3_MOSI_PIN,
+                      SD_CS_PIN);
         // Never format or write files, including after a mount failure.
         if (!SD.begin(SD_CS_PIN, bus, frequency, "/sd", 5, false))
             Serial.println("PROBE MOUNT FAILED");
-        else
-        {
+        else {
             Serial.printf("PROBE MOUNT OK type=%u bytes=%llu\n", SD.cardType(), SD.cardSize());
             uint8_t sector[512];
             if (SD.readRAW(sector, 0))
@@ -283,14 +259,12 @@ static void checkHost(uint8_t host, const char *name)
             break;
     }
     for (bool bulk : {false, true})
-        for (bool clocks : {true, false})
-        {
+        for (bool clocks : {true, false}) {
             bulkCommands = bulk;
             idleClocks = clocks;
             rawProbe(bus, true);
         }
-    if (suspectSector != UINT32_MAX)
-    {
+    if (suspectSector != UINT32_MAX) {
         rawSector = suspectSector;
         bulkCommands = false;
         idleClocks = true;
@@ -299,13 +273,11 @@ static void checkHost(uint8_t host, const char *name)
     bus.end();
 }
 
-void setup()
-{
+void setup() {
     Serial.begin(115200);
     delay(100);
     Serial.printf("\nSTANDALONE SD PROBE built %s %s\n", __DATE__, __TIME__);
-    for (int pin : {SD_CS_PIN, TFT_CS_PIN, TOUCH_CS_PIN})
-    {
+    for (int pin : {SD_CS_PIN, TFT_CS_PIN, TOUCH_CS_PIN}) {
         pinMode(pin, OUTPUT);
         digitalWrite(pin, HIGH);
     }
@@ -313,7 +285,6 @@ void setup()
     Serial.println("PROBE COMPLETE; no SD writes performed");
 }
 
-void loop()
-{
+void loop() {
     delay(1000);
 }

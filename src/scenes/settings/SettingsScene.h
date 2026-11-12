@@ -5,21 +5,26 @@
 #include "services/DeviceConfigRepository.h"
 #include "systems/ui/VolumeFeedback.h"
 
-class SettingsScene : public Scene
-{
-public:    
-    explicit SettingsScene(SettingsView::Tab tab = SettingsView::Tab::Appearance) : initialTab(tab) {}
+class SettingsScene : public Scene {
+  public:
+    explicit SettingsScene(SettingsView::Tab tab = SettingsView::Tab::Appearance)
+        : initialTab(tab) {
+    }
+
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
     void onPreferencesChanged() override;
 
-    View& getView() override { return view; }
+    View& getView() override {
+        return view;
+    }
+
     SceneRequest getRequest() const override;
 
     bool handleUIEvent(const UIEvent& event) override;
 
-private:
+  private:
     SettingsView::Tab initialTab;
     SettingsView view;
     SceneRequest request = SceneRequest();

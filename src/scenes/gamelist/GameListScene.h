@@ -5,21 +5,29 @@
 #include "scenes/gamelist/GameListView.h"
 #include <vector>
 
-class GameListScene : public Scene
-{
-public:
-    explicit GameListScene(const std::string &selection="") : selection(selection) {}
+class GameListScene : public Scene {
+  public:
+    explicit GameListScene(const std::string& selection = "") : selection(selection) {
+    }
+
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
-    void onPreferencesChanged() override { catalogVersion = 0; refreshCatalog(); }
 
-    View &getView() override { return view; }
+    void onPreferencesChanged() override {
+        catalogVersion = 0;
+        refreshCatalog();
+    }
+
+    View& getView() override {
+        return view;
+    }
+
     SceneRequest getRequest() const override;
 
     bool handleUIEvent(const UIEvent& event) override;
 
-private:
+  private:
     GameListView view;
     // int selectedIndex = -1;
     GameInfo selectedGame;

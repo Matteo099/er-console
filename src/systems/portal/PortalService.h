@@ -8,8 +8,7 @@
 #include "systems/input/InputSystem.h"
 #include "systems/network/NetworkSystem.h"
 
-struct PortalStatusData
-{
+struct PortalStatusData {
     DeviceConfig config;
     std::string portalUrl;
     std::string wifiState;
@@ -43,12 +42,12 @@ struct PortalStatusData
     std::string batteryShuntVoltage = "N/A";
 };
 
-
-class PortalService
-{
-public:
-    PortalService(StorageSystem* storage = nullptr, NetworkSystem* network = nullptr, InputSystem* input = nullptr);
-    void setDependencies(StorageSystem* storage, NetworkSystem* network, InputSystem* input = nullptr);
+class PortalService {
+  public:
+    PortalService(StorageSystem* storage = nullptr, NetworkSystem* network = nullptr,
+                  InputSystem* input = nullptr);
+    void setDependencies(StorageSystem* storage, NetworkSystem* network,
+                         InputSystem* input = nullptr);
 
     DeviceConfig getConfig() const;
     bool saveConfig(const DeviceConfig& config);
@@ -64,10 +63,15 @@ public:
     std::string portalSsid() const;
     std::string wifiQrPayload() const;
 
-    StorageSystem* storage() const { return storageSystem; }
-    NetworkSystem* network() const { return networkSystem; }
+    StorageSystem* storage() const {
+        return storageSystem;
+    }
 
-private:
+    NetworkSystem* network() const {
+        return networkSystem;
+    }
+
+  private:
     StorageSystem* storageSystem = nullptr;
     NetworkSystem* networkSystem = nullptr;
     InputSystem* inputSystem = nullptr;

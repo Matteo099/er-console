@@ -4,19 +4,21 @@
 #include "scenes/about/AboutView.h"
 #include "AboutView.h"
 
-class AboutScene : public Scene
-{
-public:    
+class AboutScene : public Scene {
+  public:
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
 
-    View& getView() override { return view; }
+    View& getView() override {
+        return view;
+    }
+
     SceneRequest getRequest() const override;
 
     bool handleUIEvent(const UIEvent& event) override;
 
-private:
+  private:
     AboutView view;
     SceneRequest request = SceneRequest();
 };

@@ -12,50 +12,40 @@
 #include "systems/input/InputSystem.h"
 #include "drivers/bus/SPIBusLock.h"
 
-namespace
-{
-    static String normalizePortalRequestPath(const String &uri)
-    {
-        if (uri == "/" || uri == "/index.html")
-            return PORTAL_INDEX_FILE;
+namespace {
+static String normalizePortalRequestPath(const String& uri) {
+    if (uri == "/" || uri == "/index.html")
+        return PORTAL_INDEX_FILE;
 
-        String requestPath = uri;
-        if (!requestPath.startsWith("/"))
-            requestPath = String("/") + requestPath;
+    String requestPath = uri;
+    if (!requestPath.startsWith("/"))
+        requestPath = String("/") + requestPath;
 
-        if (requestPath.startsWith(PORTAL_DIR))
-            return requestPath;
+    if (requestPath.startsWith(PORTAL_DIR))
+        return requestPath;
 
-        return String(PORTAL_DIR) + requestPath;
-    }
-
-    static bool shouldFallbackToPortalIndex(const String &uri)
-    {
-        if (uri == "/" || uri == "/index.html")
-            return true;
-
-        // return uri.indexOf('.') < 0;
-        // also treat known SPA routes (no extension)
-        return uri.indexOf('.') < 0 && !uri.startsWith("/api/");
-    }
-
-    static bool isCaptivePortalProbe(const String &uri)
-    {
-        return uri == "/generate_204" ||
-               uri == "/hotspot-detect.html" ||
-               uri == "/ncsi.txt" ||
-               uri == "/connecttest.txt" ||
-               uri == "/redirect";
-    }
+    return String(PORTAL_DIR) + requestPath;
 }
 
-PortalSystem::PortalSystem()
-    : server(80)
-{
+static bool shouldFallbackToPortalIndex(const String& uri) {
+    if (uri == "/" || uri == "/index.html")
+        return true;
+
+    // return uri.indexOf('.') < 0;
+    // also treat known SPA routes (no extension)
+    return uri.indexOf('.') < 0 && !uri.startsWith("/api/");
 }
 
-void PortalSystem::init(void *params)
-{
+static bool isCaptivePortalProbe(const String& uri) {
+    return uri == "/generate_204" || uri == "/hotspot-detect.html" || uri == "/ncsi.txt" ||
+           uri == "/connecttest.txt" || uri == "/redirect";
+}
+}  // namespace
+
+PortalSystem::PortalSystem() : server(80) {
+}
+
+void PortalSystem::init(void* params) {
     Log::info(Log::PORTAL_TAG, "Initializing portal system");
 
 #if !WIFI_ENABLED || !PORTAL_ENABLED
@@ -65,13 +55,15 @@ void PortalSystem::init(void *params)
     return;
 #endif
 
-    storageSystem = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
-    networkSystem = static_cast<NetworkSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
-    inputSystem = static_cast<InputSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
+    storageSystem = static_cast<StorageSystem*>(
+        SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+    networkSystem = static_cast<NetworkSystem*>(
+        SystemEventBus::instance().getService(SystemEventBus::SERVICE_NETWORK));
+    inputSystem = static_cast<InputSystem*>(
+        SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
     service.setDependencies(storageSystem, networkSystem, inputSystem);
 
-    if (!storageSystem || !storageSystem->isReady())
-    {
+    if (!storageSystem || !storageSystem->isReady()) {
         Log::warn(Log::PORTAL_TAG, "Storage unavailable, portal will stay disabled");
         running = false;
         return;
@@ -81,8 +73,7 @@ void PortalSystem::init(void *params)
     running = started;
 }
 
-void PortalSystem::update()
-{
+void PortalSystem::update() {
     if (!running)
         return;
 
@@ -90,8 +81,7 @@ void PortalSystem::update()
     server.handleClient();
 }
 
-void PortalSystem::startPortal()
-{
+void PortalSystem::startPortal() {
     if (started)
         return;
 
@@ -99,8 +89,7 @@ void PortalSystem::startPortal()
 
     WiFi.mode(WIFI_AP_STA);
     bool apStarted = WiFi.softAP(apSsid.c_str());
-    if (!apStarted)
-    {
+    if (!apStarted) {
         Log::error(Log::PORTAL_TAG, "Failed to start access point");
         return;
     }
@@ -113,8 +102,7 @@ void PortalSystem::startPortal()
     Log::info(Log::PORTAL_TAG, "Portal available at %s", service.portalUrl().c_str());
 }
 
-void PortalSystem::registerRoutes()
-{
+void PortalSystem::registerRoutes() {
     statusController = new StatusController(service);
     configController = new ConfigController(service);
     filesController = new FilesController(service);
@@ -123,46 +111,42 @@ void PortalSystem::registerRoutes()
     configController->registerRoutes(server);
     filesController->registerRoutes(server);
 
-    server.on("/api/portal/url", HTTP_GET, [this]()
-              {
+    server.on("/api/portal/url", HTTP_GET, [this]() {
         const std::string payload = std::string("{\"url\":\"") + service.portalUrl() + "\"}";
-        server.send(200, "application/json", payload.c_str()); });
+        server.send(200, "application/json", payload.c_str());
+    });
 
-    const char *headerKeys[] = {"Accept-Encoding"};
+    const char* headerKeys[] = {"Accept-Encoding"};
     server.collectHeaders(headerKeys, 1);
 
-    server.onNotFound([this]()
-                      { serveStaticOrFallback(); });
+    server.onNotFound([this]() {
+        serveStaticOrFallback();
+    });
 
     server.begin();
 }
 
-void PortalSystem::serveStaticOrFallback()
-{
+void PortalSystem::serveStaticOrFallback() {
     const String uri = server.uri();
     Log::info(Log::PORTAL_TAG, "Received request for '%s'", uri.c_str());
-    if (isCaptivePortalProbe(uri))
-    {
+    if (isCaptivePortalProbe(uri)) {
         server.send(204);
         return;
     }
 
-    if (uri.startsWith("/api/"))
-    {
+    if (uri.startsWith("/api/")) {
         server.send(404, "application/json", "{\"error\":\"not_found\"}");
         return;
     }
 
     const String storagePath = normalizePortalRequestPath(uri);
-    if (service.storage() && service.storage()->exists(storagePath.c_str()))
-    {
+    if (service.storage() && service.storage()->exists(storagePath.c_str())) {
         Log::info(Log::PORTAL_TAG, "Serving file '%s'", storagePath.c_str());
         serveFile(storagePath);
         return;
     }
 
-    if (shouldFallbackToPortalIndex(uri))
-    {
+    if (shouldFallbackToPortalIndex(uri)) {
         serveFile(PORTAL_INDEX_FILE, false);
         return;
     }
@@ -171,17 +155,15 @@ void PortalSystem::serveStaticOrFallback()
     server.send(404, "text/plain", "Not found");
 }
 
-void PortalSystem::serveFile(const String &path, bool fallbackToIndex)
-{
+void PortalSystem::serveFile(const String& path, bool fallbackToIndex) {
     SPIBusLock::Guard guard;
 
-    if (!service.storage())
-    {
+    if (!service.storage()) {
         server.send(500, "text/plain", "Storage unavailable");
         return;
     }
 
-    const bool clientWantsGzip = false; // Disable gzip for now
+    const bool clientWantsGzip = false;  // Disable gzip for now
     // const bool clientWantsGzip = clientAcceptsGzip();
 
     const String requestPath = path;
@@ -190,29 +172,22 @@ void PortalSystem::serveFile(const String &path, bool fallbackToIndex)
     bool usingGzip = false;
 
     // Only allow gzip for compressible assets
-    bool isCompressible =
-        storagePath.endsWith(".js") ||
-        storagePath.endsWith(".css") ||
-        storagePath.endsWith(".json") ||
-        storagePath.endsWith(".svg");
+    bool isCompressible = storagePath.endsWith(".js") || storagePath.endsWith(".css") ||
+                          storagePath.endsWith(".json") || storagePath.endsWith(".svg");
 
-    if (clientWantsGzip && isCompressible)
-    {
+    if (clientWantsGzip && isCompressible) {
         const String gzipPath = storagePath + ".gz";
 
-        if (service.storage()->exists(gzipPath.c_str()))
-        {
+        if (service.storage()->exists(gzipPath.c_str())) {
             File test = service.storage()->openNative(gzipPath.c_str(), false);
 
-            if (test && test.size() > 20)
-            {
+            if (test && test.size() > 20) {
                 uint8_t b1 = test.read();
                 uint8_t b2 = test.read();
                 test.close();
 
                 // gzip magic header: 1F 8B
-                if (b1 == 0x1F && b2 == 0x8B)
-                {
+                if (b1 == 0x1F && b2 == 0x8B) {
                     selectedPath = gzipPath;
                     usingGzip = true;
                 }
@@ -222,17 +197,14 @@ void PortalSystem::serveFile(const String &path, bool fallbackToIndex)
 
     File file = service.storage()->openNative(selectedPath.c_str(), false);
 
-    if (!file && usingGzip)
-    {
+    if (!file && usingGzip) {
         usingGzip = false;
         selectedPath = storagePath;
         file = service.storage()->openNative(selectedPath.c_str(), false);
     }
 
-    if (!file)
-    {
-        if (fallbackToIndex && requestPath != PORTAL_INDEX_FILE)
-        {
+    if (!file) {
+        if (fallbackToIndex && requestPath != PORTAL_INDEX_FILE) {
             serveFile(PORTAL_INDEX_FILE, false);
             return;
         }
@@ -240,8 +212,7 @@ void PortalSystem::serveFile(const String &path, bool fallbackToIndex)
         return;
     }
 
-    if (usingGzip)
-    {
+    if (usingGzip) {
         server.sendHeader("Content-Encoding", "gzip");
         server.sendHeader("Vary", "Accept-Encoding");
     }
@@ -250,8 +221,7 @@ void PortalSystem::serveFile(const String &path, bool fallbackToIndex)
     file.close();
 }
 
-bool PortalSystem::clientAcceptsGzip()
-{
+bool PortalSystem::clientAcceptsGzip() {
     if (!server.hasHeader("Accept-Encoding"))
         return false;
 
@@ -260,8 +230,7 @@ bool PortalSystem::clientAcceptsGzip()
     return acceptEncoding.indexOf("gzip") >= 0;
 }
 
-String PortalSystem::mimeTypeForPath(const String &path)
-{
+String PortalSystem::mimeTypeForPath(const String& path) {
     String normalizedPath = path;
     if (normalizedPath.endsWith(".gz"))
         normalizedPath.remove(normalizedPath.length() - 3);

@@ -1,2 +1,2 @@
 #pragma once
-void networkConnectionDiagnostics(const char *command);
+void networkConnectionDiagnostics(const char* command);

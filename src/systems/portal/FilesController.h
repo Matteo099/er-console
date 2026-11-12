@@ -3,13 +3,12 @@
 #include <WebServer.h>
 #include "PortalService.h"
 
-class FilesController
-{
-public:
+class FilesController {
+  public:
     explicit FilesController(PortalService& service);
     void registerRoutes(WebServer& server);
 
-private:
+  private:
     void listFiles(WebServer& server);
     void deleteFile(WebServer& server);
     void moveFile(WebServer& server);
@@ -18,7 +17,7 @@ private:
     static String guessMimeType(const String& path);
     static String normalizePath(const String& rawPath);
 
-private:
+  private:
     PortalService& service;
     mutable File uploadTarget;
     mutable String uploadPath;

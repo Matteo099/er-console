@@ -2,14 +2,9 @@
 
 #include <stdint.h>
 
-enum ChannelType
-{
-    GPIO,
-    MULTIPLEXED
-};
+enum ChannelType { GPIO, MULTIPLEXED };
 
-struct ChannelAddress
-{
+struct ChannelAddress {
     ChannelType type;
     uint16_t id;
     uint8_t device;

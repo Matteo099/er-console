@@ -3,8 +3,7 @@
 #include <string>
 #include <cstdint>
 
-struct StorageEntry
-{
+struct StorageEntry {
     std::string path;
     std::string name;
     bool isDirectory = false;

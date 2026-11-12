@@ -3,13 +3,12 @@
 #include <WebServer.h>
 #include "PortalService.h"
 
-class StatusController
-{
-public:
+class StatusController {
+  public:
     explicit StatusController(PortalService& service);
     void registerRoutes(WebServer& server);
 
-private:
+  private:
     void sendStatus(WebServer& server);
     void scanWifi(WebServer& server);
     void getLogs(WebServer& server);
@@ -17,6 +16,6 @@ private:
     void rebootSystem(WebServer& server);
     void shutdownSystem(WebServer& server);
 
-private:
+  private:
     PortalService& service;
 };

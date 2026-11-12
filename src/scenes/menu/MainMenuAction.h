@@ -1,9 +1,3 @@
 #pragma once
 
-enum class MainMenuAction
-{
-    None,
-    NewGame,
-    Settings,
-    About
-};
+enum class MainMenuAction { None, NewGame, Settings, About };

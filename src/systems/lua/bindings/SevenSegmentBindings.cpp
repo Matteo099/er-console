@@ -2,10 +2,9 @@
 
 #include "systems/input/subsystems/SevenSegmentSystem.h"
 
-SevenSegmentSystem *SevenSegmentBindings::get(lua_State *L)
-{
+SevenSegmentSystem* SevenSegmentBindings::get(lua_State* L) {
     lua_getfield(L, LUA_REGISTRYINDEX, SEVEN_SEGMENT_PTR_KEY);
-    auto *system = static_cast<SevenSegmentSystem *>(lua_touserdata(L, -1));
+    auto* system = static_cast<SevenSegmentSystem*>(lua_touserdata(L, -1));
     lua_pop(L, 1);
     return system;
 }
@@ -15,13 +14,12 @@ SevenSegmentSystem *SevenSegmentBindings::get(lua_State *L)
 // @param value The value to display (string)
 // @example input.sevenSegment.display(0, "1234") -- displays "1234" on display 0
 // @lua input.sevenSegment.display(display:int, value:string) -> void
-int SevenSegmentBindings::display(lua_State *L)
-{
-    auto *system = get(L);
+int SevenSegmentBindings::display(lua_State* L) {
+    auto* system = get(L);
     if (!system)
         return 0;
     uint8_t index = luaL_checkinteger(L, 1);
-    const char *value = luaL_checkstring(L, 2);
+    const char* value = luaL_checkstring(L, 2);
     system->display(index, value);
     return 0;
 }
@@ -30,9 +28,8 @@ int SevenSegmentBindings::display(lua_State *L)
 // @param display The display number (0-3)
 // @example input.sevenSegment.clear(0) -- clears display 0
 // @lua input.sevenSegment.clear(display:int) -> void
-int SevenSegmentBindings::clear(lua_State *L)
-{
-    auto *system = get(L);
+int SevenSegmentBindings::clear(lua_State* L) {
+    auto* system = get(L);
     if (!system)
         return 0;
     uint8_t index = luaL_checkinteger(L, 1);
@@ -45,9 +42,8 @@ int SevenSegmentBindings::clear(lua_State *L)
 // @param value The brightness value (0-255)
 // @example input.sevenSegment.brightness(0, 128) -- sets display 0 to half brightness
 // @lua input.sevenSegment.brightness(display:int, value:int) -> void
-int SevenSegmentBindings::brightness(lua_State *L)
-{
-    auto *system = get(L);
+int SevenSegmentBindings::brightness(lua_State* L) {
+    auto* system = get(L);
     if (!system)
         return 0;
     uint8_t index = luaL_checkinteger(L, 1);
@@ -56,10 +52,10 @@ int SevenSegmentBindings::brightness(lua_State *L)
     return 0;
 }
 
-SevenSegmentBindings::SevenSegmentBindings(SevenSegmentSystem *system) : sevenSegment(system) {}
+SevenSegmentBindings::SevenSegmentBindings(SevenSegmentSystem* system) : sevenSegment(system) {
+}
 
-void SevenSegmentBindings::registerAPI(lua_State *L)
-{
+void SevenSegmentBindings::registerAPI(lua_State* L) {
     //
     // store pointer
     //

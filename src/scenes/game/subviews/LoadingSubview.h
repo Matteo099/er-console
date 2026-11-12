@@ -3,9 +3,8 @@
 #include <lvgl.h>
 #include <string>
 
-class LoadingSubview
-{
-public:
+class LoadingSubview {
+  public:
     void create(lv_obj_t* parent);
     void destroy();
 
@@ -14,7 +13,7 @@ public:
 
     void setMessage(const std::string& message);
 
-private:
+  private:
     lv_obj_t* root = nullptr;
 
     lv_obj_t* spinner = nullptr;

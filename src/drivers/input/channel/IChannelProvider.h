@@ -2,9 +2,8 @@
 
 #include <stdint.h>
 
-class IChannelProvider
-{
-public:
+class IChannelProvider {
+  public:
     virtual ~IChannelProvider() = default;
     virtual bool init() = 0;
     virtual void shutdown() = 0;

@@ -2,10 +2,9 @@
 
 #include "systems/input/subsystems/OLEDSystem.h"
 
-OLEDSystem *OLEDBindings::get(lua_State *L)
-{
+OLEDSystem* OLEDBindings::get(lua_State* L) {
     lua_getfield(L, LUA_REGISTRYINDEX, OLED_PTR_KEY);
-    auto *sys = static_cast<OLEDSystem *>(lua_touserdata(L, -1));
+    auto* sys = static_cast<OLEDSystem*>(lua_touserdata(L, -1));
     lua_pop(L, 1);
     return sys;
 }
@@ -14,9 +13,8 @@ OLEDSystem *OLEDBindings::get(lua_State *L)
 // @return true if the OLED display is supported, false otherwise
 // @example if input.oled.isSupported() then print("OLED is supported") else print("OLED is not supported") end
 // @lua input.oled.isSupported() -> bool
-int OLEDBindings::isSupported(lua_State *L)
-{
-    auto *sys = get(L);
+int OLEDBindings::isSupported(lua_State* L) {
+    auto* sys = get(L);
     lua_pushboolean(L, sys && sys->isSupported());
     return 1;
 }
@@ -25,12 +23,11 @@ int OLEDBindings::isSupported(lua_State *L)
 // @param text The message to display
 // @example input.oled.show("Hello, World!")
 // @lua input.oled.show(text:string) -> void
-int OLEDBindings::show(lua_State *L)
-{
-    auto *sys = get(L);
+int OLEDBindings::show(lua_State* L) {
+    auto* sys = get(L);
     if (!sys)
         return 0;
-    const char *text = luaL_checkstring(L, 1);
+    const char* text = luaL_checkstring(L, 1);
     sys->showMessage(text);
     return 0;
 }
@@ -38,9 +35,8 @@ int OLEDBindings::show(lua_State *L)
 // @doc Clear the OLED display
 // @example input.oled.clear()
 // @lua input.oled.clear() -> void
-int OLEDBindings::clear(lua_State *L)
-{
-    auto *sys = get(L);
+int OLEDBindings::clear(lua_State* L) {
+    auto* sys = get(L);
     if (sys)
         sys->clear();
     return 0;
@@ -49,11 +45,9 @@ int OLEDBindings::clear(lua_State *L)
 // @doc Get the current message displayed on the OLED display
 // @example local message = input.oled.currentMessage()
 // @lua input.oled.currentMessage() -> string
-int OLEDBindings::currentMessage(lua_State *L)
-{
-    auto *sys = get(L);
-    if (!sys)
-    {
+int OLEDBindings::currentMessage(lua_State* L) {
+    auto* sys = get(L);
+    if (!sys) {
         lua_pushnil(L);
         return 1;
     }
@@ -62,10 +56,10 @@ int OLEDBindings::currentMessage(lua_State *L)
     return 1;
 }
 
-OLEDBindings::OLEDBindings(OLEDSystem *system) : oled(system) {}
+OLEDBindings::OLEDBindings(OLEDSystem* system) : oled(system) {
+}
 
-void OLEDBindings::registerAPI(lua_State *L)
-{
+void OLEDBindings::registerAPI(lua_State* L) {
     // store pointer
     lua_pushlightuserdata(L, oled);
     lua_setfield(L, LUA_REGISTRYINDEX, OLED_PTR_KEY);

@@ -3,23 +3,28 @@
 #include "systems/ui/Scene.h"
 #include "scenes/monitor/MonitorView.h"
 
-class MonitorScene : public Scene
-{
-public:
+class MonitorScene : public Scene {
+  public:
     void onEnter() override;
     void onUpdate() override;
     void onExit() override;
-    void onPreferencesChanged() override { refreshTelemetry(); }
 
-    View& getView() override { return view; }
+    void onPreferencesChanged() override {
+        refreshTelemetry();
+    }
+
+    View& getView() override {
+        return view;
+    }
+
     SceneRequest getRequest() const override;
 
     bool handleUIEvent(const UIEvent& event) override;
 
-private:
+  private:
     void refreshTelemetry();
 
-private:
+  private:
     MonitorView view;
     SceneRequest request = SceneRequest();
     class InputSystem* input = nullptr;

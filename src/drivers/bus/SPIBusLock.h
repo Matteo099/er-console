@@ -2,35 +2,26 @@
 
 #include "SPIBusManager.h"
 
-class SPIBusLock
-{
-public:
-    class Guard
-    {
-    public:
-        Guard()
-            : mutex(SPIBusManager::mutex())
-        {
-            if (mutex)
-            {
-                xSemaphoreTakeRecursive(
-                    mutex,
-                    portMAX_DELAY);
+class SPIBusLock {
+  public:
+    class Guard {
+      public:
+        Guard() : mutex(SPIBusManager::mutex()) {
+            if (mutex) {
+                xSemaphoreTakeRecursive(mutex, portMAX_DELAY);
             }
         }
 
-        ~Guard()
-        {
-            if (mutex)
-            {
+        ~Guard() {
+            if (mutex) {
                 xSemaphoreGiveRecursive(mutex);
             }
         }
 
-        Guard(const Guard &) = delete;
-        Guard &operator=(const Guard &) = delete;
+        Guard(const Guard&) = delete;
+        Guard& operator=(const Guard&) = delete;
 
-    private:
+      private:
         SemaphoreHandle_t mutex;
     };
 };

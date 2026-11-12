@@ -11,16 +11,15 @@ static constexpr uint64_t TARGET_AFTER_CLEANUP = 9ULL * 1024 * 1024;
 
 class StorageSystem;
 
-class LogStorageWriter
-{
-public:
+class LogStorageWriter {
+  public:
     static LogStorageWriter& instance();
 
     void start(StorageSystem* storage);
 
     void write(const char* line);
 
-private:
+  private:
     LogStorageWriter() = default;
 
     static void task(void* param);
@@ -31,10 +30,8 @@ private:
 
     void flushBuffer();
 
-private:
-
-    struct LogMessage
-    {
+  private:
+    struct LogMessage {
         char text[256];
     };
 
@@ -42,8 +39,7 @@ private:
 
     static constexpr size_t BUFFER_SIZE = 8192;
 
-    static constexpr TickType_t FLUSH_INTERVAL =
-        pdMS_TO_TICKS(2000);
+    static constexpr TickType_t FLUSH_INTERVAL = pdMS_TO_TICKS(2000);
 
     QueueHandle_t queue = nullptr;
 

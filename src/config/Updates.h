@@ -15,8 +15,7 @@
 #define OTA_PARTITION_TABLE_SHA256 ""
 #endif
 
-namespace UpdateConfig
-{
-    constexpr size_t JSON_LIMIT = 64 * 1024, MANIFEST_LIMIT = 8 * 1024;
-    constexpr uint32_t IO_TIMEOUT_MS = 15000, OPERATION_TIMEOUT_MS = 10 * 60 * 1000;
-}
+namespace UpdateConfig {
+constexpr size_t JSON_LIMIT = 64 * 1024, MANIFEST_LIMIT = 8 * 1024;
+constexpr uint32_t IO_TIMEOUT_MS = 15000, OPERATION_TIMEOUT_MS = 10 * 60 * 1000;
+}  // namespace UpdateConfig

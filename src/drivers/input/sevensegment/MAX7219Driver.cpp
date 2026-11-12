@@ -10,18 +10,11 @@
 #define REG_SHUTDOWN 0x0C
 #define REG_DISPLAYTEST 0x0F
 
-MAX7219Driver::MAX7219Driver(
-    SPIClass &spi,
-    uint8_t csPin,
-    uint8_t digits)
-    : spiBus(&spi),
-      csPin(csPin),
-      digitCount(digits)
-{
+MAX7219Driver::MAX7219Driver(SPIClass& spi, uint8_t csPin, uint8_t digits)
+    : spiBus(&spi), csPin(csPin), digitCount(digits) {
 }
 
-bool MAX7219Driver::init()
-{
+bool MAX7219Driver::init() {
     if (!spiBus)
         return false;
 
@@ -42,8 +35,7 @@ bool MAX7219Driver::init()
     return true;
 }
 
-void MAX7219Driver::shutdown()
-{
+void MAX7219Driver::shutdown() {
     if (!initialized)
         return;
 
@@ -58,12 +50,15 @@ void MAX7219Driver::shutdown()
     initialized = false;
 }
 
-bool MAX7219Driver::available() const { return initialized; }
+bool MAX7219Driver::available() const {
+    return initialized;
+}
 
-uint8_t MAX7219Driver::digits() const { return digitCount; }
+uint8_t MAX7219Driver::digits() const {
+    return digitCount;
+}
 
-void MAX7219Driver::writeRegister(uint8_t reg, uint8_t data)
-{
+void MAX7219Driver::writeRegister(uint8_t reg, uint8_t data) {
     // NO need to lock the SPI bus here
     digitalWrite(csPin, LOW);
     spiBus->transfer(reg);
@@ -71,18 +66,15 @@ void MAX7219Driver::writeRegister(uint8_t reg, uint8_t data)
     digitalWrite(csPin, HIGH);
 }
 
-void MAX7219Driver::clear()
-{
+void MAX7219Driver::clear() {
     SPIBusLock::Guard guard;
 
-    for (uint8_t i = 1; i <= digitCount; i++)
-    {
+    for (uint8_t i = 1; i <= digitCount; i++) {
         writeRegister(i, 0x0F);
     }
 }
 
-void MAX7219Driver::setDigit(uint8_t digit, char value, bool dot)
-{
+void MAX7219Driver::setDigit(uint8_t digit, char value, bool dot) {
     if (digit >= digitCount)
         return;
     uint8_t code = 0x0F;
@@ -101,13 +93,12 @@ void MAX7219Driver::setDigit(uint8_t digit, char value, bool dot)
     writeRegister(REG_DIGIT0 + digit, code);
 }
 
-void MAX7219Driver::setBrightness(uint8_t value)
-{
+void MAX7219Driver::setBrightness(uint8_t value) {
     if (value > 15)
         value = 15;
     brightness = value;
 
     SPIBusLock::Guard guard;
-    
+
     writeRegister(REG_INTENSITY, brightness);
 }

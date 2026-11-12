@@ -3,9 +3,8 @@
 #include <lvgl.h>
 #include <functional>
 
-class FailSubview
-{
-public:
+class FailSubview {
+  public:
     using EventCallback = std::function<void(const char*)>;
 
     void create(lv_obj_t* parent);
@@ -15,9 +14,9 @@ public:
     void hide();
 
     void setEventCallback(EventCallback callback);
-    void setMessage(const char *title, const char *message);
+    void setMessage(const char* title, const char* message);
 
-private:
+  private:
     static void onRetry(lv_event_t* e);
     static void onBack(lv_event_t* e);
 

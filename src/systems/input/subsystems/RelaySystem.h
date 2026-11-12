@@ -5,10 +5,9 @@
 #include "ISubsystem.h"
 #include "ChannelSystem.h"
 
-class RelaySystem : public ISubsystem
-{
-public:
-    RelaySystem(ChannelSystem *channels);
+class RelaySystem : public ISubsystem {
+  public:
+    RelaySystem(ChannelSystem* channels);
     bool init() override;
     void update() override;
     void shutdown() override;
@@ -18,15 +17,15 @@ public:
     void toggle(uint8_t relay);
     void pulse(uint8_t relay, uint32_t durationMs);
 
-private:
-    struct RelayConfig
-    {
+  private:
+    struct RelayConfig {
         uint16_t channel;
         bool activeLow;
         bool state;
         bool pulsing;
         uint32_t pulseEnd;
     };
-    ChannelSystem *channels = nullptr;
+
+    ChannelSystem* channels = nullptr;
     std::vector<RelayConfig> relays;
 };

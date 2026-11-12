@@ -4,10 +4,9 @@
 
 #include "IGpioProvider.h"
 
-class MCP23017Driver : public IGpioProvider
-{
-public:
-    MCP23017Driver(TwoWire &wire, uint16_t basePin, uint8_t address);
+class MCP23017Driver : public IGpioProvider {
+  public:
+    MCP23017Driver(TwoWire& wire, uint16_t basePin, uint8_t address);
     bool init() override;
     void shutdown() override;
     bool ownsPin(uint16_t pin) const override;
@@ -15,11 +14,11 @@ public:
     void digitalWrite(uint16_t pin, bool state) override;
     bool digitalRead(uint16_t pin) override;
 
-private:
+  private:
     uint16_t toLocal(uint16_t pin) const;
 
-private:
-    TwoWire *wireBus = nullptr;
+  private:
+    TwoWire* wireBus = nullptr;
     uint16_t basePin;
     uint8_t address;
     bool initialized = false;

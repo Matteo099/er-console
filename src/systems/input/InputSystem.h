@@ -27,27 +27,29 @@
 #include "subsystems/RgbLedSystem.h"
 #include "subsystems/SevenSegmentSystem.h"
 
-class InputSystem : public SystemService
-{
-public:
+class InputSystem : public SystemService {
+  public:
     InputSystem();
     ~InputSystem();
 
-    void init(void *params = nullptr) override;
-    bool begin(const InputConfig &config);
+    void init(void* params = nullptr) override;
+    bool begin(const InputConfig& config);
     void update() override;
     void shutdown();
 
-    bool hasPower() const { return powerInitialized; }
-    PowerSystem *power();
-    RFIDSystem *rfid();
-    OLEDSystem *oled();
-    ChannelSystem *channels();
-    RelaySystem *relays();
-    RgbLedSystem *rgb();
-    SevenSegmentSystem *sevenSegment();
+    bool hasPower() const {
+        return powerInitialized;
+    }
 
-private:
+    PowerSystem* power();
+    RFIDSystem* rfid();
+    OLEDSystem* oled();
+    ChannelSystem* channels();
+    RelaySystem* relays();
+    RgbLedSystem* rgb();
+    SevenSegmentSystem* sevenSegment();
+
+  private:
     TaskMutex lifecycleMutex;
     bool powerInitialized = false;
     bool rfidInitialized = false;
@@ -59,29 +61,29 @@ private:
 
     I2CBusManager i2cManager;
 
-    std::vector<ISubsystem *> subsystems;
+    std::vector<ISubsystem*> subsystems;
 
-    INA219Driver *powerDriver = nullptr;
-    MFRC522Driver *rfidDriver = nullptr;
-    SSD1306Driver *oledDriver = nullptr;
-    NativeChannelProvider *nativeChannel = nullptr;
-    MCP23017Driver *mcpDriver1 = nullptr;
-    MCP23017Driver *mcpDriver2 = nullptr;
-    CD74HC4067Driver *muxDriver = nullptr;
-    MCPChannelProvider *mcp1 = nullptr;
-    MCPChannelProvider *mcp2 = nullptr;
-    MuxChannelProvider *mux1 = nullptr;
-    ESP32PwmRgbDriver *statusLed = nullptr;
-    PCA9685Driver *rgbExpander = nullptr;
-    MAX7219Driver *sevenSegDriver = nullptr;
+    INA219Driver* powerDriver = nullptr;
+    MFRC522Driver* rfidDriver = nullptr;
+    SSD1306Driver* oledDriver = nullptr;
+    NativeChannelProvider* nativeChannel = nullptr;
+    MCP23017Driver* mcpDriver1 = nullptr;
+    MCP23017Driver* mcpDriver2 = nullptr;
+    CD74HC4067Driver* muxDriver = nullptr;
+    MCPChannelProvider* mcp1 = nullptr;
+    MCPChannelProvider* mcp2 = nullptr;
+    MuxChannelProvider* mux1 = nullptr;
+    ESP32PwmRgbDriver* statusLed = nullptr;
+    PCA9685Driver* rgbExpander = nullptr;
+    MAX7219Driver* sevenSegDriver = nullptr;
 
-    PowerSystem *powerSystem = nullptr;
-    RFIDSystem *rfidSystem = nullptr;
-    OLEDSystem *oledSystem = nullptr;
-    ChannelSystem *channelSystem = nullptr;
-    RelaySystem *relaySystem = nullptr;
-    RgbLedSystem *rgbLedSystem = nullptr;
-    SevenSegmentSystem *sevenSegmentSystem = nullptr;
+    PowerSystem* powerSystem = nullptr;
+    RFIDSystem* rfidSystem = nullptr;
+    OLEDSystem* oledSystem = nullptr;
+    ChannelSystem* channelSystem = nullptr;
+    RelaySystem* relaySystem = nullptr;
+    RgbLedSystem* rgbLedSystem = nullptr;
+    SevenSegmentSystem* sevenSegmentSystem = nullptr;
 
     void reset();
     void clearFlags();

@@ -9,9 +9,7 @@
 #include <cstdio>
 #include "scenes/sample/SampleEvents.h"
 
-
-void SampleScene::onEnter()
-{
+void SampleScene::onEnter() {
     Log::info(Log::SCENE_TAG, "Entering SampleScene");
 
     // Set up event handling - scene handles events from view
@@ -20,27 +18,22 @@ void SampleScene::onEnter()
     view.create();
 }
 
-void SampleScene::onUpdate()
-{
+void SampleScene::onUpdate() {
     // No more polling! Events are handled immediately when emitted
     view.update();
 }
 
-void SampleScene::onExit()
-{
+void SampleScene::onExit() {
     view.destroy();
 }
 
-SceneRequest SampleScene::getRequest() const
-{
+SceneRequest SampleScene::getRequest() const {
     return SceneRequest();
 }
 
 // Event handling implementation
-bool SampleScene::handleUIEvent(const UIEvent& event)
-{
-    if (event.getType() == PlaySoundEvent::TYPE)
-    {
+bool SampleScene::handleUIEvent(const UIEvent& event) {
+    if (event.getType() == PlaySoundEvent::TYPE) {
         const PlaySoundEvent& playEvent = static_cast<const PlaySoundEvent&>(event);
 
         Log::info(Log::SCENE_TAG, "Play sound!!!!!");

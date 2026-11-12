@@ -6,9 +6,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
 
-class PowerSystem : public ISubsystem
-{
-public:
+class PowerSystem : public ISubsystem {
+  public:
     explicit PowerSystem(IPowerMonitor& monitor);
 
     bool init() override;
@@ -21,14 +20,13 @@ public:
 
     void shutdown() override;
 
-private:
+  private:
     void poll();
 
-private:
+  private:
     IPowerMonitor& monitor;
 
-    mutable portMUX_TYPE lock =
-        portMUX_INITIALIZER_UNLOCKED;
+    mutable portMUX_TYPE lock = portMUX_INITIALIZER_UNLOCKED;
 
     PowerReading metrics;
 

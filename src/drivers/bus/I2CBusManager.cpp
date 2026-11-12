@@ -6,19 +6,15 @@ SemaphoreHandle_t I2CBusManager::busMutex = nullptr;
 
 bool I2CBusManager::initialized = false;
 
-bool I2CBusManager::init(int sdaPin, int sclPin, uint32_t frequency)
-{
-    if (initialized)
-    {
+bool I2CBusManager::init(int sdaPin, int sclPin, uint32_t frequency) {
+    if (initialized) {
         return true;
     }
     busMutex = xSemaphoreCreateMutex();
-    if (!busMutex)
-    {
+    if (!busMutex) {
         return false;
     }
-    if (!wire.begin(sdaPin, sclPin, frequency))
-    {
+    if (!wire.begin(sdaPin, sclPin, frequency)) {
         vSemaphoreDelete(busMutex);
         busMutex = nullptr;
         return false;
@@ -27,21 +23,22 @@ bool I2CBusManager::init(int sdaPin, int sclPin, uint32_t frequency)
     return true;
 }
 
-void I2CBusManager::shutdown()
-{
-    if (!initialized)
-    {
+void I2CBusManager::shutdown() {
+    if (!initialized) {
         return;
     }
     wire.end();
-    if (busMutex)
-    {
+    if (busMutex) {
         vSemaphoreDelete(busMutex);
         busMutex = nullptr;
     }
     initialized = false;
 }
 
-TwoWire &I2CBusManager::bus() { return wire; }
+TwoWire& I2CBusManager::bus() {
+    return wire;
+}
 
-SemaphoreHandle_t I2CBusManager::mutex() { return busMutex; }
+SemaphoreHandle_t I2CBusManager::mutex() {
+    return busMutex;
+}

@@ -6,26 +6,29 @@
 #include <atomic>
 class UpdateInput;
 
-class UpdateSystem
-{
-public:
-    static UpdateSystem &instance();
+class UpdateSystem {
+  public:
+    static UpdateSystem& instance();
     UpdateSnapshot snapshot() const;
-    uint32_t revision() const
-    {
+
+    uint32_t revision() const {
         TaskMutex::Guard lock(mutex);
         return status.revision;
     }
+
     bool check();
     bool install();
     void cancel();
     void beginBootVerification();
     void uiHeartbeat();
-    static bool flashInProgress() { return flashing.load(); }
+
+    static bool flashInProgress() {
+        return flashing.load();
+    }
 #if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
-    UpdateError validateInactiveForDiagnostics(UpdateInput &input, const UpdateRelease &release);
+    UpdateError validateInactiveForDiagnostics(UpdateInput& input, const UpdateRelease& release);
 #endif
-private:
+  private:
     mutable TaskMutex mutex;
     UpdateSnapshot status;
     std::atomic<bool> cancellation{false};
@@ -37,7 +40,7 @@ private:
     bool stopped() const;
     void fail(UpdateError error);
     void progress(UpdateState state, size_t downloaded, size_t written);
-    static void worker(void *context);
-    static void verifier(void *context);
+    static void worker(void* context);
+    static void verifier(void* context);
     void run();
 };

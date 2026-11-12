@@ -3,13 +3,12 @@
 #include <cstdint>
 #include "drivers/storage/IFile.h"
 
-class AudioDriver
-{
-protected:
+class AudioDriver {
+  protected:
     uint8_t currentVolume = 50;
     bool playing = false;
 
-public:
+  public:
     virtual ~AudioDriver() = default;
 
     virtual bool init() = 0;
@@ -18,14 +17,12 @@ public:
 
     virtual void playTone(uint16_t freq, uint16_t ms) = 0;
     virtual bool startWav(IFile* file) = 0;
-    
-    bool isPlaying() const
-    {
+
+    bool isPlaying() const {
         return playing;
     };
 
-    void setVolume(uint8_t volume)
-    {
+    void setVolume(uint8_t volume) {
         currentVolume = volume;
     };
 };

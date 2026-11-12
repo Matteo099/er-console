@@ -15,19 +15,12 @@
 #include <atomic>
 #include "core/TaskMutex.h"
 
-enum class GameLoadState
-{
-    Idle,
-    Loading,
-    LoadComplete,
-    LoadFailed
-};
+enum class GameLoadState { Idle, Loading, LoadComplete, LoadFailed };
 
-class GameScene : public Scene
-{
-public:
+class GameScene : public Scene {
+  public:
 #if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
-    static GameScene *diagnosticCurrent;
+    static GameScene* diagnosticCurrent;
 #endif
     // Scene interface
     void onEnter() override;
@@ -35,28 +28,37 @@ public:
     void onExit() override;
     void onPreferencesChanged() override;
 
-    View &getView() override { return view; }
+    View& getView() override {
+        return view;
+    }
+
     SceneRequest getRequest() const override;
 
-    bool handleUIEvent(const UIEvent &event) override;
+    bool handleUIEvent(const UIEvent& event) override;
 
     // Called by SceneManager with game ID
-    void setGameInfo(const GameInfo &info) { gameInfo = info; }
+    void setGameInfo(const GameInfo& info) {
+        gameInfo = info;
+    }
 
     void completeGame();
-    void requestCompletion() { completionPending.store(true); }
+
+    void requestCompletion() {
+        completionPending.store(true);
+    }
+
     void postGameObjects(std::vector<GameObjectSubview::ObjectData> objects);
 
-    GameView *getGameView() { return &view; }
+    GameView* getGameView() {
+        return &view;
+    }
 
-    std::string getGameDataDirectory() const
-    {
+    std::string getGameDataDirectory() const {
         return std::string("/games/") + gameInfo.id;
     }
 
-private:
-    struct SessionDisplayStatistics
-    {
+  private:
+    struct SessionDisplayStatistics {
         uint32_t elapsedSeconds = 0;
         uint32_t pausedSeconds = 0;
 
@@ -71,8 +73,8 @@ private:
 
     SessionDisplayStatistics statistics;
     GameSessionClock sessionClock;
-    uint64_t statisticsSessionId=0;
-    uint16_t selectedPlayers=1;
+    uint64_t statisticsSessionId = 0;
+    uint16_t selectedPlayers = 1;
     void recordOutcome(GameOutcome outcome);
 
     // Game identification
@@ -81,8 +83,8 @@ private:
     // View
     GameView view;
     GameAudioAssets audioAssets;
-    GameAssetCache::Token assetToken=0;
-    class AudioSystem *audioSystem = nullptr;
+    GameAssetCache::Token assetToken = 0;
+    class AudioSystem* audioSystem = nullptr;
     DeviceConfigRepository settingsRepository;
     AudioPreferences settingsAudio;
     VolumeFeedback settingsFeedback;
@@ -93,8 +95,8 @@ private:
     void saveSettings();
 
     // Lua system integration
-    LuaSystem *luaSystem = nullptr;
-    InputSystem *inputSystem = nullptr;
+    LuaSystem* luaSystem = nullptr;
+    InputSystem* inputSystem = nullptr;
     GameLoadState loadState = GameLoadState::Idle;
 
     // Game state
@@ -116,7 +118,7 @@ private:
     // Internal helpers
     bool loadGameScript();
     void stopGame();
-    void failLoad(const char *message);
+    void failLoad(const char* message);
 
     void startTimer();
     void pauseTimer();

@@ -6,14 +6,14 @@
 #include "log/Logger.h"
 #include "drivers/bus/I2CBusLock.h"
 
-INA219Driver::INA219Driver(TwoWire &wire, uint8_t address) : wireBus(&wire), deviceAddress(address), sensor(address) {}
+INA219Driver::INA219Driver(TwoWire& wire, uint8_t address)
+    : wireBus(&wire), deviceAddress(address), sensor(address) {
+}
 
-bool INA219Driver::init()
-{
+bool INA219Driver::init() {
     I2CBusLock::Guard guard;
 
-    if (!sensor.begin(wireBus))
-    {
+    if (!sensor.begin(wireBus)) {
         Log::warn(Log::DRIVER_TAG, "INA219 not detected at 0x%02X", deviceAddress);
         initialized = false;
         return false;
@@ -24,8 +24,7 @@ bool INA219Driver::init()
     return true;
 }
 
-void INA219Driver::shutdown()
-{
+void INA219Driver::shutdown() {
     if (!initialized)
         return;
 
@@ -34,8 +33,7 @@ void INA219Driver::shutdown()
     Log::info(Log::DRIVER_TAG, "INA219 shutdown");
 }
 
-bool INA219Driver::read(PowerReading &reading)
-{
+bool INA219Driver::read(PowerReading& reading) {
     if (!initialized)
         return false;
 
@@ -45,8 +43,8 @@ bool INA219Driver::read(PowerReading &reading)
     const float busVoltageV = sensor.getBusVoltage_V();
     const float currentMa = sensor.getCurrent_mA();
     const float powerMw = sensor.getPower_mW();
-    if (std::isnan(shuntVoltageMv) || std::isnan(busVoltageV) || std::isnan(currentMa) || std::isnan(powerMw))
-    {
+    if (std::isnan(shuntVoltageMv) || std::isnan(busVoltageV) || std::isnan(currentMa) ||
+        std::isnan(powerMw)) {
         return false;
     }
     reading.available = true;
@@ -60,4 +58,6 @@ bool INA219Driver::read(PowerReading &reading)
     return true;
 }
 
-bool INA219Driver::isAvailable() const { return initialized; }
+bool INA219Driver::isAvailable() const {
+    return initialized;
+}

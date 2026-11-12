@@ -4,42 +4,39 @@
 
 #include "log/Logger.h"
 
-RFIDSystem::RFIDSystem(IRFIDReader &reader) : reader(reader) {}
+RFIDSystem::RFIDSystem(IRFIDReader& reader) : reader(reader) {
+}
 
-bool RFIDSystem::init()
-{
+bool RFIDSystem::init() {
     supported = reader.init();
-    if (!supported)
-    {
+    if (!supported) {
         Log::warn(Log::INPUT_TAG, "RFID reader unavailable");
-    }
-    else
-    {
+    } else {
         Log::info(Log::INPUT_TAG, "RFID reader initialized");
     }
     return supported;
 }
 
-void RFIDSystem::update() { poll(); }
+void RFIDSystem::update() {
+    poll();
+}
 
-void RFIDSystem::shutdown()
-{
-    if (supported)
-    {
+void RFIDSystem::shutdown() {
+    if (supported) {
         reader.shutdown();
         supported = false;
         Log::info(Log::INPUT_TAG, "RFID reader shutdown");
     }
 }
 
-bool RFIDSystem::isSupported() const { return supported; }
+bool RFIDSystem::isSupported() const {
+    return supported;
+}
 
-bool RFIDSystem::getLastTag(RFIDTag& tag) const
-{
+bool RFIDSystem::getLastTag(RFIDTag& tag) const {
     portENTER_CRITICAL(&lock);
 
-    if (!newTagAvailable)
-    {
+    if (!newTagAvailable) {
         portEXIT_CRITICAL(&lock);
         return false;
     }
@@ -51,11 +48,9 @@ bool RFIDSystem::getLastTag(RFIDTag& tag) const
     return true;
 }
 
-bool RFIDSystem::consumeTag(RFIDTag &tag)
-{
+bool RFIDSystem::consumeTag(RFIDTag& tag) {
     portENTER_CRITICAL(&lock);
-    if (!newTagAvailable)
-    {
+    if (!newTagAvailable) {
         portEXIT_CRITICAL(&lock);
         return false;
     }
@@ -77,8 +72,7 @@ void setTagDetectedCallback(...);
 
 so the application can react immediately to badge scans instead of polling consumeTag()
 */
-void RFIDSystem::poll()
-{
+void RFIDSystem::poll() {
     if (!supported)
         return;
     const uint32_t now = millis();
@@ -89,9 +83,9 @@ void RFIDSystem::poll()
     if (!reader.readTag(tag))
         return;
     portENTER_CRITICAL(&lock);
-    const bool duplicate = tag.uid == lastTag.uid && (now - lastTag.timestampMs) < DUPLICATE_TIMEOUT_MS;
-    if (!duplicate)
-    {
+    const bool duplicate =
+        tag.uid == lastTag.uid && (now - lastTag.timestampMs) < DUPLICATE_TIMEOUT_MS;
+    if (!duplicate) {
         lastTag = tag;
         newTagAvailable = true;
     }

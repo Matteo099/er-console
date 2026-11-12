@@ -11,12 +11,9 @@ static std::deque<std::string> recentLogs;
 static constexpr std::size_t MAX_RECENT_LOG_LINES = 400;
 static SemaphoreHandle_t logMutex;
 
-namespace
-{
-    static const char *levelToString(esp_log_level_t level)
-    {
-        switch (level)
-        {
+namespace {
+static const char* levelToString(esp_log_level_t level) {
+    switch (level) {
         case ESP_LOG_ERROR:
             return "ERROR";
         case ESP_LOG_WARN:
@@ -27,29 +24,27 @@ namespace
             return "DEBUG";
         default:
             return "LOG";
-        }
     }
 }
+}  // namespace
 
-void Log::init(Level level)
-{
+void Log::init(Level level) {
     Serial.begin(115200);
     logMutex = xSemaphoreCreateMutex();
 
-    switch (level)
-    {
-    case Level::ERROR:
-        currentLevel = ESP_LOG_ERROR;
-        break;
-    case Level::WARNING:
-        currentLevel = ESP_LOG_WARN;
-        break;
-    case Level::INFO:
-        currentLevel = ESP_LOG_INFO;
-        break;
-    case Level::DEBUG:
-        currentLevel = ESP_LOG_DEBUG;
-        break;
+    switch (level) {
+        case Level::ERROR:
+            currentLevel = ESP_LOG_ERROR;
+            break;
+        case Level::WARNING:
+            currentLevel = ESP_LOG_WARN;
+            break;
+        case Level::INFO:
+            currentLevel = ESP_LOG_INFO;
+            break;
+        case Level::DEBUG:
+            currentLevel = ESP_LOG_DEBUG;
+            break;
     }
 
     esp_log_level_set("*", currentLevel);
@@ -58,8 +53,7 @@ void Log::init(Level level)
 // static void logInternal(esp_log_level_t level, const char* tag, const char* format, va_list args) {
 //     esp_log_writev(level, tag, format, args);
 // }
-static void logInternal(esp_log_level_t level, const char *tag, const char *format, va_list args)
-{
+static void logInternal(esp_log_level_t level, const char* tag, const char* format, va_list args) {
     if (level > currentLevel)
         return;
 
@@ -81,59 +75,50 @@ static void logInternal(esp_log_level_t level, const char *tag, const char *form
     xSemaphoreGive(logMutex);
 }
 
-void Log::error(const char *tag, const char *format, ...)
-{
+void Log::error(const char* tag, const char* format, ...) {
     va_list args;
     va_start(args, format);
     logInternal(ESP_LOG_ERROR, tag, format, args);
     va_end(args);
 }
 
-void Log::warn(const char *tag, const char *format, ...)
-{
+void Log::warn(const char* tag, const char* format, ...) {
     va_list args;
     va_start(args, format);
     logInternal(ESP_LOG_WARN, tag, format, args);
     va_end(args);
 }
 
-void Log::info(const char *tag, const char *format, ...)
-{
+void Log::info(const char* tag, const char* format, ...) {
     va_list args;
     va_start(args, format);
     logInternal(ESP_LOG_INFO, tag, format, args);
     va_end(args);
 }
 
-void Log::debug(const char *tag, const char *format, ...)
-{
+void Log::debug(const char* tag, const char* format, ...) {
     va_list args;
     va_start(args, format);
     logInternal(ESP_LOG_DEBUG, tag, format, args);
     va_end(args);
 }
 
-std::string Log::getRecentLogs(std::size_t maxLines)
-{
+std::string Log::getRecentLogs(std::size_t maxLines) {
     xSemaphoreTake(logMutex, portMAX_DELAY);
 
-    if (recentLogs.empty())
-    {
+    if (recentLogs.empty()) {
         xSemaphoreGive(logMutex);
         return {};
     }
 
     std::size_t count =
-        maxLines == 0 || maxLines > recentLogs.size()
-            ? recentLogs.size()
-            : maxLines;
+        maxLines == 0 || maxLines > recentLogs.size() ? recentLogs.size() : maxLines;
 
     std::size_t start = recentLogs.size() - count;
 
     std::string result;
 
-    for (std::size_t i = start; i < recentLogs.size(); ++i)
-    {
+    for (std::size_t i = start; i < recentLogs.size(); ++i) {
         result += recentLogs[i];
         result += '\n';
     }
@@ -143,8 +128,7 @@ std::string Log::getRecentLogs(std::size_t maxLines)
     return result;
 }
 
-void Log::clearRecentLogs()
-{
+void Log::clearRecentLogs() {
     xSemaphoreTake(logMutex, portMAX_DELAY);
     recentLogs.clear();
     xSemaphoreGive(logMutex);

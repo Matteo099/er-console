@@ -1,9 +1,3 @@
 #pragma once
 
-enum class GameState
-{
-    Ready,
-    Running,
-    Paused,
-    Finished
-};
+enum class GameState { Ready, Running, Paused, Finished };

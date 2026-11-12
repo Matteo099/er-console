@@ -2,8 +2,7 @@
 
 #include <stdint.h>
 
-struct PowerReading
-{
+struct PowerReading {
     bool available = false;
     bool overflow = false;
 
@@ -17,9 +16,8 @@ struct PowerReading
     uint32_t sampleTimeMs = 0;
 };
 
-class IPowerMonitor
-{
-public:
+class IPowerMonitor {
+  public:
     virtual ~IPowerMonitor() = default;
 
     virtual bool init() = 0;

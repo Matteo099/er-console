@@ -18,14 +18,13 @@
 #include "systems/audio/AudioSystem.h"
 #include "localization/LocalizedText.h"
 
-void UIManager::init(void *params)
-{
+void UIManager::init(void* params) {
     Log::info(Log::UI_TAG, "Initializing UI Manager");
 
     // 1. Initialize display (LovyanGFX)
     display.init();
 
-    // 2. Initialize LVGL core 
+    // 2. Initialize LVGL core
     lvgl.init(&display, &display);
     loadPreferences();
 
@@ -42,24 +41,25 @@ void UIManager::init(void *params)
     Log::info(Log::UI_TAG, "UI Manager ready");
 }
 
-void UIManager::update()
-{
-    if (!preferencesLoaded && (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY))
+void UIManager::update() {
+    if (!preferencesLoaded &&
+        (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY))
         loadPreferences();
     const auto changedRevision = DeviceConfigRepository::revision();
-    if (preferencesRevision != changedRevision)
-    {
-        DeviceConfig config; DeviceConfigRepository().loadCached(config);
+    if (preferencesRevision != changedRevision) {
+        DeviceConfig config;
+        DeviceConfigRepository().loadCached(config);
         preferencesRevision = changedRevision;
         I18n::select(config.locale.language.c_str());
         UITheme::select(UITheme::fromName(config.ui.theme.c_str()));
         UIFeedback::setSoundEnabled(config.audio.effects.enabled && config.audio.effects.volume);
-        auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
-        if (audio) audio->configure(config.audio);
+        auto* audio = static_cast<AudioSystem*>(
+            SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
+        if (audio)
+            audio->configure(config.audio);
         scenes.preferencesChanged();
     }
-    if (localeRevision != I18n::revision())
-    {
+    if (localeRevision != I18n::revision()) {
         localeRevision = I18n::revision();
         LocalizedText::refresh();
     }
@@ -71,17 +71,19 @@ void UIManager::update()
     UpdateSystem::instance().uiHeartbeat();
 }
 
-void UIManager::loadPreferences()
-{
-    auto *storage = static_cast<StorageSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+void UIManager::loadPreferences() {
+    auto* storage = static_cast<StorageSystem*>(
+        SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
     DeviceConfigRepository repository;
     DeviceConfig config;
     repository.load(storage, config);
     I18n::select(config.locale.language.c_str());
     UITheme::select(UITheme::fromName(config.ui.theme.c_str()));
     UIFeedback::setSoundEnabled(config.audio.effects.enabled && config.audio.effects.volume);
-    auto *audio = static_cast<AudioSystem *>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
-    if (audio) audio->configure(config.audio);
+    auto* audio = static_cast<AudioSystem*>(
+        SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
+    if (audio)
+        audio->configure(config.audio);
     preferencesLoaded = (storage && storage->isReady()) ||
-        (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY);
+                        (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY);
 }

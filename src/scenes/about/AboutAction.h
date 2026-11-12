@@ -1,6 +1,3 @@
 #pragma once
 
-enum class AboutAction {
-    None,
-    Back
-};
+enum class AboutAction { None, Back };

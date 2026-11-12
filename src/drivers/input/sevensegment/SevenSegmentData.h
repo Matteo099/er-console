@@ -3,9 +3,7 @@
 #include <stdint.h>
 #include <string>
 
-
-struct SevenSegmentValue
-{
+struct SevenSegmentValue {
     std::string text;
 
     bool decimal = false;

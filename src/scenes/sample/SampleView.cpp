@@ -6,30 +6,26 @@
 #include "systems/ui/components/Button.h"
 #include "systems/ui/components/Screen.h"
 
-void SampleView::create()
-{
+void SampleView::create() {
     screen = Screen::create();
 
     btn = Button::create(screen, tr(Text::PlaySound), onButtonClicked, this);
 }
 
-void SampleView::update()
-{
+void SampleView::update() {
     if (!screen)
         return;
 }
 
-void SampleView::destroy()
-{
+void SampleView::destroy() {
     screen = nullptr;
 
     // Nullify remaining pointers
     btn = nullptr;
 }
 
-void SampleView::onButtonClicked(lv_event_t *e)
-{
-    auto *view = static_cast<SampleView *>(lv_event_get_user_data(e));
+void SampleView::onButtonClicked(lv_event_t* e) {
+    auto* view = static_cast<SampleView*>(lv_event_get_user_data(e));
     if (!view)
         return;
 

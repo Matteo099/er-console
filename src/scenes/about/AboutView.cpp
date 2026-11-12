@@ -9,8 +9,7 @@
 #include "systems/ui/components/SceneLayout.h"
 #include "systems/ui/components/Screen.h"
 
-void AboutView::create()
-{
+void AboutView::create() {
     screen = Screen::create();
     auto layout = SceneLayout::create(screen);
     brandImg = BrandHeader::create(layout.top, 100, tr(Text::About));
@@ -22,16 +21,25 @@ void AboutView::create()
     textLabel = Label::create(container, tr(Text::AboutDescription), &lv_font_montserrat_12,
                               LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     UITheme::muted(textLabel);
-    Label::create(container, I18n::format(Text::FirmwareVersion, FW_VERSION).c_str(), &lv_font_montserrat_14);
-    auto *build = Label::create(container, I18n::format(Text::BuildRevision, FW_BUILD_DATE, FW_GIT_HASH).c_str(),
-                                &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
+    Label::create(container, I18n::format(Text::FirmwareVersion, FW_VERSION).c_str(),
+                  &lv_font_montserrat_14);
+    auto* build =
+        Label::create(container,
+                      I18n::format(Text::BuildRevision, FW_BUILD_DATE, FW_GIT_HASH).c_str(),
+                      &lv_font_montserrat_12, LV_TEXT_ALIGN_LEFT, LV_PCT(100));
     UITheme::muted(build);
     btnBack = BackButton::create(layout.footer, onBackClicked, this);
 }
-void AboutView::update() {}
-void AboutView::destroy() { screen = brandImg = container = textLabel = btnBack = nullptr; }
-void AboutView::onBackClicked(lv_event_t *e)
-{
-    auto *view = static_cast<AboutView *>(lv_event_get_user_data(e));
-    if (view) view->emitEvent(ButtonClickedEvent("back"));
+
+void AboutView::update() {
+}
+
+void AboutView::destroy() {
+    screen = brandImg = container = textLabel = btnBack = nullptr;
+}
+
+void AboutView::onBackClicked(lv_event_t* e) {
+    auto* view = static_cast<AboutView*>(lv_event_get_user_data(e));
+    if (view)
+        view->emitEvent(ButtonClickedEvent("back"));
 }

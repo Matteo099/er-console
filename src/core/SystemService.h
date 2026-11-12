@@ -1,7 +1,7 @@
 #pragma once
 
 class SystemService {
-public:
+  public:
     virtual ~SystemService() = default;
 
     virtual void init(void* params = nullptr) = 0;

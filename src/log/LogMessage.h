@@ -1,6 +1,5 @@
 #pragma once
 
-struct LogMessage
-{
+struct LogMessage {
     char text[96];
 };

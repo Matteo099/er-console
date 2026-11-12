@@ -2,11 +2,9 @@
 
 #include <Preferences.h>
 
-class StorageRecoveryStore
-{
-public:
-    void save(StorageFailureReason reason)
-    {
+class StorageRecoveryStore {
+  public:
+    void save(StorageFailureReason reason) {
         Preferences prefs;
         prefs.begin("storage", false);
         uint32_t count = prefs.getUInt("failures", 0);
@@ -16,9 +14,8 @@ public:
         prefs.putUInt("time", millis());
         prefs.end();
     }
-    
-    StorageRecoveryState load()
-    {
+
+    StorageRecoveryState load() {
         Preferences prefs;
         prefs.begin("storage", true);
         StorageRecoveryState state;
@@ -30,8 +27,7 @@ public:
         return state;
     }
 
-    void clear()
-    {
+    void clear() {
         Preferences prefs;
         prefs.begin("storage", false);
         prefs.clear();

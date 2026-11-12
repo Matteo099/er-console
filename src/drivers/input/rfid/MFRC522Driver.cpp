@@ -4,19 +4,11 @@
 
 #include "drivers/bus/SPIBusLock.h"
 
-MFRC522Driver::MFRC522Driver(
-    SPIClass &spi,
-    uint8_t ssPin,
-    uint8_t rstPin)
-    : spiBus(&spi),
-      ssPin(ssPin),
-      rstPin(rstPin),
-      reader(ssPin, rstPin)
-{
+MFRC522Driver::MFRC522Driver(SPIClass& spi, uint8_t ssPin, uint8_t rstPin)
+    : spiBus(&spi), ssPin(ssPin), rstPin(rstPin), reader(ssPin, rstPin) {
 }
 
-bool MFRC522Driver::init()
-{
+bool MFRC522Driver::init() {
     if (!spiBus)
         return false;
 
@@ -25,8 +17,7 @@ bool MFRC522Driver::init()
         reader.PCD_Init();
         delay(50);
         byte version = reader.PCD_ReadRegister(MFRC522::VersionReg);
-        if (version == 0x00 || version == 0xFF)
-        {
+        if (version == 0x00 || version == 0xFF) {
             Log::warn(Log::DRIVER_TAG, "MFRC522 not detected");
             initialized = false;
             return false;
@@ -38,8 +29,7 @@ bool MFRC522Driver::init()
     return true;
 }
 
-void MFRC522Driver::shutdown()
-{
+void MFRC522Driver::shutdown() {
     if (!initialized)
         return;
 
@@ -55,8 +45,7 @@ void MFRC522Driver::shutdown()
     Log::info(Log::DRIVER_TAG, "MFRC522 shutdown");
 }
 
-bool MFRC522Driver::readTag(RFIDTag &tag)
-{
+bool MFRC522Driver::readTag(RFIDTag& tag) {
     if (!initialized)
         return false;
 
@@ -66,8 +55,7 @@ bool MFRC522Driver::readTag(RFIDTag &tag)
     if (!reader.PICC_ReadCardSerial())
         return false;
     tag.uid.clear();
-    for (byte i = 0; i < reader.uid.size; i++)
-    {
+    for (byte i = 0; i < reader.uid.size; i++) {
         char buffer[4];
         snprintf(buffer, sizeof(buffer), "%02X", reader.uid.uidByte[i]);
         tag.uid += buffer;
@@ -79,4 +67,6 @@ bool MFRC522Driver::readTag(RFIDTag &tag)
     return true;
 }
 
-bool MFRC522Driver::isAvailable() const { return initialized; }
+bool MFRC522Driver::isAvailable() const {
+    return initialized;
+}

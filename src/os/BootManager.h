@@ -3,11 +3,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 
-class BootManager
-{
-public:
-    enum class BootStep : uint8_t
-    {
+class BootManager {
+  public:
+    enum class BootStep : uint8_t {
         CORE_INIT = 0,
         RAINBOW_LED_INIT,
         DISPLAY_INIT,
@@ -23,7 +21,7 @@ public:
 
     void run();
 
-private:
+  private:
     uint8_t bootProgress(BootStep step);
-    void emitStep(BootStep step, const char *label);
+    void emitStep(BootStep step, const char* label);
 };

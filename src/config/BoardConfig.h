@@ -48,7 +48,6 @@ GPIO       → LEDs, buttons, actuators
 
 */
 
-
 /* ================================================================
    SPI BUS 1 — TFT DISPLAY + TOUCH
    ================================================================
@@ -66,36 +65,32 @@ GPIO       → LEDs, buttons, actuators
    - Touch: ~2.5 MHz
 */
 
-#define SPI1_MOSI_PIN        11
-#define SPI1_MISO_PIN        13
-#define SPI1_SCLK_PIN        12
+#define SPI1_MOSI_PIN 11
+#define SPI1_MISO_PIN 13
+#define SPI1_SCLK_PIN 12
 
 /* TFT Display Control Pins */
 
-#define TFT_CS_PIN           10   // Chip Select for TFT display
-#define TFT_DC_PIN           9    // Data/Command control
-#define TFT_RST_PIN          8    // Hardware reset line
+#define TFT_CS_PIN 10  // Chip Select for TFT display
+#define TFT_DC_PIN 9  // Data/Command control
+#define TFT_RST_PIN 8  // Hardware reset line
 // #define TFT_BL_PIN           3 // Backlight control (connect to 3.3V or it could be connected to GPIO for PWM brightness control)
 
 /* Touch Controller */
 
-#define TOUCH_CS_PIN         7    // Chip Select for touch controller
-#define TOUCH_IRQ_PIN        6    // Touch interrupt (optional)
-
-
+#define TOUCH_CS_PIN 7  // Chip Select for touch controller
+#define TOUCH_IRQ_PIN 6  // Touch interrupt (optional)
 
 /* ================================================================
    SPI BUS 1 — MICRO SD CARD
    ================================================================
 */
 
-#define SPI3_MISO_PIN        20  // MISO for SD; also native USB D+, use USB-UART for diagnostics
-#define SPI3_SCLK_PIN        21  // SCLK pin for SPI3 (SD card)
-#define SPI3_MOSI_PIN        47   // MOSI pin for SPI3 (SD card)
-#define SD_CS_PIN            5   // SD card chip select
-#define SD_POWER_RELAY_PIN   3   // Relay to control SD card power (optional)
-
-
+#define SPI3_MISO_PIN 20  // MISO for SD; also native USB D+, use USB-UART for diagnostics
+#define SPI3_SCLK_PIN 21  // SCLK pin for SPI3 (SD card)
+#define SPI3_MOSI_PIN 47  // MOSI pin for SPI3 (SD card)
+#define SD_CS_PIN 5  // SD card chip select
+#define SD_POWER_RELAY_PIN 3  // Relay to control SD card power (optional)
 
 /* ================================================================
    I2S AUDIO BUS — MAX98357A
@@ -110,14 +105,14 @@ GPIO       → LEDs, buttons, actuators
    ESP32 I2S → MAX98357A
 */
 
-#define I2S_PORT             I2S_NUM_0
+#define I2S_PORT I2S_NUM_0
 
-#define I2S_DOUT_PIN         16     // Serial audio data (DIN on amplifier)
-#define I2S_BCLK_PIN         18     // Bit clock (BCLK)
-#define I2S_LRCLK_PIN        17     // Left/Right channel clock (LRC - WS)
-#define I2S_SHUTDOWN_PIN      4     // SD card shutdown control (SD)
+#define I2S_DOUT_PIN 16  // Serial audio data (DIN on amplifier)
+#define I2S_BCLK_PIN 18  // Bit clock (BCLK)
+#define I2S_LRCLK_PIN 17  // Left/Right channel clock (LRC - WS)
+#define I2S_SHUTDOWN_PIN 4  // SD card shutdown control (SD)
 
-#define AUDIO_SAMPLE_RATE    22050  // Console PCM output: mono, 16 bit, 352800 bit/s
+#define AUDIO_SAMPLE_RATE 22050  // Console PCM output: mono, 16 bit, 352800 bit/s
 
 /*
 GAIN pin: (do not connect)
@@ -137,12 +132,10 @@ GAIN pin: (do not connect)
    - SSD1306 OLED display
 */
 
-#define I2C_SDA_PIN          14
-#define I2C_SCL_PIN          15
+#define I2C_SDA_PIN 14
+#define I2C_SCL_PIN 15
 
-#define I2C_FREQUENCY        400000    // 400 kHz I2C; unrelated to the SD SPI clock
-
-
+#define I2C_FREQUENCY 400000  // 400 kHz I2C; unrelated to the SD SPI clock
 
 /* ================================================================
    NEOPIXEL / STATUS LED
@@ -151,10 +144,8 @@ GAIN pin: (do not connect)
    Many ESP32-S3 boards include a built-in WS2812 RGB LED.
 */
 
-#define NEOPIXEL_PIN         48
-#define NEOPIXEL_COUNT       1
-
-
+#define NEOPIXEL_PIN 48
+#define NEOPIXEL_COUNT 1
 
 /* ================================================================
    FREE GPIOs FOR EXPANSION
@@ -170,29 +161,25 @@ GAIN pin: (do not connect)
    - Encoders
 */
 
-#define GPIO_FREE_1          1
-#define GPIO_FREE_2          2
-#define GPIO_FREE_5          21  // Reserved by SD SCLK; not available while SD is used
-#define GPIO_FREE_6          38
-#define GPIO_FREE_7          39
-#define GPIO_FREE_8          40
-#define GPIO_FREE_9          41
-#define GPIO_FREE_10         42
-#define GPIO_FREE_11         47  // Reserved by SD MOSI; not available while SD is used
-#define GPIO_MIN_PIN         0
-#define GPIO_MAX_PIN         48
-
-
+#define GPIO_FREE_1 1
+#define GPIO_FREE_2 2
+#define GPIO_FREE_5 21  // Reserved by SD SCLK; not available while SD is used
+#define GPIO_FREE_6 38
+#define GPIO_FREE_7 39
+#define GPIO_FREE_8 40
+#define GPIO_FREE_9 41
+#define GPIO_FREE_10 42
+#define GPIO_FREE_11 47  // Reserved by SD MOSI; not available while SD is used
+#define GPIO_MIN_PIN 0
+#define GPIO_MAX_PIN 48
 
 /* ================================================================
    PROJECT CONSTANTS
    ================================================================ */
 
-#define DEFAULT_SPI_CLOCK    40000000   // 40 MHz SPI for TFT
-#define TOUCH_SPI_CLOCK      2500000    // 2.5 MHz for touch controller
-#define SD_SPI_CLOCK         4000000    // 4 MHz SD SPI; verified separately from I2C
-
-
+#define DEFAULT_SPI_CLOCK 40000000  // 40 MHz SPI for TFT
+#define TOUCH_SPI_CLOCK 2500000  // 2.5 MHz for touch controller
+#define SD_SPI_CLOCK 4000000  // 4 MHz SD SPI; verified separately from I2C
 
 /* ================================================================
    POWER NOTES

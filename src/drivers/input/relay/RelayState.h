@@ -2,9 +2,7 @@
 
 #include <stdint.h>
 
-
-struct RelayState
-{
+struct RelayState {
     bool enabled = false;
 
     bool activeLow = false;

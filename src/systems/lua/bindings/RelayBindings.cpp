@@ -2,10 +2,9 @@
 
 #include "systems/input/subsystems/RelaySystem.h"
 
-RelaySystem *RelayBindings::getSystem(lua_State *L)
-{
+RelaySystem* RelayBindings::getSystem(lua_State* L) {
     lua_getfield(L, LUA_REGISTRYINDEX, RELAY_PTR_KEY);
-    auto *system = static_cast<RelaySystem *>(lua_touserdata(L, -1));
+    auto* system = static_cast<RelaySystem*>(lua_touserdata(L, -1));
     lua_pop(L, 1);
     return system;
 }
@@ -15,9 +14,8 @@ RelaySystem *RelayBindings::getSystem(lua_State *L)
 // @param state The state to set (true for on, false for off)
 // @example input.relays.set(0, true) -- turn on relay 0
 // @lua input.relays.set(relay:int, state:bool) -> void
-int RelayBindings::set(lua_State *L)
-{
-    auto *system = getSystem(L);
+int RelayBindings::set(lua_State* L) {
+    auto* system = getSystem(L);
     if (!system)
         return 0;
     uint8_t relay = luaL_checkinteger(L, 1);
@@ -31,11 +29,9 @@ int RelayBindings::set(lua_State *L)
 // @return The state of the relay (true for on, false for off)
 // @example local state = input.relays.get(0) -- get the state of relay 0
 // @lua input.relays.get(relay:int) -> bool
-int RelayBindings::get(lua_State *L)
-{
-    auto *system = getSystem(L);
-    if (!system)
-    {
+int RelayBindings::get(lua_State* L) {
+    auto* system = getSystem(L);
+    if (!system) {
         lua_pushboolean(L, false);
         return 1;
     }
@@ -48,9 +44,8 @@ int RelayBindings::get(lua_State *L)
 // @param relay The relay number (0-3)
 // @example input.relays.toggle(0) -- toggle the state of relay 0
 // @lua input.relays.toggle(relay:int) -> void
-int RelayBindings::toggle(lua_State *L)
-{
-    auto *system = getSystem(L);
+int RelayBindings::toggle(lua_State* L) {
+    auto* system = getSystem(L);
     if (!system)
         return 0;
     uint8_t relay = luaL_checkinteger(L, 1);
@@ -63,9 +58,8 @@ int RelayBindings::toggle(lua_State *L)
 // @param duration The duration of the pulse in milliseconds
 // @example input.relays.pulse(0, 1000) -- pulse relay 0 for 1 second
 // @lua input.relays.pulse(relay:int, duration:int) -> void
-int RelayBindings::pulse(lua_State *L)
-{
-    auto *system = getSystem(L);
+int RelayBindings::pulse(lua_State* L) {
+    auto* system = getSystem(L);
     if (!system)
         return 0;
     uint8_t relay = luaL_checkinteger(L, 1);
@@ -74,10 +68,10 @@ int RelayBindings::pulse(lua_State *L)
     return 0;
 }
 
-RelayBindings::RelayBindings(RelaySystem *system) : relays(system) {}
+RelayBindings::RelayBindings(RelaySystem* system) : relays(system) {
+}
 
-void RelayBindings::registerAPI(lua_State *L)
-{
+void RelayBindings::registerAPI(lua_State* L) {
     //
     // store pointer
     //

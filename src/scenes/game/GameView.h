@@ -13,17 +13,14 @@
 
 #include <string>
 
-class GameView : public View
-{
-public:
-
+class GameView : public View {
+  public:
     /* View lifecycle */
     void create() override;
     void update() override;
     void destroy() override;
 
-    lv_obj_t *getScreen() override
-    {
+    lv_obj_t* getScreen() override {
         return screen;
     }
 
@@ -33,37 +30,66 @@ public:
     void showVictory();
     void showFailure();
     void showGameObject();
-    void showLoadError(const char *message);
-    void setTitle(const std::string &title);
+    void showLoadError(const char* message);
+    void setTitle(const std::string& title);
     void showExitConfirmation();
     void hideExitConfirmation();
-    void showPlayers(uint16_t initial) { lv_obj_add_state(settingsButton,LV_STATE_DISABLED); playerSelector.show(initial); }
-    void hidePlayers() { playerSelector.hide(); lv_obj_remove_state(settingsButton,LV_STATE_DISABLED); }
-    bool playersVisible() const { return playerSelector.visible(); }
-    void showSettings(const AudioPreferences &preferences, Text context);
-    void hideSettings() { settingsSubview.hide(); }
-    bool settingsVisible() const { return settingsSubview.visible(); }
-    void setSettingsAudio(const AudioPreferences &value) { settingsSubview.set(value); }
-    void setSettingsStatus(Text value) { settingsSubview.setStatus(value); }
-    void translateSettings() { settingsSubview.translate(); }
-    GameSubview currentSubview() const { return currentState; }
 
-    void setLoadingMessage(const std::string &message);
-    void setVictoryStats(const VictorySubview::GameStats &stats);
-    void setGameObjectData(const std::vector<GameObjectSubview::ObjectData> &data);
+    void showPlayers(uint16_t initial) {
+        lv_obj_add_state(settingsButton, LV_STATE_DISABLED);
+        playerSelector.show(initial);
+    }
+
+    void hidePlayers() {
+        playerSelector.hide();
+        lv_obj_remove_state(settingsButton, LV_STATE_DISABLED);
+    }
+
+    bool playersVisible() const {
+        return playerSelector.visible();
+    }
+
+    void showSettings(const AudioPreferences& preferences, Text context);
+
+    void hideSettings() {
+        settingsSubview.hide();
+    }
+
+    bool settingsVisible() const {
+        return settingsSubview.visible();
+    }
+
+    void setSettingsAudio(const AudioPreferences& value) {
+        settingsSubview.set(value);
+    }
+
+    void setSettingsStatus(Text value) {
+        settingsSubview.setStatus(value);
+    }
+
+    void translateSettings() {
+        settingsSubview.translate();
+    }
+
+    GameSubview currentSubview() const {
+        return currentState;
+    }
+
+    void setLoadingMessage(const std::string& message);
+    void setVictoryStats(const VictorySubview::GameStats& stats);
+    void setGameObjectData(const std::vector<GameObjectSubview::ObjectData>& data);
 
     /* Main game API */
     void setTime(uint32_t seconds);
     void setRunning(bool running);
 
-
-private:
+  private:
     void setState(GameSubview state);
 
-    lv_obj_t *screen = nullptr;
-    lv_obj_t *titleLabel = nullptr;
-    lv_obj_t *settingsButton = nullptr;
-    static void onSettings(lv_event_t *event);
+    lv_obj_t* screen = nullptr;
+    lv_obj_t* titleLabel = nullptr;
+    lv_obj_t* settingsButton = nullptr;
+    static void onSettings(lv_event_t* event);
     ConfirmationDialog exitDialog;
     PlayerSelectorDialog playerSelector;
 

@@ -7,20 +7,11 @@
 #include "core/TaskMutex.h"
 #include "WifiScan.h"
 
-class NetworkSystem : public SystemService
-{
-public:
-    enum class State
-    {
-        Idle,
-        Connecting,
-        Connected,
-        Disconnected,
-        Error
-    };
+class NetworkSystem : public SystemService {
+  public:
+    enum class State { Idle, Connecting, Connected, Disconnected, Error };
 
-    struct Status
-    {
+    struct Status {
         std::string ssid;
         std::string ip;
         State state = State::Idle;
@@ -39,24 +30,38 @@ public:
     bool reloadFromStorage(StorageSystem* storage);
     void setCredentials(const std::string& newSsid, const std::string& newPassword);
 
-    Status getStatus() const { TaskMutex::Guard lock(mutex); return status; }
-    bool hasCredentials() const { TaskMutex::Guard lock(mutex); return !ssid.empty(); }
-    bool requestScan();
-    WifiScanSnapshot getScanSnapshot() const { TaskMutex::Guard lock(mutex); return scan; }
-    bool scanSnapshot(uint32_t seenRevision, WifiScanSnapshot &result) const
-    {
+    Status getStatus() const {
         TaskMutex::Guard lock(mutex);
-        if (seenRevision == scan.revision) return false;
-        result = scan; return true;
+        return status;
     }
 
-private:
+    bool hasCredentials() const {
+        TaskMutex::Guard lock(mutex);
+        return !ssid.empty();
+    }
+
+    bool requestScan();
+
+    WifiScanSnapshot getScanSnapshot() const {
+        TaskMutex::Guard lock(mutex);
+        return scan;
+    }
+
+    bool scanSnapshot(uint32_t seenRevision, WifiScanSnapshot& result) const {
+        TaskMutex::Guard lock(mutex);
+        if (seenRevision == scan.revision)
+            return false;
+        result = scan;
+        return true;
+    }
+
+  private:
     bool loadLegacyCredentials(StorageSystem* storage);
     void refreshStatus();
     void setState(State state, const std::string& message, bool timedOut = false);
     void updateScan();
 
-private:
+  private:
     bool initialized = false;
     std::string ssid;
     std::string password;

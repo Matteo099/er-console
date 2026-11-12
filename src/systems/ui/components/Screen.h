@@ -3,11 +3,9 @@
 #include <lvgl.h>
 #include "systems/ui/UITheme.h"
 
-class Screen
-{
-public:
-    static lv_obj_t* create()
-    {
+class Screen {
+  public:
+    static lv_obj_t* create() {
         lv_obj_t* screen = lv_obj_create(nullptr);
         lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
         UITheme::screen(screen);

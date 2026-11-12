@@ -3,8 +3,7 @@
 #include "services/GameCatalog.h"
 #include "systems/ui/UIEvents.h"
 
-void GameListScene::onEnter()
-{
+void GameListScene::onEnter() {
     Log::info(Log::SCENE_TAG, "Entering GameListScene");
     view.setEventHandler(this);
     GameCatalog::request();
@@ -12,47 +11,60 @@ void GameListScene::onEnter()
     view.create();
 }
 
-void GameListScene::refreshCatalog()
-{
+void GameListScene::refreshCatalog() {
     GameCatalog::Snapshot catalog;
-    if (!GameCatalog::snapshot(catalogVersion, catalog)) return;
+    if (!GameCatalog::snapshot(catalogVersion, catalog))
+        return;
     catalogVersion = catalog.version;
     view.setCatalog(catalog.games, tr(catalog.error), catalog.loading);
-    if (!selection.empty()) { view.selectGame(selection); if (view.getCurrentGame() && view.getCurrentGame()->id==selection) selection.clear(); }
+    if (!selection.empty()) {
+        view.selectGame(selection);
+        if (view.getCurrentGame() && view.getCurrentGame()->id == selection)
+            selection.clear();
+    }
 }
 
-void GameListScene::onUpdate() { refreshCatalog(); view.update(); }
-void GameListScene::onExit() { view.destroy(); }
-SceneRequest GameListScene::getRequest() const { return request; }
+void GameListScene::onUpdate() {
+    refreshCatalog();
+    view.update();
+}
 
-bool GameListScene::handleUIEvent(const UIEvent &event)
-{
-    if (event.getType() != ButtonClickedEvent::TYPE) return false;
-    const auto &clicked = static_cast<const ButtonClickedEvent &>(event);
-    if (clicked.buttonId == "back")
-    {
+void GameListScene::onExit() {
+    view.destroy();
+}
+
+SceneRequest GameListScene::getRequest() const {
+    return request;
+}
+
+bool GameListScene::handleUIEvent(const UIEvent& event) {
+    if (event.getType() != ButtonClickedEvent::TYPE)
+        return false;
+    const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
+    if (clicked.buttonId == "back") {
         request = SceneRequest(SceneChange::GoToMainMenu, SceneTransition::SlideRight);
         return true;
     }
-    if (clicked.buttonId == "refresh_games")
-    {
+    if (clicked.buttonId == "refresh_games") {
         GameCatalog::request(true);
         return true;
     }
-    if (clicked.buttonId == "start_game")
-    {
-        if (auto *game = view.getCurrentGame())
-        {
+    if (clicked.buttonId == "start_game") {
+        if (auto* game = view.getCurrentGame()) {
             // The cache may publish a refresh before SceneManager consumes this request.
             selectedGame = *game;
-            request = SceneRequest(SceneChange::GoToGame, SceneTransition::SlideLeft, &selectedGame);
-        }
-        else GameCatalog::request(true);
+            request =
+                SceneRequest(SceneChange::GoToGame, SceneTransition::SlideLeft, &selectedGame);
+        } else
+            GameCatalog::request(true);
         return true;
     }
-    if (clicked.buttonId=="game_statistics")
-    {
-        if (auto *game=view.getCurrentGame()) { selectedGame=*game; request=SceneRequest(SceneChange::GoToStatistics,SceneTransition::SlideLeft,&selectedGame); }
+    if (clicked.buttonId == "game_statistics") {
+        if (auto* game = view.getCurrentGame()) {
+            selectedGame = *game;
+            request = SceneRequest(SceneChange::GoToStatistics, SceneTransition::SlideLeft,
+                                   &selectedGame);
+        }
         return true;
     }
     return false;

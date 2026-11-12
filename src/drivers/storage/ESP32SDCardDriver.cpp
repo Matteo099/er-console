@@ -6,37 +6,32 @@
 #include <cstring>
 #include <cerrno>
 
-namespace
-{
-    static constexpr const char *SYSTEM_VOLUME_INFO_DIR =
-        "System Volume Information";
+namespace {
+static constexpr const char* SYSTEM_VOLUME_INFO_DIR = "System Volume Information";
 
-    static std::string fileName(const char *path)
-    {
-        if (!path)
-            return {};
+static std::string fileName(const char* path) {
+    if (!path)
+        return {};
 
-        std::string value(path);
-        auto pos = value.find_last_of('/');
+    std::string value(path);
+    auto pos = value.find_last_of('/');
 
-        if (pos == std::string::npos)
-            return value;
+    if (pos == std::string::npos)
+        return value;
 
-        return value.substr(pos + 1);
-    }
-
-    static void trimTrailingSlash(std::string &value)
-    {
-        while (!value.empty() && value.back() == '/')
-            value.pop_back();
-    }
+    return value.substr(pos + 1);
 }
 
-ESP32SDCardDriver::ESP32SDCardDriver(SPIClass &spi, uint8_t csPin)
-    : spi(spi), cs(csPin) {}
+static void trimTrailingSlash(std::string& value) {
+    while (!value.empty() && value.back() == '/')
+        value.pop_back();
+}
+}  // namespace
 
-bool ESP32SDCardDriver::init()
-{
+ESP32SDCardDriver::ESP32SDCardDriver(SPIClass& spi, uint8_t csPin) : spi(spi), cs(csPin) {
+}
+
+bool ESP32SDCardDriver::init() {
     SPIBusLock::Guard guard;
 
     Log::info(Log::DRIVER_TAG, "Initializing SD Card (CS=%d)", cs);
@@ -49,30 +44,27 @@ bool ESP32SDCardDriver::init()
     return isMounted;
 }
 
-bool ESP32SDCardDriver::mounted() const
-{
+bool ESP32SDCardDriver::mounted() const {
     return isMounted;
 }
 
-IFile *ESP32SDCardDriver::open(const char *path, FileMode mode)
-{
+IFile* ESP32SDCardDriver::open(const char* path, FileMode mode) {
     if (!isMounted)
         return nullptr;
 
     SPIBusLock::Guard guard;
     File file;
 
-    switch (mode)
-    {
-    case FileMode::Read:
-        file = SD.open(path, FILE_READ);
-        break;
-    case FileMode::Write:
-        file = SD.open(path, FILE_WRITE);
-        break;
-    case FileMode::Append:
-        file = SD.open(path, FILE_APPEND);
-        break;
+    switch (mode) {
+        case FileMode::Read:
+            file = SD.open(path, FILE_READ);
+            break;
+        case FileMode::Write:
+            file = SD.open(path, FILE_WRITE);
+            break;
+        case FileMode::Append:
+            file = SD.open(path, FILE_APPEND);
+            break;
     }
 
     if (!file)
@@ -81,8 +73,7 @@ IFile *ESP32SDCardDriver::open(const char *path, FileMode mode)
     return new ESP32SDFile(file);
 }
 
-File ESP32SDCardDriver::openNative(const char *path, bool write)
-{
+File ESP32SDCardDriver::openNative(const char* path, bool write) {
     if (!isMounted || !path)
         return File();
 
@@ -97,8 +88,7 @@ File ESP32SDCardDriver::openNative(const char *path, bool write)
     return SD.open(path, write ? FILE_WRITE : FILE_READ);
 }
 
-bool ESP32SDCardDriver::exists(const char *path) const
-{
+bool ESP32SDCardDriver::exists(const char* path) const {
     if (!isMounted || !path)
         return false;
 
@@ -107,8 +97,7 @@ bool ESP32SDCardDriver::exists(const char *path) const
     return SD.exists(path);
 }
 
-bool ESP32SDCardDriver::remove(const char *path)
-{
+bool ESP32SDCardDriver::remove(const char* path) {
     if (!isMounted || !path)
         return false;
 
@@ -117,10 +106,7 @@ bool ESP32SDCardDriver::remove(const char *path)
     return SD.remove(path);
 }
 
-bool ESP32SDCardDriver::rename(
-    const char *src,
-    const char *dst)
-{
+bool ESP32SDCardDriver::rename(const char* src, const char* dst) {
     if (!isMounted || !src || !dst)
         return false;
 
@@ -129,8 +115,7 @@ bool ESP32SDCardDriver::rename(
     return SD.rename(src, dst);
 }
 
-bool ESP32SDCardDriver::mkdir(const char *path)
-{
+bool ESP32SDCardDriver::mkdir(const char* path) {
     if (!isMounted || !path)
         return false;
 
@@ -142,10 +127,7 @@ bool ESP32SDCardDriver::mkdir(const char *path)
     return SD.mkdir(path);
 }
 
-bool ESP32SDCardDriver::listDirectory(
-    const char *path,
-    std::vector<StorageEntry> &out) const
-{
+bool ESP32SDCardDriver::listDirectory(const char* path, std::vector<StorageEntry>& out) const {
     if (!isMounted || !path)
         return false;
 
@@ -156,14 +138,15 @@ bool ESP32SDCardDriver::listDirectory(
     if (!directory || !directory.isDirectory())
         return false;
 
-    while (true)
-    {
+    while (true) {
         errno = 0;
         File entry = directory.openNextFile();
 
-        if (!entry)
-        {
-            if (errno && errno != ENOENT) { directory.close(); return false; }
+        if (!entry) {
+            if (errno && errno != ENOENT) {
+                directory.close();
+                return false;
+            }
             break;
         }
 
@@ -175,12 +158,9 @@ bool ESP32SDCardDriver::listDirectory(
 
         info.name = name;
 
-        if (std::strcmp(path, "/") == 0)
-        {
+        if (std::strcmp(path, "/") == 0) {
             info.path = "/" + name;
-        }
-        else
-        {
+        } else {
             info.path = std::string(path);
 
             if (!info.path.empty() && info.path.back() != '/')
@@ -202,8 +182,7 @@ bool ESP32SDCardDriver::listDirectory(
     return true;
 }
 
-uint64_t ESP32SDCardDriver::totalBytes() const
-{
+uint64_t ESP32SDCardDriver::totalBytes() const {
     if (!isMounted)
         return 0;
 
@@ -212,15 +191,14 @@ uint64_t ESP32SDCardDriver::totalBytes() const
     return SD.totalBytes();
 }
 
-uint64_t ESP32SDCardDriver::capacityBytes() const
-{
-    if (!isMounted) return 0;
+uint64_t ESP32SDCardDriver::capacityBytes() const {
+    if (!isMounted)
+        return 0;
     SPIBusLock::Guard guard;
-    return SD.cardSize(); // Cached CSD capacity; no FAT free-cluster scan.
+    return SD.cardSize();  // Cached CSD capacity; no FAT free-cluster scan.
 }
 
-uint64_t ESP32SDCardDriver::usedBytes() const
-{
+uint64_t ESP32SDCardDriver::usedBytes() const {
     if (!isMounted)
         return 0;
 
@@ -229,35 +207,36 @@ uint64_t ESP32SDCardDriver::usedBytes() const
     return SD.usedBytes();
 }
 
-bool ESP32SDCardDriver::readSpaceUsage(uint64_t &total, uint64_t &used) const
-{
-    if (!isMounted) return false;
+bool ESP32SDCardDriver::readSpaceUsage(uint64_t& total, uint64_t& used) const {
+    if (!isMounted)
+        return false;
     SPIBusLock::Guard guard;
     total = SD.totalBytes();
-    if (!total) return false;
+    if (!total)
+        return false;
     used = SD.usedBytes();
-    if (used > total) return false;
+    if (used > total)
+        return false;
     // Arduino's API also returns zero on failure. Never call a nonempty volume empty.
-    if (used == 0)
-    {
+    if (used == 0) {
         File root = SD.open("/");
-        if (!root || !root.isDirectory()) return false;
+        if (!root || !root.isDirectory())
+            return false;
         errno = 0;
         File entry = root.openNextFile();
         const bool empty = !entry && errno == 0;
-        entry.close(); root.close();
-        if (!empty) return false;
+        entry.close();
+        root.close();
+        if (!empty)
+            return false;
     }
     return true;
 }
 
-bool ESP32SDCardDriver::ensureParents(const char *path)
-{
+bool ESP32SDCardDriver::ensureParents(const char* path) {
     std::string parent = parentPath(path);
 
-    if (parent.empty() ||
-        parent == "/")
-    {
+    if (parent.empty() || parent == "/") {
         return true;
     }
 
@@ -270,20 +249,15 @@ bool ESP32SDCardDriver::ensureParents(const char *path)
     return mkdir(parent.c_str());
 }
 
-std::string ESP32SDCardDriver::parentPath(
-    const char *path)
-{
+std::string ESP32SDCardDriver::parentPath(const char* path) {
     if (!path)
         return {};
 
     std::string value(path);
 
-    auto pos =
-        value.find_last_of('/');
+    auto pos = value.find_last_of('/');
 
-    if (pos == std::string::npos ||
-        pos == 0)
-    {
+    if (pos == std::string::npos || pos == 0) {
         return "/";
     }
 

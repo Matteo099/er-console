@@ -4,14 +4,15 @@
 
 float TimeBindings::s_delta = 0.0f;
 
-void TimeBindings::setDelta(float dt) { s_delta = dt; }
+void TimeBindings::setDelta(float dt) {
+    s_delta = dt;
+}
 
 // @doc Get the current time in milliseconds since boot
 // @return The current time in milliseconds since boot
 // @example local currentTime = time.now()
 // @lua time.now() -> integer
-int TimeBindings::now(lua_State *L)
-{
+int TimeBindings::now(lua_State* L) {
     lua_pushinteger(L, millis());
     return 1;
 }
@@ -20,8 +21,7 @@ int TimeBindings::now(lua_State *L)
 // @return The current time in seconds since boot
 // @example local currentSeconds = time.seconds()
 // @lua time.seconds() -> number
-int TimeBindings::seconds(lua_State *L)
-{
+int TimeBindings::seconds(lua_State* L) {
     lua_pushnumber(L, millis() / 1000.0);
     return 1;
 }
@@ -30,8 +30,7 @@ int TimeBindings::seconds(lua_State *L)
 // @return The uptime in seconds
 // @example local uptime = time.uptime()
 // @lua time.uptime() -> number
-int TimeBindings::uptime(lua_State *L)
-{
+int TimeBindings::uptime(lua_State* L) {
     lua_pushnumber(L, millis() / 1000.0);
     return 1;
 }
@@ -40,8 +39,7 @@ int TimeBindings::uptime(lua_State *L)
 // @return The current time in HH:MM:SS format
 // @example local currentTime = time.clock()
 // @lua time.clock() -> string
-int TimeBindings::clock(lua_State *L)
-{
+int TimeBindings::clock(lua_State* L) {
     unsigned long ms = millis();
     int seconds = (ms / 1000) % 60;
     int minutes = (ms / 60000) % 60;
@@ -56,16 +54,15 @@ int TimeBindings::clock(lua_State *L)
 // @return The frame delta time
 // @example local delta = time.delta()
 // @lua time.delta() -> number
-int TimeBindings::delta(lua_State *L)
-{
+int TimeBindings::delta(lua_State* L) {
     lua_pushnumber(L, s_delta);
     return 1;
 }
 
-TimeBindings::TimeBindings() {}
+TimeBindings::TimeBindings() {
+}
 
-void TimeBindings::registerAPI(lua_State *L)
-{
+void TimeBindings::registerAPI(lua_State* L) {
     lua_newtable(L);
     lua_pushcfunction(L, now);
     lua_setfield(L, -2, "now");

@@ -9,9 +9,8 @@
  * UI events are emitted by views and handled by scenes.
  * Each event type should inherit from this base class.
  */
-class UIEvent
-{
-public:
+class UIEvent {
+  public:
     virtual ~UIEvent() = default;
 
     /**
@@ -37,10 +36,8 @@ public:
  *       std::string buttonId;
  *   };
  */
-template<typename T>
-class UIEventType : public UIEvent
-{
-public:
+template <typename T> class UIEventType : public UIEvent {
+  public:
     const char* getType() const override {
         return T::TYPE;
     }
@@ -55,9 +52,8 @@ public:
  * 
  * Scenes implement this to handle UI events from their views.
  */
-class UIEventHandler
-{
-public:
+class UIEventHandler {
+  public:
     virtual ~UIEventHandler() = default;
 
     /**
@@ -73,9 +69,8 @@ public:
  * 
  * Views implement this to emit events to their scenes.
  */
-class UIEventEmitter
-{
-public:
+class UIEventEmitter {
+  public:
     virtual ~UIEventEmitter() = default;
 
     /**

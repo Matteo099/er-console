@@ -1,30 +1,17 @@
 #include "CD74HC4067Driver.h"
 
-CD74HC4067Driver::CD74HC4067Driver(
-    uint8_t signalPin,
-    uint8_t s0,
-    uint8_t s1,
-    uint8_t s2,
-    uint8_t s3,
-    int8_t enablePin)
-    : signalPin(signalPin),
-      s0Pin(s0),
-      s1Pin(s1),
-      s2Pin(s2),
-      s3Pin(s3),
-      enablePin(enablePin)
-{
+CD74HC4067Driver::CD74HC4067Driver(uint8_t signalPin, uint8_t s0, uint8_t s1, uint8_t s2,
+                                   uint8_t s3, int8_t enablePin)
+    : signalPin(signalPin), s0Pin(s0), s1Pin(s1), s2Pin(s2), s3Pin(s3), enablePin(enablePin) {
 }
 
-bool CD74HC4067Driver::init()
-{
+bool CD74HC4067Driver::init() {
     pinMode(s0Pin, OUTPUT);
     pinMode(s1Pin, OUTPUT);
     pinMode(s2Pin, OUTPUT);
     pinMode(s3Pin, OUTPUT);
 
-    if (enablePin >= 0)
-    {
+    if (enablePin >= 0) {
         pinMode(enablePin, OUTPUT);
         digitalWrite(enablePin, LOW);
     }
@@ -34,14 +21,12 @@ bool CD74HC4067Driver::init()
     return true;
 }
 
-void CD74HC4067Driver::shutdown()
-{
+void CD74HC4067Driver::shutdown() {
     if (!initialized)
         return;
 
     // Disable the mux first
-    if (enablePin >= 0)
-    {
+    if (enablePin >= 0) {
         digitalWrite(enablePin, HIGH);
         pinMode(enablePin, INPUT);
     }
@@ -62,14 +47,11 @@ void CD74HC4067Driver::shutdown()
     initialized = false;
 }
 
-uint8_t CD74HC4067Driver::channelCount() const
-{
+uint8_t CD74HC4067Driver::channelCount() const {
     return 16;
 }
 
-void CD74HC4067Driver::setAddress(
-    uint8_t channel)
-{
+void CD74HC4067Driver::setAddress(uint8_t channel) {
     digitalWrite(s0Pin, channel & 0x01);
     digitalWrite(s1Pin, channel & 0x02);
     digitalWrite(s2Pin, channel & 0x04);
@@ -78,9 +60,7 @@ void CD74HC4067Driver::setAddress(
     currentChannel = channel;
 }
 
-bool CD74HC4067Driver::selectChannel(
-    uint8_t channel)
-{
+bool CD74HC4067Driver::selectChannel(uint8_t channel) {
     if (channel >= 16)
         return false;
 
@@ -89,9 +69,7 @@ bool CD74HC4067Driver::selectChannel(
     return true;
 }
 
-int CD74HC4067Driver::analogRead(
-    uint8_t channel)
-{
+int CD74HC4067Driver::analogRead(uint8_t channel) {
     if (channel >= 16)
         return 0;
 
@@ -100,9 +78,7 @@ int CD74HC4067Driver::analogRead(
     return ::analogRead(signalPin);
 }
 
-bool CD74HC4067Driver::digitalRead(
-    uint8_t channel)
-{
+bool CD74HC4067Driver::digitalRead(uint8_t channel) {
     if (channel >= 16)
         return false;
 
@@ -111,10 +87,7 @@ bool CD74HC4067Driver::digitalRead(
     return ::digitalRead(signalPin);
 }
 
-void CD74HC4067Driver::digitalWrite(
-    uint8_t channel,
-    bool value)
-{
+void CD74HC4067Driver::digitalWrite(uint8_t channel, bool value) {
     if (channel >= 16)
         return;
 

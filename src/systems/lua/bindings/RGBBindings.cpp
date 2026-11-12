@@ -2,10 +2,9 @@
 
 #include "systems/input/subsystems/RgbLedSystem.h"
 
-RgbLedSystem *RGBBindings::get(lua_State *L)
-{
+RgbLedSystem* RGBBindings::get(lua_State* L) {
     lua_getfield(L, LUA_REGISTRYINDEX, RGB_PTR_KEY);
-    auto *system = static_cast<RgbLedSystem *>(lua_touserdata(L, -1));
+    auto* system = static_cast<RgbLedSystem*>(lua_touserdata(L, -1));
     lua_pop(L, 1);
     return system;
 }
@@ -17,9 +16,8 @@ RgbLedSystem *RGBBindings::get(lua_State *L)
 // @param b The blue component (0-255)
 // @example input.rgb.setColor(0, 255, 0, 0) -- sets LED 0 to red
 // @lua input.rgb.setColor(led:int, r:int, g:int, b:int) -> void
-int RGBBindings::setColor(lua_State *L)
-{
-    auto *system = get(L);
+int RGBBindings::setColor(lua_State* L) {
+    auto* system = get(L);
     if (!system)
         return 0;
     uint8_t led = luaL_checkinteger(L, 1);
@@ -39,9 +37,8 @@ int RGBBindings::setColor(lua_State *L)
 // @param value The brightness value (0-255)
 // @example input.rgb.setBrightness(0, 128) -- sets LED 0 to half brightness
 // @lua input.rgb.setBrightness(led:int, value:int) -> void
-int RGBBindings::setBrightness(lua_State *L)
-{
-    auto *system = get(L);
+int RGBBindings::setBrightness(lua_State* L) {
+    auto* system = get(L);
     if (!system)
         return 0;
     uint8_t led = luaL_checkinteger(L, 1);
@@ -50,10 +47,10 @@ int RGBBindings::setBrightness(lua_State *L)
     return 0;
 }
 
-RGBBindings::RGBBindings(RgbLedSystem *system) : rgb(system) {}
+RGBBindings::RGBBindings(RgbLedSystem* system) : rgb(system) {
+}
 
-void RGBBindings::registerAPI(lua_State *L)
-{
+void RGBBindings::registerAPI(lua_State* L) {
     //
     // store pointer
     //

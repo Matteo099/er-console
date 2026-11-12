@@ -2,17 +2,11 @@
 
 #include <lvgl.h>
 
-class Container
-{
-public:
-    static lv_obj_t* create(
-        lv_obj_t* parent,
-        lv_coord_t width = LV_PCT(100),
-        lv_coord_t height = LV_SIZE_CONTENT,
-        lv_align_t align = LV_ALIGN_CENTER,
-        lv_coord_t x = 0,
-        lv_coord_t y = 0)
-    {
+class Container {
+  public:
+    static lv_obj_t* create(lv_obj_t* parent, lv_coord_t width = LV_PCT(100),
+                            lv_coord_t height = LV_SIZE_CONTENT, lv_align_t align = LV_ALIGN_CENTER,
+                            lv_coord_t x = 0, lv_coord_t y = 0) {
         lv_obj_t* container = lv_obj_create(parent);
 
         lv_obj_set_size(container, width, height);
@@ -34,28 +28,19 @@ public:
         return container;
     }
 
-    static void setFlex(
-        lv_obj_t* object,
-        lv_flex_flow_t flow = LV_FLEX_FLOW_COLUMN,
-        lv_flex_align_t mainAxis = LV_FLEX_ALIGN_START,
-        lv_flex_align_t crossAxis = LV_FLEX_ALIGN_CENTER)
-    {
+    static void setFlex(lv_obj_t* object, lv_flex_flow_t flow = LV_FLEX_FLOW_COLUMN,
+                        lv_flex_align_t mainAxis = LV_FLEX_ALIGN_START,
+                        lv_flex_align_t crossAxis = LV_FLEX_ALIGN_CENTER) {
         if (!object)
             return;
 
         lv_obj_set_flex_flow(object, flow);
 
         // FIXED: correct LVGL API usage
-        lv_obj_set_flex_align(
-            object,
-            mainAxis,
-            crossAxis,
-            crossAxis
-        );
+        lv_obj_set_flex_align(object, mainAxis, crossAxis, crossAxis);
     }
 
-    static void setScrollable(lv_obj_t* object)
-    {
+    static void setScrollable(lv_obj_t* object) {
         if (!object)
             return;
 

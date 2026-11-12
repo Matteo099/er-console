@@ -2,9 +2,8 @@
 
 #include "RFIDTag.h"
 
-class IRFIDReader
-{
-public:
+class IRFIDReader {
+  public:
     virtual ~IRFIDReader() = default;
 
     virtual bool init() = 0;

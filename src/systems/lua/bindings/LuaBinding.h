@@ -2,8 +2,7 @@
 
 #include "log/Logger.h"
 
-extern "C"
-{
+extern "C" {
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
@@ -18,27 +17,22 @@ extern "C"
 #define SEVEN_SEGMENT_PTR_KEY "lua.sevenSegmentSystem"
 #define GAME_SCENE_PTR_KEY "lua.gameScene"
 
-class LuaBinding
-{
-public:
+class LuaBinding {
+  public:
     virtual ~LuaBinding() = default;
 
-    virtual void registerAPI(lua_State *L) = 0;
+    virtual void registerAPI(lua_State* L) = 0;
 
-protected:
-    static void ensureTable(lua_State *L, const char *name)
-    {
+  protected:
+    static void ensureTable(lua_State* L, const char* name) {
         Log::debug(Log::LUA_TAG, "ensureTable(%s)", name);
         lua_getglobal(L, name);
-        if (!lua_istable(L, -1))
-        {
+        if (!lua_istable(L, -1)) {
             Log::debug(Log::LUA_TAG, "%s does not exist, creating", name);
             lua_pop(L, 1);
             lua_newtable(L);
             lua_setglobal(L, name);
-        }
-        else
-        {
+        } else {
             Log::debug(Log::LUA_TAG, "%s already exists", name);
             lua_pop(L, 1);
         }

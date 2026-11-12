@@ -3,12 +3,10 @@
 
 EscapeOS os;
 
-void setup()
-{
-  os.init();
+void setup() {
+    os.init();
 }
 
-void loop()
-{
-  vTaskDelay(portMAX_DELAY);
+void loop() {
+    vTaskDelay(portMAX_DELAY);
 }

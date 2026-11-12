@@ -3,175 +3,146 @@
 #include "log/Logger.h"
 #include "drivers/bus/SPIBusManager.h"
 
-InputSystem::InputSystem()
-{
+InputSystem::InputSystem() {
     subsystems.reserve(16);
 }
 
-InputSystem::~InputSystem()
-{
+InputSystem::~InputSystem() {
     reset();
 }
 
-bool InputSystem::begin(const InputConfig &config)
-{
+bool InputSystem::begin(const InputConfig& config) {
     TaskMutex::Guard guard(lifecycleMutex);
     reset();
     auto& i2c = I2CBusManager::bus();
     auto& spi = SPIBusManager::bus();
 
-    if (config.channels.enabled)
-    {
+    if (config.channels.enabled) {
         channelSystem = new ChannelSystem();
         nativeChannel = new NativeChannelProvider();
         channelSystem->registerProvider(nativeChannel);
         Log::debug(Log::INPUT_TAG, "NativeChannelProvider registered");
 
-        if (config.channels.mcp1Enabled)
-        {
-            mcpDriver1 = new MCP23017Driver(i2c, config.channels.mcp1Base, config.channels.mcp1Address);
+        if (config.channels.mcp1Enabled) {
+            mcpDriver1 =
+                new MCP23017Driver(i2c, config.channels.mcp1Base, config.channels.mcp1Address);
             mcp1 = new MCPChannelProvider(*mcpDriver1, config.channels.mcp1Base);
             channelSystem->registerProvider(mcp1);
-            Log::debug(Log::INPUT_TAG, "MCP23017Driver 1 registered at base %d", config.channels.mcp1Base);
+            Log::debug(Log::INPUT_TAG, "MCP23017Driver 1 registered at base %d",
+                       config.channels.mcp1Base);
         }
 
-        if (config.channels.mcp2Enabled)
-        {
-            mcpDriver2 = new MCP23017Driver(i2c, config.channels.mcp2Base, config.channels.mcp2Address);
+        if (config.channels.mcp2Enabled) {
+            mcpDriver2 =
+                new MCP23017Driver(i2c, config.channels.mcp2Base, config.channels.mcp2Address);
             mcp2 = new MCPChannelProvider(*mcpDriver2, config.channels.mcp2Base);
             channelSystem->registerProvider(mcp2);
-            Log::debug(Log::INPUT_TAG, "MCP23017Driver 2 registered at base %d", config.channels.mcp2Base);
+            Log::debug(Log::INPUT_TAG, "MCP23017Driver 2 registered at base %d",
+                       config.channels.mcp2Base);
         }
 
-        if (config.channels.muxEnabled)
-        {
-            muxDriver = new CD74HC4067Driver(config.channels.muxCsPin, config.channels.muxS0Pin, config.channels.muxS1Pin, config.channels.muxS2Pin, config.channels.muxS3Pin);
+        if (config.channels.muxEnabled) {
+            muxDriver = new CD74HC4067Driver(config.channels.muxCsPin, config.channels.muxS0Pin,
+                                             config.channels.muxS1Pin, config.channels.muxS2Pin,
+                                             config.channels.muxS3Pin);
             mux1 = new MuxChannelProvider(*muxDriver, config.channels.muxBase);
             channelSystem->registerProvider(mux1);
-            Log::debug(Log::INPUT_TAG, "CD74HC4067Driver registered at base %d", config.channels.muxBase);
+            Log::debug(Log::INPUT_TAG, "CD74HC4067Driver registered at base %d",
+                       config.channels.muxBase);
         }
 
-        if (!channelSystem->init())
-        {
+        if (!channelSystem->init()) {
             destroyChannels();
 
             Log::error(Log::INPUT_TAG, "Failed to initialize ChannelSystem");
-        }
-        else
-        {
+        } else {
             channelInitialized = true;
             subsystems.push_back(channelSystem);
             Log::debug(Log::INPUT_TAG, "ChannelSystem initialized");
         }
     }
-    if (config.power.enabled)
-    {
+    if (config.power.enabled) {
         powerDriver = new INA219Driver(i2c, config.power.address);
         powerSystem = new PowerSystem(*powerDriver);
-        if (!powerSystem->init())
-        {
+        if (!powerSystem->init()) {
             destroyPower();
 
             Log::error(Log::INPUT_TAG, "Failed to initialize PowerSystem");
-        }
-        else
-        {
+        } else {
             powerInitialized = true;
             Log::debug(Log::INPUT_TAG, "PowerSystem initialized");
             subsystems.push_back(powerSystem);
         }
     }
-    if (config.rfid.enabled)
-    {
+    if (config.rfid.enabled) {
         rfidDriver = new MFRC522Driver(spi, config.rfid.ssPin, config.rfid.rstPin);
         rfidSystem = new RFIDSystem(*rfidDriver);
-        if (!rfidSystem->init())
-        {
+        if (!rfidSystem->init()) {
             destroyRfid();
 
             Log::error(Log::INPUT_TAG, "Failed to initialize RFIDSystem");
-        }
-        else
-        {
+        } else {
             rfidInitialized = true;
             Log::debug(Log::INPUT_TAG, "RFIDSystem initialized");
             subsystems.push_back(rfidSystem);
         }
     }
-    if (config.oled.enabled)
-    {
-        oledDriver = new SSD1306Driver(config.oled.width, config.oled.height, i2c, config.oled.address);
+    if (config.oled.enabled) {
+        oledDriver =
+            new SSD1306Driver(config.oled.width, config.oled.height, i2c, config.oled.address);
         oledSystem = new OLEDSystem(*oledDriver);
-        if (!oledSystem->init())
-        {
+        if (!oledSystem->init()) {
             destroyOled();
 
             Log::error(Log::INPUT_TAG, "Failed to initialize OLEDSystem");
-        }
-        else
-        {
+        } else {
             oledInitialized = true;
             Log::debug(Log::INPUT_TAG, "OLEDSystem initialized");
             subsystems.push_back(oledSystem);
         }
     }
-    if (config.rgb.enabled)
-    {
+    if (config.rgb.enabled) {
         rgbLedSystem = new RgbLedSystem();
-        if (config.rgb.usePCA9685)
-        {
+        if (config.rgb.usePCA9685) {
             rgbExpander = new PCA9685Driver(i2c, config.rgb.address);
             rgbLedSystem->registerDriver(rgbExpander);
         }
-        if (!rgbLedSystem->init())
-        {
+        if (!rgbLedSystem->init()) {
             destroyRgb();
 
             Log::error(Log::INPUT_TAG, "Failed to initialize RgbLedSystem");
-        }
-        else
-        {
+        } else {
             rgbInitialized = true;
             subsystems.push_back(rgbLedSystem);
             Log::debug(Log::INPUT_TAG, "RgbLedSystem initialized");
         }
     }
-    if (config.sevenSegment.enabled)
-    {
-        sevenSegDriver = new MAX7219Driver(spi, config.sevenSegment.csPin, config.sevenSegment.digits);
+    if (config.sevenSegment.enabled) {
+        sevenSegDriver =
+            new MAX7219Driver(spi, config.sevenSegment.csPin, config.sevenSegment.digits);
         sevenSegmentSystem = new SevenSegmentSystem();
         sevenSegmentSystem->registerDriver(sevenSegDriver);
-        if (!sevenSegmentSystem->init())
-        {
+        if (!sevenSegmentSystem->init()) {
             destroySevenSegment();
 
             Log::error(Log::INPUT_TAG, "Failed to initialize SevenSegmentSystem");
-        }
-        else
-        {
+        } else {
             sevenSegmentInitialized = true;
             Log::debug(Log::INPUT_TAG, "SevenSegmentSystem initialized");
             subsystems.push_back(sevenSegmentSystem);
         }
     }
-    if (config.relays.enabled)
-    {
-        if (!channelInitialized)
-        {
-            Log::error(
-                Log::INPUT_TAG,
-                "RelaySystem requires ChannelSystem to be enabled");
+    if (config.relays.enabled) {
+        if (!channelInitialized) {
+            Log::error(Log::INPUT_TAG, "RelaySystem requires ChannelSystem to be enabled");
 
             return false;
         }
         relaySystem = new RelaySystem(channelSystem);
-        if (!relaySystem->init())
-        {
+        if (!relaySystem->init()) {
             destroyRelay();
             Log::error(Log::INPUT_TAG, "Failed to initialize RelaySystem");
-        }
-        else
-        {
+        } else {
             relayInitialized = true;
             subsystems.push_back(relaySystem);
             Log::debug(Log::INPUT_TAG, "RelaySystem initialized");
@@ -180,17 +151,14 @@ bool InputSystem::begin(const InputConfig &config)
     return true;
 }
 
-void InputSystem::shutdown()
-{
+void InputSystem::shutdown() {
     TaskMutex::Guard guard(lifecycleMutex);
     Log::info(Log::INPUT_TAG, "Shutting down InputSystem");
     reset();
 }
 
-void InputSystem::destroyChannels()
-{
-    if (channelSystem)
-    {
+void InputSystem::destroyChannels() {
+    if (channelSystem) {
         channelSystem->shutdown();
     }
 
@@ -221,10 +189,8 @@ void InputSystem::destroyChannels()
     channelInitialized = false;
 }
 
-void InputSystem::destroyPower()
-{
-    if (powerSystem)
-    {
+void InputSystem::destroyPower() {
+    if (powerSystem) {
         powerSystem->shutdown();
     }
 
@@ -237,10 +203,8 @@ void InputSystem::destroyPower()
     powerInitialized = false;
 }
 
-void InputSystem::destroyRfid()
-{
-    if (rfidSystem)
-    {
+void InputSystem::destroyRfid() {
+    if (rfidSystem) {
         rfidSystem->shutdown();
     }
 
@@ -253,10 +217,8 @@ void InputSystem::destroyRfid()
     rfidInitialized = false;
 }
 
-void InputSystem::destroyOled()
-{
-    if (oledSystem)
-    {
+void InputSystem::destroyOled() {
+    if (oledSystem) {
         oledSystem->shutdown();
     }
 
@@ -269,10 +231,8 @@ void InputSystem::destroyOled()
     oledInitialized = false;
 }
 
-void InputSystem::destroyRgb()
-{
-    if (rgbLedSystem)
-    {
+void InputSystem::destroyRgb() {
+    if (rgbLedSystem) {
         rgbLedSystem->shutdown();
     }
 
@@ -285,10 +245,8 @@ void InputSystem::destroyRgb()
     rgbInitialized = false;
 }
 
-void InputSystem::destroySevenSegment()
-{
-    if (sevenSegmentSystem)
-    {
+void InputSystem::destroySevenSegment() {
+    if (sevenSegmentSystem) {
         sevenSegmentSystem->shutdown();
     }
 
@@ -301,10 +259,8 @@ void InputSystem::destroySevenSegment()
     sevenSegmentInitialized = false;
 }
 
-void InputSystem::destroyRelay()
-{
-    if (relaySystem)
-    {
+void InputSystem::destroyRelay() {
+    if (relaySystem) {
         relaySystem->shutdown();
     }
 
@@ -314,8 +270,7 @@ void InputSystem::destroyRelay()
     relayInitialized = false;
 }
 
-void InputSystem::reset()
-{
+void InputSystem::reset() {
     subsystems.clear();
 
     destroyChannels();
@@ -327,14 +282,10 @@ void InputSystem::reset()
     destroyRelay();
 }
 
-void InputSystem::init(void *params)
-{
+void InputSystem::init(void* params) {
     (void)params;
 
-    if (!i2cManager.init(I2C_SDA_PIN,
-                         I2C_SCL_PIN,
-                         I2C_FREQUENCY))
-    {
+    if (!i2cManager.init(I2C_SDA_PIN, I2C_SCL_PIN, I2C_FREQUENCY)) {
         Log::error(Log::INPUT_TAG, "Failed to initialize I2C bus");
         return;
     }
@@ -342,11 +293,9 @@ void InputSystem::init(void *params)
     Log::info(Log::INPUT_TAG, "InputSystem initialization completed (nothing to do)");
 }
 
-void InputSystem::update()
-{
+void InputSystem::update() {
     TaskMutex::Guard guard(lifecycleMutex);
-    for (auto *system : subsystems)
-    {
+    for (auto* system : subsystems) {
         if (system)
             system->update();
     }
@@ -372,10 +321,8 @@ void InputSystem::update()
  *    auto m=p->metrics();
  * }
  */
-PowerSystem *InputSystem::power()
-{
-    if (!powerInitialized)
-    {
+PowerSystem* InputSystem::power() {
+    if (!powerInitialized) {
         Log::warn(Log::INPUT_TAG, "PowerSystem not initialized");
         return nullptr;
     }
@@ -403,10 +350,8 @@ PowerSystem *InputSystem::power()
  *     }
  * }
  */
-RFIDSystem *InputSystem::rfid()
-{
-    if (!rfidInitialized)
-    {
+RFIDSystem* InputSystem::rfid() {
+    if (!rfidInitialized) {
         Log::warn(Log::INPUT_TAG, "RFIDSystem not initialized");
 
         return nullptr;
@@ -428,10 +373,8 @@ RFIDSystem *InputSystem::rfid()
  *      ->showMessage(
  *          "READY");
  */
-OLEDSystem *InputSystem::oled()
-{
-    if (!oledInitialized)
-    {
+OLEDSystem* InputSystem::oled() {
+    if (!oledInitialized) {
         Log::warn(Log::INPUT_TAG, "OLEDSystem not initialized");
 
         return nullptr;
@@ -469,10 +412,8 @@ OLEDSystem *InputSystem::oled()
  *   input.channels()
  *     ->analogRead(203);
  */
-ChannelSystem *InputSystem::channels()
-{
-    if (!channelInitialized)
-    {
+ChannelSystem* InputSystem::channels() {
+    if (!channelInitialized) {
         Log::warn(Log::INPUT_TAG, "ChannelSystem not initialized");
 
         return nullptr;
@@ -510,10 +451,8 @@ ChannelSystem *InputSystem::channels()
  *       0,
  *      500);
  */
-RelaySystem *InputSystem::relays()
-{
-    if (!relayInitialized)
-    {
+RelaySystem* InputSystem::relays() {
+    if (!relayInitialized) {
         Log::warn(Log::INPUT_TAG, "RelaySystem not initialized");
 
         return nullptr;
@@ -541,10 +480,8 @@ RelaySystem *InputSystem::relays()
  *         0,
  *        50);
  */
-RgbLedSystem *InputSystem::rgb()
-{
-    if (!rgbInitialized)
-    {
+RgbLedSystem* InputSystem::rgb() {
+    if (!rgbInitialized) {
         Log::warn(Log::INPUT_TAG, "RgbLedSystem not initialized");
 
         return nullptr;
@@ -573,10 +510,8 @@ RgbLedSystem *InputSystem::rgb()
  *          0,
  *          5);
  */
-SevenSegmentSystem *InputSystem::sevenSegment()
-{
-    if (!sevenSegmentInitialized)
-    {
+SevenSegmentSystem* InputSystem::sevenSegment() {
+    if (!sevenSegmentInitialized) {
         Log::warn(Log::INPUT_TAG, "SevenSegmentSystem not initialized");
 
         return nullptr;

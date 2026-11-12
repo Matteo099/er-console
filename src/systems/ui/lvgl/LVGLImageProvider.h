@@ -1,8 +1,7 @@
 #pragma once
 #include <lvgl.h>
 
-class LVGLImageProvider
-{
-public:
+class LVGLImageProvider {
+  public:
     static void init();
 };

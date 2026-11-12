@@ -3,28 +3,22 @@
 #include "lvgl.h"
 #include <string>
 
-namespace
-{
-    inline std::string normalizeSpinnerSrc(const char *src)
-    {
-        if (!src || !*src)
-            return {};
+namespace {
+inline std::string normalizeSpinnerSrc(const char* src) {
+    if (!src || !*src)
+        return {};
 
-        if (((src[0] >= 'A' && src[0] <= 'Z') ||
-             (src[0] >= 'a' && src[0] <= 'z')) &&
-            src[1] == ':')
-        {
-            return src;
-        }
-
-        return std::string("S:") + src;
+    if (((src[0] >= 'A' && src[0] <= 'Z') || (src[0] >= 'a' && src[0] <= 'z')) && src[1] == ':') {
+        return src;
     }
 
-    inline bool isImageSpinner(lv_obj_t *obj)
-    {
-        return obj && lv_obj_check_type(obj, &lv_image_class);
-    }
+    return std::string("S:") + src;
 }
+
+inline bool isImageSpinner(lv_obj_t* obj) {
+    return obj && lv_obj_check_type(obj, &lv_image_class);
+}
+}  // namespace
 
 /**
  * @brief Rotating spinner component for loading/progress indication
@@ -42,9 +36,8 @@ namespace
  *   // On cleanup:
  *   // Animation auto-stopped when parent deleted (cascade)
  */
-class Spinner
-{
-public:
+class Spinner {
+  public:
     /**
      * @brief Create a spinning object (typically an image or shape)
      * @param parent Parent container
@@ -57,19 +50,14 @@ public:
      * Note: Spinner starts in idle state (not rotating)
      * Call start() to begin animation
      */
-    static lv_obj_t *create(
-        lv_obj_t *parent,
-        lv_coord_t width,
-        lv_coord_t height,
-        const char *imagePath = nullptr)
-    {
+    static lv_obj_t* create(lv_obj_t* parent, lv_coord_t width, lv_coord_t height,
+                            const char* imagePath = nullptr) {
         if (!parent)
             return nullptr;
 
-        lv_obj_t *spinner = nullptr;
+        lv_obj_t* spinner = nullptr;
 
-        if (imagePath)
-        {
+        if (imagePath) {
             // Create image spinner
             spinner = lv_image_create(parent);
 
@@ -77,9 +65,7 @@ public:
 
             lv_image_set_src(spinner, resolvedSrc.c_str());
             lv_obj_set_size(spinner, width, height);
-        }
-        else
-        {
+        } else {
             // Create shape spinner (rotating rectangle)
             spinner = lv_obj_create(parent);
             lv_obj_set_size(spinner, width, height);
@@ -99,11 +85,8 @@ public:
      * @param duration Time in milliseconds for one full rotation (360°)
      * @param repeatCount Number of times to repeat (LV_ANIM_REPEAT_INFINITE for endless)
      */
-    static void start(
-        lv_obj_t *spinner,
-        uint32_t duration = 600,
-        uint32_t repeatCount = LV_ANIM_REPEAT_INFINITE)
-    {
+    static void start(lv_obj_t* spinner, uint32_t duration = 600,
+                      uint32_t repeatCount = LV_ANIM_REPEAT_INFINITE) {
         if (!spinner)
             return;
 
@@ -112,20 +95,14 @@ public:
         lv_anim_t anim;
         lv_anim_init(&anim);
         lv_anim_set_var(&anim, spinner);
-        lv_anim_set_exec_cb(
-            &anim,
-            [](void *obj, int32_t angle)
-            {
-                lv_obj_t *spinnerObj = static_cast<lv_obj_t *>(obj);
-                if (isImageSpinner(spinnerObj))
-                {
-                    lv_image_set_rotation(spinnerObj, angle);
-                }
-                else
-                {
-                    lv_obj_set_style_transform_rotation(spinnerObj, angle, 0);
-                }
-            });
+        lv_anim_set_exec_cb(&anim, [](void* obj, int32_t angle) {
+            lv_obj_t* spinnerObj = static_cast<lv_obj_t*>(obj);
+            if (isImageSpinner(spinnerObj)) {
+                lv_image_set_rotation(spinnerObj, angle);
+            } else {
+                lv_obj_set_style_transform_rotation(spinnerObj, angle, 0);
+            }
+        });
 
         lv_anim_set_values(&anim, 0, 3600);
         lv_anim_set_time(&anim, duration);
@@ -140,19 +117,15 @@ public:
      * @brief Stop spinning animation
      * @param spinner Spinner object
      */
-    static void stop(lv_obj_t *spinner)
-    {
+    static void stop(lv_obj_t* spinner) {
         if (!spinner)
             return;
 
         lv_anim_del(spinner, nullptr);
 
-        if (isImageSpinner(spinner))
-        {
+        if (isImageSpinner(spinner)) {
             lv_image_set_rotation(spinner, 0);
-        }
-        else
-        {
+        } else {
             lv_obj_set_style_transform_rotation(spinner, 0, 0);
         }
     }
@@ -162,13 +135,11 @@ public:
      * @param spinner Spinner object
      * @param color Color in 0xRRGGBB format
      */
-    static void setColor(lv_obj_t *spinner, lv_color_t color)
-    {
+    static void setColor(lv_obj_t* spinner, lv_color_t color) {
         if (!spinner)
             return;
 
-        if (!isImageSpinner(spinner))
-        {
+        if (!isImageSpinner(spinner)) {
             lv_obj_set_style_bg_color(spinner, color, 0);
             lv_obj_set_style_border_color(spinner, color, 0);
         }
@@ -179,13 +150,11 @@ public:
      * @param spinner Spinner object
      * @param borderWidth Border width in pixels
      */
-    static void setBorderWidth(lv_obj_t *spinner, lv_coord_t borderWidth)
-    {
+    static void setBorderWidth(lv_obj_t* spinner, lv_coord_t borderWidth) {
         if (!spinner)
             return;
 
-        if (!isImageSpinner(spinner))
-        {
+        if (!isImageSpinner(spinner)) {
             lv_obj_set_style_border_width(spinner, borderWidth, 0);
         }
     }
@@ -195,8 +164,7 @@ public:
      * Call this before deleting the spinner or in view destroy()
      * @param spinner Spinner object
      */
-    static void cleanup(lv_obj_t *spinner)
-    {
+    static void cleanup(lv_obj_t* spinner) {
         if (!spinner)
             return;
 
@@ -211,8 +179,7 @@ public:
      *
      * Note: Stops current animation and restarts with new duration
      */
-    static void setDuration(lv_obj_t *spinner, uint32_t duration)
-    {
+    static void setDuration(lv_obj_t* spinner, uint32_t duration) {
         if (!spinner)
             return;
 

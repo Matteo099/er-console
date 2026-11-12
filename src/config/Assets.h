@@ -28,7 +28,6 @@
 // Music files
 #define AUDIO_MAIN_THEME_FILE AUDIO_DIR "/main_theme.wav"
 
-
 // Image files
 #define IMG_LOGO_FILE IMAGES_DIR "/logo.png"
 #define IMG_BRAND_FILE IMAGES_DIR "/brand.png"

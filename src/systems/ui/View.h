@@ -3,9 +3,8 @@
 #include <lvgl.h>
 #include "UIEventSystem.h"
 
-class View : public UIEventEmitter
-{
-public:
+class View : public UIEventEmitter {
+  public:
     virtual ~View() = default;
 
     virtual void create() = 0;
@@ -14,24 +13,18 @@ public:
 
     virtual lv_obj_t* getScreen() = 0;
 
-
     // UIEventEmitter implementation
-    void setEventHandler(UIEventHandler* handler) override
-    {
+    void setEventHandler(UIEventHandler* handler) override {
         eventHandler = handler;
     }
 
-    void emitEvent(const UIEvent& event) override
-    {
-        if (eventHandler)
-        {
+    void emitEvent(const UIEvent& event) override {
+        if (eventHandler) {
             eventHandler->handleUIEvent(event);
         }
     }
 
-protected:
-
+  protected:
     // Event handler (typically the scene)
     UIEventHandler* eventHandler = nullptr;
 };
-

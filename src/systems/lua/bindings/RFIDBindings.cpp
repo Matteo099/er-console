@@ -2,12 +2,12 @@
 
 #include "systems/input/subsystems/RFIDSystem.h"
 
-RFIDBindings::RFIDBindings(RFIDSystem *system) : rfid(system) {}
+RFIDBindings::RFIDBindings(RFIDSystem* system) : rfid(system) {
+}
 
-RFIDSystem *RFIDBindings::get(lua_State *L)
-{
+RFIDSystem* RFIDBindings::get(lua_State* L) {
     lua_getfield(L, LUA_REGISTRYINDEX, RFID_PTR_KEY);
-    auto *system = static_cast<RFIDSystem *>(lua_touserdata(L, -1));
+    auto* system = static_cast<RFIDSystem*>(lua_touserdata(L, -1));
     lua_pop(L, 1);
     return system;
 }
@@ -23,17 +23,14 @@ RFIDSystem *RFIDBindings::get(lua_State *L)
 // @return A table containing the tag information, or nil if no new tag is available
 // @example local tag = input.rfid.consume()
 // @lua input.rfid.consume() -> table|nil
-int RFIDBindings::consume(lua_State *L)
-{
-    auto *rfid = get(L);
-    if (!rfid)
-    {
+int RFIDBindings::consume(lua_State* L) {
+    auto* rfid = get(L);
+    if (!rfid) {
         lua_pushnil(L);
         return 1;
     }
     RFIDTag tag;
-    if (!rfid->consumeTag(tag))
-    {
+    if (!rfid->consumeTag(tag)) {
         lua_pushnil(L);
         return 1;
     }
@@ -54,19 +51,16 @@ int RFIDBindings::consume(lua_State *L)
  */
 // @doc Get the last available RFID tag
 // @return A table containing the tag information, or nil if no tag is available
-// @example local tag = input.rfid.last() 
+// @example local tag = input.rfid.last()
 // @lua input.rfid.last() -> table|nil
-int RFIDBindings::last(lua_State *L)
-{
-    auto *rfid = get(L);
-    if (!rfid)
-    {
+int RFIDBindings::last(lua_State* L) {
+    auto* rfid = get(L);
+    if (!rfid) {
         lua_pushnil(L);
         return 1;
     }
     RFIDTag tag;
-    if (!rfid->getLastTag(tag))
-    {
+    if (!rfid->getLastTag(tag)) {
         lua_pushnil(L);
         return 1;
     }
@@ -78,11 +72,10 @@ int RFIDBindings::last(lua_State *L)
     return 1;
 }
 
-void RFIDBindings::registerAPI(lua_State *L)
-{
+void RFIDBindings::registerAPI(lua_State* L) {
     ensureTable(L, "input");
     lua_getglobal(L, "input");
-    
+
     lua_newtable(L);
     lua_pushcfunction(L, consume);
     lua_setfield(L, -2, "consume");

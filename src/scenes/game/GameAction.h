@@ -1,6 +1,3 @@
 #pragma once
 
-enum class GameAction {
-    None,
-    Back
-};
+enum class GameAction { None, Back };

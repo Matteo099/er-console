@@ -15,9 +15,8 @@ extern "C" {
 // Forward declaration
 class GameScene;
 
-class LuaSystem : public SystemService
-{
-public:
+class LuaSystem : public SystemService {
+  public:
     enum class ErrorKind { None, Storage, Syntax, Runtime, Initialization };
     LuaSystem();
     ~LuaSystem();
@@ -33,26 +32,67 @@ public:
     void reset();
 
     // Game control
-    void pause() { TaskMutex::Guard lock(vmMutex); gamePaused = true; }
-    void resume() { TaskMutex::Guard lock(vmMutex); gamePaused = false; lastTickMs = 0; }
+    void pause() {
+        TaskMutex::Guard lock(vmMutex);
+        gamePaused = true;
+    }
+
+    void resume() {
+        TaskMutex::Guard lock(vmMutex);
+        gamePaused = false;
+        lastTickMs = 0;
+    }
 
     // State
-    bool isReady() const { TaskMutex::Guard lock(vmMutex); return ready; }
-    bool isScriptLoaded() const { TaskMutex::Guard lock(vmMutex); return scriptLoaded; }
-    ErrorKind getErrorKind() const { TaskMutex::Guard lock(vmMutex); return errorKind; }
-    std::string getLastError() const { TaskMutex::Guard lock(vmMutex); return lastError; }
-    bool isBoundTo(const GameScene *scene) const { TaskMutex::Guard lock(vmMutex); return gameScene == scene; }
+    bool isReady() const {
+        TaskMutex::Guard lock(vmMutex);
+        return ready;
+    }
+
+    bool isScriptLoaded() const {
+        TaskMutex::Guard lock(vmMutex);
+        return scriptLoaded;
+    }
+
+    ErrorKind getErrorKind() const {
+        TaskMutex::Guard lock(vmMutex);
+        return errorKind;
+    }
+
+    std::string getLastError() const {
+        TaskMutex::Guard lock(vmMutex);
+        return lastError;
+    }
+
+    bool isBoundTo(const GameScene* scene) const {
+        TaskMutex::Guard lock(vmMutex);
+        return gameScene == scene;
+    }
 
     // Lua VM access
-    lua_State* getVM() { return L; }
+    lua_State* getVM() {
+        return L;
+    }
 
     // API registration (for dependency injection)
-    void setGameScene(GameScene* scene) { TaskMutex::Guard lock(vmMutex); gameScene = scene; }
-    void setStorageSystem(StorageSystem* sys) { storageSystem = sys; }
-    void setAudioSystem(AudioSystem* sys) { audioSystem = sys; }
-    void setInputSystem(InputSystem* sys) { inputSystem = sys; }
+    void setGameScene(GameScene* scene) {
+        TaskMutex::Guard lock(vmMutex);
+        gameScene = scene;
+    }
 
-private:
+    void setStorageSystem(StorageSystem* sys) {
+        storageSystem = sys;
+    }
+
+    void setAudioSystem(AudioSystem* sys) {
+        audioSystem = sys;
+    }
+
+    void setInputSystem(InputSystem* sys) {
+        inputSystem = sys;
+    }
+
+  private:
     mutable TaskMutex vmMutex;
     ErrorKind errorKind = ErrorKind::None;
     std::string lastError;
@@ -77,6 +117,5 @@ private:
     void registerBaseLibraries();
     void registerGameAPI();
 
-    void tick(); // one non-blocking execution step
+    void tick();  // one non-blocking execution step
 };
-

@@ -4,16 +4,10 @@
 
 #include "IMultiplexer.h"
 
-class CD74HC4067Driver : public IMultiplexer
-{
-public:
-    CD74HC4067Driver(
-        uint8_t signalPin,
-        uint8_t s0,
-        uint8_t s1,
-        uint8_t s2,
-        uint8_t s3,
-        int8_t enablePin = -1);
+class CD74HC4067Driver : public IMultiplexer {
+  public:
+    CD74HC4067Driver(uint8_t signalPin, uint8_t s0, uint8_t s1, uint8_t s2, uint8_t s3,
+                     int8_t enablePin = -1);
 
     bool init() override;
 
@@ -27,14 +21,12 @@ public:
 
     bool digitalRead(uint8_t channel) override;
 
-    void digitalWrite(
-        uint8_t channel,
-        bool value) override;
+    void digitalWrite(uint8_t channel, bool value) override;
 
-private:
+  private:
     void setAddress(uint8_t channel);
 
-private:
+  private:
     uint8_t signalPin;
 
     uint8_t s0Pin;

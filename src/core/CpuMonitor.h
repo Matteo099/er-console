@@ -2,9 +2,8 @@
 
 #include <stdint.h>
 
-class CpuMonitor
-{
-public:
+class CpuMonitor {
+  public:
     static volatile uint32_t tickCount[2];
     static volatile uint32_t idleCount[2];
 
@@ -15,7 +14,7 @@ public:
     static uint8_t usagePercentCore1();
     static uint8_t usagePercentAvg();
 
-private:
+  private:
     static uint8_t cpuUsage[2];
     static int64_t lastUpdateMs;
     static bool initialized;

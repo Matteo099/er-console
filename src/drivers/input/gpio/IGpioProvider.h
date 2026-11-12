@@ -2,9 +2,8 @@
 
 #include <stdint.h>
 
-class IGpioProvider
-{
-public:
+class IGpioProvider {
+  public:
     virtual ~IGpioProvider() = default;
     virtual bool init() = 0;
     virtual void shutdown() = 0;
