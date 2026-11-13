@@ -1,6 +1,7 @@
 #include "config/Console.h"
 #if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
 #include "UpdateDiagnostics.h"
+#include "SdResourcesDiagnostics.h"
 #include "systems/update/UpdateEngine.h"
 #include "systems/update/UpdateMetadata.h"
 #include "systems/update/UpdateSystem.h"
@@ -102,7 +103,7 @@ struct Flash : UpdateFlash {
 };
 
 std::string releaseJson() {
-    return R"({"tag_name":"v1.2.3","name":"Firmware 1.2.3","body":"Release notes","published_at":"2026-11-10","draft":false,"prerelease":false,"assets":[{"id":11,"name":"manifest.json","size":1000,"state":"uploaded"},{"id":12,"name":"firmware.bin","size":8192,"state":"uploaded"}]})";
+    return R"({"tag_name":"v1.2.3","name":"Firmware 1.2.3","body":"Release notes","published_at":"2026-11-10","draft":false,"prerelease":false,"assets":[{"id":11,"name":"manifest.json","size":1000,"state":"uploaded"},{"id":12,"name":"firmware.bin","size":8192,"state":"uploaded"},{"id":13,"name":"resources.sdpack","size":1000,"state":"uploaded"}]})";
 }
 
 UpdateError release(std::string value, UpdateRelease& out) {
@@ -111,7 +112,7 @@ UpdateError release(std::string value, UpdateRelease& out) {
 
 std::string manifestJson(const std::string& hash) {
     JsonDocument value;
-    value["schema_version"] = 1;
+    value["schema_version"] = 2;
     value["version"] = "1.2.3";
     value["channel"] = "stable";
     value["dirty"] = false;
@@ -123,6 +124,9 @@ std::string manifestJson(const std::string& hash) {
     value["files"]["firmware"]["file"] = "firmware.bin";
     value["files"]["firmware"]["size"] = 8192;
     value["files"]["firmware"]["sha256"] = hash;
+    value["files"]["resources"]["file"] = "resources.sdpack";
+    value["files"]["resources"]["size"] = 1000;
+    value["files"]["resources"]["sha256"] = std::string(64, 'a');
     std::string result;
     serializeJson(value, result);
     return result;
@@ -317,6 +321,7 @@ void runUpdateDiagnostics() {
         okay ? ++passed : ++failed;
         Serial.printf("@OTACHECK %s %s\n", okay ? "PASS" : "FAIL", name);
     };
+    runSdResourcesDiagnostics(check);
     using namespace UpdateMetadata;
     check(versionValid("1.2.3") && versionValid("v1.2.3-dev.2+sha.abc") &&
               !versionValid("1.02.3") && !versionValid("1.2.3-dev.01"),

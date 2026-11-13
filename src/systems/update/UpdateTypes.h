@@ -14,7 +14,8 @@ enum class UpdateState : uint8_t {
     Installing,
     Success,
     Error,
-    Cancelled
+    Cancelled,
+    Resources
 };
 enum class UpdateError : uint8_t {
     None,
@@ -38,7 +39,9 @@ enum class UpdateError : uint8_t {
     Persistence,
     RollbackUnavailable,
     Interrupted,
-    Busy
+    Busy,
+    Storage,
+    StorageSpace
 };
 
 struct ReleaseAsset {
@@ -51,6 +54,9 @@ struct UpdateRelease {
     std::string version, title, notes, published, sha256, filename;
     uint64_t manifestId = 0, firmwareId = 0;
     size_t size = 0;
+    uint64_t resourcesId = 0;
+    size_t resourcesSize = 0;
+    std::string resourcesSha256;
     bool notesTruncated = false;
     std::vector<ReleaseAsset> assets;
 };
@@ -61,11 +67,11 @@ struct UpdateSnapshot {
     UpdateRelease release;
     size_t downloaded = 0, written = 0, total = 0;
     uint32_t revision = 0;
-    bool cancelling = false, confirmedUpdate = false;
+    bool cancelling = false, confirmedUpdate = false, resourcesOnly = false;
 
     bool busy() const {
         return state == UpdateState::Checking || state == UpdateState::Downloading ||
                state == UpdateState::Verifying || state == UpdateState::Installing ||
-               state == UpdateState::Success;
+               state == UpdateState::Success || state == UpdateState::Resources;
     }
 };

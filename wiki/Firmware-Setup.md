@@ -6,6 +6,11 @@
 - ESP32-S3 target board profile available
 - SD card prepared for `/.core` and `/games` content
 
+Release bundles use a versioned SD directory: unzip the matching `...-sd.zip`
+into the card root, including hidden files. OTA installs this generation
+automatically. Standalone `pio run` builds use the repository's flat `sd/`
+layout for development. See [SD updates](reference/SD_UPDATES.md).
+
 ## PlatformIO Environment
 
 The default environment is:

@@ -1,6 +1,7 @@
 #include "UpdateSystem.h"
 #include "UpdateMetadata.h"
 #include "UpdateHttp.h"
+#include "SdResources.h"
 #include "config/Updates.h"
 #include "config/Console.h"
 #include "config/Environment.h"
@@ -168,7 +169,8 @@ bool UpdateSystem::request(bool installing) {
     }
     if (installing) {
         if (!status.release.firmwareId || !status.release.size ||
-            UpdateMetadata::compareVersions(status.release.version, FW_VERSION) <= 0)
+            (!status.resourcesOnly &&
+             UpdateMetadata::compareVersions(status.release.version, FW_VERSION) <= 0))
             return false;
         auto* lua = static_cast<LuaSystem*>(
             SystemEventBus::instance().getService(SystemEventBus::SERVICE_LUA));
@@ -192,16 +194,18 @@ bool UpdateSystem::request(bool installing) {
     cancellation.store(false);
     startedAt = millis();
     installRequested = installing;
-    if (!installing)
+    if (!installing) {
         status.release = UpdateRelease{};
+        status.resourcesOnly = false;
+    }
     status.error = UpdateError::None;
     status.cancelling = false;
     status.downloaded = status.written = 0;
-    status.total = installing ? status.release.size : 0;
-    status.state = installing ? UpdateState::Downloading : UpdateState::Checking;
+    status.total = installing ? status.release.resourcesSize : 0;
+    status.state = installing ? UpdateState::Resources : UpdateState::Checking;
     ++status.revision;
     working = true;
-    if (xTaskCreatePinnedToCore(worker, "githubOTA", 12288, this, 1, nullptr, 0) != pdPASS) {
+    if (xTaskCreatePinnedToCore(worker, "githubOTA", 16384, this, 1, nullptr, 0) != pdPASS) {
         working = false;
         fail(UpdateError::Memory);
         return false;
@@ -295,20 +299,22 @@ void UpdateSystem::run() {
         TaskMutex::Guard lock(mutex);
         status.release = std::move(release);
         status.total = status.release.size;
-        status.state = UpdateMetadata::compareVersions(status.release.version, FW_VERSION) > 0
-                           ? UpdateState::Available
-                           : UpdateState::UpToDate;
+        status.resourcesOnly = status.release.version == FW_VERSION && SdResources::required() &&
+                               status.release.resourcesSha256 == SD_CONTENT_SHA256 &&
+                               !SdResources::ready(SD_CONTENT_SHA256, FW_VERSION);
+        status.state =
+            status.resourcesOnly ||
+                    UpdateMetadata::compareVersions(status.release.version, FW_VERSION) > 0
+                ? UpdateState::Available
+                : UpdateState::UpToDate;
         ++status.revision;
         return;
     }
-    const auto release = snapshot().release;
+    const auto selected = snapshot();
+    const auto release = selected.release;
     const auto* slot = updateSlot();
     if (!slot || release.size > slot->size) {
         fail(UpdateError::Incompatible);
-        return;
-    }
-    if (!http.open(assetUrl(release.firmwareId), true)) {
-        fail(http.error());
         return;
     }
     auto* audio = static_cast<AudioSystem*>(
@@ -323,6 +329,42 @@ void UpdateSystem::run() {
         vTaskDelay(pdMS_TO_TICKS(10));
     if (audio && !audio->quiescentForFlash()) {
         fail(UpdateError::Busy);
+        return;
+    }
+    // Stage and verify every resource before touching the bootable firmware slot.
+    if (!SdResources::ready(release.resourcesSha256, release.version)) {
+        if (!http.open(assetUrl(release.resourcesId), true)) {
+            fail(http.error());
+            return;
+        }
+        const auto result = SdResources::install(
+            http, release,
+            [this](UpdateState state, size_t downloaded, size_t written) {
+                progress(state, downloaded, written);
+            },
+            [this]() {
+                return stopped();
+            });
+        http.close();
+        if (result != UpdateError::None) {
+            fail(stopped() ? (cancellation.load() ? UpdateError::Cancelled : UpdateError::Timeout)
+                           : result);
+            return;
+        }
+    }
+    if (selected.resourcesOnly) {
+        progress(UpdateState::Success, release.resourcesSize, release.resourcesSize);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+        ESP.restart();
+        return;
+    }
+    {
+        TaskMutex::Guard lock(mutex);
+        status.total = release.size;
+    }
+    progress(UpdateState::Downloading, 0, 0);
+    if (!http.open(assetUrl(release.firmwareId), true)) {
+        fail(http.error());
         return;
     }
     NativeFlash flash(slot);
@@ -435,7 +477,7 @@ void UpdateSystem::verifier(void* context) {
             SystemEventBus::systemEvents &&
             (xEventGroupGetBits(SystemEventBus::systemEvents) & required) == required &&
             self.heartbeat.load() && uint32_t(now - self.heartbeat.load()) < 1000 &&
-            heap_caps_get_free_size(MALLOC_CAP_INTERNAL) > 24 * 1024;
+            heap_caps_get_free_size(MALLOC_CAP_INTERNAL) > 24 * 1024 && SdResources::current();
         if (!ready)
             healthySince = 0;
         else if (!healthySince)

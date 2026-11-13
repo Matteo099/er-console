@@ -53,6 +53,10 @@ Text errorText(UpdateError error) {
             return Text::OtaInterrupted;
         case UpdateError::Busy:
             return Text::OtaBusy;
+        case UpdateError::Storage:
+            return Text::OtaSdError;
+        case UpdateError::StorageSpace:
+            return Text::OtaSdSpace;
         default:
             return Text::OtaHttpError;
     }
@@ -67,7 +71,9 @@ Text stateText(const UpdateSnapshot& value) {
         case UpdateState::UpToDate:
             return Text::OtaUpToDate;
         case UpdateState::Available:
-            return Text::OtaAvailable;
+            return value.resourcesOnly ? Text::OtaSdRepairAvailable : Text::OtaAvailable;
+        case UpdateState::Resources:
+            return Text::OtaSdUpdating;
         case UpdateState::Downloading:
             return Text::OtaDownloading;
         case UpdateState::Verifying:
@@ -145,7 +151,8 @@ void UpdateView::render(const UpdateSnapshot& value) {
         UITheme::accent(statusLabel);
     const bool transfer =
         value.state == UpdateState::Downloading || value.state == UpdateState::Verifying ||
-        value.state == UpdateState::Installing || value.state == UpdateState::Success;
+        value.state == UpdateState::Installing || value.state == UpdateState::Success ||
+        value.state == UpdateState::Resources;
     lv_obj_set_flag(progressBar, LV_OBJ_FLAG_HIDDEN, !transfer);
     lv_obj_set_flag(transferLabel, LV_OBJ_FLAG_HIDDEN, !transfer);
     const auto percentage = [&](size_t amount) {
@@ -168,6 +175,8 @@ void UpdateView::render(const UpdateSnapshot& value) {
     const bool cancellable = busy && value.state != UpdateState::Installing &&
                              value.state != UpdateState::Success && !value.cancelling;
     text(lv_obj_get_child(checkButton, 0), tr(busy ? Text::Cancel : Text::OtaCheck));
+    text(lv_obj_get_child(installButton, 0),
+         tr(value.resourcesOnly ? Text::OtaSdRepair : Text::OtaInstall));
     lv_obj_set_state(checkButton, LV_STATE_DISABLED,
                      busy ? !cancellable : !OTA_ENABLED || !WIFI_ENABLED);
     lv_obj_set_state(backButton, LV_STATE_DISABLED, busy);

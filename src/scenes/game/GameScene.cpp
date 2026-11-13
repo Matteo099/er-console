@@ -1,5 +1,6 @@
 #include "systems/ui/localization/I18n.h"
 #include "GameScene.h"
+#include "systems/update/SdResources.h"
 
 #include "log/Logger.h"
 #include "systems/ui/UIEvents.h"
@@ -33,6 +34,10 @@ void GameScene::onEnter() {
         static_cast<LuaSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_LUA));
     inputSystem = static_cast<InputSystem*>(
         SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
+    if (!SdResources::current()) {
+        failLoad(tr(Text::SdResourcesMissing));
+        return;
+    }
     if (!luaSystem || !inputSystem || gameInfo.id.empty()) {
         failLoad(tr(Text::GameUnavailable));
         return;

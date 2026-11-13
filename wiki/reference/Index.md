@@ -12,6 +12,7 @@
 - [In Game Settings](IN_GAME_SETTINGS.md)
 - [Network Ui](NETWORK_UI.md)
 - [Sd Diagnostics](SD_DIAGNOSTICS.md)
+- [SD resource updates](SD_UPDATES.md)
 - [Settings](SETTINGS.md)
 - [Device settings storage](DEVICE_SETTINGS_STORAGE.md)
 - [Ui Cleanup Quick Reference](UI_CLEANUP_QUICK_REFERENCE.md)

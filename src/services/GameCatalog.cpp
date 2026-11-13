@@ -5,6 +5,7 @@
 #include "systems/storage/StorageSystem.h"
 #include "config/Assets.h"
 #include "log/Logger.h"
+#include "systems/update/SdResources.h"
 #include <ArduinoJson.h>
 
 namespace {
@@ -78,6 +79,10 @@ static void loadInputConfig(JsonObject inputs, InputConfig& config) {
 GameCatalog::Snapshot GameCatalog::readGames() {
     Snapshot result;
     result.initialized = true;
+    if (!SdResources::current()) {
+        result.error = Text::SdResourcesMissing;
+        return result;
+    }
     StorageSystem* storageSystem = static_cast<StorageSystem*>(
         SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
 
@@ -161,7 +166,8 @@ void GameCatalog::loadTask(void*) {
     }
     {
         TaskMutex::Guard lock(catalogMutex);
-        if (result.error != Text::None && result.games.empty())
+        if (result.error != Text::None && result.error != Text::SdResourcesMissing &&
+            result.games.empty())
             result.games.swap(cachedCatalog.games);
         result.version = cachedCatalog.version + 1;
         cachedCatalog = std::move(result);

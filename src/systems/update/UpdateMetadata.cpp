@@ -286,6 +286,7 @@ UpdateError UpdateMetadata::parseRelease(char* json, size_t length, UpdateReleas
 UpdateError UpdateMetadata::parseManifest(char* json, size_t length, UpdateRelease& out,
                                           const std::string& hardware, const std::string& layout,
                                           size_t slotSize) {
+    out.firmwareId = out.resourcesId = 0;
     if (!json || !length || length > UpdateConfig::MANIFEST_LIMIT)
         return UpdateError::Metadata;
     JsonAllocator allocator;
@@ -294,7 +295,7 @@ UpdateError UpdateMetadata::parseManifest(char* json, size_t length, UpdateRelea
     if (parsed)
         return parsed == DeserializationError::NoMemory ? UpdateError::Memory
                                                         : UpdateError::Metadata;
-    if (!doc["schema_version"].is<unsigned>() || doc["schema_version"].as<unsigned>() != 1 ||
+    if (!doc["schema_version"].is<unsigned>() || doc["schema_version"].as<unsigned>() != 2 ||
         !doc["version"].is<const char*>() || std::strcmp(doc["channel"] | "", "stable") ||
         !doc["dirty"].is<bool>() || doc["dirty"].as<bool>() ||
         out.version != doc["version"].as<const char*>())
@@ -305,32 +306,43 @@ UpdateError UpdateMetadata::parseManifest(char* json, size_t length, UpdateRelea
         std::strlen(tableHash) != 64 || lower(layout) != lower(tableHash) ||
         !doc["ota_slot_size"].is<size_t>() || doc["ota_slot_size"].as<size_t>() != slotSize)
         return UpdateError::Incompatible;
-    JsonVariant value = doc["files"]["firmware"];
-    if (!value["file"].is<const char*>() || !value["sha256"].is<const char*>() ||
-        !value["size"].is<size_t>())
-        return UpdateError::Metadata;
-    if (std::strlen(value["file"].as<const char*>()) > 192 ||
-        std::strlen(value["sha256"].as<const char*>()) != 64)
-        return UpdateError::Metadata;
-    const std::string name = value["file"].as<const char*>(),
-                      digest = value["sha256"].as<const char*>();
-    const size_t size = value["size"].as<size_t>();
-    if (!hexDigest(digest))
-        return UpdateError::Integrity;
-    if (size < 288 || size > slotSize)
-        return UpdateError::Size;
-    for (const auto& asset : out.assets)
-        if (asset.name == name) {
-            if (asset.size != size || asset.name.size() < 4 ||
-                asset.name.substr(asset.name.size() - 4) != ".bin")
-                return UpdateError::Size;
-            if (!asset.digest.empty() && asset.digest != "sha256:" + lower(digest))
-                return UpdateError::Integrity;
-            out.firmwareId = asset.id;
-            out.size = size;
-            out.sha256 = lower(digest);
-            out.filename = name;
-            return UpdateError::None;
-        }
-    return UpdateError::Metadata;
+    for (unsigned kind = 0; kind < 2; ++kind) {
+        JsonVariant value = doc["files"][kind ? "resources" : "firmware"];
+        if (!value["file"].is<const char*>() || !value["sha256"].is<const char*>() ||
+            !value["size"].is<size_t>())
+            return UpdateError::Metadata;
+        if (std::strlen(value["file"].as<const char*>()) > 192 ||
+            std::strlen(value["sha256"].as<const char*>()) != 64)
+            return UpdateError::Metadata;
+        const std::string name = value["file"].as<const char*>(),
+                          digest = value["sha256"].as<const char*>();
+        const size_t size = value["size"].as<size_t>();
+        if (!hexDigest(digest))
+            return UpdateError::Integrity;
+        if (size < (kind ? 12u : 288u) || size > (kind ? UpdateConfig::SDPACK_LIMIT : slotSize))
+            return UpdateError::Size;
+        for (const auto& asset : out.assets)
+            if (asset.name == name) {
+                const std::string suffix = kind ? ".sdpack" : ".bin";
+                if (asset.size != size || asset.name.size() < suffix.size() ||
+                    asset.name.substr(asset.name.size() - suffix.size()) != suffix)
+                    return UpdateError::Size;
+                if (!asset.digest.empty() && asset.digest != "sha256:" + lower(digest))
+                    return UpdateError::Integrity;
+                if (kind) {
+                    out.resourcesId = asset.id;
+                    out.resourcesSize = size;
+                    out.resourcesSha256 = lower(digest);
+                } else {
+                    out.firmwareId = asset.id;
+                    out.size = size;
+                    out.sha256 = lower(digest);
+                    out.filename = name;
+                }
+                break;
+            }
+        if (kind ? !out.resourcesId : !out.firmwareId)
+            return UpdateError::Metadata;
+    }
+    return UpdateError::None;
 }
