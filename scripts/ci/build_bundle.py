@@ -80,7 +80,7 @@ def package(root, output, info, firmware, elf, partitions, frontend):
         raise ValueError('Every packaged game must include configuration and a Lua entry point')
     sd.update({'.core/portal/'+name: data for name, data in portal.items()})
     sd['build-info.json'] = info_bytes
-    sd['.core/config/README.md'] = b'User configuration and Wi-Fi credentials are intentionally not distributed.\n'
+    sd['.core/config/README.md'] = b'Device settings and Wi-Fi credentials live in internal NVS. Legacy SD configuration is imported and removed after verification.\n'
     output.mkdir(parents=True, exist_ok=True)
     stem = f'escaperiom-{HARDWARE}-{info["version"]}'
     binary = output/f'{stem}.bin'

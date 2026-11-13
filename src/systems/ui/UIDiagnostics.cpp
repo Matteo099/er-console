@@ -23,6 +23,7 @@
 #include "drivers/bus/SPIBusLock.h"
 #include "config/Assets.h"
 #include "SettingsDiagnostics.h"
+#include "ConfigStorageDiagnostics.h"
 #include "AudioDiagnostics.h"
 #include "ScrollDiagnostics.h"
 #include "PlayerSelectorDiagnostics.h"
@@ -543,6 +544,10 @@ void UIDiagnostics::update(SceneManager& scenes) {
             UIFrameStats::print();
         else if (command == "ui selftest")
             runSettingsDiagnostics();
+        else if (command == "ui config-test")
+            runConfigStorageDiagnostics();
+        else if (command == "ui config-baseline" || command == "ui config-verify")
+            configPersistenceDiagnostics(command == "ui config-baseline");
         else if (command == "ui audio-test")
             runAudioDiagnostics();
         else if (command == "ui scroll-test")

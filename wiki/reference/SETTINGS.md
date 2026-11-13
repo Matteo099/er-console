@@ -21,13 +21,13 @@ scorre, mentre intestazione, selettore delle schede e Indietro restano visibili.
 
 ## Persistenza e compatibilita'
 
-`DeviceConfigRepository` combina default, JSON SD e preferenze NVS. Le modifiche
-TFT vengono salvate dopo 400 ms di inattivita' o uscendo dalla schermata, senza
-scrivere sulla SD. Un singolo record versionato `console-ui/prefs-v2` conserva
-tema, lingua e i quattro valori audio. Le vecchie chiavi `theme` e `sound` e i
-campi JSON `audio.volume` / `audio.enabled` sono ancora leggibili. Il vecchio
-interruttore OFF migra entrambi i canali su OFF. Il portale legge e scrive lo
-stesso modello, includendo i vecchi campi come alias degli effetti.
+`DeviceConfigRepository` usa il record NVS versionato `console-cfg/settings` per
+tutte le preferenze e configurazioni del dispositivo. Le modifiche TFT vengono
+salvate dopo 400 ms di inattivita' o uscendo dalla schermata. I vecchi JSON SD,
+`console-ui/prefs-v2`, `theme` e `sound` vengono importati preservando i valori
+esistenti; il vecchio interruttore OFF migra entrambi i canali su OFF.
+Il portale usa lo stesso modello senza scrivere configurazioni personali sulla SD.
+Dettagli e limiti: [DEVICE_SETTINGS_STORAGE.md](DEVICE_SETTINGS_STORAGE.md).
 
 ```json
 {
@@ -40,7 +40,7 @@ stesso modello, includendo i vecchi campi come alias degli effetti.
 }
 ```
 
-Il portale salva anche il documento completo sulla SD; le modifiche vengono
+Il portale salva il documento completo in NVS; le modifiche vengono
 propagate al task UI tramite la revisione del repository. Dopo `npm run build`
 in `frontend`, copiare `sd/.core/portal` nella cartella `/.core/portal` della
 microSD fisica: l'upload del firmware non aggiorna questi file.
@@ -134,8 +134,9 @@ API per sorgente, limiti della cache e preparazione degli asset:
 L'SSID si seleziona dalla lista delle reti disponibili, con segnale e protezione.
 La password usa una tastiera con occhio, Annulla e Conferma; viene inizialmente
 mascherata. Salva valida SSID (massimo 32 byte), password aperta/vuota, 8–63 byte
-oppure PSK esadecimale di 64 cifre. Le credenziali sono un record NVS separato
-`console-net/credentials` e restano utilizzabili senza SD.
+oppure PSK esadecimale di 64 cifre. Le credenziali vengono importate dal vecchio
+`console-net/credentials` nel record `console-cfg/settings` e restano
+utilizzabili senza SD. Le risposte del portale non restituiscono la password.
 
 Con `WIFI_ENABLED=1`, Salva e connetti e Disconnetti inviano richieste al task
 rete. La pagina mostra stato, SSID, IP e segnale RSSI; il timeout e' 10 secondi.

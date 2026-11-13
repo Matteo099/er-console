@@ -1,7 +1,7 @@
 """Test real Wi-Fi submission and nonblocking startup on diagnostic firmware.
 
 Temporarily replaces only the saved network with empty/unreachable fixtures.
-An exact credential-record backup stays in device NVS across resets and is
+An exact configuration-snapshot backup stays in device NVS across resets and is
 restored in finally. No passwords are transferred to the PC. Recovery after
 an interrupted test: ui wifi-fixture restore, then reset the console.
 """

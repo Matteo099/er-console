@@ -76,7 +76,7 @@ python scripts/diagnostics/ui_network_connection.py --port COM3
 Questa seconda prova usa il servizio rete e la pagina effettivi. Sostituisce
 temporaneamente le credenziali salvate con una configurazione vuota e una rete
 inesistente, riavvia il dispositivo e verifica che avvio e UI proseguano. Un
-backup esatto del record originale resta nel namespace NVS `wifi-check`; il
+backup esatto della configurazione originale resta nel namespace NVS `wifi-check-v2`; il
 blocco `finally` lo ripristina, senza trasferire password al PC. Non modificare
 la configurazione di rete manualmente durante la prova. Dopo il ripristino,
 se la rete originale e' raggiungibile, verifica connessione al boot, Conferma

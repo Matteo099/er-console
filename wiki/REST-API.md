@@ -60,19 +60,22 @@ Returns nearby SSIDs:
 
 ### GET /api/config
 
-Returns full device config object.
+Returns device configuration from internal NVS, excluding the saved password.
+`wifi.password` is a null placeholder; `wifi.passwordConfigured` indicates whether
+one exists. Responses use `Cache-Control: no-store`.
 
 ### PUT /api/config
 
 Updates config from JSON payload. Expected sections:
 
 - `deviceName`
-- `wifi` (`ssid`, `password`)
+- `wifi` (`ssid`, optional write-only `password`): omit the password or pass null to preserve it for the same SSID; send an empty string explicitly for an open network. A changed SSID never inherits the previous password.
 - `locale` (`language`, `timezone`, `dateFormat`)
 - `ui` (`theme`, `brightness`)
 - `audio` (`volume`, `enabled`)
 
-On success returns persisted config payload.
+On success returns the persisted configuration with the password replaced by null. Saves do
+not require SD. See [storage and migration](reference/DEVICE_SETTINGS_STORAGE.md).
 
 ### POST /api/config
 
@@ -88,8 +91,8 @@ Returns directory listing:
 {
   "items": [
     {
-      "path": "/.core/config/config.json",
-      "name": "config.json",
+      "path": "/.core/audio/click1.wav",
+      "name": "click1.wav",
       "directory": false,
       "size": 512
     }

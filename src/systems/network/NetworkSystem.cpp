@@ -1,9 +1,7 @@
 #include "NetworkSystem.h"
 #include "config/Console.h"
-#include "config/Assets.h"
 #include "log/Logger.h"
 #include <WiFi.h>
-#include <sstream>
 
 namespace {
 const char* authModeName(wifi_auth_mode_t mode) {
@@ -187,39 +185,11 @@ void NetworkSystem::setCredentials(const std::string& newSsid, const std::string
 
 bool NetworkSystem::reloadFromStorage(StorageSystem* storage) {
     DeviceConfig config;
-    const bool loaded = configRepository.load(storage, config);
+    configRepository.load(storage, config);
     setCredentials(config.wifi.ssid, config.wifi.password);
-    if (!loaded && config.wifi.ssid.empty())
-        loadLegacyCredentials(storage);
     setState(hasCredentials() ? State::Disconnected : State::Idle,
              hasCredentials() ? "Ready to connect" : "Missing credentials");
     return hasCredentials();
-}
-
-bool NetworkSystem::loadLegacyCredentials(StorageSystem* storage) {
-    std::string contents;
-    if (!storage || !storage->readTextFile(WIFI_CFG_FILE, contents))
-        return false;
-    std::string selectedSsid, selectedPassword, line;
-    std::istringstream stream(contents);
-    while (std::getline(stream, line)) {
-        const auto separator = line.find('=');
-        if (separator == std::string::npos)
-            continue;
-        auto value = line.substr(separator + 1);
-        if (!value.empty() && value.back() == '\r')
-            value.pop_back();
-        if (line.substr(0, separator) == "ssid")
-            selectedSsid = value;
-        if (line.substr(0, separator) == "password")
-            selectedPassword = value;
-    }
-    if (selectedSsid.empty() ||
-        !DeviceConfigRepository::validNetwork(selectedSsid, selectedPassword))
-        return false;
-    setCredentials(selectedSsid, selectedPassword);
-    configRepository.saveNetworkPreferences(selectedSsid, selectedPassword);
-    return true;
 }
 
 void NetworkSystem::refreshStatus() {

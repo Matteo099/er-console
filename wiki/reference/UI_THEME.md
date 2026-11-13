@@ -108,13 +108,14 @@ configurato sul dispositivo.
 
 ## Preferenze
 
-`DeviceConfigRepository` combina i valori predefiniti, il documento su SD e
-le preferenze locali NVS, in quest'ordine. I nomi precedenti `light`/`dark`
+`DeviceConfigRepository` usa le preferenze in NVS `console-cfg/settings`;
+il documento su SD e le vecchie chiavi NVS sono importati una sola volta.
+I nomi precedenti `light`/`dark`
 ricadono su Menta; `blue` e `red` sono alias di Cielo e Corallo.
 
 Tema, lingua e audio vengono applicati subito e salvati dopo 400 ms di quiete
-o all'uscita dalle impostazioni. Usano il namespace NVS `console-ui`, record
-versionato `prefs-v2`: non riscrivono il JSON della SD per ogni tocco. Questo consente
+o all'uscita dalle impostazioni. Usano il record versionato `console-cfg/settings`,
+che comprende anche rete e configurazione del dispositivo. Questo consente
 di mantenere le preferenze anche con SD assente. Un salvataggio completo dal
 portale aggiorna anche questi valori NVS; il caricamento dal repository
 restituisce gli stessi valori effettivi a tutti i servizi.

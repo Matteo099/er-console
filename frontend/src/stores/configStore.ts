@@ -12,7 +12,6 @@ const defaultConfig = (): DeviceConfig => ({
   deviceName: 'ESP32 Device',
   wifi: {
     ssid: '',
-    password: '',
   },
   locale: {
     language: 'it-IT',

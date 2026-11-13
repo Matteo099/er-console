@@ -29,18 +29,12 @@ void PortalService::setDependencies(StorageSystem* storage, NetworkSystem* netwo
 
 DeviceConfig PortalService::getConfig() const {
     DeviceConfig config = cachedConfig;
-    if (storageSystem && storageSystem->isReady()) {
-        configRepository.load(storageSystem, config);
-        cachedConfig = config;
-    } else
-        configRepository.loadCached(config);
+    configRepository.load(storageSystem, config);
+    cachedConfig = config;
     return config;
 }
 
 bool PortalService::saveConfig(const DeviceConfig& config) {
-    if (!storageSystem || !storageSystem->isReady())
-        return false;
-
     if (!configRepository.save(storageSystem, config))
         return false;
     cachedConfig = config;

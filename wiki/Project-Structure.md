@@ -35,7 +35,7 @@
 ## Important Runtime Paths
 
 - `/.core/portal/index.html`: frontend entry served by firmware
-- `/.core/config/config.json`: device configuration file
+- `/.core/config/config.json` and `wifi.cfg`: legacy migration inputs, removed after verified import into internal NVS `console-cfg/settings`
 - `/games/*`: Lua game payloads
 
 ## Scripts

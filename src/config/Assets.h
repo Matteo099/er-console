@@ -9,7 +9,7 @@
 #define PORTAL_DIR CORE_DIR "/portal"
 #define IMAGES_DIR CORE_DIR "/images"
 
-// Configuration files
+// Legacy files, read only for migration to internal NVS; never written.
 #define DEVICE_CONFIG_FILE CONFIG_DIR "/config.json"
 #define WIFI_CFG_FILE CONFIG_DIR "/wifi.cfg"
 

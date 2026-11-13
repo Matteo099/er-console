@@ -19,6 +19,7 @@ void ConfigController::registerRoutes(WebServer& server) {
 
 void ConfigController::sendConfigPayload(WebServer& server, const DeviceConfig& config) {
     const auto body = DeviceConfigRepository().toJson(config);
+    server.sendHeader("Cache-Control", "no-store");
     server.send(200, "application/json", body.c_str());
 }
 
@@ -40,21 +41,36 @@ void ConfigController::updateConfig(WebServer& server) {
 
     JsonObject wifi = doc["wifi"];
     if (!wifi.isNull()) {
-        config.wifi.ssid = wifi["ssid"].as<std::string>();
-        config.wifi.password = wifi["password"].as<std::string>();
+        if ((!wifi["ssid"].isNull() && !wifi["ssid"].is<const char*>()) ||
+            (!wifi["password"].isNull() && !wifi["password"].is<const char*>())) {
+            server.send(400, "application/json", "{\"error\":\"invalid_config\"}");
+            return;
+        }
+        if (!wifi["ssid"].isNull()) {
+            const auto ssid = wifi["ssid"].as<std::string>();
+            if (ssid != config.wifi.ssid)
+                config.wifi.password.clear();
+            config.wifi.ssid = ssid;
+        }
+        if (!wifi["password"].isNull())
+            config.wifi.password = wifi["password"].as<std::string>();
     }
 
     JsonObject locale = doc["locale"];
     if (!locale.isNull()) {
-        config.locale.language = locale["language"].as<std::string>();
-        config.locale.timezone = locale["timezone"].as<std::string>();
-        config.locale.dateFormat = locale["dateFormat"].as<std::string>();
+        if (!locale["language"].isNull())
+            config.locale.language = locale["language"].as<std::string>();
+        if (!locale["timezone"].isNull())
+            config.locale.timezone = locale["timezone"].as<std::string>();
+        if (!locale["dateFormat"].isNull())
+            config.locale.dateFormat = locale["dateFormat"].as<std::string>();
     }
 
     JsonObject ui = doc["ui"];
     if (!ui.isNull()) {
-        config.ui.theme = ui["theme"].as<std::string>();
-        config.ui.brightness = ui["brightness"] | 100;
+        if (!ui["theme"].isNull())
+            config.ui.theme = ui["theme"].as<std::string>();
+        config.ui.brightness = ui["brightness"] | config.ui.brightness;
     }
 
     JsonObject audio = doc["audio"];

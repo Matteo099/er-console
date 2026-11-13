@@ -10,6 +10,7 @@
     "build-only": "vite build",
     "postbuild": "shx mkdir -p ../sd/.core/portal && node scripts/clean-portal.mjs && shx cp -r dist/* ../sd/.core/portal",
     "type-check": "vue-tsc --build",
+    "test:config": "node --test scripts/test-config-storage.mjs",
     "lint": "run-s lint:*",
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",

@@ -9,7 +9,9 @@
 
 export interface WiFiConfig {
   ssid: string
-  password: string
+  // Write-only: null/absent preserves the secret; an explicit empty value selects an open network.
+  password?: string | null
+  passwordConfigured?: boolean
 }
 
 export interface LocaleConfig {

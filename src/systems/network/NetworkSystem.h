@@ -56,7 +56,6 @@ class NetworkSystem : public SystemService {
     }
 
   private:
-    bool loadLegacyCredentials(StorageSystem* storage);
     void refreshStatus();
     void setState(State state, const std::string& message, bool timedOut = false);
     void updateScan();
