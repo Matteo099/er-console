@@ -19,13 +19,12 @@ GameView, conservando stato, timer e script: [IN_GAME_SETTINGS.md](IN_GAME_SETTI
 Indietro da Risorse o Rete torna alla scheda Sistema. Il contenuto delle schede
 scorre, mentre intestazione, selettore delle schede e Indietro restano visibili.
 
-## Persistenza e compatibilita'
+## Persistenza
 
 `DeviceConfigRepository` usa il record NVS versionato `console-cfg/settings` per
 tutte le preferenze e configurazioni del dispositivo. Le modifiche TFT vengono
-salvate dopo 400 ms di inattivita' o uscendo dalla schermata. I vecchi JSON SD,
-`console-ui/prefs-v2`, `theme` e `sound` vengono importati preservando i valori
-esistenti; il vecchio interruttore OFF migra entrambi i canali su OFF.
+salvate dopo 400 ms di inattivita' o uscendo dalla schermata. Un dispositivo privo
+di configurazione usa i default del firmware.
 Il portale usa lo stesso modello senza scrivere configurazioni personali sulla SD.
 Dettagli e limiti: [DEVICE_SETTINGS_STORAGE.md](DEVICE_SETTINGS_STORAGE.md).
 
@@ -134,8 +133,8 @@ API per sorgente, limiti della cache e preparazione degli asset:
 L'SSID si seleziona dalla lista delle reti disponibili, con segnale e protezione.
 La password usa una tastiera con occhio, Annulla e Conferma; viene inizialmente
 mascherata. Salva valida SSID (massimo 32 byte), password aperta/vuota, 8–63 byte
-oppure PSK esadecimale di 64 cifre. Le credenziali vengono importate dal vecchio
-`console-net/credentials` nel record `console-cfg/settings` e restano
+oppure PSK esadecimale di 64 cifre. Le credenziali sono salvate nel record
+`console-cfg/settings` e restano
 utilizzabili senza SD. Le risposte del portale non restituiscono la password.
 
 Con `WIFI_ENABLED=1`, Salva e connetti e Disconnetti inviano richieste al task
@@ -147,7 +146,7 @@ Per la selezione delle reti, i controlli e la scansione asincrona vedere
 [NETWORK_UI.md](NETWORK_UI.md).
 
 Con build debug e `UI_DIAGNOSTICS_ENABLED=1`, `ui selftest` verifica mixer,
-migrazione, validazione credenziali e traduzione live senza audio o scritture NVS.
+default, validazione credenziali e traduzione live senza audio o scritture NVS.
 `ui preferences` riporta le preferenze non sensibili; `ui set x y valore` agisce
 sui controlli LVGL reali e pubblica il relativo evento. Ripristinare il flag a
 zero dopo le prove.

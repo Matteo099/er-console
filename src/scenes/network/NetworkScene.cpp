@@ -14,7 +14,7 @@ void NetworkScene::onEnter() {
     view.setEventHandler(this);
     view.create();
     DeviceConfig config;
-    DeviceConfigRepository().loadCached(config);
+    DeviceConfigRepository().load(config);
     view.setCredentials(config.wifi.ssid, config.wifi.password);
 
     network = static_cast<NetworkSystem*>(

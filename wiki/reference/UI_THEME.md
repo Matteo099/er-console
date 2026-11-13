@@ -108,10 +108,8 @@ configurato sul dispositivo.
 
 ## Preferenze
 
-`DeviceConfigRepository` usa le preferenze in NVS `console-cfg/settings`;
-il documento su SD e le vecchie chiavi NVS sono importati una sola volta.
-I nomi precedenti `light`/`dark`
-ricadono su Menta; `blue` e `red` sono alias di Cielo e Corallo.
+`DeviceConfigRepository` usa le preferenze in NVS `console-cfg/settings`.
+I temi disponibili sono `mint`, `sky` e `coral`.
 
 Tema, lingua e audio vengono applicati subito e salvati dopo 400 ms di quiete
 o all'uscita dalle impostazioni. Usano il record versionato `console-cfg/settings`,

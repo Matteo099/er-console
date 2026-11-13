@@ -13,7 +13,7 @@
 - [Network Ui](NETWORK_UI.md)
 - [Sd Diagnostics](SD_DIAGNOSTICS.md)
 - [Settings](SETTINGS.md)
-- [Device settings storage and migration](DEVICE_SETTINGS_STORAGE.md)
+- [Device settings storage](DEVICE_SETTINGS_STORAGE.md)
 - [Ui Cleanup Quick Reference](UI_CLEANUP_QUICK_REFERENCE.md)
 - [Ui Cleanup System](UI_CLEANUP_SYSTEM.md)
 - [Ui Cleanup Visual Guide](UI_CLEANUP_VISUAL_GUIDE.md)

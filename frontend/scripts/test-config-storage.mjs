@@ -13,19 +13,13 @@ const { mockRequestJson: request } = await import(`data:text/javascript;base64,$
 
 test('configuration reads redact the password and settings saves preserve it', async () => {
   const config = await request('/api/config')
-  assert.equal(config.wifi.password, null)
+  assert.equal(Object.hasOwn(config.wifi, 'password'), false)
   assert.equal(config.wifi.passwordConfigured, true)
   config.ui.theme = 'coral'
   const saved = await request('/api/config', { method: 'PUT', body: JSON.stringify(config) })
   assert.equal(saved.ui.theme, 'coral')
   assert.equal(saved.wifi.passwordConfigured, true)
-  assert.equal(saved.wifi.password, null)
-  // Legacy portal normalization defaults to an empty password, then overlays
-  // the response. The null placeholder must survive and preserve credentials.
-  const legacy = { ...saved, wifi: { ssid: '', password: '', ...saved.wifi } }
-  const roundTrip = await request('/api/config', { method: 'PUT', body: JSON.stringify(legacy) })
-  assert.equal(roundTrip.wifi.passwordConfigured, true)
-  assert.equal(roundTrip.wifi.password, null)
+  assert.equal(Object.hasOwn(saved.wifi, 'password'), false)
 })
 
 test('explicit credential changes and open networks use write-only passwords', async () => {
@@ -36,7 +30,7 @@ test('explicit credential changes and open networks use write-only passwords', a
   opened.wifi.password = 'test-only-password'
   const secured = await request('/api/config', { method: 'PUT', body: JSON.stringify(opened) })
   assert.equal(secured.wifi.passwordConfigured, true)
-  assert.equal(secured.wifi.password, null)
+  assert.equal(Object.hasOwn(secured.wifi, 'password'), false)
   secured.wifi.ssid = 'Different open network'
   const different = await request('/api/config', { method: 'PUT', body: JSON.stringify(secured) })
   assert.equal(different.wifi.passwordConfigured, false)

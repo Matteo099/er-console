@@ -10,7 +10,7 @@ __pycache__/
 
 # Generated portal files; source is in frontend/
 /sd/.core/portal/
-# Legacy personal configuration is imported into internal NVS, never committed.
+# Personal device configuration belongs in NVS, never in the asset bundle.
 /sd/.core/config/
 
 # Local editor state

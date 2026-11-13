@@ -1,6 +1,5 @@
 #pragma once
 
-#include "systems/storage/StorageSystem.h"
 #include "core/SystemService.h"
 #include "services/DeviceConfigRepository.h"
 #include <string>
@@ -27,7 +26,7 @@ class NetworkSystem : public SystemService {
 
     bool connect();
     void disconnect();
-    bool reloadFromStorage(StorageSystem* storage);
+    bool reloadConfiguration();
     void setCredentials(const std::string& newSsid, const std::string& newPassword);
 
     Status getStatus() const {

@@ -145,7 +145,7 @@ void GameScene::openSettings() {
     if (view.settingsVisible())
         return;
     DeviceConfig config;
-    settingsRepository.loadCached(config);
+    settingsRepository.load(config);
     settingsAudio = config.audio;
     settingsDirty = false;
     view.showSettings(settingsAudio, state == GameState::Paused  ? Text::GameSettingsPaused
@@ -169,7 +169,7 @@ void GameScene::saveSettings() {
     // Merge only audio into the latest preferences. A portal/theme/language
     // update while playing must not be overwritten by an older game snapshot.
     DeviceConfig latest;
-    settingsRepository.loadCached(latest);
+    settingsRepository.load(latest);
     latest.audio.music = settingsAudio.music;
     latest.audio.effects = settingsAudio.effects;
     const bool saved = settingsRepository.savePreferences(latest);
@@ -182,7 +182,7 @@ void GameScene::onPreferencesChanged() {
     view.translateSettings();
     if (view.settingsVisible() && !settingsDirty) {
         DeviceConfig config;
-        settingsRepository.loadCached(config);
+        settingsRepository.load(config);
         settingsAudio = config.audio;
         view.setSettingsAudio(settingsAudio);
     }

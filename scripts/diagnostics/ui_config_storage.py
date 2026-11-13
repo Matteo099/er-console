@@ -1,9 +1,7 @@
-"""Verify internal-NVS settings, safe SD migration and persistence across reset.
+"""Verify internal-NVS settings and persistence across reset.
 
-Requires a debug build with UI_DIAGNOSTICS_ENABLED=1. Migration cases use RAM
-files and isolated NVS namespaces; production settings are never changed.
-The reboot comparison retains its baseline in internal NVS and returns boolean
-results only: no password, credential hash or configuration export crosses UART.
+Requires a debug build with UI_DIAGNOSTICS_ENABLED=1. Tests use an isolated NVS
+namespace; production settings are never changed. Saved passwords stay on-device.
 """
 import argparse
 from pathlib import Path
@@ -12,18 +10,17 @@ import time
 
 from ui_settings import preferences
 from ui_stability import StabilityProbe
+from ui_network_connection import status, wait_connected
 
 
 def run(args):
     probe = StabilityProbe(args.port, args.output)
-    baseline = False
     try:
         probe.command('ui wifi-log off')
         original = preferences(probe)
         statistics = next(row.split('@STATS ', 1)[1] for row in probe.command('ui stats-data')
                           if '@STATS ' in row)
-        assert any('@CONFIGBASELINE OK' in row for row in probe.command('ui config-baseline'))
-        baseline = True
+        configured = status(probe)[1]
         rows = probe.command('ui config-test')
         for row in rows:
             if '@CONFIG' in row:
@@ -31,27 +28,21 @@ def run(args):
         result = next((re.search(r'@CONFIGTEST passed=(\d+) failed=(\d+)', row)
                        for row in rows if '@CONFIGTEST ' in row), None)
         assert result and int(result[1]) > 0 and int(result[2]) == 0, rows
-        # The committed baseline stays on the ESP32 across the reset.
         probe.port.setRTS(True)
         time.sleep(.1)
         probe.port.setRTS(False)
         probe.read_until(lambda row: 'Entering MainMenuScene' in row, timeout=30)
         probe.command('ui wifi-log off')
-        verification = probe.command('ui config-verify')
-        assert any('@CONFIGVERIFY match=1 clean_sd=1 baseline_cleared=1' in row
-                   for row in verification), verification
-        baseline = False
         assert preferences(probe) == original
+        assert status(probe)[1] == configured
+        if configured:
+            wait_connected(probe)
         after = next(row.split('@STATS ', 1)[1] for row in probe.command('ui stats-data')
                      if '@STATS ' in row)
         assert after == statistics, 'User statistics changed'
-        print('PASS all device settings and credentials survive reboot; no legacy settings on SD',
-              flush=True)
-        print('PASS UI/audio preferences and statistics preserved', flush=True)
+        print('PASS reboot preserves UI/audio preferences, saved network and statistics', flush=True)
     finally:
         try:
-            if baseline:
-                probe.command('ui config-verify')
             probe.command('ui wifi-log on')
         finally:
             probe.close('session')

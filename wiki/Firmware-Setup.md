@@ -53,9 +53,8 @@ pio device monitor -e esp32-s3-devkitc-1-n16r8v-debug -p COM3 -b 115200
 
 Runtime device configuration is stored in internal NVS (`console-cfg/settings`),
 including theme, language, audio, Wi-Fi credentials and device preferences. It
-persists without SD and across ordinary firmware/OTA updates. Existing SD and
-legacy NVS configuration is imported automatically; SD originals are removed only
-after the NVS commit is verified. See [storage and migration](reference/DEVICE_SETTINGS_STORAGE.md).
+persists without SD and across ordinary firmware/OTA updates. A device without a
+saved configuration uses firmware defaults. See [device settings storage](reference/DEVICE_SETTINGS_STORAGE.md).
 
 Default values include:
 

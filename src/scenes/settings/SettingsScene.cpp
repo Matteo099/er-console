@@ -11,7 +11,7 @@
 
 void SettingsScene::onEnter() {
     view.setEventHandler(this);
-    repository.loadCached(config);
+    repository.load(config);
     I18n::select(config.locale.language.c_str());
     UITheme::select(UITheme::fromName(config.ui.theme.c_str()));
     view.create();
@@ -55,7 +55,7 @@ void SettingsScene::onPreferencesChanged() {
     if (dirty)
         return;
     volumeFeedback.stop();
-    repository.loadCached(config);
+    repository.load(config);
     view.translate();
     view.setAudio(config.audio);
     view.setTheme(UITheme::current());
@@ -117,8 +117,6 @@ bool SettingsScene::handleUIEvent(const UIEvent& event) {
 }
 
 void SettingsScene::applyAudioPreference() {
-    config.audio.enabled = config.audio.effects.enabled;
-    config.audio.volume = config.audio.effects.volume;
     UIFeedback::setSoundEnabled(config.audio.effects.enabled && config.audio.effects.volume);
     if (audio)
         audio->configure(config.audio);

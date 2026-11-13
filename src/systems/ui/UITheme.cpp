@@ -143,9 +143,9 @@ const UITheme::Palette& UITheme::palette(UIThemeId id) {
 }
 
 UIThemeId UITheme::fromName(const char* value) {
-    if (value && (!std::strcmp(value, "sky") || !std::strcmp(value, "blue")))
+    if (value && !std::strcmp(value, "sky"))
         return UIThemeId::Sky;
-    if (value && (!std::strcmp(value, "coral") || !std::strcmp(value, "red")))
+    if (value && !std::strcmp(value, "coral"))
         return UIThemeId::Coral;
     return UIThemeId::Mint;
 }

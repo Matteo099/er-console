@@ -546,8 +546,6 @@ void UIDiagnostics::update(SceneManager& scenes) {
             runSettingsDiagnostics();
         else if (command == "ui config-test")
             runConfigStorageDiagnostics();
-        else if (command == "ui config-baseline" || command == "ui config-verify")
-            configPersistenceDiagnostics(command == "ui config-baseline");
         else if (command == "ui audio-test")
             runAudioDiagnostics();
         else if (command == "ui scroll-test")
@@ -588,7 +586,7 @@ void UIDiagnostics::update(SceneManager& scenes) {
             audioPreloadAction(command.substring(17).c_str());
         else if (command == "ui preferences") {
             DeviceConfig config;
-            DeviceConfigRepository().loadCached(config);
+            DeviceConfigRepository().load(config);
             Serial.printf("@PREFERENCES theme=%s language=%s music=%u/%u effects=%u/%u\n",
                           config.ui.theme.c_str(), config.locale.language.c_str(),
                           config.audio.music.enabled, config.audio.music.volume,
@@ -601,7 +599,7 @@ void UIDiagnostics::update(SceneManager& scenes) {
                 audio->setVolume(level);
         } else if (command == "ui quiet on" || command == "ui quiet off") {
             DeviceConfig config;
-            DeviceConfigRepository().loadCached(config);
+            DeviceConfigRepository().load(config);
             const bool enabled = command.endsWith("off") && config.audio.effects.enabled &&
                                  config.audio.effects.volume;
             UIFeedback::setSoundEnabled(enabled);

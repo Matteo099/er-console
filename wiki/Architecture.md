@@ -46,7 +46,7 @@
 
 ## Data Persistence
 
-- Device configuration is stored in internal NVS `console-cfg/settings`; SD JSON/Wi-Fi files are legacy migration inputs only. See [storage and migration](reference/DEVICE_SETTINGS_STORAGE.md).
+- Device configuration is stored exclusively in internal NVS `console-cfg/settings`. See [device settings storage](reference/DEVICE_SETTINGS_STORAGE.md).
 - Config defaults are defined in `DeviceConfig`
 - Storage and network systems are injected into portal service layer
 

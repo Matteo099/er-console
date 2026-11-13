@@ -32,12 +32,12 @@ NetworkSystem::NetworkSystem() {
     status.message = "Idle";
 }
 
-void NetworkSystem::init(void* params) {
+void NetworkSystem::init(void*) {
     Log::info(Log::NETWORK_TAG, "Initializing network system");
 #if WIFI_ENABLED
     WiFi.persistent(false);
     WiFi.mode(WIFI_STA);
-    if (reloadFromStorage(static_cast<StorageSystem*>(params))) {
+    if (reloadConfiguration()) {
         // Queue association for update(); boot must not wait for the network.
         connect();
     }
@@ -183,9 +183,9 @@ void NetworkSystem::setCredentials(const std::string& newSsid, const std::string
         status.ssid = ssid;
 }
 
-bool NetworkSystem::reloadFromStorage(StorageSystem* storage) {
+bool NetworkSystem::reloadConfiguration() {
     DeviceConfig config;
-    configRepository.load(storage, config);
+    configRepository.load(config);
     setCredentials(config.wifi.ssid, config.wifi.password);
     setState(hasCredentials() ? State::Disconnected : State::Idle,
              hasCredentials() ? "Ready to connect" : "Missing credentials");

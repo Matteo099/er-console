@@ -45,7 +45,6 @@ const defaultConfig = (): DeviceConfig => ({
   },
   ui: {
     theme: 'mint',
-    compactMode: false,
   },
   audio: { music: { enabled: true, volume: 50 }, effects: { enabled: true, volume: 70 } },
 })
@@ -85,7 +84,7 @@ const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value))
 const publicConfig = (): DeviceConfig => {
   const config = clone(state.config)
   config.wifi.passwordConfigured = Boolean(config.wifi.password)
-  config.wifi.password = null
+  delete config.wifi.password
   return config
 }
 
@@ -254,7 +253,7 @@ export async function mockRequestJson<T>(path: string, options: RequestOptions =
 
   if (pathname === '/api/config' && method === 'PUT') {
     const incoming = parseJsonBody<DeviceConfig>(options.body)
-    if (incoming.wifi.password == null && incoming.wifi.ssid === state.config.wifi.ssid)
+    if (incoming.wifi.password === undefined && incoming.wifi.ssid === state.config.wifi.ssid)
       incoming.wifi.password = state.config.wifi.password
     state.config = clone(incoming)
     state.logs.unshift(`[INFO] config updated (wifi=${state.config.wifi.ssid || 'none'})`)
