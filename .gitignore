@@ -10,6 +10,8 @@ __pycache__/
 
 # Generated portal files; source is in frontend/
 /sd/.core/portal/
+# Personal device configuration belongs in NVS, never in the asset bundle.
+/sd/.core/config/
 
 # Local editor state
 .vscode/.browse.c_cpp.db*

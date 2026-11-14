@@ -1,92 +1,21 @@
 #include "DeviceConfigRepository.h"
-
-#include <Arduino.h>
 #include <ArduinoJson.h>
 #include <nvs.h>
 #include <algorithm>
-#include <cstring>
-#include <cctype>
 #include <atomic>
+#include <cctype>
+#include <cstring>
+#include <utility>
 #include "core/TaskMutex.h"
+#include "log/Logger.h"
 
 namespace {
 TaskMutex configMutex;
-DeviceConfig cachedConfig;
-bool hasConfig = false;
 std::atomic<uint32_t> preferencesRevision{0};
-
-struct PreferenceRecord {
-    uint32_t magic = 0x45525032;
-    char theme[12]{};
-    char language[8]{};
-    uint8_t musicEnabled, musicVolume, effectsEnabled, effectsVolume;
-};
-
-static_assert(sizeof(PreferenceRecord) == 28, "Stable NVS preferences layout");
-
-struct NetworkRecord {
-    uint32_t magic = 0x45524e31;
-    char ssid[33]{};
-    char password[65]{};
-};
-
-const char* languageCode(const std::string& value) {
-    return value == "en" || value.compare(0, 3, "en-") == 0 ? "en-GB" : "it-IT";
-}
 
 bool validTheme(const std::string& value) {
     return value == "mint" || value == "sky" || value == "coral";
 }
-
-void legacyAudio(DeviceAudioConfig& audio) {
-    audio.music =
-        audio.effects = {audio.enabled, uint8_t(std::max(0, std::min(100, audio.volume)))};
-}
-
-void loadUiPreferences(DeviceConfig& config) {
-    nvs_handle_t handle;
-    if (nvs_open("console-ui", NVS_READONLY, &handle) == ESP_OK) {
-        PreferenceRecord record{};
-        size_t size = sizeof(record);
-        const bool valid =
-            nvs_get_blob(handle, "prefs-v2", &record, &size) == ESP_OK && size == sizeof(record) &&
-            record.magic == 0x45525032 && record.theme[11] == 0 && record.language[7] == 0 &&
-            validTheme(record.theme) && record.musicEnabled <= 1 && record.effectsEnabled <= 1 &&
-            record.musicVolume <= 100 && record.effectsVolume <= 100 &&
-            (std::strcmp(record.language, "it-IT") == 0 ||
-             std::strcmp(record.language, "en-GB") == 0);
-        if (valid) {
-            config.ui.theme = record.theme;
-            config.locale.language = record.language;
-            config.audio.music = {record.musicEnabled != 0, record.musicVolume};
-            config.audio.effects = {record.effectsEnabled != 0, record.effectsVolume};
-            config.audio.independent = true;
-        } else {
-            char theme[32];
-            size_t length = sizeof(theme);
-            if (nvs_get_str(handle, "theme", theme, &length) == ESP_OK && validTheme(theme))
-                config.ui.theme = theme;
-            uint8_t sound;
-            if (nvs_get_u8(handle, "sound", &sound) == ESP_OK &&
-                (!config.audio.independent || !sound))
-                config.audio.music.enabled = config.audio.effects.enabled = sound != 0;
-        }
-        config.audio.enabled = config.audio.effects.enabled;
-        config.audio.volume = config.audio.effects.volume;
-        nvs_close(handle);
-    }
-    if (nvs_open("console-net", NVS_READONLY, &handle) == ESP_OK) {
-        NetworkRecord record{};
-        size_t size = sizeof(record);
-        if (nvs_get_blob(handle, "credentials", &record, &size) == ESP_OK &&
-            size == sizeof(record) && record.magic == 0x45524e31 && !record.ssid[32] &&
-            !record.password[64] &&
-            DeviceConfigRepository::validNetwork(record.ssid, record.password))
-            config.wifi = {record.ssid, record.password};
-        nvs_close(handle);
-    }
-}
-
 }  // namespace
 
 DeviceConfig DeviceConfigRepository::defaultConfig() const {
@@ -97,95 +26,44 @@ uint32_t DeviceConfigRepository::revision() {
     return preferencesRevision.load();
 }
 
-bool DeviceConfigRepository::load(StorageSystem* storage, DeviceConfig& config) const {
-    config = defaultConfig();
-    bool loaded = false;
-    if (storage && storage->isReady()) {
-        std::string json;
-        if (storage->readTextFile(DEVICE_CONFIG_FILE, json))
-            loaded = parseJson(json, config);
-    }
-    if (!loaded) {
-        TaskMutex::Guard lock(configMutex);
-        if (hasConfig)
-            config = cachedConfig;
-    }
-    // Local display preferences remain usable without SD. All callers, including
-    // the portal, see the same effective UI configuration through this repository.
-    loadUiPreferences(config);
-    {
-        TaskMutex::Guard lock(configMutex);
-        cachedConfig = config;
-        hasConfig |= loaded;
-    }
-    return loaded;
-}
-
-void DeviceConfigRepository::loadCached(DeviceConfig& config) const {
+bool DeviceConfigRepository::load(DeviceConfig& config) const {
     TaskMutex::Guard lock(configMutex);
-    config = cachedConfig;
-    loadUiPreferences(config);
+    config = defaultConfig();
+    const auto state = readRecord(config);
+    if (state == RecordState::Error)
+        Log::error(Log::STORAGE_TAG, "Device NVS configuration unreadable");
+    return state == RecordState::Ready;
 }
 
-bool DeviceConfigRepository::save(StorageSystem* storage, const DeviceConfig& config) const {
-    if (!validTheme(config.ui.theme) || config.audio.music.volume > 100 ||
-        config.audio.effects.volume > 100 || !validNetwork(config.wifi.ssid, config.wifi.password))
-        return false;
-    if (!storage || !storage->isReady())
-        return false;
-
-    if (!storage->writeTextFile(DEVICE_CONFIG_FILE, toJson(config), true))
-        return false;
-    {
-        TaskMutex::Guard lock(configMutex);
-        cachedConfig = config;
-        hasConfig = true;
-    }
-    return savePreferences(config) &&
-           saveNetworkPreferences(config.wifi.ssid, config.wifi.password);
+bool DeviceConfigRepository::save(const DeviceConfig& config) const {
+    TaskMutex::Guard lock(configMutex);
+    return writeRecord(config);
 }
 
 bool DeviceConfigRepository::savePreferences(const DeviceConfig& config) const {
-    if (!validTheme(config.ui.theme) || config.audio.music.volume > 100 ||
-        config.audio.effects.volume > 100)
+    TaskMutex::Guard lock(configMutex);
+    DeviceConfig current;
+    if (readRecord(current) == RecordState::Error)
         return false;
-    PreferenceRecord record{};
-    std::strncpy(record.theme, config.ui.theme.c_str(), sizeof(record.theme) - 1);
-    std::strncpy(record.language, languageCode(config.locale.language),
-                 sizeof(record.language) - 1);
-    record.musicEnabled = config.audio.music.enabled;
-    record.musicVolume = config.audio.music.volume;
-    record.effectsEnabled = config.audio.effects.enabled;
-    record.effectsVolume = config.audio.effects.volume;
-    nvs_handle_t handle;
-    if (nvs_open("console-ui", NVS_READWRITE, &handle) != ESP_OK)
-        return false;
-    const bool saved = nvs_set_blob(handle, "prefs-v2", &record, sizeof(record)) == ESP_OK &&
-                       nvs_commit(handle) == ESP_OK;
-    nvs_close(handle);
-    if (saved) {
-        TaskMutex::Guard lock(configMutex);
-        cachedConfig.ui = config.ui;
-        cachedConfig.locale = config.locale;
-        cachedConfig.audio = config.audio;
-        cachedConfig.audio.enabled = config.audio.effects.enabled;
-        cachedConfig.audio.volume = config.audio.effects.volume;
-        preferencesRevision.fetch_add(1);
-    }
-    return saved;
+    current.ui.theme = config.ui.theme;
+    current.locale.language = config.locale.language;
+    current.audio = config.audio;
+    return writeRecord(current);
 }
 
-bool DeviceConfigRepository::saveUiPreferences(const std::string& theme, bool enabled) const {
+bool DeviceConfigRepository::saveNetworkPreferences(const std::string& ssid,
+                                                    const std::string& password) const {
+    TaskMutex::Guard lock(configMutex);
     DeviceConfig config;
-    loadCached(config);
-    config.ui.theme = theme;
-    config.audio.music.enabled = config.audio.effects.enabled = enabled;
-    return savePreferences(config);
+    if (readRecord(config) == RecordState::Error)
+        return false;
+    config.wifi = {ssid, password};
+    return writeRecord(config);
 }
 
 bool DeviceConfigRepository::validNetwork(const std::string& ssid, const std::string& password) {
     if (ssid.size() > 32 || password.size() > 64 || ssid.find('\0') != std::string::npos ||
-        password.find('\0') != std::string::npos)
+        password.find('\0') != std::string::npos || (ssid.empty() && !password.empty()))
         return false;
     if (password.size() == 64)
         return std::all_of(password.begin(), password.end(), [](unsigned char c) {
@@ -194,116 +72,126 @@ bool DeviceConfigRepository::validNetwork(const std::string& ssid, const std::st
     return password.empty() || (password.size() >= 8 && password.size() <= 63);
 }
 
-bool DeviceConfigRepository::saveNetworkPreferences(const std::string& ssid,
-                                                    const std::string& password) const {
-    if (!validNetwork(ssid, password))
-        return false;
-    NetworkRecord record{};
-    std::memcpy(record.ssid, ssid.data(), ssid.size());
-    std::memcpy(record.password, password.data(), password.size());
-    nvs_handle_t handle;
-    if (nvs_open("console-net", NVS_READWRITE, &handle) != ESP_OK)
-        return false;
-    const bool saved = nvs_set_blob(handle, "credentials", &record, sizeof(record)) == ESP_OK &&
-                       nvs_commit(handle) == ESP_OK;
-    nvs_close(handle);
-    if (saved) {
-        TaskMutex::Guard lock(configMutex);
-        cachedConfig.wifi = {ssid, password};
-        preferencesRevision.fetch_add(1);
-    }
-    return saved;
+bool DeviceConfigRepository::validConfig(const DeviceConfig& config) {
+    const auto text = [](const std::string& value, size_t maximum) {
+        return !value.empty() && value.size() <= maximum && value.find('\0') == std::string::npos;
+    };
+    return text(config.deviceName, 64) && text(config.locale.timezone, 64) &&
+           text(config.locale.dateFormat, 32) && validTheme(config.ui.theme) &&
+           config.ui.brightness >= 0 && config.ui.brightness <= 100 &&
+           config.audio.music.volume <= 100 && config.audio.effects.volume <= 100 &&
+           (config.locale.language == "it-IT" || config.locale.language == "en-GB") &&
+           validNetwork(config.wifi.ssid, config.wifi.password);
 }
 
-std::string DeviceConfigRepository::toJson(const DeviceConfig& config) const {
+DeviceConfigRepository::RecordState DeviceConfigRepository::readRecord(DeviceConfig& config) const {
+    nvs_handle_t handle;
+    auto result = nvs_open(storageNamespace, NVS_READONLY, &handle);
+    if (result == ESP_ERR_NVS_NOT_FOUND)
+        return RecordState::Missing;
+    if (result != ESP_OK)
+        return RecordState::Error;
+    size_t size = 0;
+    result = nvs_get_blob(handle, NVS_KEY, nullptr, &size);
+    if (result == ESP_ERR_NVS_NOT_FOUND) {
+        nvs_close(handle);
+        return RecordState::Missing;
+    }
+    std::string json;
+    if (result == ESP_OK && size && size <= MAX_RECORD_BYTES) {
+        json.resize(size);
+        result = nvs_get_blob(handle, NVS_KEY, &json[0], &size);
+    } else
+        result = ESP_FAIL;
+    nvs_close(handle);
+    return result == ESP_OK && parseJson(json, config) ? RecordState::Ready : RecordState::Error;
+}
+
+bool DeviceConfigRepository::writeRecord(const DeviceConfig& config) const {
+    if (!validConfig(config))
+        return false;
+    const auto json = toJson(config, true);
+    if (json.size() > MAX_RECORD_BYTES)
+        return false;
+    DeviceConfig previous;
+    if (readRecord(previous) == RecordState::Ready && toJson(previous, true) == json)
+        return true;
+    nvs_handle_t handle;
+    const auto opened = nvs_open(storageNamespace, NVS_READWRITE, &handle);
+    if (opened != ESP_OK) {
+        Log::error(Log::STORAGE_TAG, "NVS settings open failed: %s", esp_err_to_name(opened));
+        return false;
+    }
+    auto result = nvs_set_blob(handle, NVS_KEY, json.data(), json.size());
+    if (result == ESP_OK)
+        result = nvs_commit(handle);
+    nvs_close(handle);
+    DeviceConfig verified;
+    const auto readState = readRecord(verified);
+    const auto verifiedJson = toJson(verified, true);
+    if (result != ESP_OK || readState != RecordState::Ready || verifiedJson != json) {
+        Log::error(Log::STORAGE_TAG, "NVS settings save/verification failed: %s",
+                   esp_err_to_name(result));
+        return false;
+    }
+    if (!std::strcmp(storageNamespace, NVS_NAMESPACE))
+        preferencesRevision.fetch_add(1);
+    return true;
+}
+
+std::string DeviceConfigRepository::toJson(const DeviceConfig& config, bool includeSecrets) const {
     JsonDocument doc;
-    doc["version"] = 1;
+    doc["version"] = 2;
     doc["deviceName"] = config.deviceName;
-
-    JsonObject wifi = doc["wifi"].to<JsonObject>();
-    wifi["ssid"] = config.wifi.ssid;
-    wifi["password"] = config.wifi.password;
-
-    JsonObject locale = doc["locale"].to<JsonObject>();
-    locale["language"] = config.locale.language;
-    locale["timezone"] = config.locale.timezone;
-    locale["dateFormat"] = config.locale.dateFormat;
-
-    JsonObject ui = doc["ui"].to<JsonObject>();
-    ui["theme"] = config.ui.theme;
-    ui["compactMode"] = false;
-    ui["brightness"] = config.ui.brightness;
-
-    JsonObject audio = doc["audio"].to<JsonObject>();
-    audio["enabled"] = config.audio.effects.enabled;
-    audio["volume"] = config.audio.effects.volume;
-    audio["music"]["enabled"] = config.audio.music.enabled;
-    audio["music"]["volume"] = config.audio.music.volume;
-    audio["effects"]["enabled"] = config.audio.effects.enabled;
-    audio["effects"]["volume"] = config.audio.effects.volume;
-
-    String output;
-    serializeJsonPretty(doc, output);
-    output += '\n';
-    return std::string(output.c_str());
+    doc["wifi"]["ssid"] = config.wifi.ssid;
+    if (includeSecrets)
+        doc["wifi"]["password"] = config.wifi.password;
+    else
+        doc["wifi"]["passwordConfigured"] = !config.wifi.password.empty();
+    doc["locale"]["language"] = config.locale.language;
+    doc["locale"]["timezone"] = config.locale.timezone;
+    doc["locale"]["dateFormat"] = config.locale.dateFormat;
+    doc["ui"]["theme"] = config.ui.theme;
+    doc["ui"]["brightness"] = config.ui.brightness;
+    doc["audio"]["music"]["enabled"] = config.audio.music.enabled;
+    doc["audio"]["music"]["volume"] = config.audio.music.volume;
+    doc["audio"]["effects"]["enabled"] = config.audio.effects.enabled;
+    doc["audio"]["effects"]["volume"] = config.audio.effects.volume;
+    std::string output;
+    serializeJson(doc, output);
+    return output;
 }
 
 bool DeviceConfigRepository::parseJson(const std::string& json, DeviceConfig& config) const {
     JsonDocument doc;
-    const DeserializationError error = deserializeJson(doc, json);
-    if (error)
+    if (deserializeJson(doc, json) || !doc["version"].is<unsigned>() ||
+        doc["version"].as<unsigned>() != 2 || !doc["deviceName"].is<const char*>() ||
+        !doc["wifi"]["ssid"].is<const char*>() || !doc["wifi"]["password"].is<const char*>() ||
+        !doc["locale"]["language"].is<const char*>() ||
+        !doc["locale"]["timezone"].is<const char*>() ||
+        !doc["locale"]["dateFormat"].is<const char*>() || !doc["ui"]["theme"].is<const char*>() ||
+        !doc["ui"]["brightness"].is<int>())
         return false;
-
-    config = defaultConfig();
-
-    config.deviceName = doc["deviceName"].as<std::string>();
-
-    JsonObject wifi = doc["wifi"];
-    if (!wifi.isNull()) {
-        config.wifi.ssid = wifi["ssid"].as<std::string>();
-        config.wifi.password = wifi["password"].as<std::string>();
+    DeviceConfig decoded;
+    decoded.deviceName = doc["deviceName"].as<std::string>();
+    decoded.wifi = {doc["wifi"]["ssid"].as<std::string>(),
+                    doc["wifi"]["password"].as<std::string>()};
+    decoded.locale.language = doc["locale"]["language"].as<std::string>();
+    decoded.locale.timezone = doc["locale"]["timezone"].as<std::string>();
+    decoded.locale.dateFormat = doc["locale"]["dateFormat"].as<std::string>();
+    decoded.ui.theme = doc["ui"]["theme"].as<std::string>();
+    decoded.ui.brightness = doc["ui"]["brightness"].as<int>();
+    for (const char* name : {"music", "effects"}) {
+        auto channel = doc["audio"][name].as<JsonObjectConst>();
+        if (!channel["enabled"].is<bool>() || !channel["volume"].is<unsigned>() ||
+            channel["volume"].as<unsigned>() > 100)
+            return false;
+        auto& target = name[0] == 'm' ? decoded.audio.music : decoded.audio.effects;
+        target.enabled = channel["enabled"].as<bool>();
+        target.volume = channel["volume"].as<uint8_t>();
     }
-
-    JsonObject locale = doc["locale"];
-    if (!locale.isNull()) {
-        config.locale.language = locale["language"] | config.locale.language;
-        config.locale.timezone = locale["timezone"] | config.locale.timezone;
-        config.locale.dateFormat = locale["dateFormat"] | config.locale.dateFormat;
-    }
-
-    JsonObject ui = doc["ui"];
-    if (!ui.isNull()) {
-        config.ui.theme = ui["theme"] | config.ui.theme;
-        config.ui.brightness = ui["brightness"] | 100;
-    }
-
-    JsonObject audio = doc["audio"];
-    if (!audio.isNull()) {
-        config.audio.volume = audio["volume"] | 70;
-        config.audio.enabled = audio["enabled"] | true;
-        if (!audio["volume"].isNull() || !audio["enabled"].isNull())
-            legacyAudio(config.audio);
-        if (auto music = audio["music"].as<JsonObject>()) {
-            config.audio.independent = true;
-            config.audio.music.enabled = music["enabled"] | config.audio.music.enabled;
-            config.audio.music.volume =
-                std::max(0, std::min(100, music["volume"] | int(config.audio.music.volume)));
-        }
-        if (auto effects = audio["effects"].as<JsonObject>()) {
-            config.audio.independent = true;
-            config.audio.effects.enabled = effects["enabled"] | config.audio.effects.enabled;
-            config.audio.effects.volume =
-                std::max(0, std::min(100, effects["volume"] | int(config.audio.effects.volume)));
-        }
-    }
-
-    if (config.deviceName.empty())
-        config.deviceName = defaultConfig().deviceName;
-
-    config.locale.language = languageCode(config.locale.language);
-    if (!validTheme(config.ui.theme))
-        config.ui.theme = config.ui.theme == "blue"  ? "sky"
-                          : config.ui.theme == "red" ? "coral"
-                                                     : "mint";
+    if (!validConfig(decoded))
+        return false;
+    config = std::move(decoded);
     return true;
 }

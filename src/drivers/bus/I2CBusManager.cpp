@@ -19,6 +19,7 @@ bool I2CBusManager::init(int sdaPin, int sclPin, uint32_t frequency) {
         busMutex = nullptr;
         return false;
     }
+    wire.setTimeOut(20); // Bound a missing/stuck room device without blocking the UI.
     initialized = true;
     return true;
 }

@@ -8,3 +8,8 @@ Install PlatformIO (CLI or VS Code extension), Python, and the Node.js version i
 4. Insert the card and use `pio device monitor -b 115200` for serial output.
 
 The portal and Wi-Fi depend on firmware configuration. See [Firmware Setup](Firmware-Setup.md), [Frontend Portal](Frontend-Portal.md), and [Troubleshooting](Troubleshooting.md).
+
+These steps describe standalone development builds. For a downloadable release
+or CI bundle, use its matching `...-sd.zip`: extract it into the card root,
+including the hidden `.releases` directory. Subsequent OTA updates synchronize
+these resources automatically; see [SD updates](reference/SD_UPDATES.md).

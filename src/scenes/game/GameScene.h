@@ -15,12 +15,17 @@
 #include <atomic>
 #include "core/TaskMutex.h"
 
-enum class GameLoadState { Idle, Loading, LoadComplete, LoadFailed };
+enum class GameLoadState { Idle, Loading, LoadComplete, LoadFailed, CheckingHardware };
 
 class GameScene : public Scene {
   public:
 #if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
     static GameScene* diagnosticCurrent;
+
+    void useHardwareForDiagnostics(const InputConfig& config) {
+        diagnosticHardware = true;
+        gameInfo.inputConfig = config;
+    }
 #endif
     // Scene interface
     void onEnter() override;
@@ -58,6 +63,9 @@ class GameScene : public Scene {
     }
 
   private:
+#if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
+    bool diagnosticHardware = false;
+#endif
     struct SessionDisplayStatistics {
         uint32_t elapsedSeconds = 0;
         uint32_t pausedSeconds = 0;
@@ -98,6 +106,12 @@ class GameScene : public Scene {
     LuaSystem* luaSystem = nullptr;
     InputSystem* inputSystem = nullptr;
     GameLoadState loadState = GameLoadState::Idle;
+    enum class HardwareAction { None, Load, Start, Resume };
+    HardwareAction hardwareAction = HardwareAction::None;
+    void checkHardware(HardwareAction action);
+    void updateHardware();
+    void failHardware(const HardwareStatus& status);
+    bool finishGameScriptLoad();
 
     // Game state
     GameState state = GameState::Ready;
@@ -105,6 +119,7 @@ class GameScene : public Scene {
     uint32_t lastTickMs = 0;
     bool loadRequested = false;
     bool audioPreparing = false;
+    bool hardwarePrepared = false;
     uint32_t loadRequestedAt = 0;
     bool exitConfirmationOpen = false;
     bool resumeAfterConfirmation = false;
@@ -116,7 +131,7 @@ class GameScene : public Scene {
     SceneRequest request = SceneRequest();
 
     // Internal helpers
-    bool loadGameScript();
+    bool prepareHardware();
     void stopGame();
     void failLoad(const char* message);
 

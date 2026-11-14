@@ -3,6 +3,8 @@
 #include "drivers/bus/SPIBusLock.h"
 #include "config/BoardConfig.h"
 #include "ESP32SDFile.h"
+#include "systems/update/SdResources.h"
+#include <algorithm>
 #include <cstring>
 #include <cerrno>
 
@@ -41,6 +43,7 @@ bool ESP32SDCardDriver::init() {
     if (!isMounted)
         Log::error(Log::DRIVER_TAG, "SD mount failed on SPI3: SCK=%d MISO=%d MOSI=%d CS=%d",
                    SPI3_SCLK_PIN, SPI3_MISO_PIN, SPI3_MOSI_PIN, cs);
+    SdResources::mounted(isMounted);
     return isMounted;
 }
 
@@ -53,6 +56,10 @@ IFile* ESP32SDCardDriver::open(const char* path, FileMode mode) {
         return nullptr;
 
     SPIBusLock::Guard guard;
+    const auto resolved = SdResources::resolve(path, mode != FileMode::Read);
+    if (resolved.empty())
+        return nullptr;
+    path = resolved.c_str();
     File file;
 
     switch (mode) {
@@ -78,6 +85,10 @@ File ESP32SDCardDriver::openNative(const char* path, bool write) {
         return File();
 
     SPIBusLock::Guard guard;
+    const auto resolved = SdResources::resolve(path, write);
+    if (resolved.empty())
+        return File();
+    path = resolved.c_str();
 
     if (write && !ensureParents(path))
         return File();
@@ -94,11 +105,12 @@ bool ESP32SDCardDriver::exists(const char* path) const {
 
     SPIBusLock::Guard guard;
 
-    return SD.exists(path);
+    const auto resolved = SdResources::resolve(path);
+    return !resolved.empty() && SD.exists(resolved.c_str());
 }
 
 bool ESP32SDCardDriver::remove(const char* path) {
-    if (!isMounted || !path)
+    if (!isMounted || !path || SdResources::managed(path))
         return false;
 
     SPIBusLock::Guard guard;
@@ -107,7 +119,7 @@ bool ESP32SDCardDriver::remove(const char* path) {
 }
 
 bool ESP32SDCardDriver::rename(const char* src, const char* dst) {
-    if (!isMounted || !src || !dst)
+    if (!isMounted || !src || !dst || SdResources::managed(src) || SdResources::managed(dst))
         return false;
 
     SPIBusLock::Guard guard;
@@ -116,7 +128,7 @@ bool ESP32SDCardDriver::rename(const char* src, const char* dst) {
 }
 
 bool ESP32SDCardDriver::mkdir(const char* path) {
-    if (!isMounted || !path)
+    if (!isMounted || !path || SdResources::managed(path))
         return false;
 
     SPIBusLock::Guard guard;
@@ -133,52 +145,69 @@ bool ESP32SDCardDriver::listDirectory(const char* path, std::vector<StorageEntry
 
     SPIBusLock::Guard guard;
 
-    File directory = SD.open(path);
-
-    if (!directory || !directory.isDirectory())
+    const auto resolved = SdResources::resolve(path);
+    if (resolved.empty())
         return false;
+    // Release files take precedence; merge in user games and runtime save files.
+    const auto scan = [&](const std::string& physical) -> bool {
+        File directory = SD.open(physical.c_str());
+        if (!directory || !directory.isDirectory())
+            return false;
+        while (true) {
+            errno = 0;
+            File entry = directory.openNextFile();
 
-    while (true) {
-        errno = 0;
-        File entry = directory.openNextFile();
-
-        if (!entry) {
-            if (errno && errno != ENOENT) {
-                directory.close();
-                return false;
+            if (!entry) {
+                if (errno && errno != ENOENT) {
+                    directory.close();
+                    return false;
+                }
+                break;
             }
-            break;
+
+            StorageEntry info;
+
+            const bool isDir = entry.isDirectory();
+
+            std::string name = fileName(entry.name());
+            if (!strcasecmp(name.c_str(), ".releases") || name == ".complete" ||
+                name == ".inventory" || name == ".owner" || name == SYSTEM_VOLUME_INFO_DIR ||
+                std::any_of(out.begin(), out.end(), [&](const StorageEntry& prior) {
+                    return strcasecmp(prior.name.c_str(), name.c_str()) == 0;
+                })) {
+                entry.close();
+                continue;
+            }
+
+            info.name = name;
+
+            if (std::strcmp(path, "/") == 0) {
+                info.path = "/" + name;
+            } else {
+                info.path = std::string(path);
+
+                if (!info.path.empty() && info.path.back() != '/')
+                    info.path += '/';
+
+                info.path += name;
+            }
+            info.name = fileName(entry.name());
+            info.isDirectory = isDir;
+            info.size = entry.size();
+
+            out.push_back(std::move(info));
+
+            entry.close();
         }
 
-        StorageEntry info;
+        directory.close();
 
-        const bool isDir = entry.isDirectory();
-
-        std::string name = fileName(entry.name());
-
-        info.name = name;
-
-        if (std::strcmp(path, "/") == 0) {
-            info.path = "/" + name;
-        } else {
-            info.path = std::string(path);
-
-            if (!info.path.empty() && info.path.back() != '/')
-                info.path += '/';
-
-            info.path += name;
-        }
-        info.name = fileName(entry.name());
-        info.isDirectory = isDir;
-        info.size = entry.size();
-
-        out.push_back(std::move(info));
-
-        entry.close();
-    }
-
-    directory.close();
-
+        return true;
+    };
+    if (!scan(resolved))
+        return false;
+    if (resolved != path && std::string(path).compare(0, 6, "/.core") != 0 && SD.exists(path))
+        return scan(path);
     return true;
 }
 
@@ -234,19 +263,18 @@ bool ESP32SDCardDriver::readSpaceUsage(uint64_t& total, uint64_t& used) const {
 }
 
 bool ESP32SDCardDriver::ensureParents(const char* path) {
-    std::string parent = parentPath(path);
-
-    if (parent.empty() || parent == "/") {
-        return true;
-    }
-
-    if (exists(parent.c_str()))
-        return true;
-
-    if (!ensureParents(parent.c_str()))
+    SPIBusLock::Guard guard;
+    if (!isMounted || SdResources::managed(path))
         return false;
-
-    return mkdir(parent.c_str());
+    const std::string value(path);
+    // Saves use flat user directories even when their game is served by a release.
+    for (auto slash = value.find('/', 1); slash != std::string::npos;
+         slash = value.find('/', slash + 1)) {
+        const auto parent = value.substr(0, slash);
+        if (!SD.exists(parent.c_str()) && !SD.mkdir(parent.c_str()))
+            return false;
+    }
+    return true;
 }
 
 std::string ESP32SDCardDriver::parentPath(const char* path) {

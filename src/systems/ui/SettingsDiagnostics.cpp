@@ -128,20 +128,9 @@ void runSettingsDiagnostics() {
           "truncated WAV rejected");
     mixer.stop();
     check(!mixer.available(), "stop all voices");
-    DeviceConfigRepository repository;
     DeviceConfig config;
-    check(repository.parseJson("{\"audio\":{\"volume\":80,\"enabled\":false}}", config) &&
-              !config.audio.music.enabled && !config.audio.effects.enabled &&
-              config.audio.music.volume == 80 && config.audio.effects.volume == 80,
-          "legacy audio migration");
-    check(repository.parseJson("{\"audio\":{\"music\":{\"volume\":101,\"enabled\":false},"
-                               "\"effects\":{\"volume\":-1}},\"locale\":{\"language\":\"en-US\"}}",
-                               config) &&
-              !config.audio.music.enabled && config.audio.music.volume == 100 &&
-              config.audio.effects.volume == 0 && config.locale.language == "en-GB",
-          "independent audio and language decode");
-    check(repository.parseJson("{}", config) && config.locale.language == "it-IT" &&
-              config.audio.music.volume == 50 && config.audio.effects.volume == 70,
+    check(config.locale.language == "it-IT" && config.audio.music.volume == 50 &&
+              config.audio.effects.volume == 70,
           "Italian defaults");
     check(DeviceConfigRepository::validNetwork(std::string(32, 's'), "password") &&
               !DeviceConfigRepository::validNetwork(std::string(33, 's'), "password") &&

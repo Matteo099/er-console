@@ -1,8 +1,7 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
-#include "systems/storage/StorageSystem.h"
-#include "config/Assets.h"
 #include "systems/audio/AudioPreferences.h"
 
 struct DeviceWifiConfig {
@@ -21,32 +20,40 @@ struct DeviceUiConfig {
     int brightness = 100;
 };
 
-struct DeviceAudioConfig : AudioPreferences {
-    int volume = 70;
-    bool enabled = true;
-    bool independent = false;  // Legacy JSON/NVS migration only; not serialized.
-};
-
 struct DeviceConfig {
     std::string deviceName = "EscapeRoom Console";
     DeviceWifiConfig wifi;
     DeviceLocaleConfig locale;
     DeviceUiConfig ui;
-    DeviceAudioConfig audio;
+    AudioPreferences audio;
 };
 
 class DeviceConfigRepository {
   public:
+    static constexpr const char* NVS_NAMESPACE = "console-cfg";
+    static constexpr const char* NVS_KEY = "settings";
+    static constexpr size_t MAX_RECORD_BYTES = 2048;
+    DeviceConfigRepository() = default;
     DeviceConfig defaultConfig() const;
-    bool load(StorageSystem* storage, DeviceConfig& config) const;
-    void loadCached(DeviceConfig& config) const;
-    bool save(StorageSystem* storage, const DeviceConfig& config) const;
-    bool saveUiPreferences(const std::string& theme, bool soundEnabled) const;
+    bool load(DeviceConfig& config) const;
+    bool save(const DeviceConfig& config) const;
     bool savePreferences(const DeviceConfig& config) const;
     bool saveNetworkPreferences(const std::string& ssid, const std::string& password) const;
     static bool validNetwork(const std::string& ssid, const std::string& password);
+    static bool validConfig(const DeviceConfig& config);
     static uint32_t revision();
-    std::string toJson(const DeviceConfig& config) const;
-    // Stateless decoder also used by migration tests and configuration tooling.
+    // Saved passwords are included only for internal NVS serialization.
+    std::string toJson(const DeviceConfig& config, bool includeSecrets = false) const;
+
+  private:
+    enum class RecordState { Missing, Ready, Error };
+
+    explicit DeviceConfigRepository(const char* target) : storageNamespace(target) {
+    }
+
     bool parseJson(const std::string& json, DeviceConfig& config) const;
+    RecordState readRecord(DeviceConfig& config) const;
+    bool writeRecord(const DeviceConfig& config) const;
+    const char* storageNamespace = NVS_NAMESPACE;
+    friend void runConfigStorageDiagnostics();
 };

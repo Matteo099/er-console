@@ -8,57 +8,6 @@ import { ref, computed } from 'vue'
 import { configService } from '@/services'
 import type { DeviceConfig } from '@/models'
 
-const defaultConfig = (): DeviceConfig => ({
-  deviceName: 'ESP32 Device',
-  wifi: {
-    ssid: '',
-    password: '',
-  },
-  locale: {
-    language: 'it-IT',
-    timezone: 'Europe/Rome',
-    dateFormat: 'DD/MM/YYYY',
-  },
-  ui: {
-    theme: 'mint',
-    compactMode: false,
-  },
-  audio: { music: { enabled: true, volume: 50 }, effects: { enabled: true, volume: 70 } },
-})
-
-const normalizeConfig = (value?: Partial<DeviceConfig> | null): DeviceConfig => {
-  const defaults = defaultConfig()
-  return {
-    ...defaults,
-    ...value,
-    wifi: {
-      ...defaults.wifi,
-      ...value?.wifi,
-    },
-    locale: {
-      ...defaults.locale,
-      ...value?.locale,
-      language: value?.locale?.language?.startsWith('en') ? 'en-GB' : 'it-IT',
-    },
-    ui: {
-      ...defaults.ui,
-      ...value?.ui,
-      // The TFT maps legacy light/dark values to the default pastel palette.
-      theme: value?.ui?.theme === 'sky' || value?.ui?.theme === 'coral' ? value.ui.theme : 'mint',
-    },
-    audio: {
-      music: {
-        enabled: value?.audio?.music?.enabled ?? value?.audio?.enabled ?? defaults.audio.music.enabled,
-        volume: Math.max(0, Math.min(100, value?.audio?.music?.volume ?? value?.audio?.volume ?? defaults.audio.music.volume)),
-      },
-      effects: {
-        enabled: value?.audio?.effects?.enabled ?? value?.audio?.enabled ?? defaults.audio.effects.enabled,
-        volume: Math.max(0, Math.min(100, value?.audio?.effects?.volume ?? value?.audio?.volume ?? defaults.audio.effects.volume)),
-      },
-    },
-  }
-}
-
 export const useConfigStore = defineStore('config', () => {
   // State
   const config = ref<DeviceConfig | null>(null)
@@ -76,7 +25,7 @@ export const useConfigStore = defineStore('config', () => {
     error.value = null
 
     try {
-      config.value = normalizeConfig(await configService.getConfig())
+      config.value = await configService.getConfig()
       originalConfig.value = JSON.parse(JSON.stringify(config.value))
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch config'
@@ -93,7 +42,7 @@ export const useConfigStore = defineStore('config', () => {
     error.value = null
 
     try {
-      const saved = normalizeConfig(await configService.saveConfig(config.value))
+      const saved = await configService.saveConfig(config.value)
       originalConfig.value = JSON.parse(JSON.stringify(saved))
       config.value = saved
     } catch (err) {
@@ -110,7 +59,7 @@ export const useConfigStore = defineStore('config', () => {
     error.value = null
 
     try {
-      const reset = normalizeConfig(await configService.resetConfig())
+      const reset = await configService.resetConfig()
       config.value = reset
       originalConfig.value = JSON.parse(JSON.stringify(reset))
     } catch (err) {

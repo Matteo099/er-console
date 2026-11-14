@@ -14,11 +14,11 @@ namespace {
 // stay on the device; serial commands expose only state and boolean flags.
 bool fixture(bool restore, bool empty) {
     nvs_handle_t backup;
-    if (nvs_open("wifi-check", NVS_READWRITE, &backup) != ESP_OK)
+    if (nvs_open("wifi-check-v2", NVS_READWRITE, &backup) != ESP_OK)
         return false;
     uint8_t active = 0, had = 0;
     nvs_get_u8(backup, "active", &active);
-    uint8_t bytes[512];
+    uint8_t bytes[DeviceConfigRepository::MAX_RECORD_BYTES];
     size_t size = sizeof(bytes);
     bool ok = true;
     if (restore) {
@@ -27,9 +27,11 @@ bool fixture(bool restore, bool empty) {
             if (ok && had)
                 ok = nvs_get_blob(backup, "original", bytes, &size) == ESP_OK;
             nvs_handle_t target;
-            if (ok && nvs_open("console-net", NVS_READWRITE, &target) == ESP_OK) {
-                auto result = had ? nvs_set_blob(target, "credentials", bytes, size)
-                                  : nvs_erase_key(target, "credentials");
+            if (ok &&
+                nvs_open(DeviceConfigRepository::NVS_NAMESPACE, NVS_READWRITE, &target) == ESP_OK) {
+                auto result =
+                    had ? nvs_set_blob(target, DeviceConfigRepository::NVS_KEY, bytes, size)
+                        : nvs_erase_key(target, DeviceConfigRepository::NVS_KEY);
                 ok = (result == ESP_OK || (!had && result == ESP_ERR_NVS_NOT_FOUND)) &&
                      nvs_commit(target) == ESP_OK;
                 nvs_close(target);
@@ -41,10 +43,11 @@ bool fixture(bool restore, bool empty) {
     } else {
         if (!active) {
             nvs_handle_t original;
-            const auto opened = nvs_open("console-net", NVS_READONLY, &original);
+            const auto opened =
+                nvs_open(DeviceConfigRepository::NVS_NAMESPACE, NVS_READONLY, &original);
             esp_err_t result = ESP_ERR_NVS_NOT_FOUND;
             if (opened == ESP_OK) {
-                result = nvs_get_blob(original, "credentials", bytes, &size);
+                result = nvs_get_blob(original, DeviceConfigRepository::NVS_KEY, bytes, &size);
                 nvs_close(original);
             } else if (opened != ESP_ERR_NVS_NOT_FOUND)
                 ok = false;

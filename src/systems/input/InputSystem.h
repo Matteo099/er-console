@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "config/Console.h"
 
 #include "core/SystemService.h"
 #include "core/TaskMutex.h"
@@ -9,7 +10,8 @@
 #include "InputConfig.h"
 
 #include "drivers/input/power/INA219Driver.h"
-#include "drivers/input/rfid/MFRC522Driver.h"
+#include "drivers/input/rfid/MFRC522Reader.h"
+#include "HardwareCheck.h"
 #include "drivers/input/oled/SSD1306Driver.h"
 #include "drivers/input/channel/NativeChannelProvider.h"
 #include "drivers/input/channel/MCPChannelProvider.h"
@@ -33,7 +35,13 @@ class InputSystem : public SystemService {
     ~InputSystem();
 
     void init(void* params = nullptr) override;
-    bool begin(const InputConfig& config);
+    void requestBegin(const InputConfig& config);
+    void requestHardwareCheck();
+    HardwareStatus hardwareStatus() const;
+    bool powerSnapshot(PowerReading& reading);
+#if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
+    void injectHardwareFaultForDiagnostics(HardwareIssueKind kind);
+#endif
     void update() override;
     void shutdown();
 
@@ -51,6 +59,15 @@ class InputSystem : public SystemService {
 
   private:
     TaskMutex lifecycleMutex;
+    mutable TaskMutex hardwareMutex;
+    HardwareStatus hardware;
+    InputConfig queuedConfig, activeConfig;
+    bool beginPending = false, checkPending = false, monitoring = false,
+         connectionConfigured = false;
+    uint32_t generation = 0, checkedAt = 0;
+    HardwareCheck::Monitor monitor;
+    bool begin(const InputConfig& config, uint32_t token);
+    void publish(uint32_t token, HardwareState state, std::vector<HardwareIssue> issues = {});
     bool powerInitialized = false;
     bool rfidInitialized = false;
     bool oledInitialized = false;
@@ -64,7 +81,7 @@ class InputSystem : public SystemService {
     std::vector<ISubsystem*> subsystems;
 
     INA219Driver* powerDriver = nullptr;
-    MFRC522Driver* rfidDriver = nullptr;
+    MFRC522Reader* rfidDriver = nullptr;
     SSD1306Driver* oledDriver = nullptr;
     NativeChannelProvider* nativeChannel = nullptr;
     MCP23017Driver* mcpDriver1 = nullptr;

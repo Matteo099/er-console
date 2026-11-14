@@ -2,6 +2,7 @@ Import("env")
 import importlib.util
 import re
 import hashlib
+import os
 from pathlib import Path
 
 root = Path(env['PROJECT_DIR'])
@@ -26,6 +27,11 @@ if not partition_file.is_absolute():
 partition_hash = hashlib.sha256(partition_file.read_bytes()).hexdigest()
 env.Append(CPPDEFINES=[('OTA_PARTITION_TABLE_SHA256', '\\"%s\\"' % partition_hash)])
 print('\n========== BUILD INFO ==========')
+sd_hash = os.environ.get('ER_SD_CONTENT_SHA256', '')
+if sd_hash and not re.fullmatch('[0-9a-f]{64}', sd_hash):
+    raise ValueError('Invalid SD resource content hash')
+quote = chr(92) + chr(34)
+env.Append(CPPDEFINES=[('SD_CONTENT_SHA256', quote + sd_hash + quote)])
 for key in ('version', 'branch', 'commit', 'channel', 'dev_mode'):
     print(f'{key}: {info[key]}')
 print('================================\n')

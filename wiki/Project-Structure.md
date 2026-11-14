@@ -35,7 +35,7 @@
 ## Important Runtime Paths
 
 - `/.core/portal/index.html`: frontend entry served by firmware
-- `/.core/config/config.json`: device configuration file
+- Device settings use internal NVS `console-cfg/settings` and have no SD path.
 - `/games/*`: Lua game payloads
 
 ## Scripts

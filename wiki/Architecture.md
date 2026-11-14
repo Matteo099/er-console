@@ -46,7 +46,7 @@
 
 ## Data Persistence
 
-- Device config is stored in `/.core/config/config.json`
+- Device configuration is stored exclusively in internal NVS `console-cfg/settings`. See [device settings storage](reference/DEVICE_SETTINGS_STORAGE.md).
 - Config defaults are defined in `DeviceConfig`
 - Storage and network systems are injected into portal service layer
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdint.h>
+#include "HardwareStatus.h"
+#include <ArduinoJson.h>
 
 struct PowerConfig {
     bool enabled = false;
@@ -9,8 +11,9 @@ struct PowerConfig {
 
 struct RFIDConfig {
     bool enabled = false;
-    uint8_t ssPin = 10;
-    uint8_t rstPin = 9;
+    uint8_t ssPin = 41;
+    uint8_t rstPin = 40;
+    std::string spiBus = "sd";
 };
 
 struct OLEDConfig {
@@ -53,6 +56,12 @@ struct RelayConfig {
     bool enabled = false;
 };
 
+struct ConnectionConfig {
+    bool enabled = false;
+    uint8_t pin = 1;
+    unsigned resistanceOhms = 0;
+};
+
 struct InputConfig {
     PowerConfig power;
     RFIDConfig rfid;
@@ -61,4 +70,8 @@ struct InputConfig {
     RGBConfig rgb;
     SevenSegmentConfig sevenSegment;
     RelayConfig relays;
+    ConnectionConfig connection;
+    std::vector<HardwareIssue> configurationIssues;
+    static InputConfig parse(JsonVariantConst inputs);
+    std::vector<HardwareIssue> validate() const;
 };

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "services/DeviceConfigRepository.h"
+#include "systems/storage/StorageSystem.h"
 #include "systems/input/InputSystem.h"
 #include "systems/network/NetworkSystem.h"
 
@@ -76,5 +77,4 @@ class PortalService {
     NetworkSystem* networkSystem = nullptr;
     InputSystem* inputSystem = nullptr;
     DeviceConfigRepository configRepository;
-    mutable DeviceConfig cachedConfig;
 };

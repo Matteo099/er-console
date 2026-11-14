@@ -13,6 +13,7 @@ import time
 import zipfile
 
 from build_metadata import HARDWARE, metadata
+import sd_pack
 
 
 def sha256(data):
@@ -60,11 +61,7 @@ def slot_size(partitions):
     return min(sizes)
 
 
-def package(root, output, info, firmware, elf, partitions, frontend):
-    firmware_bytes = firmware.read_bytes()
-    maximum = slot_size(partitions)
-    if not firmware_bytes or firmware_bytes[0]!=0xE9 or len(firmware_bytes)>maximum:
-        raise ValueError(f'Invalid ESP application or firmware exceeds OTA slot ({maximum} bytes)')
+def resource_contents(root, info, frontend):
     portal = {path.relative_to(frontend).as_posix(): path.read_bytes()
               for path in sorted(frontend.rglob('*')) if path.is_file() and not path.is_symlink()}
     if not portal.get('index.html') or not any(name.endswith('.gz') for name in portal):
@@ -80,29 +77,50 @@ def package(root, output, info, firmware, elf, partitions, frontend):
         raise ValueError('Every packaged game must include configuration and a Lua entry point')
     sd.update({'.core/portal/'+name: data for name, data in portal.items()})
     sd['build-info.json'] = info_bytes
-    sd['.core/config/README.md'] = b'User configuration and Wi-Fi credentials are intentionally not distributed.\n'
+    return portal, sd
+
+
+def package(root, output, info, firmware, elf, partitions, frontend, expected_sd_hash=None):
+    firmware_bytes = firmware.read_bytes()
+    maximum = slot_size(partitions)
+    if not firmware_bytes or firmware_bytes[0]!=0xE9 or len(firmware_bytes)>maximum:
+        raise ValueError(f'Invalid ESP application or firmware exceeds OTA slot ({maximum} bytes)')
+    portal, contents = resource_contents(root, info, frontend)
+    packed = sd_pack.encode(contents)
+    content_hash = sha256(packed)
+    if expected_sd_hash is not None and content_hash != expected_sd_hash:
+        raise ValueError('SD contents changed after firmware compilation')
+    if expected_sd_hash is not None and content_hash.encode() not in firmware_bytes:
+        raise ValueError('Firmware does not contain its SD resource content hash')
+    generation = sd_pack.root(content_hash)
+    sd = {generation+'/'+name: data for name, data in contents.items()}
+    sd[generation+'/.complete'] = sd_pack.marker(info['version'], content_hash, HARDWARE)
+    sd[generation+'/.inventory'] = sd_pack.inventory(contents)
     output.mkdir(parents=True, exist_ok=True)
     stem = f'escaperiom-{HARDWARE}-{info["version"]}'
     binary = output/f'{stem}.bin'
     binary.write_bytes(firmware_bytes)
+    resource_pack = output/f'{stem}.sdpack'
+    resource_pack.write_bytes(packed)
     portal_zip, sd_zip, symbols_zip = [output/f'{stem}-{suffix}.zip' for suffix in ('portal', 'sd', 'symbols')]
     zip_contents(portal_zip, portal, info['source_date_epoch'])
     zip_contents(sd_zip, sd, info['source_date_epoch'])
     if not elf.read_bytes().startswith(b'\x7fELF'):
         raise ValueError('Matching firmware ELF is required for crash diagnostics')
-    zip_contents(symbols_zip, {'firmware.elf': elf.read_bytes(), 'build-info.json': info_bytes}, info['source_date_epoch'])
+    zip_contents(symbols_zip, {'firmware.elf': elf.read_bytes(), 'build-info.json': contents['build-info.json']}, info['source_date_epoch'])
     files = {}
-    for kind, path in [('firmware', binary), ('portal', portal_zip), ('sd', sd_zip), ('symbols', symbols_zip)]:
+    for kind, path in [('firmware', binary), ('resources', resource_pack), ('portal', portal_zip), ('sd', sd_zip), ('symbols', symbols_zip)]:
         data = path.read_bytes()
         files[kind] = {'file': path.name, 'size': len(data), 'sha256': sha256(data)}
     manifest = {
-        'schema_version': 1, **info, 'platformio_environment': HARDWARE,
+        'schema_version': 2, **info, 'platformio_environment': HARDWARE,
         'firmware_type': 'application', 'ota_slot_size': maximum,
         'partition_table_sha256': sha256(partitions.read_bytes()),
-        'games': len(games), 'sd_files': len(sd), 'portal_files': len(portal), 'files': files,
+        'games': sum(name.startswith('games/') and name.endswith('/config.json') for name in contents),
+        'sd_files': len(contents), 'portal_files': len(portal), 'files': files,
     }
     (output/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n', encoding='utf-8')
-    checksum_paths = [binary, portal_zip, sd_zip, symbols_zip, output/'manifest.json']
+    checksum_paths = [binary, resource_pack, portal_zip, sd_zip, symbols_zip, output/'manifest.json']
     if (output/'CHANGELOG.md').is_file():
         checksum_paths.append(output/'CHANGELOG.md')
     (output/'SHA256SUMS').write_text(''.join(f'{sha256(path.read_bytes())}  {path.name}\n' for path in checksum_paths), encoding='utf-8')
@@ -123,6 +141,15 @@ def verify(output):
         expected, name = line.split('  ', 1)
         if Path(name).name!=name or sha256((output/name).read_bytes())!=expected:
             raise ValueError(f'Checksum mismatch: {name}')
+    resources = manifest['files']['resources']
+    entries = sd_pack.decode((output/resources['file']).read_bytes())
+    generation = sd_pack.root(resources['sha256'])
+    with zipfile.ZipFile(output/manifest['files']['sd']['file']) as archive:
+        expected = {generation+'/'+name: data for name, data in entries.items()}
+        expected[generation+'/.complete'] = sd_pack.marker(manifest['version'], resources['sha256'], manifest['hardware'])
+        expected[generation+'/.inventory'] = sd_pack.inventory(entries)
+        if set(archive.namelist()) != set(expected) or any(archive.read(name) != data for name, data in expected.items()):
+            raise ValueError('SD image differs from streaming resources')
 
 
 def npm_command():
@@ -145,11 +172,14 @@ def main():
     for script in ('check_translations.py', 'check_game_translations.py'):
         subprocess.run([sys.executable, str(root/'scripts'/'checks'/script)], cwd=root, env=build_env, check=True)
     subprocess.run([*npm_command(), 'run', 'build'], cwd=root/'frontend', env=build_env, check=True)
-    subprocess.run([sys.executable, '-m', 'platformio', 'run', '--environment', HARDWARE], cwd=root, env=build_env, check=True)
+    _, contents = resource_contents(root, info, root/'frontend/dist')
+    content_hash = sha256(sd_pack.encode(contents))
+    build_env['ER_SD_CONTENT_SHA256'] = content_hash
+    subprocess.run([sys.executable, '-m', 'platformio', 'run', '--environment', HARDWARE, '--disable-auto-clean'], cwd=root, env=build_env, check=True)
     core = Path(os.environ.get('PLATFORMIO_CORE_DIR', Path.home()/'.platformio'))
     partitions = core/'packages/framework-arduinoespressif32/tools/partitions/default_16MB.csv'
     build = root/'.pio/build'/HARDWARE
-    result = package(root, root/'dist', info, build/'firmware.bin', build/'firmware.elf', partitions, root/'frontend/dist')
+    result = package(root, root/'dist', info, build/'firmware.bin', build/'firmware.elf', partitions, root/'frontend/dist', content_hash)
     print(json.dumps(result, indent=2))
 
 

@@ -28,23 +28,13 @@ void PortalService::setDependencies(StorageSystem* storage, NetworkSystem* netwo
 }
 
 DeviceConfig PortalService::getConfig() const {
-    DeviceConfig config = cachedConfig;
-    if (storageSystem && storageSystem->isReady()) {
-        configRepository.load(storageSystem, config);
-        cachedConfig = config;
-    } else
-        configRepository.loadCached(config);
+    DeviceConfig config;
+    configRepository.load(config);
     return config;
 }
 
 bool PortalService::saveConfig(const DeviceConfig& config) {
-    if (!storageSystem || !storageSystem->isReady())
-        return false;
-
-    if (!configRepository.save(storageSystem, config))
-        return false;
-    cachedConfig = config;
-    return true;
+    return configRepository.save(config);
 }
 
 PortalStatusData PortalService::getStatus() const {
@@ -76,9 +66,9 @@ PortalStatusData PortalService::getStatus() const {
         status.apSsid = portalSsid();
     }
 
-    if (inputSystem && inputSystem->power()) {
-        const auto metrics = inputSystem->power()->getMetrics();
-        status.batterySupported = inputSystem->power()->isSupported();
+    PowerReading metrics;
+    if (inputSystem && inputSystem->powerSnapshot(metrics)) {
+        status.batterySupported = true;
         status.batteryAvailable = metrics.available;
         status.batteryOverflow = metrics.overflow;
         status.batterySampleTimeMs = metrics.sampleTimeMs;
@@ -174,7 +164,7 @@ std::string PortalService::portalSsid() const {
 }
 
 std::string PortalService::wifiQrPayload() const {
-    // Encode the AP actually running, not a fresh (possibly failed) SD config read.
+    // Encode the access point actually running.
     const String ssid = WiFi.softAPSSID();
     if (ssid.isEmpty())
         return {};

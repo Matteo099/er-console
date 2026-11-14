@@ -63,17 +63,12 @@ void MonitorScene::refreshTelemetry() {
     //
     // Power
     //
-    if (!input || !input->hasPower()) {
+    PowerReading power;
+    if (!input || !input->powerSnapshot(power)) {
         view.setPowerAvailable(false);
     } else {
-        const auto power = input->power();
-        if (!power || !power->isSupported()) {
-            view.setPowerAvailable(false);
-        } else {
-            view.setPowerAvailable(true);
-            view.setPower(power->getMetrics().loadVoltageV, power->getMetrics().currentMa,
-                          power->getMetrics().powerMw);
-        }
+        view.setPowerAvailable(true);
+        view.setPower(power.loadVoltageV, power.currentMa, power.powerMw);
     }
 
     //

@@ -27,7 +27,7 @@ npm run build
 ## Coding Notes
 
 - Preserve separation between game logic (Lua) and firmware internals (C++)
-- Keep API contracts backward-compatible with frontend service calls
+- Update firmware API contracts and frontend service calls together
 - Prefer small, reviewable PRs by subsystem (portal, storage, network, scenes)
 
 ## Pull Request Checklist

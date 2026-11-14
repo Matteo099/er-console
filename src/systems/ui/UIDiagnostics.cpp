@@ -1,4 +1,5 @@
 #include "UIDiagnostics.h"
+#include "HardwareDiagnostics.h"
 #include "config/Console.h"
 
 #if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
@@ -23,6 +24,7 @@
 #include "drivers/bus/SPIBusLock.h"
 #include "config/Assets.h"
 #include "SettingsDiagnostics.h"
+#include "ConfigStorageDiagnostics.h"
 #include "AudioDiagnostics.h"
 #include "ScrollDiagnostics.h"
 #include "PlayerSelectorDiagnostics.h"
@@ -499,6 +501,17 @@ void UIDiagnostics::update(SceneManager& scenes) {
             scenes.changeScene(new UpdateScene(), SceneTransition::None);
         else if (command == "ui ota-test")
             runUpdateDiagnostics();
+        else if (command == "ui hardware-test")
+            runHardwareDiagnostics();
+        else if (command.startsWith("ui hardware-game "))
+            scenes.changeScene(createHardwareGameForDiagnostics(command.substring(17).c_str()), SceneTransition::None);
+        else if (command == "ui hardware-state")
+            hardwareStatusForDiagnostics();
+        else if (command == "ui hardware-fault") {
+            auto* input = static_cast<InputSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
+            if (input && GameScene::diagnosticCurrent) input->injectHardwareFaultForDiagnostics(HardwareIssueKind::MissingI2C);
+        } else if (command.startsWith("ui room-resistor "))
+            roomResistorForDiagnostics(command.substring(17).toInt());
         else if (command.startsWith("ui ota-native ")) {
             unsigned bytes = 0;
             char digest[65]{};
@@ -543,6 +556,8 @@ void UIDiagnostics::update(SceneManager& scenes) {
             UIFrameStats::print();
         else if (command == "ui selftest")
             runSettingsDiagnostics();
+        else if (command == "ui config-test")
+            runConfigStorageDiagnostics();
         else if (command == "ui audio-test")
             runAudioDiagnostics();
         else if (command == "ui scroll-test")
@@ -583,7 +598,7 @@ void UIDiagnostics::update(SceneManager& scenes) {
             audioPreloadAction(command.substring(17).c_str());
         else if (command == "ui preferences") {
             DeviceConfig config;
-            DeviceConfigRepository().loadCached(config);
+            DeviceConfigRepository().load(config);
             Serial.printf("@PREFERENCES theme=%s language=%s music=%u/%u effects=%u/%u\n",
                           config.ui.theme.c_str(), config.locale.language.c_str(),
                           config.audio.music.enabled, config.audio.music.volume,
@@ -596,7 +611,7 @@ void UIDiagnostics::update(SceneManager& scenes) {
                 audio->setVolume(level);
         } else if (command == "ui quiet on" || command == "ui quiet off") {
             DeviceConfig config;
-            DeviceConfigRepository().loadCached(config);
+            DeviceConfigRepository().load(config);
             const bool enabled = command.endsWith("off") && config.audio.effects.enabled &&
                                  config.audio.effects.volume;
             UIFeedback::setSoundEnabled(enabled);

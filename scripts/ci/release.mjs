@@ -12,7 +12,7 @@ const result = await semanticRelease({
     [require.resolve("@semantic-release/release-notes-generator"), {"preset": "conventionalcommits"}],
     [require.resolve("@semantic-release/changelog"), {"changelogFile": "dist/CHANGELOG.md"}],
     [require.resolve("@semantic-release/exec"), {"prepareCmd": "python scripts/ci/build_bundle.py --channel stable --version ${nextRelease.version}"}],
-    [require.resolve("@semantic-release/github"), {"assets": [{"path": "dist/*.bin", "label": "ESP32-S3 application firmware"}, {"path": "dist/*.zip"}, {"path": "dist/manifest.json"}, {"path": "dist/SHA256SUMS"}, {"path": "dist/CHANGELOG.md"}], "successComment": false, "failComment": false, "failTitle": false, "releasedLabels": false}],
+    [require.resolve("@semantic-release/github"), {"assets": [{"path": "dist/*.bin", "label": "ESP32-S3 application firmware"}, {"path": "dist/*.sdpack", "label": "Verified SD resources for OTA"}, {"path": "dist/*.zip"}, {"path": "dist/manifest.json"}, {"path": "dist/SHA256SUMS"}, {"path": "dist/CHANGELOG.md"}], "successComment": false, "failComment": false, "failTitle": false, "releasedLabels": false}],
   ],
 }, { cwd })
 if (result === false) console.log('No release is required.')

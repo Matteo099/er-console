@@ -9,6 +9,7 @@ import zipfile
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_bundle import package, verify, slot_size
 from build_metadata import metadata, dev_version, valid_version, HARDWARE
+import sd_pack
 
 
 class BundleTests(unittest.TestCase):
@@ -56,19 +57,35 @@ class BundleTests(unittest.TestCase):
 
     def test_sd_includes_hidden_assets_and_compiled_portal_without_private_files(self):
         manifest = self.bundle()
+        prefix = sd_pack.root(manifest['files']['resources']['sha256'])+'/'
         with zipfile.ZipFile(self.output/manifest['files']['sd']['file']) as archive:
-            names = archive.namelist()
+            names = [name.removeprefix(prefix) for name in archive.namelist()]
             self.assertIn('.core/audio/win.wav', names)
             self.assertIn('.core/images/logo.png', names)
             self.assertIn('games/test/game.lua', names)
             self.assertIn('.core/portal/assets/app.js.gz', names)
             self.assertNotIn('.core/config/wifi.cfg', names)
             self.assertNotIn('user-save.json', names)
-            self.assertEqual(archive.read('.core/portal/index.html'), b'COMPILED PORTAL')
-            info = json.loads(archive.read('build-info.json'))
+            self.assertEqual(archive.read(prefix+'.core/portal/index.html'), b'COMPILED PORTAL')
+            self.assertEqual(archive.read(prefix+'.complete'), sd_pack.marker('1.3.0', manifest['files']['resources']['sha256'], HARDWARE))
+            info = json.loads(archive.read(prefix+'build-info.json'))
             self.assertEqual(info['version'], '1.3.0')
             self.assertEqual(info['commit'], self.git('rev-parse', 'HEAD'))
         verify(self.output)
+        self.assertEqual(manifest['schema_version'], 2)
+        self.assertEqual(sd_pack.decode((self.output/manifest['files']['resources']['file']).read_bytes())['games/test/game.lua'], b'function init() end')
+
+    def test_resources_cannot_change_after_hash_is_embedded_in_firmware(self):
+        with self.assertRaisesRegex(ValueError, 'changed after firmware'):
+            package(self.root, self.output, self.info, self.firmware, self.elf, self.partitions, self.root/'frontend/dist', '0'*64)
+
+    def test_compiled_firmware_must_contain_the_pack_hash(self):
+        manifest = self.bundle()
+        digest = manifest['files']['resources']['sha256']
+        with self.assertRaisesRegex(ValueError, 'does not contain'):
+            package(self.root, self.output, self.info, self.firmware, self.elf, self.partitions, self.root/'frontend/dist', digest)
+        self.firmware.write_bytes(b'\xe9firmware'+digest.encode())
+        package(self.root, self.output, self.info, self.firmware, self.elf, self.partitions, self.root/'frontend/dist', digest)
 
     def test_corrupt_artifact_is_rejected(self):
         manifest = self.bundle()

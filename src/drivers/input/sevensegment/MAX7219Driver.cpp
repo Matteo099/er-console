@@ -60,10 +60,12 @@ uint8_t MAX7219Driver::digits() const {
 
 void MAX7219Driver::writeRegister(uint8_t reg, uint8_t data) {
     // NO need to lock the SPI bus here
+    spiBus->beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
     digitalWrite(csPin, LOW);
     spiBus->transfer(reg);
     spiBus->transfer(data);
     digitalWrite(csPin, HIGH);
+    spiBus->endTransaction();
 }
 
 void MAX7219Driver::clear() {

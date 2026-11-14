@@ -9,7 +9,9 @@
 
 export interface WiFiConfig {
   ssid: string
-  password: string
+  // Write-only: omit to preserve the secret; send an empty value for an open network.
+  password?: string
+  passwordConfigured?: boolean
 }
 
 export interface LocaleConfig {
@@ -20,7 +22,6 @@ export interface LocaleConfig {
 
 export interface UIConfig {
   theme: 'mint' | 'sky' | 'coral'
-  compactMode: boolean
 }
 
 export interface DeviceConfig {
@@ -31,8 +32,6 @@ export interface DeviceConfig {
   audio: {
     music: { enabled: boolean; volume: number }
     effects: { enabled: boolean; volume: number }
-    enabled?: boolean
-    volume?: number
   }
 }
 

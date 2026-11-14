@@ -7,6 +7,7 @@
 #include "config/Assets.h"
 #include "log/Logger.h"
 #include "services/GameAssetCache.h"
+#include "systems/update/SdResources.h"
 
 #include <algorithm>
 #include <vector>
@@ -267,6 +268,8 @@ bool StorageSystem::removePath(const char* path) {
 }
 
 bool StorageSystem::movePath(const char* sourcePath, const char* destinationPath, bool overwrite) {
+    if (SdResources::managed(sourcePath) || SdResources::managed(destinationPath))
+        return false;
     GameAssetCache::instance().invalidate(sourcePath);
     GameAssetCache::instance().invalidate(destinationPath);
     SPIBusLock::Guard guard;

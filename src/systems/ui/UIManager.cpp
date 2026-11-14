@@ -4,8 +4,6 @@
 #include "log/Logger.h"
 #include "scenes/boot/BootScene.h"
 #include "scenes/sample/SampleScene.h"
-#include "drivers/storage/ESP32SDCardDriver.h"
-#include "systems/storage/StorageSystem.h"
 #include "systems/ui/lvgl/LVGLImageProvider.h"
 #include "config/BoardConfig.h"
 #include "services/DeviceConfigRepository.h"
@@ -42,13 +40,10 @@ void UIManager::init(void* params) {
 }
 
 void UIManager::update() {
-    if (!preferencesLoaded &&
-        (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY))
-        loadPreferences();
     const auto changedRevision = DeviceConfigRepository::revision();
     if (preferencesRevision != changedRevision) {
         DeviceConfig config;
-        DeviceConfigRepository().loadCached(config);
+        DeviceConfigRepository().load(config);
         preferencesRevision = changedRevision;
         I18n::select(config.locale.language.c_str());
         UITheme::select(UITheme::fromName(config.ui.theme.c_str()));
@@ -72,11 +67,9 @@ void UIManager::update() {
 }
 
 void UIManager::loadPreferences() {
-    auto* storage = static_cast<StorageSystem*>(
-        SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
     DeviceConfigRepository repository;
     DeviceConfig config;
-    repository.load(storage, config);
+    repository.load(config);
     I18n::select(config.locale.language.c_str());
     UITheme::select(UITheme::fromName(config.ui.theme.c_str()));
     UIFeedback::setSoundEnabled(config.audio.effects.enabled && config.audio.effects.volume);
@@ -84,6 +77,4 @@ void UIManager::loadPreferences() {
         SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
     if (audio)
         audio->configure(config.audio);
-    preferencesLoaded = (storage && storage->isReady()) ||
-                        (xEventGroupGetBits(SystemEventBus::systemEvents) & EVT_STORAGE_READY);
 }

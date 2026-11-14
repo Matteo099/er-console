@@ -1,22 +1,26 @@
-#include "MFRC522Driver.h"
+#include "MFRC522Reader.h"
 #include <Arduino.h>
 #include "log/Logger.h"
 
 #include "drivers/bus/SPIBusLock.h"
 
-MFRC522Driver::MFRC522Driver(SPIClass& spi, uint8_t ssPin, uint8_t rstPin)
-    : spiBus(&spi), ssPin(ssPin), rstPin(rstPin), reader(ssPin, rstPin) {
+MFRC522Reader::MFRC522Reader(SPIClass& spi, uint8_t ssPin, uint8_t rstPin)
+    : spiBus(&spi), ssPin(ssPin), rstPin(rstPin), select(ssPin), transport(select, spi),
+      reader(transport) {
 }
 
-bool MFRC522Driver::init() {
+bool MFRC522Reader::init() {
     if (!spiBus)
         return false;
 
     {
         SPIBusLock::Guard guard;
-        reader.PCD_Init();
+        pinMode(rstPin, OUTPUT);
+        digitalWrite(rstPin, HIGH);
+        if (!reader.PCD_Init())
+            return false;
         delay(50);
-        byte version = reader.PCD_ReadRegister(MFRC522::VersionReg);
+        byte version = static_cast<byte>(reader.PCD_GetVersion());
         if (version == 0x00 || version == 0xFF) {
             Log::warn(Log::DRIVER_TAG, "MFRC522 not detected");
             initialized = false;
@@ -29,7 +33,7 @@ bool MFRC522Driver::init() {
     return true;
 }
 
-void MFRC522Driver::shutdown() {
+void MFRC522Reader::shutdown() {
     if (!initialized)
         return;
 
@@ -45,7 +49,7 @@ void MFRC522Driver::shutdown() {
     Log::info(Log::DRIVER_TAG, "MFRC522 shutdown");
 }
 
-bool MFRC522Driver::readTag(RFIDTag& tag) {
+bool MFRC522Reader::readTag(RFIDTag& tag) {
     if (!initialized)
         return false;
 
@@ -67,6 +71,6 @@ bool MFRC522Driver::readTag(RFIDTag& tag) {
     return true;
 }
 
-bool MFRC522Driver::isAvailable() const {
+bool MFRC522Reader::isAvailable() const {
     return initialized;
 }

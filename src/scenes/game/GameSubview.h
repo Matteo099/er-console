@@ -4,4 +4,4 @@
 
 using EventCallback = std::function<void(const char*)>;
 
-enum class GameSubview { Loading, Main, Victory, Fail, GameObject };
+enum class GameSubview { Loading, Main, Victory, Fail, GameObject, Hardware };

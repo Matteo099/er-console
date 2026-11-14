@@ -45,7 +45,6 @@ const defaultConfig = (): DeviceConfig => ({
   },
   ui: {
     theme: 'mint',
-    compactMode: false,
   },
   audio: { music: { enabled: true, volume: 50 }, effects: { enabled: true, volume: 70 } },
 })
@@ -58,9 +57,7 @@ const initialFiles = (): Map<string, MockFileNode> => {
 
   addDir('/.core')
   addDir('/.core/portal')
-  addDir('/.core/config')
   addDir('/.core/audio')
-  addFile('/.core/config/config.json', JSON.stringify(defaultConfig(), null, 2))
   addFile('/.core/portal/index.html', '<!doctype html><html><body><h1>Mock Portal</h1></body></html>')
   addFile('/.core/audio/stage.wav', 'mock-binary')
   return m
@@ -83,6 +80,13 @@ const state: MockState = {
 }
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value))
+
+const publicConfig = (): DeviceConfig => {
+  const config = clone(state.config)
+  config.wifi.passwordConfigured = Boolean(config.wifi.password)
+  delete config.wifi.password
+  return config
+}
 
 const delay = (ms = 120) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -244,20 +248,22 @@ export async function mockRequestJson<T>(path: string, options: RequestOptions =
   }
 
   if (pathname === '/api/config' && method === 'GET') {
-    return clone(state.config) as T
+    return publicConfig() as T
   }
 
   if (pathname === '/api/config' && method === 'PUT') {
     const incoming = parseJsonBody<DeviceConfig>(options.body)
+    if (incoming.wifi.password === undefined && incoming.wifi.ssid === state.config.wifi.ssid)
+      incoming.wifi.password = state.config.wifi.password
     state.config = clone(incoming)
     state.logs.unshift(`[INFO] config updated (wifi=${state.config.wifi.ssid || 'none'})`)
-    return clone(state.config) as T
+    return publicConfig() as T
   }
 
   if (pathname === '/api/config' && method === 'POST') {
     state.config = defaultConfig()
     state.logs.unshift('[INFO] config reset to defaults')
-    return clone(state.config) as T
+    return publicConfig() as T
   }
 
   if (pathname === '/api/wifi/scan' && method === 'GET') {

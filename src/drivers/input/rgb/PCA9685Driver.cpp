@@ -25,6 +25,11 @@ void PCA9685Driver::shutdown() {
     I2CBusLock::Guard guard;
 
     // Turn off all PWM outputs
+    wireBus->beginTransmission(address);
+    if (wireBus->endTransmission() != 0) {
+        initialized = false;
+        return;
+    }
     for (uint8_t channel = 0; channel < 16; channel++) {
         pwm.setPWM(channel, 0, 0);
         brightness[channel] = 255;

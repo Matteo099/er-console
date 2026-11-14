@@ -17,10 +17,15 @@ void MCP23017Driver::shutdown() {
         return;
 
     I2CBusLock::Guard guard;
+    wireBus->beginTransmission(address);
+    if (wireBus->endTransmission() != 0) {
+        initialized = false;
+        return;
+    }
     for (uint8_t pin = 0; pin < 16; pin++) {
-        mcp.digitalWrite(pin, LOW);
         mcp.pinMode(pin, INPUT);
     }
+    initialized = false;
 }
 
 bool MCP23017Driver::ownsPin(uint16_t pin) const {

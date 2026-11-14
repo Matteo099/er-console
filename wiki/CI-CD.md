@@ -63,11 +63,13 @@ branch. The Releases page is the chronological changelog. Builds with only
 Development artifacts and stable releases contain:
 
 - `escaperiom-esp32-s3-devkitc-1-n16r8v-<version>.bin`: application firmware.
+- `...sdpack`: streamable, hashed SD resources for the device OTA client.
 - `...-portal.zip`: compiled Vue assets, gzip counterparts and build metadata.
 - `...-sd.zip`: tracked games, scripts, images, audio, hidden `.core` directory
   and the freshly compiled portal. Untracked local files, saves, old generated
-  portal files and `sd/.core/config/*` are excluded. A configuration README
-  explains the omission; credentials are never copied into the package.
+  portal files and `sd/.core/config/*` are excluded. Files live under
+  `.releases/<content-sha256>/`, with completion and inventory records;
+  credentials are never copied into the package.
 - `...-symbols.zip`: matching ELF and build metadata for crash decoding.
 - `manifest.json`: schema version, build version/channel, source SHA, board,
   source timestamp, partition-table hash, actual OTA-slot limit, counts and
@@ -84,9 +86,11 @@ artifact hidden-file defaults cannot accidentally remove them.
 The `.bin` is an **application image**, not a merged USB/factory flash image.
 The manifest and checksums are consumed by the [device OTA client](OTA.md).
 The workflow does not cryptographically sign firmware.
-Copy SD assets deliberately when updating an existing card; bundled games are
-the repository examples and can replace files with the same names. Existing
-configuration, credentials and NVS statistics are not part of the archive.
+The bundle builds the portal and prepares the SD pack before compiling firmware.
+Its SHA-256 is embedded as `SD_CONTENT_SHA256`; packaging fails if resources
+change afterward. Unzip `...-sd.zip` into the card root when provisioning via
+USB, preserving its hidden `.releases` directory. OTA performs this installation
+automatically. Existing user files are not overwritten; see [SD updates](reference/SD_UPDATES.md).
 
 ## Local reproduction
 

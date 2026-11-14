@@ -27,8 +27,8 @@ Checks:
 
 Checks:
 
-1. Verify SD card write support
-2. Confirm `/.core/config/config.json` is writable
+1. Check for NVS configuration/write errors; device settings do not require SD
+2. Check the current settings format and limits in [device settings storage](reference/DEVICE_SETTINGS_STORAGE.md); do not erase flash to fix a save error
 3. Validate JSON payload shape for `PUT /api/config`
 4. Check logs from `GET /api/system/logs`
 

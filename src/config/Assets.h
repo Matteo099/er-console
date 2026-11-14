@@ -5,13 +5,8 @@
 #define LOGS_DIR "/logs"
 
 #define AUDIO_DIR CORE_DIR "/audio"
-#define CONFIG_DIR CORE_DIR "/config"
 #define PORTAL_DIR CORE_DIR "/portal"
 #define IMAGES_DIR CORE_DIR "/images"
-
-// Configuration files
-#define DEVICE_CONFIG_FILE CONFIG_DIR "/config.json"
-#define WIFI_CFG_FILE CONFIG_DIR "/wifi.cfg"
 
 // Portal files
 #define PORTAL_INDEX_FILE PORTAL_DIR "/index.html"

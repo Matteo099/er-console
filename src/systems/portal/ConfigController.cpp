@@ -19,6 +19,7 @@ void ConfigController::registerRoutes(WebServer& server) {
 
 void ConfigController::sendConfigPayload(WebServer& server, const DeviceConfig& config) {
     const auto body = DeviceConfigRepository().toJson(config);
+    server.sendHeader("Cache-Control", "no-store");
     server.send(200, "application/json", body.c_str());
 }
 
@@ -40,34 +41,40 @@ void ConfigController::updateConfig(WebServer& server) {
 
     JsonObject wifi = doc["wifi"];
     if (!wifi.isNull()) {
-        config.wifi.ssid = wifi["ssid"].as<std::string>();
-        config.wifi.password = wifi["password"].as<std::string>();
+        if ((!wifi["ssid"].isUnbound() && !wifi["ssid"].is<const char*>()) ||
+            (!wifi["password"].isUnbound() && !wifi["password"].is<const char*>())) {
+            server.send(400, "application/json", "{\"error\":\"invalid_config\"}");
+            return;
+        }
+        if (!wifi["ssid"].isNull()) {
+            const auto ssid = wifi["ssid"].as<std::string>();
+            if (ssid != config.wifi.ssid)
+                config.wifi.password.clear();
+            config.wifi.ssid = ssid;
+        }
+        if (!wifi["password"].isNull())
+            config.wifi.password = wifi["password"].as<std::string>();
     }
 
     JsonObject locale = doc["locale"];
     if (!locale.isNull()) {
-        config.locale.language = locale["language"].as<std::string>();
-        config.locale.timezone = locale["timezone"].as<std::string>();
-        config.locale.dateFormat = locale["dateFormat"].as<std::string>();
+        if (!locale["language"].isNull())
+            config.locale.language = locale["language"].as<std::string>();
+        if (!locale["timezone"].isNull())
+            config.locale.timezone = locale["timezone"].as<std::string>();
+        if (!locale["dateFormat"].isNull())
+            config.locale.dateFormat = locale["dateFormat"].as<std::string>();
     }
 
     JsonObject ui = doc["ui"];
     if (!ui.isNull()) {
-        config.ui.theme = ui["theme"].as<std::string>();
-        config.ui.brightness = ui["brightness"] | 100;
+        if (!ui["theme"].isNull())
+            config.ui.theme = ui["theme"].as<std::string>();
+        config.ui.brightness = ui["brightness"] | config.ui.brightness;
     }
 
     JsonObject audio = doc["audio"];
     if (!audio.isNull()) {
-        if (!audio["volume"].isNull() || !audio["enabled"].isNull()) {
-            const int volume = audio["volume"] | config.audio.volume;
-            if (volume < 0 || volume > 100) {
-                server.send(400, "application/json", "{\"error\":\"invalid_volume\"}");
-                return;
-            }
-            config.audio.music =
-                config.audio.effects = {audio["enabled"] | config.audio.enabled, uint8_t(volume)};
-        }
         for (const char* name : {"music", "effects"}) {
             if (audio[name].isNull())
                 continue;
@@ -89,25 +96,19 @@ void ConfigController::updateConfig(WebServer& server) {
             }
             channel = {audio[name]["enabled"] | channel.enabled, uint8_t(volume)};
         }
-        config.audio.enabled = config.audio.effects.enabled;
-        config.audio.volume = config.audio.effects.volume;
     }
 
-    if (!DeviceConfigRepository::validNetwork(config.wifi.ssid, config.wifi.password) ||
-        (config.locale.language != "it" && config.locale.language != "it-IT" &&
-         config.locale.language != "en" && config.locale.language != "en-GB" &&
-         config.locale.language != "en-US")) {
+    if (!DeviceConfigRepository::validConfig(config)) {
         server.send(400, "application/json", "{\"error\":\"invalid_config\"}");
         return;
     }
-    config.locale.language = config.locale.language.compare(0, 2, "en") == 0 ? "en-GB" : "it-IT";
     if (!service.saveConfig(config)) {
         server.send(500, "application/json", "{\"error\":\"save_failed\"}");
         return;
     }
 
     if (service.network())
-        service.network()->reloadFromStorage(service.storage());
+        service.network()->reloadConfiguration();
 
     sendConfigPayload(server, config);
 }
@@ -122,7 +123,7 @@ void ConfigController::resetConfig(WebServer& server) {
     }
 
     if (service.network())
-        service.network()->reloadFromStorage(service.storage());
+        service.network()->reloadConfiguration();
 
     sendConfigPayload(server, config);
 }

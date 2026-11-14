@@ -6,9 +6,13 @@
 #include <unordered_set>
 #include "Arduino.h"
 #include "config/BoardConfig.h"
+#include "systems/input/HardwareCheck.h"
+#include <algorithm>
+#include <vector>
 
 class NativeChannelProvider : public IChannelProvider {
   public:
+    explicit NativeChannelProvider(std::vector<uint8_t> reserved = {}) : reserved(std::move(reserved)) {}
     bool init() override {
         return true;
     }
@@ -22,7 +26,8 @@ class NativeChannelProvider : public IChannelProvider {
     }
 
     bool owns(uint16_t c) const override {
-        return c >= GPIO_MIN_PIN && c <= GPIO_MAX_PIN;
+        return c <= UINT8_MAX && HardwareCheck::roomPin(c) &&
+            std::find(reserved.begin(), reserved.end(), c) == reserved.end();
     }
 
     void pinMode(uint16_t c, uint8_t mode) {
@@ -48,4 +53,5 @@ class NativeChannelProvider : public IChannelProvider {
 
   private:
     std::unordered_set<uint16_t> configuredPins;
+    std::vector<uint8_t> reserved;
 };

@@ -6,6 +6,11 @@
 - ESP32-S3 target board profile available
 - SD card prepared for `/.core` and `/games` content
 
+Release bundles use a versioned SD directory: unzip the matching `...-sd.zip`
+into the card root, including hidden files. OTA installs this generation
+automatically. Standalone `pio run` builds use the repository's flat `sd/`
+layout for development. See [SD updates](reference/SD_UPDATES.md).
+
 ## PlatformIO Environment
 
 The default environment is:
@@ -51,9 +56,10 @@ pio device monitor -e esp32-s3-devkitc-1-n16r8v-debug -p COM3 -b 115200
 
 ## Configuration Persistence
 
-At runtime, configuration is loaded from and saved to:
-
-- `/.core/config/config.json`
+Runtime device configuration is stored in internal NVS (`console-cfg/settings`),
+including theme, language, audio, Wi-Fi credentials and device preferences. It
+persists without SD and across ordinary firmware/OTA updates. A device without a
+saved configuration uses firmware defaults. See [device settings storage](reference/DEVICE_SETTINGS_STORAGE.md).
 
 Default values include:
 
