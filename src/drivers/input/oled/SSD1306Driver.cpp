@@ -31,6 +31,11 @@ void SSD1306Driver::shutdown() {
     I2CBusLock::Guard guard;
 
     // Clear framebuffer
+    wireBus->beginTransmission(displayAddress);
+    if (wireBus->endTransmission() != 0) {
+        initialized = false;
+        return;
+    }
     display.clearDisplay();
     display.display();
 

@@ -69,24 +69,30 @@ void GameScene::onUpdate() {
         settingsFeedback.stop();
     if (settingsDirty && uint32_t(millis() - settingsChangedAt) >= 400)
         saveSettings();
+    updateHardware();
     // Let the loading screen render and the previous scene unload before I/O.
     if (loadRequested && lv_tick_get() - loadRequestedAt >= 160) {
-        auto& cache = GameAssetCache::instance();
-        if (!assetToken) {
-            auto* storage = static_cast<StorageSystem*>(
-                SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
-            assetToken = cache.begin(storage, getGameDataDirectory());
-        }
-        if (cache.prepared(assetToken) && !audioPreparing) {
-            auto* audio = static_cast<AudioSystem*>(
-                SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
-            audioAssets.begin(audio, lv_tick_get(), cache.audioPaths(assetToken));
-            audioPreparing = true;
-            view.setLoadingMessage(tr(Text::PrepareAudio));
-        }
-        if (audioPreparing && audioAssets.prepared(lv_tick_get())) {
-            loadRequested = false;
-            loadGameScript();
+        if (!hardwarePrepared) {
+            if (hardwareAction == HardwareAction::None)
+                prepareHardware();
+        } else {
+            auto& cache = GameAssetCache::instance();
+            if (!assetToken) {
+                auto* storage = static_cast<StorageSystem*>(
+                    SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+                assetToken = cache.begin(storage, getGameDataDirectory());
+            }
+            if (cache.prepared(assetToken) && !audioPreparing) {
+                auto* audio = static_cast<AudioSystem*>(
+                    SystemEventBus::instance().getService(SystemEventBus::SERVICE_AUDIO));
+                audioAssets.begin(audio, lv_tick_get(), cache.audioPaths(assetToken));
+                audioPreparing = true;
+                view.setLoadingMessage(tr(Text::PrepareAudio));
+            }
+            if (audioPreparing && audioAssets.prepared(lv_tick_get())) {
+                loadRequested = false;
+                finishGameScriptLoad();
+            }
         }
     }
     std::vector<GameObjectSubview::ObjectData> objects;
@@ -140,6 +146,8 @@ void GameScene::onExit() {
 #endif
     closeSettings();
     stopGame();
+    if (inputSystem)
+        inputSystem->shutdown();
     audioAssets.release();
     GameAssetCache::instance().release(assetToken);
     assetToken = 0;
@@ -224,14 +232,7 @@ bool GameScene::handleUIEvent(const UIEvent& event) {
         if (!chosen.confirmed || !chosen.players)
             return true;
         selectedPlayers = chosen.players;
-        statisticsSessionId = StatisticsRepository::instance().start(gameInfo.id, selectedPlayers);
-        startTimer();
-        state = GameState::Running;
-        lastTickMs = lv_tick_get();
-        luaSystem->resume();
-        view.setRunning(true);
-        Log::info(Log::GAME_TAG, "Session started: id=%llu players=%u",
-                  static_cast<unsigned long long>(statisticsSessionId), unsigned(selectedPlayers));
+        checkHardware(HardwareAction::Start);
         return true;
     }
     if (view.playersVisible())
@@ -281,11 +282,7 @@ bool GameScene::handleUIEvent(const UIEvent& event) {
         if (state == GameState::Ready) {
             view.showPlayers(selectedPlayers);
         } else if (state == GameState::Paused) {
-            state = GameState::Running;
-            lastTickMs = lv_tick_get();
-            luaSystem->resume();
-            view.setRunning(true);
-            resumeTimer();
+            checkHardware(HardwareAction::Resume);
         } else if (state == GameState::Running) {
             state = GameState::Paused;
             luaSystem->pause();
@@ -314,11 +311,7 @@ bool GameScene::handleUIEvent(const UIEvent& event) {
         exitConfirmationOpen = false;
         view.hideExitConfirmation();
         if (resumeAfterConfirmation) {
-            state = GameState::Running;
-            lastTickMs = lv_tick_get();
-            resumeTimer();
-            luaSystem->resume();
-            view.setRunning(true);
+            checkHardware(HardwareAction::Resume);
         }
         return true;
     }
@@ -368,7 +361,7 @@ bool GameScene::handleUIEvent(const UIEvent& event) {
     return false;
 }
 
-bool GameScene::loadGameScript() {
+bool GameScene::prepareHardware() {
     stopGame();
     loadState = GameLoadState::Loading;
     state = GameState::Ready;
@@ -380,10 +373,34 @@ bool GameScene::loadGameScript() {
     view.setRunning(false);
     view.showLoading();
     view.setLoadingMessage(tr(Text::PrepareDevices));
-    if (!inputSystem->begin(gameInfo.inputConfig)) {
-        failLoad(tr(Text::DevicesUnavailable));
-        return false;
+#if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
+    if (!diagnosticHardware) {
+#endif
+        auto* storage = static_cast<StorageSystem*>(
+            SystemEventBus::instance().getService(SystemEventBus::SERVICE_STORAGE));
+        std::string configuration;
+        if (!storage || !storage->readTextFile((getGameDataDirectory() + "/config.json").c_str(),
+                                               configuration, true)) {
+            failLoad(tr(Text::GameReadError));
+            return false;
+        }
+        JsonDocument document;
+        if (deserializeJson(document, configuration)) {
+            failLoad(tr(Text::CatalogConfigError));
+            return false;
+        }
+        gameInfo.inputConfig = InputConfig::parse(document["inputs"]);
+#if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
     }
+#endif
+    loadState = GameLoadState::CheckingHardware;
+    hardwareAction = HardwareAction::Load;
+    inputSystem->requestBegin(gameInfo.inputConfig);
+    view.setLoadingMessage(tr(Text::HardwareChecking));
+    return true;
+}
+
+bool GameScene::finishGameScriptLoad() {
     view.setLoadingMessage(tr(Text::ReadGame));
     const std::string path = getGameDataDirectory() + "/game.lua";
     luaSystem->setGameScene(this);
@@ -402,6 +419,68 @@ bool GameScene::loadGameScript() {
     return true;
 }
 
+void GameScene::checkHardware(HardwareAction action) {
+    if (hardwareAction != HardwareAction::None)
+        return;
+    hardwareAction = action;
+    view.showLoading();
+    view.setLoadingMessage(tr(Text::HardwareChecking));
+    inputSystem->requestHardwareCheck();
+}
+
+void GameScene::updateHardware() {
+    if (!inputSystem ||
+        (hardwareAction == HardwareAction::None && !(hardwarePrepared && loadRequested) &&
+         (loadState != GameLoadState::LoadComplete || state == GameState::Finished)))
+        return;
+    const auto status = inputSystem->hardwareStatus();
+    if (status.state == HardwareState::Fault) {
+        failHardware(status);
+        return;
+    }
+    if (hardwareAction == HardwareAction::None || status.state != HardwareState::Ready)
+        return;
+    const auto action = hardwareAction;
+    hardwareAction = HardwareAction::None;
+    if (action == HardwareAction::Load) {
+        hardwarePrepared = true;
+        loadState = GameLoadState::Loading;
+        loadRequested = true;
+        view.setLoadingMessage(tr(Text::PrepareAssets));
+        return;
+    }
+    if (action == HardwareAction::Start) {
+        statisticsSessionId = StatisticsRepository::instance().start(gameInfo.id, selectedPlayers);
+        startTimer();
+        Log::info(Log::GAME_TAG, "Session started: id=%llu players=%u",
+                  static_cast<unsigned long long>(statisticsSessionId), unsigned(selectedPlayers));
+    } else
+        resumeTimer();
+    state = GameState::Running;
+    lastTickMs = lv_tick_get();
+    view.showMain();
+    view.setRunning(true);
+    luaSystem->resume();
+}
+
+void GameScene::failHardware(const HardwareStatus& status) {
+    const bool interrupted = statisticsSessionId != 0;
+    if (interrupted)
+        pauseTimer();
+    closeSettings();
+    view.hideExitConfirmation();
+    stopGame();
+    inputSystem->shutdown();
+    if (audioSystem)
+        audioSystem->stop();
+    audioAssets.release();
+    GameAssetCache::instance().release(assetToken);
+    assetToken = 0;
+    loadState = GameLoadState::LoadFailed;
+    view.setRunning(false);
+    view.showHardwareError(status, interrupted);
+}
+
 void GameScene::failLoad(const char* message) {
     closeSettings();
     loadRequested = false;
@@ -414,6 +493,8 @@ void GameScene::failLoad(const char* message) {
 }
 
 void GameScene::stopGame() {
+    hardwareAction = HardwareAction::None;
+    hardwarePrepared = false;
     recordOutcome(GameOutcome::Abandoned);
     view.hidePlayers();
     loadRequested = false;

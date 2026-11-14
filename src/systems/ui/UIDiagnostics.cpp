@@ -1,4 +1,5 @@
 #include "UIDiagnostics.h"
+#include "HardwareDiagnostics.h"
 #include "config/Console.h"
 
 #if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
@@ -500,6 +501,17 @@ void UIDiagnostics::update(SceneManager& scenes) {
             scenes.changeScene(new UpdateScene(), SceneTransition::None);
         else if (command == "ui ota-test")
             runUpdateDiagnostics();
+        else if (command == "ui hardware-test")
+            runHardwareDiagnostics();
+        else if (command.startsWith("ui hardware-game "))
+            scenes.changeScene(createHardwareGameForDiagnostics(command.substring(17).c_str()), SceneTransition::None);
+        else if (command == "ui hardware-state")
+            hardwareStatusForDiagnostics();
+        else if (command == "ui hardware-fault") {
+            auto* input = static_cast<InputSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
+            if (input && GameScene::diagnosticCurrent) input->injectHardwareFaultForDiagnostics(HardwareIssueKind::MissingI2C);
+        } else if (command.startsWith("ui room-id "))
+            roomIdForDiagnostics(command.substring(11).toInt());
         else if (command.startsWith("ui ota-native ")) {
             unsigned bytes = 0;
             char digest[65]{};

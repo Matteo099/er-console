@@ -1,13 +1,15 @@
 #pragma once
 
-#include <MFRC522.h>
+#include <MFRC522v2.h>
+#include <MFRC522DriverSPI.h>
+#include <MFRC522DriverPinSimple.h>
 #include <SPI.h>
 
 #include "IRFIDReader.h"
 
-class MFRC522Driver : public IRFIDReader {
+class MFRC522Reader : public IRFIDReader {
   public:
-    MFRC522Driver(SPIClass& spi, uint8_t ssPin, uint8_t rstPin);
+    MFRC522Reader(SPIClass& spi, uint8_t ssPin, uint8_t rstPin);
 
     bool init() override;
 
@@ -24,5 +26,7 @@ class MFRC522Driver : public IRFIDReader {
 
     bool initialized = false;
 
+    MFRC522DriverPinSimple select;
+    MFRC522DriverSPI transport;
     MFRC522 reader;
 };

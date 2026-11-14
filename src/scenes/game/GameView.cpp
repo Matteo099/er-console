@@ -22,6 +22,8 @@ const char* stateToString(GameSubview state) {
             return "Fail";
         case GameSubview::GameObject:
             return "GameObject";
+        case GameSubview::Hardware:
+            return "Hardware";
         default:
             return "Unknown";
     }
@@ -58,6 +60,7 @@ void GameView::create() {
     victorySubview.setEventCallback(callback);
     failSubview.setEventCallback(callback);
     gameObjectSubview.setEventCallback(callback);
+    hardwareSubview.create(layout.body, callback);
     settingsSubview.create(screen, [this](const UIEvent& event) {
         emitEvent(event);
     });
@@ -81,6 +84,7 @@ void GameView::destroy() {
     victorySubview.destroy();
     failSubview.destroy();
     gameObjectSubview.destroy();
+    hardwareSubview.destroy();
     exitDialog.destroy();
     settingsSubview.clear();
     playerSelector.clear();
@@ -101,6 +105,7 @@ void GameView::update() {
         case GameSubview::Victory:
         case GameSubview::Fail:
         case GameSubview::GameObject:
+        case GameSubview::Hardware:
             break;
     }
 }
@@ -129,6 +134,7 @@ void GameView::setState(GameSubview state) {
     victorySubview.hide();
     failSubview.hide();
     gameObjectSubview.hide();
+    hardwareSubview.hide();
 
     switch (state) {
         case GameSubview::Main:
@@ -150,6 +156,8 @@ void GameView::setState(GameSubview state) {
         case GameSubview::GameObject:
             gameObjectSubview.show();
             break;
+        case GameSubview::Hardware:
+            break;  // HardwareSubview::show supplies the report after changing state.
     }
 
     Log::info("GameView", "screen hidden=%d", lv_obj_has_flag(screen, LV_OBJ_FLAG_HIDDEN));
@@ -179,6 +187,11 @@ void GameView::showFailure() {
 void GameView::showLoadError(const char* message) {
     failSubview.setMessage(tr(Text::CannotStart), message);
     setState(GameSubview::Fail);
+}
+
+void GameView::showHardwareError(const HardwareStatus& status, bool interrupted) {
+    setState(GameSubview::Hardware);
+    hardwareSubview.show(status, interrupted);
 }
 
 void GameView::setTitle(const std::string& title) {

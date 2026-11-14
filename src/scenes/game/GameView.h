@@ -8,6 +8,7 @@
 #include "subviews/FailSubview.h"
 #include "subviews/GameObjectSubview.h"
 #include "subviews/InGameSettingsSubview.h"
+#include "subviews/HardwareSubview.h"
 #include "systems/ui/components/ConfirmationDialog.h"
 #include "systems/ui/components/PlayerSelectorDialog.h"
 
@@ -31,6 +32,7 @@ class GameView : public View {
     void showFailure();
     void showGameObject();
     void showLoadError(const char* message);
+    void showHardwareError(const HardwareStatus& status, bool interrupted);
     void setTitle(const std::string& title);
     void showExitConfirmation();
     void hideExitConfirmation();
@@ -69,6 +71,7 @@ class GameView : public View {
 
     void translateSettings() {
         settingsSubview.translate();
+        hardwareSubview.translate();
     }
 
     GameSubview currentSubview() const {
@@ -101,4 +104,5 @@ class GameView : public View {
     FailSubview failSubview;
     GameObjectSubview gameObjectSubview;
     InGameSettingsSubview settingsSubview;
+    HardwareSubview hardwareSubview;
 };

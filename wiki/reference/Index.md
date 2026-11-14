@@ -11,6 +11,7 @@
 - [Game Ui](GAME_UI.md)
 - [In Game Settings](IN_GAME_SETTINGS.md)
 - [Network Ui](NETWORK_UI.md)
+- [Room hardware checks and one-pin identity](ROOM_HARDWARE.md)
 - [Sd Diagnostics](SD_DIAGNOSTICS.md)
 - [SD resource updates](SD_UPDATES.md)
 - [Settings](SETTINGS.md)

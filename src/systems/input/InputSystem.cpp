@@ -2,6 +2,8 @@
 
 #include "log/Logger.h"
 #include "drivers/bus/SPIBusManager.h"
+#include "drivers/input/RoomHardwareProbe.h"
+#include <algorithm>
 
 InputSystem::InputSystem() {
     subsystems.reserve(16);
@@ -11,15 +13,106 @@ InputSystem::~InputSystem() {
     reset();
 }
 
-bool InputSystem::begin(const InputConfig& config) {
+void InputSystem::requestBegin(const InputConfig& config) {
+    TaskMutex::Guard lock(hardwareMutex);
+    ++generation;
+    queuedConfig = config;
+    beginPending = true;
+    checkPending = false;
+    hardware = HardwareStatus{};
+    hardware.state = HardwareState::Checking;
+}
+
+void InputSystem::requestHardwareCheck() {
+    TaskMutex::Guard lock(hardwareMutex);
+    if (hardware.state != HardwareState::Ready)
+        return;
+    ++generation;
+    checkPending = true;
+    hardware.state = HardwareState::Checking;
+    hardware.issues.clear();
+}
+
+HardwareStatus InputSystem::hardwareStatus() const {
+    TaskMutex::Guard lock(hardwareMutex);
+    return hardware;
+}
+
+bool InputSystem::powerSnapshot(PowerReading& reading) {
+    TaskMutex::Guard lock(lifecycleMutex);
+    if (!powerInitialized || !powerSystem || !powerSystem->isSupported()) {
+        reading = PowerReading{};
+        return false;
+    }
+    reading = powerSystem->getMetrics();
+    return true;
+}
+
+#if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
+void InputSystem::injectHardwareFaultForDiagnostics(HardwareIssueKind kind) {
+    TaskMutex::Guard guard(lifecycleMutex);
+    uint32_t token;
+    {
+        TaskMutex::Guard lock(hardwareMutex);
+        token = generation;
+    }
+    monitoring = false;
+    publish(token, HardwareState::Fault, {{kind, "MCP23017 #1 (I2C 0x27)"}});
+}
+#endif
+
+void InputSystem::publish(uint32_t token, HardwareState state, std::vector<HardwareIssue> issues) {
+    TaskMutex::Guard lock(hardwareMutex);
+    if (token != generation)
+        return;
+    hardware.state = state;
+    hardware.issues = std::move(issues);
+    if (state == HardwareState::Fault)
+        for (const auto& item : hardware.issues)
+            Log::warn(Log::INPUT_TAG, "Hardware check failed: kind=%u component=%s",
+                      unsigned(item.kind), item.component.c_str());
+}
+
+bool InputSystem::begin(const InputConfig& config, uint32_t token) {
     TaskMutex::Guard guard(lifecycleMutex);
     reset();
+    auto issues = config.validate();
+    if (!issues.empty()) {
+        publish(token, HardwareState::Fault, std::move(issues));
+        return false;
+    }
+    activeConfig = config;
+    connectionConfigured = config.connection.enabled;
+    RoomHardwareProbe probe;
+    issues = HardwareCheck::inspect(config, probe, true);
+    if (!issues.empty()) {
+        reset();
+        publish(token, HardwareState::Fault, std::move(issues));
+        return false;
+    }
+    const auto failed = [&](const char* name) {
+        issues.push_back({HardwareIssueKind::Initialization, name});
+    };
     auto& i2c = I2CBusManager::bus();
     auto& spi = SPIBusManager::bus();
 
     if (config.channels.enabled) {
         channelSystem = new ChannelSystem();
-        nativeChannel = new NativeChannelProvider();
+        std::vector<uint8_t> reserved;
+        if (config.connection.enabled)
+            reserved.push_back(config.connection.pin);
+        if (config.rfid.enabled) {
+            reserved.push_back(config.rfid.ssPin);
+            reserved.push_back(config.rfid.rstPin);
+        }
+        if (config.sevenSegment.enabled)
+            reserved.push_back(config.sevenSegment.csPin);
+        if (config.channels.muxEnabled) {
+            reserved.insert(reserved.end(), {config.channels.muxCsPin, config.channels.muxS0Pin,
+                                             config.channels.muxS1Pin, config.channels.muxS2Pin,
+                                             config.channels.muxS3Pin});
+        }
+        nativeChannel = new NativeChannelProvider(std::move(reserved));
         channelSystem->registerProvider(nativeChannel);
         Log::debug(Log::INPUT_TAG, "NativeChannelProvider registered");
 
@@ -55,6 +148,7 @@ bool InputSystem::begin(const InputConfig& config) {
             destroyChannels();
 
             Log::error(Log::INPUT_TAG, "Failed to initialize ChannelSystem");
+            failed("MCP23017 / GPIO");
         } else {
             channelInitialized = true;
             subsystems.push_back(channelSystem);
@@ -68,6 +162,7 @@ bool InputSystem::begin(const InputConfig& config) {
             destroyPower();
 
             Log::error(Log::INPUT_TAG, "Failed to initialize PowerSystem");
+            failed("INA219");
         } else {
             powerInitialized = true;
             Log::debug(Log::INPUT_TAG, "PowerSystem initialized");
@@ -75,12 +170,13 @@ bool InputSystem::begin(const InputConfig& config) {
         }
     }
     if (config.rfid.enabled) {
-        rfidDriver = new MFRC522Driver(spi, config.rfid.ssPin, config.rfid.rstPin);
+        rfidDriver = new MFRC522Reader(spi, config.rfid.ssPin, config.rfid.rstPin);
         rfidSystem = new RFIDSystem(*rfidDriver);
         if (!rfidSystem->init()) {
             destroyRfid();
 
             Log::error(Log::INPUT_TAG, "Failed to initialize RFIDSystem");
+            failed("MFRC522");
         } else {
             rfidInitialized = true;
             Log::debug(Log::INPUT_TAG, "RFIDSystem initialized");
@@ -95,6 +191,7 @@ bool InputSystem::begin(const InputConfig& config) {
             destroyOled();
 
             Log::error(Log::INPUT_TAG, "Failed to initialize OLEDSystem");
+            failed("SSD1306");
         } else {
             oledInitialized = true;
             Log::debug(Log::INPUT_TAG, "OLEDSystem initialized");
@@ -111,6 +208,7 @@ bool InputSystem::begin(const InputConfig& config) {
             destroyRgb();
 
             Log::error(Log::INPUT_TAG, "Failed to initialize RgbLedSystem");
+            failed("PCA9685");
         } else {
             rgbInitialized = true;
             subsystems.push_back(rgbLedSystem);
@@ -126,6 +224,7 @@ bool InputSystem::begin(const InputConfig& config) {
             destroySevenSegment();
 
             Log::error(Log::INPUT_TAG, "Failed to initialize SevenSegmentSystem");
+            failed("MAX7219");
         } else {
             sevenSegmentInitialized = true;
             Log::debug(Log::INPUT_TAG, "SevenSegmentSystem initialized");
@@ -136,22 +235,41 @@ bool InputSystem::begin(const InputConfig& config) {
         if (!channelInitialized) {
             Log::error(Log::INPUT_TAG, "RelaySystem requires ChannelSystem to be enabled");
 
+            failed("Relay / GPIO");
+            reset();
+            publish(token, HardwareState::Fault, std::move(issues));
             return false;
         }
         relaySystem = new RelaySystem(channelSystem);
         if (!relaySystem->init()) {
             destroyRelay();
             Log::error(Log::INPUT_TAG, "Failed to initialize RelaySystem");
+            failed("Relay / GPIO");
         } else {
             relayInitialized = true;
             subsystems.push_back(relaySystem);
             Log::debug(Log::INPUT_TAG, "RelaySystem initialized");
         }
     }
+    if (!issues.empty()) {
+        reset();
+        publish(token, HardwareState::Fault, std::move(issues));
+        return false;
+    }
+    monitor.reset();
+    monitoring = true;
+    checkedAt = millis();
+    publish(token, HardwareState::Ready);
     return true;
 }
 
 void InputSystem::shutdown() {
+    {
+        TaskMutex::Guard lock(hardwareMutex);
+        ++generation;
+        beginPending = checkPending = false;
+        hardware = HardwareStatus{};
+    }
     TaskMutex::Guard guard(lifecycleMutex);
     Log::info(Log::INPUT_TAG, "Shutting down InputSystem");
     reset();
@@ -271,15 +389,25 @@ void InputSystem::destroyRelay() {
 }
 
 void InputSystem::reset() {
+    monitoring = false;
+    monitor.reset();
     subsystems.clear();
-
-    destroyChannels();
+    // Relay shutdown still needs the channel providers.
+    destroyRelay();
     destroyPower();
     destroyRfid();
     destroyOled();
     destroyRgb();
     destroySevenSegment();
-    destroyRelay();
+    destroyChannels();
+    if (connectionConfigured)
+        gpio_reset_pin(static_cast<gpio_num_t>(activeConfig.connection.pin));
+    if (activeConfig.rfid.enabled) {
+        pinMode(activeConfig.rfid.ssPin, INPUT_PULLUP);
+        pinMode(activeConfig.rfid.rstPin, INPUT);
+    }
+    connectionConfigured = false;
+    activeConfig = InputConfig{};
 }
 
 void InputSystem::init(void* params) {
@@ -294,7 +422,49 @@ void InputSystem::init(void* params) {
 }
 
 void InputSystem::update() {
+    bool initialize, check;
+    uint32_t token;
+    InputConfig config;
+    {
+        TaskMutex::Guard lock(hardwareMutex);
+        initialize = beginPending;
+        check = checkPending;
+        token = generation;
+        if (initialize)
+            config = queuedConfig;
+        beginPending = checkPending = false;
+    }
     TaskMutex::Guard guard(lifecycleMutex);
+    {
+        TaskMutex::Guard lock(hardwareMutex);
+        if (token != generation)
+            return;
+    }
+    if (initialize) {
+        begin(config, token);
+        return;
+    }
+    if (!monitoring)
+        return;
+    if (check || uint32_t(millis() - checkedAt) >= 500) {
+        checkedAt = millis();
+        RoomHardwareProbe probe;
+        auto issues = HardwareCheck::inspect(activeConfig, probe, false);
+        const bool wrongRoom =
+            std::any_of(issues.begin(), issues.end(), [](const HardwareIssue& item) {
+                return item.kind == HardwareIssueKind::WrongRoom;
+            });
+        const bool fault = monitor.sample(issues.empty());
+        if (!issues.empty() && (check || wrongRoom || fault)) {
+            monitoring = false;
+            publish(token, HardwareState::Fault, std::move(issues));
+            return;
+        }
+        if (check && issues.empty())
+            publish(token, HardwareState::Ready);
+        if (!issues.empty())
+            return;
+    }
     for (auto* system : subsystems) {
         if (system)
             system->update();
