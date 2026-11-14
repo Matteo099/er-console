@@ -3,7 +3,7 @@
 Requires debug diagnostics and the existing 3-t_loop game on SD. User statistics
 are isolated in the established diagnostic sandbox and original preferences are
 not rewritten. Missing I2C uses address 0x27; disconnect is explicitly injected.
-Physical DS2401 success/unplug tests require the separately documented hardware.
+Physical resistor identification/unplug tests require the documented divider.
 """
 import argparse
 import json

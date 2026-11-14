@@ -55,6 +55,12 @@ void HardwareSubview::translate() {
             case HardwareIssueKind::MissingIdentity:
                 key = Text::HardwareIdentityMissing;
                 break;
+            case HardwareIssueKind::IdentityShort:
+                key = Text::HardwareIdentityShort;
+                break;
+            case HardwareIssueKind::IdentityUnstable:
+                key = Text::HardwareIdentityUnstable;
+                break;
             case HardwareIssueKind::WrongRoom:
                 key = Text::HardwareWrongRoom;
                 break;

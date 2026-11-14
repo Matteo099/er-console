@@ -58,8 +58,8 @@ struct RelayConfig {
 
 struct ConnectionConfig {
     bool enabled = false;
-    uint8_t pin = 38;
-    std::string rom;
+    uint8_t pin = 1;
+    unsigned resistanceOhms = 0;
 };
 
 struct InputConfig {

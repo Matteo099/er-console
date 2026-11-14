@@ -3,7 +3,6 @@
 #include "config/BoardConfig.h"
 #include <algorithm>
 #include <cstdio>
-#include <cstring>
 
 InputConfig InputConfig::parse(JsonVariantConst inputs) {
     InputConfig result;
@@ -108,16 +107,11 @@ InputConfig InputConfig::parse(JsonVariantConst inputs) {
     auto connection = object("connection");
     flag(connection, "enabled", result.connection.enabled, "connection");
     integer(connection, "pin", result.connection.pin, "connection");
-    if (!connection["rom"].isNull()) {
-        if (!connection["rom"].is<const char*>() ||
-            std::strlen(connection["rom"].as<const char*>()) > 16)
-            issue("connection.rom");
-        else {
-            result.connection.rom = connection["rom"].as<const char*>();
-            for (auto& c : result.connection.rom)
-                if (c >= 'a' && c <= 'f')
-                    c -= 'a' - 'A';
-        }
+    if (!connection["resistanceOhms"].isNull()) {
+        if (!connection["resistanceOhms"].is<unsigned>())
+            issue("connection.resistanceOhms");
+        else
+            result.connection.resistanceOhms = connection["resistanceOhms"].as<unsigned>();
     }
     auto i2c = object("i2c");
     for (const auto& field : {std::pair<const char*, unsigned>{"sdaPin", I2C_SDA_PIN},
@@ -211,9 +205,11 @@ std::vector<HardwareIssue> InputConfig::validate() const {
     if (relays.enabled && !channels.enabled)
         add("relays/channels.enabled");
     if (connection.enabled) {
-        pin(connection.pin, "DS2401");
-        if (!HardwareCheck::validRoomId(connection.rom))
-            add("connection.rom");
+        pin(connection.pin, "Room ADC");
+        if (!HardwareCheck::identityPin(connection.pin))
+            add("connection.pin (ADC1 GPIO 1/2)");
+        if (connection.resistanceOhms < 150 || connection.resistanceOhms > 4700)
+            add("connection.resistanceOhms (150-4700)");
     }
     return issues;
 }

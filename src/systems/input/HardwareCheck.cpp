@@ -16,28 +16,14 @@ bool HardwareCheck::roomPin(uint8_t pin) {
     return true;
 }
 
-bool HardwareCheck::validRoomId(const std::string& rom) {
-    if (rom.size() != 16 || rom.substr(0, 2) != "01")
-        return false;
-    uint8_t bytes[8]{};
-    for (unsigned i = 0; i < 16; ++i) {
-        const char c = rom[i];
-        if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F')))
-            return false;
-        bytes[i / 2] = bytes[i / 2] * 16 + (c <= '9' ? c - '0' : c - 'A' + 10);
-    }
-    uint8_t crc = 0;
-    for (unsigned i = 0; i < 8; ++i) {
-        uint8_t value = bytes[i];
-        for (unsigned bit = 0; bit < 8; ++bit) {
-            const bool mix = (crc ^ value) & 1;
-            crc >>= 1;
-            if (mix)
-                crc ^= 0x8C;
-            value >>= 1;
-        }
-    }
-    return crc == 0;
+bool HardwareCheck::identityPin(uint8_t pin) {
+    // Only these ADC1 pins are free on the current ESP32-S3 N16R8 console.
+    return (pin == 1 || pin == 2) && roomPin(pin);
+}
+
+unsigned HardwareCheck::identityVoltage(unsigned resistanceOhms) {
+    return uint64_t(IdentitySupplyMillivolts) * resistanceOhms /
+           (uint64_t(IdentityPullupOhms) + resistanceOhms);
 }
 
 std::vector<HardwareIssue> HardwareCheck::inspect(const InputConfig& config, HardwareProbe& probe,
@@ -47,10 +33,28 @@ std::vector<HardwareIssue> HardwareCheck::inspect(const InputConfig& config, Har
         return issues;  // Never touch pins from an invalid configuration.
     if (config.connection.enabled) {
         const auto found = probe.identity(config.connection.pin);
-        if (!validRoomId(found) || found != config.connection.rom) {
-            issues.push_back({validRoomId(found) ? HardwareIssueKind::WrongRoom
-                                                 : HardwareIssueKind::MissingIdentity,
-                              "DS2401"});
+        const auto resistance = config.connection.resistanceOhms;
+        const auto lower = identityVoltage(resistance * (100 - IdentityTolerancePercent) / 100) -
+                           IdentityAdcMarginMillivolts;
+        const auto upper = identityVoltage(resistance * (100 + IdentityTolerancePercent) / 100) +
+                           IdentityAdcMarginMillivolts;
+        HardwareIssueKind kind;
+        bool failed = true;
+        if (found.spreadMillivolts > IdentityMaxSpreadMillivolts)
+            kind = HardwareIssueKind::IdentityUnstable;
+        else if (found.millivolts >= IdentityOpenMillivolts)
+            kind = HardwareIssueKind::MissingIdentity;
+        else if (found.millivolts <= IdentityShortMillivolts)
+            kind = HardwareIssueKind::IdentityShort;
+        else if (found.millivolts < lower || found.millivolts > upper)
+            kind = HardwareIssueKind::WrongRoom;
+        else
+            failed = false;
+        if (failed) {
+            char label[96];
+            snprintf(label, sizeof(label), "GPIO %u, %u mV; %u ohm", config.connection.pin,
+                     found.millivolts, resistance);
+            issues.push_back({kind, label});
             return issues;  // Do not initialize outputs on the wrong room.
         }
     }

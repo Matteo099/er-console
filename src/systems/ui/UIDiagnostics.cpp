@@ -510,8 +510,8 @@ void UIDiagnostics::update(SceneManager& scenes) {
         else if (command == "ui hardware-fault") {
             auto* input = static_cast<InputSystem*>(SystemEventBus::instance().getService(SystemEventBus::SERVICE_INPUT));
             if (input && GameScene::diagnosticCurrent) input->injectHardwareFaultForDiagnostics(HardwareIssueKind::MissingI2C);
-        } else if (command.startsWith("ui room-id "))
-            roomIdForDiagnostics(command.substring(11).toInt());
+        } else if (command.startsWith("ui room-resistor "))
+            roomResistorForDiagnostics(command.substring(17).toInt());
         else if (command.startsWith("ui ota-native ")) {
             unsigned bytes = 0;
             char digest[65]{};

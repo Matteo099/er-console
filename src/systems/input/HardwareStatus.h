@@ -9,6 +9,8 @@ enum class HardwareIssueKind {
     MissingI2C,
     MissingRFID,
     MissingIdentity,
+    IdentityShort,
+    IdentityUnstable,
     WrongRoom,
     Initialization
 };

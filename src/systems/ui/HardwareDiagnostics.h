@@ -3,4 +3,4 @@ class Scene;
 void runHardwareDiagnostics();
 Scene* createHardwareGameForDiagnostics(const char* mode);
 void hardwareStatusForDiagnostics();
-void roomIdForDiagnostics(unsigned pin);
+void roomResistorForDiagnostics(unsigned pin);

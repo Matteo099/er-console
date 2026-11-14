@@ -4,7 +4,7 @@
 #include "drivers/bus/SPIBusManager.h"
 #include "drivers/bus/SPIBusLock.h"
 #include <Arduino.h>
-#include <OneWire.h>
+#include <algorithm>
 
 bool RoomHardwareProbe::i2c(uint8_t address) {
     I2CBusLock::Guard lock;
@@ -39,16 +39,25 @@ bool RoomHardwareProbe::rfid(uint8_t chipSelect, uint8_t reset, bool prepare) {
            version == 0x89 || version == 0xB2;
 }
 
-std::string RoomHardwareProbe::identity(uint8_t pin) {
-    if (!HardwareCheck::roomPin(pin))
+RoomIdentityReading RoomHardwareProbe::identity(uint8_t pin) {
+    if (!HardwareCheck::identityPin(pin))
         return {};
-    OneWire wire(pin);
-    uint8_t address[8], extra[8];
-    if (!wire.search(address) || OneWire::crc8(address, 7) != address[7] || address[0] != 0x01 ||
-        wire.search(extra))
-        return {};
-    char rom[17]{};
-    for (unsigned i = 0; i < 8; ++i)
-        snprintf(rom + 2 * i, 3, "%02X", address[i]);
-    return rom;
+    pinMode(pin, ANALOG);  // External pull-up only; internal pulls distort the divider.
+    analogReadResolution(12);
+    analogSetPinAttenuation(pin, ADC_11db);
+    delay(2);  // Settle the divider and its 100 nF bypass capacitor.
+    analogReadMilliVolts(pin);  // Discard the first conversion after configuring the ADC.
+    unsigned samples[32];
+    for (auto& sample : samples) {
+        sample = analogReadMilliVolts(pin);
+        delayMicroseconds(250);
+    }
+    std::sort(samples, samples + 32);
+    unsigned total = 0;
+    for (unsigned i = 4; i < 28; ++i)
+        total += samples[i];
+    RoomIdentityReading result;
+    result.millivolts = total / 24;
+    result.spreadMillivolts = samples[27] - samples[4];
+    return result;
 }
