@@ -22,15 +22,15 @@ class MCPChannelProvider : public IChannelProvider {
     }
 
     void pinMode(uint16_t c, uint8_t mode) override {
-        driver.pinMode(c - base, mode);
+        driver.pinMode(c, mode);
     }
 
     void digitalWrite(uint16_t c, bool value) {
-        driver.digitalWrite(c - base, value);
+        driver.digitalWrite(c, value);
     }
 
     bool digitalRead(uint16_t c) {
-        return driver.digitalRead(c - base);
+        return driver.digitalRead(c);
     }
 
     int analogRead(uint16_t c) override {

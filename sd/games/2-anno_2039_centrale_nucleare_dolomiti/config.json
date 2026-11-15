@@ -21,18 +21,12 @@
         },
         "channels": {
             "enabled": true,
-            "mcp1Enabled": true,
-            "mcp1Base": 100,
-            "mcp1Address": 32,
-            "mcp2Enabled": true,
-            "mcp2Base": 120,
-            "mcp2Address": 33,
-            "mcp3Enabled": true,
-            "mcp3Base": 140,
-            "mcp3Address": 34,
-            "mcp4Enabled": true,
-            "mcp4Base": 160,
-            "mcp4Address": 35,
+            "mcp": [
+                {"base": 100, "address": 32},
+                {"base": 120, "address": 33},
+                {"base": 140, "address": 34},
+                {"base": 160, "address": 35}
+            ],
             "muxEnabled": false
         },
         "i2c": {"sdaPin": 1, "sclPin": 2, "frequency": 100000},

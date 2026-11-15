@@ -67,10 +67,12 @@ std::vector<HardwareIssue> HardwareCheck::inspect(const InputConfig& config, Har
     };
     check(config.power.enabled, config.power.address, "INA219");
     check(config.oled.enabled, config.oled.address, "OLED SSD1306");
-    check(config.channels.enabled && config.channels.mcp1Enabled, config.channels.mcp1Address,
-          "MCP23017 #1");
-    check(config.channels.enabled && config.channels.mcp2Enabled, config.channels.mcp2Address,
-          "MCP23017 #2");
+    if (config.channels.enabled)
+        for (size_t i = 0; i < config.channels.mcp.size(); ++i) {
+            const auto& device = config.channels.mcp[i];
+            const auto name = "MCP23017 #" + std::to_string(i + 1);
+            check(device.enabled, device.address, name.c_str());
+        }
     check(config.rgb.enabled && config.rgb.usePCA9685, config.rgb.address, "PCA9685");
     // A mismatched I2C profile must not drive CS/RST pins on another room.
     if (!issues.empty())

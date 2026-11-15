@@ -104,7 +104,7 @@ of the cable. A correct resistor does not prove downstream components work.
 
 | Requirement | Check |
 | --- | --- |
-| MCP23017 #1/#2, INA219, SSD1306, PCA9685 | I2C acknowledgement at the configured address, then driver initialization |
+| MCP23017 array entries, INA219, SSD1306, PCA9685 | I2C acknowledgement at the configured address, then driver initialization |
 | RFID MFRC522 | Known read-only version register, then driver initialization on SPI3 |
 | Configuration | Strict types/ranges, supported features, unique I2C addresses, disjoint channel ranges, reserved/duplicate GPIOs |
 
@@ -131,13 +131,63 @@ Relays require channels. RFID uses `"spiBus": "sd"`: SPI3/HSPI with separate
 CS/RST (for example 41/40); SPI2/TFT is not supported. RFID receives the actual
 shared `SPIClass`, and MAX7219 establishes its SPI transaction settings.
 
-MCP #3/#4 and the proposed general ADC, servo, TM1637 and LED-strip APIs are
+The proposed general ADC, servo, TM1637 and LED-strip APIs are
 unsupported. The identification ADC above is independent of those proposed game
 APIs. The bundled nuclear-room example requests unsupported devices; `1-lab`
 has board pin/address conflicts. Correct their profiles before using them;
 these configuration errors are not SD read failures.
 
+## MCP channel arrays
+
+Declare GPIO expanders in `inputs.channels.mcp`, with one object per device:
+
+```json
+{
+  "inputs": {
+    "channels": {
+      "enabled": true,
+      "mcp": [
+        {"address": 32, "base": 64},
+        {"address": 33, "base": 80},
+        {"address": 34, "base": 96}
+      ]
+    }
+  }
+}
+```
+
+Each entry requires `address` and `base`. Its optional `enabled` flag defaults
+to `true`; `enabled: false` skips the device, its address and its channel range.
+An empty or omitted array creates no MCP providers. With `channels.enabled`
+true, native GPIO channels remain available. Active MCP entries with the parent
+channels section disabled are configuration errors.
+
+Parsing, preflight/background checks, provider registration and cleanup all
+iterate this collection; there are no numbered slots or two-device limit.
+The physical shared bus still permits only unique addresses in `0x20`-`0x27`
+(32-39), hence eight MCP23017 chips without an I2C bus multiplexer. Address
+conflicts with every other enabled I2C device are rejected. Each chip owns
+16 consecutive virtual channels starting at `base`. Bases must be above the
+native GPIO range and at most 240, so the last channel is at most 255. All MCP
+and GPIO-multiplexer ranges must be disjoint. Each driver receives the absolute
+virtual channel and translates it to a local pin exactly once.
+
+Add/remove array entries to change the hardware profile. Update SD game
+configuration files to this schema when deploying the firmware; numbered
+fields are no longer accepted, and no conversion/migration runs on the device.
+The repository's lab and nuclear-room configurations use the array format.
+
 ## Verification
+
+The MCP array refactor was verified on 15 November 2026 with **72 checker and
+layout/routing checks passed** on ESP32. Simulated probes cover all eight
+distinct MCP addresses, missing/disabled later entries, empty arrays, malformed
+entries, duplicate addresses, overlapping ranges, and first/last channel
+routing plus shutdown for every provider. These tests also protect against
+subtracting the virtual channel base twice. The real UI tests passed missing
+hardware, invalid pins, Retry/Back in IT/EN, and an injected in-game disconnect,
+with preferences/statistics preserved. Logs: `.pio/mcp-array-hardware/`.
+An eight-chip physical bus was not connected for these tests.
 
 With `UI_DIAGNOSTICS_ENABLED=1` and the debug environment uploaded:
 

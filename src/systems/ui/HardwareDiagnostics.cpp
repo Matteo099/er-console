@@ -15,11 +15,12 @@ namespace {
 struct Probe : HardwareProbe {
     bool present = true, reader = true;
     unsigned i2cCalls = 0, rfidCalls = 0, identityCalls = 0;
+    int missingAddress = -1;
     RoomIdentityReading room;
 
-    bool i2c(uint8_t) override {
+    bool i2c(uint8_t address) override {
         ++i2cCalls;
-        return present;
+        return present && address != missingAddress;
     }
 
     bool rfid(uint8_t, uint8_t, bool) override {
@@ -37,6 +38,117 @@ InputConfig parse(const char* text) {
     JsonDocument json;
     deserializeJson(json, text);
     return InputConfig::parse(json.as<JsonVariantConst>());
+}
+
+struct MCPDriverProbe : MCP23017Driver {
+    unsigned starts = 0, stops = 0, writes = 0;
+    uint16_t lastPin = 0;
+    uint8_t mode = INPUT;
+    bool value = false;
+
+    MCPDriverProbe(uint8_t base, uint8_t address) : MCP23017Driver(Wire, base, address) {
+    }
+
+    bool init() override {
+        ++starts;
+        return true;
+    }
+
+    void shutdown() override {
+        ++stops;
+    }
+
+    void pinMode(uint16_t pin, uint8_t requested) override {
+        lastPin = pin;
+        mode = requested;
+    }
+
+    void digitalWrite(uint16_t pin, bool requested) override {
+        lastPin = pin;
+        value = requested;
+        ++writes;
+    }
+
+    bool digitalRead(uint16_t pin) override {
+        lastPin = pin;
+        return value;
+    }
+};
+
+void checkMCPArrays(const std::function<void(bool, const char*)>& check) {
+    auto config = parse(R"({"channels":{"enabled":true,"mcp":[]}})");
+    Probe probe;
+    check(HardwareCheck::inspect(config, probe, true).empty() && !probe.i2cCalls,
+          "empty MCP arrays keep native channels usable without I2C probing");
+    JsonDocument json;
+    json["channels"]["enabled"] = true;
+    auto devices = json["channels"]["mcp"].to<JsonArray>();
+    for (unsigned i = 0; i < 8; ++i) {
+        auto device = devices.add<JsonObject>();
+        device["base"] = 64 + 16 * i;
+        device["address"] = 32 + i;
+    }
+    config = InputConfig::parse(json.as<JsonVariantConst>());
+    check(config.channels.mcp.size() == 8 && HardwareCheck::inspect(config, probe, true).empty() &&
+              probe.i2cCalls == 8,
+          "all eight distinct MCP addresses parse and are checked beyond the old two slots");
+    probe.missingAddress = 0x27;
+    auto issues = HardwareCheck::inspect(config, probe, false);
+    check(issues.size() == 1 && issues[0].component.find("#8") != std::string::npos &&
+              issues[0].component.find("0x27") != std::string::npos,
+          "a missing device at the end of the MCP array is named correctly");
+    config.channels.mcp.back().enabled = false;
+    probe.i2cCalls = 0;
+    check(HardwareCheck::inspect(config, probe, false).empty() && probe.i2cCalls == 7,
+          "disabled MCP entries are not required by background hardware checks");
+    config.channels.mcp.pop_back();
+    check(config.validate().empty() && config.channels.mcp.size() == 7,
+          "removing an MCP entry requires no configuration schema change");
+    for (
+        const char* text :
+        {R"({"channels":{"enabled":true,"mcp":null}})", R"({"channels":{"enabled":true,"mcp":{}}})",
+         R"({"channels":{"enabled":true,"mcp":[true]}})",
+         R"({"channels":{"enabled":true,"mcp":[{}]}})",
+         R"({"channels":{"enabled":true,"mcp":[{"base":64,"address":32,"enabled":1}]}})",
+         R"({"channels":{"enabled":true,"mcp":[{"base":64,"address":31}]}})",
+         R"({"channels":{"enabled":true,"mcp":[{"base":64,"address":40}]}})",
+         R"({"channels":{"enabled":true,"mcp":[{"base":64,"address":288}]}})",
+         R"({"channels":{"enabled":true,"mcp":[{"base":64,"address":32.5}]}})",
+         R"({"channels":{"enabled":true,"mcp":[{"base":64,"address":-1}]}})",
+         R"({"channels":{"enabled":true,"mcp":[{"base":241,"address":32}]}})",
+         R"({"channels":{"enabled":true,"mcp":[{"base":32,"address":32}]}})",
+         R"({"channels":{"enabled":true,"mcp":[{"base":64,"address":32},{"base":80,"address":33},{"base":96,"address":33}]}})",
+         R"({"channels":{"enabled":true,"mcp":[{"base":64,"address":32},{"base":80,"address":33},{"base":90,"address":34}]}})",
+         R"({"channels":{"enabled":true,"muxEnabled":true,"muxBase":100,"muxCsPin":38,"muxS0Pin":39,"muxS1Pin":40,"muxS2Pin":41,"muxS3Pin":42,"mcp":[{"base":100,"address":32}]}})",
+         R"({"channels":{"enabled":false,"mcp":[{"base":64,"address":32}]}})"}) {
+        probe.i2cCalls = 0;
+        check(!HardwareCheck::inspect(parse(text), probe, true).empty() && !probe.i2cCalls,
+              "malformed MCP arrays, address collisions and overlapping ranges fail before I/O");
+    }
+    check(parse(R"({"channels":{"mcp":[{"enabled":false}]}})").validate().empty(),
+          "disabled entries may omit hardware parameters");
+    config = InputConfig::parse(json.as<JsonVariantConst>());
+    ChannelSystem channels;
+    std::vector<std::unique_ptr<MCPDriverProbe>> drivers;
+    std::vector<std::unique_ptr<MCPChannelProvider>> providers;
+    for (const auto& device : config.channels.mcp) {
+        drivers.emplace_back(new MCPDriverProbe(device.base, device.address));
+        providers.emplace_back(new MCPChannelProvider(*drivers.back(), device.base));
+        channels.registerProvider(providers.back().get());
+    }
+    bool routed = channels.init();
+    for (size_t i = 0; i < drivers.size(); ++i) {
+        const auto first = config.channels.mcp[i].base;
+        channels.pinMode(first, OUTPUT);
+        routed &= drivers[i]->mode == OUTPUT && drivers[i]->lastPin == first;
+        channels.digitalWrite(first + 15, true);
+        routed &= channels.digitalRead(first + 15) && drivers[i]->lastPin == first + 15 &&
+                  drivers[i]->starts == 1 && drivers[i]->writes == 1;
+    }
+    channels.shutdown();
+    for (const auto& driver : drivers)
+        routed &= driver->stops == 1;
+    check(routed, "every MCP routes both channel boundaries and shuts down exactly once");
 }
 
 InputSystem* input() {
@@ -79,13 +191,14 @@ void runHardwareDiagnostics() {
         okay ? ++passed : ++failed;
         Serial.printf("@HWCHECK %s %s\n", okay ? "PASS" : "FAIL", name);
     };
+    checkMCPArrays(check);
     Probe probe;
     InputConfig config;
     check(HardwareCheck::inspect(config, probe, true).empty() && !probe.i2cCalls &&
               !probe.rfidCalls && !probe.identityCalls,
           "software-only games require no room hardware");
     config = parse(
-        R"({"power":{"enabled":true},"oled":{"enabled":true},"channels":{"enabled":true,"mcp1Enabled":true,"mcp2Enabled":true},"rgb":{"enabled":true,"usePCA9685":true,"address":65},"rfid":{"enabled":true}})");
+        R"({"power":{"enabled":true},"oled":{"enabled":true},"channels":{"enabled":true,"mcp":[{"base":100,"address":32},{"base":120,"address":33}]},"rgb":{"enabled":true,"usePCA9685":true,"address":65},"rfid":{"enabled":true}})");
     check(HardwareCheck::inspect(config, probe, true).empty() && probe.i2cCalls == 5 &&
               probe.rfidCalls == 1,
           "all declared readable devices must respond");
@@ -159,7 +272,7 @@ void runHardwareDiagnostics() {
         {R"({"power":{"enabled":"true"}})", R"({"power":{"enabled":true,"address":300}})",
          R"({"power":{"enabled":true,"address":-1}})", R"({"rfid":{"enabled":true,"ssPin":10}})",
          R"({"power":{"enabled":true},"rgb":{"enabled":true,"usePCA9685":true}})",
-         R"({"channels":{"enabled":true,"mcp1Enabled":true,"mcp2Enabled":true,"mcp2Base":110}})",
+         R"({"channels":{"enabled":true,"mcp":[{"base":100,"address":32},{"base":110,"address":33}]}})",
          R"({"relays":{"enabled":true}})",
          R"({"sevenSegment":{"enabled":true,"csPin":39,"digits":9}})",
          R"({"connection":{"enabled":true,"pin":48,"resistanceOhms":220}})",
@@ -180,7 +293,7 @@ void runHardwareDiagnostics() {
               "invalid configuration is rejected before any bus or GPIO operation");
     }
     for (const char* text :
-         {R"({"adc":{"enabled":true}})", R"({"channels":{"enabled":true,"mcp3Enabled":true}})",
+         {R"({"adc":{"enabled":true}})", R"({"channels":{"enabled":true,"unknown":true}})",
           R"({"i2c":{"sdaPin":1,"sclPin":2}})", R"({"rfid":{"enabled":true,"spiBus":"tft"}})"}) {
         issues = parse(text).validate();
         check(std::any_of(issues.begin(), issues.end(),
@@ -250,8 +363,10 @@ Scene* createHardwareGameForDiagnostics(const char* mode) {
     InputConfig config;
     if (!std::strcmp(mode, "missing")) {
         config.channels.enabled = true;
-        config.channels.mcp1Enabled = true;
-        config.channels.mcp1Address = 0x27;
+        MCPConfig device;
+        device.base = 100;
+        device.address = 0x27;
+        config.channels.mcp.push_back(device);
     } else if (!std::strcmp(mode, "identity")) {
         config.connection.enabled = true;
         config.connection.resistanceOhms = 220;

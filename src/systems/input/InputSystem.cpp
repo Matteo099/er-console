@@ -116,22 +116,16 @@ bool InputSystem::begin(const InputConfig& config, uint32_t token) {
         channelSystem->registerProvider(nativeChannel);
         Log::debug(Log::INPUT_TAG, "NativeChannelProvider registered");
 
-        if (config.channels.mcp1Enabled) {
-            mcpDriver1 =
-                new MCP23017Driver(i2c, config.channels.mcp1Base, config.channels.mcp1Address);
-            mcp1 = new MCPChannelProvider(*mcpDriver1, config.channels.mcp1Base);
-            channelSystem->registerProvider(mcp1);
-            Log::debug(Log::INPUT_TAG, "MCP23017Driver 1 registered at base %d",
-                       config.channels.mcp1Base);
-        }
-
-        if (config.channels.mcp2Enabled) {
-            mcpDriver2 =
-                new MCP23017Driver(i2c, config.channels.mcp2Base, config.channels.mcp2Address);
-            mcp2 = new MCPChannelProvider(*mcpDriver2, config.channels.mcp2Base);
-            channelSystem->registerProvider(mcp2);
-            Log::debug(Log::INPUT_TAG, "MCP23017Driver 2 registered at base %d",
-                       config.channels.mcp2Base);
+        for (const auto& device : config.channels.mcp) {
+            if (!device.enabled)
+                continue;
+            MCPDevice runtime;
+            runtime.driver.reset(new MCP23017Driver(i2c, device.base, device.address));
+            runtime.provider.reset(new MCPChannelProvider(*runtime.driver, device.base));
+            channelSystem->registerProvider(runtime.provider.get());
+            mcpDevices.push_back(std::move(runtime));
+            Log::debug(Log::INPUT_TAG, "MCP23017 registered at I2C 0x%02X, base %u", device.address,
+                       device.base);
         }
 
         if (config.channels.muxEnabled) {
@@ -280,17 +274,7 @@ void InputSystem::destroyChannels() {
         channelSystem->shutdown();
     }
 
-    delete mcp1;
-    mcp1 = nullptr;
-
-    delete mcpDriver1;
-    mcpDriver1 = nullptr;
-
-    delete mcp2;
-    mcp2 = nullptr;
-
-    delete mcpDriver2;
-    mcpDriver2 = nullptr;
+    mcpDevices.clear();
 
     delete mux1;
     mux1 = nullptr;
