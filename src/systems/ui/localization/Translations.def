@@ -107,6 +107,7 @@ X(SdResourcesMissing, "Risorse SD mancanti o incompatibili. Apri Impostazioni > 
 X(OtaNotesTruncated, "Altre informazioni nella release GitHub.", "More information in the GitHub release.")
 X(OtaDisabled, "Aggiornamenti o Wi-Fi disabilitati.", "Updates or Wi-Fi are disabled.")
 X(OtaNeedsWifi, "Connetti la console a Internet via Wi-Fi.", "Connect the console to Internet over Wi-Fi.")
+X(OtaConnectionError, "Impossibile contattare GitHub. Verifica Internet e riprova.", "Cannot reach GitHub. Check Internet access and retry.")
 X(OtaClockError, "Impossibile sincronizzare l'orologio.", "Could not synchronize the clock.")
 X(OtaNotFound, "Release pubblica non disponibile.", "Public release unavailable.")
 X(OtaRateLimit, "Limite GitHub raggiunto. Riprova piu' tardi.", "GitHub rate limit reached. Try again later.")

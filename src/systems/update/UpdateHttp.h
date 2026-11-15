@@ -34,11 +34,13 @@ class UpdateHttp : public UpdateInput {
     }
 
   private:
+    UpdateError transportError(const char* operation, int code) const;
     static esp_err_t event(esp_http_client_event_t* value);
     esp_http_client_handle_t client = nullptr;
     UpdateEngine::Cancel cancelled;
     std::string location;
     bool rateLimited = false;
+    bool tlsMemoryFailure = false;
     int statusCode = 0;
     int64_t length = -1;
     uint32_t lastData = 0;

@@ -84,6 +84,22 @@ blocking connection operation is bounded, and an update operation has a
 10-minute limit. The UI reports network, clock, rate-limit,
 metadata, memory, compatibility, integrity and flash errors separately.
 
+Wi-Fi availability is read from the station driver's current connection status;
+the portal/AP is not required. Only an actual Wi-Fi disconnection displays the
+instruction to connect the console. A failed GitHub connection, DNS lookup,
+TLS handshake or interrupted response while Wi-Fi remains connected instead
+reports that GitHub could not be reached. Being associated with an access point
+and having an IP address does not by itself prove Internet access. Transport
+failure logs include the HTTP operation, its error code and live Wi-Fi status.
+
+On this board, TLS allocations use the available PSRAM through Mbed TLS's
+runtime allocator. The prebuilt core otherwise requires contiguous internal
+16 KB record buffers; scene changes/reconnection can fragment internal RAM
+enough to make `mbedtls_ssl_setup` fail with `-0x7F00` despite healthy Wi-Fi.
+The allocator is configured once and uses internal RAM on boards without PSRAM;
+its free function accepts either memory region. TLS record allocation failures
+are reported as memory errors. Certificate validation remains enabled.
+
 Installation is refused while a game is loaded. Before erasing flash, audio
 playback is stopped and the updater waits for the audio task to acknowledge
 that I2S is stopped; the rainbow LED task is also suspended during writes.
@@ -118,6 +134,30 @@ Build the debug environment with `UI_DIAGNOSTICS_ENABLED=1`, upload it and run:
 ```powershell
 python scripts/diagnostics/ui_ota.py --port COM3 --output .pio/ota-check
 ```
+
+To check an existing Wi-Fi connection, deliberate disconnection and recovery
+through **Save and connect**, using the already saved credentials:
+
+```powershell
+python scripts/diagnostics/ui_ota_connectivity.py --port COM4 --output .pio/ota-connectivity
+```
+
+This requires an available saved Wi-Fi network and a compatible published
+release. It checks that connected requests retrieve release information,
+offline requests show Wi-Fi guidance, and reconnection allows another check.
+It reconnects Wi-Fi before returning, preserves preferences/statistics, and
+never installs firmware. The engine/UI diagnostics also distinguish a GitHub
+transport failure from a Wi-Fi disconnection.
+
+Verified on 15 November 2026 on COM4: the reconnect probe reproduced a TLS
+allocation failure (`mbedtls_ssl_setup -0x7F00`) with Wi-Fi still connected.
+After the memory/error fixes, both the existing-connection check and the check
+after **Save and connect** retrieved release 1.2.0; a deliberate disconnection
+displayed Wi-Fi guidance. All 59 engine/SD/UI checks passed, including PSRAM
+allocation and distinct transport/offline messages. Preferences and statistics
+were unchanged. Debug and release builds passed; no OTA firmware was installed.
+Logs/screenshots: `.pio/ota-connectivity-verified/` and
+`.pio/ota-connectivity-engine/`.
 
 This exercises native SD staging and readback in a small isolated diagnostic
 generation, SemVer, metadata and manifest validation, allowed HTTPS hosts,

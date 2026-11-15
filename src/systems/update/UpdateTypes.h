@@ -41,7 +41,8 @@ enum class UpdateError : uint8_t {
     Interrupted,
     Busy,
     Storage,
-    StorageSpace
+    StorageSpace,
+    WifiDisconnected
 };
 
 struct ReleaseAsset {
