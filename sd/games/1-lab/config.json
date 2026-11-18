@@ -23,12 +23,10 @@
         },
         "channels": {
             "enabled": true,
-            "mcp1Enabled": true,
-            "mcp1Base": 100,
-            "mcp1Address": 32,
-            "mcp2Enabled": false,
-            "mcp2Base": 120,
-            "mcp2Address": 33,
+            "mcp": [
+                {"enabled": true, "base": 100, "address": 32},
+                {"enabled": false, "base": 120, "address": 33}
+            ],
             "muxEnabled": true,
             "muxBase": 200,
             "muxCsPin": 5,

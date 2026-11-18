@@ -5,6 +5,9 @@
 #include "systems/update/UpdateEngine.h"
 #include "systems/update/UpdateMetadata.h"
 #include "systems/update/UpdateSystem.h"
+#include "systems/update/UpdateHttp.h"
+#include <mbedtls/platform.h>
+#include <soc/soc_memory_types.h>
 #include <esp_ota_ops.h>
 #include "config/Updates.h"
 #include "scenes/update/UpdateView.h"
@@ -160,6 +163,17 @@ lv_obj_t* textarea(lv_obj_t* root) {
         if (auto* found = textarea(lv_obj_get_child(root, i)))
             return found;
     return nullptr;
+}
+
+bool containsText(lv_obj_t* root, const char* text) {
+    if (!lv_obj_is_visible(root))
+        return false;
+    if (lv_obj_check_type(root, &lv_label_class) && !std::strcmp(lv_label_get_text(root), text))
+        return true;
+    for (unsigned i = 0; i < lv_obj_get_child_count(root); ++i)
+        if (containsText(lv_obj_get_child(root, i), text))
+            return true;
+    return false;
 }
 
 struct Capture : UIEventHandler {
@@ -390,6 +404,14 @@ void runUpdateDiagnostics() {
     const auto quiet = [](UpdateState, size_t, size_t) {
     };
     {
+        UpdateHttp transport(never);
+        auto* record = static_cast<uint8_t*>(mbedtls_calloc(1, 16384));
+        check(record && (!psramFound() || esp_ptr_external_ram(record)) && !record[0] &&
+                  !record[16383],
+              "TLS record allocation uses available PSRAM instead of fragmented internal RAM");
+        mbedtls_free(record);
+    }
+    {
         Input input(data);
         Flash flash;
         auto result = UpdateEngine::install(input, flash, candidate, quiet, never);
@@ -567,6 +589,17 @@ void runUpdateDiagnostics() {
         check(lv_obj_has_state(install, LV_STATE_DISABLED),
               "up-to-date firmware cannot be installed again");
         check(!textarea(screen), "public update UI contains no credential input or keyboard");
+        current.state = UpdateState::Error;
+        current.error = UpdateError::Network;
+        view.render(current);
+        check(containsText(screen, tr(Text::OtaConnectionError)) &&
+                  !containsText(screen, tr(Text::OtaNeedsWifi)),
+              "a failed GitHub request does not report disconnected Wi-Fi");
+        current.error = UpdateError::WifiDisconnected;
+        view.render(current);
+        check(containsText(screen, tr(Text::OtaNeedsWifi)) &&
+                  !containsText(screen, tr(Text::OtaConnectionError)),
+              "only disconnected Wi-Fi asks the user to connect");
         view.destroy();
     }
     lv_display_delete(display);

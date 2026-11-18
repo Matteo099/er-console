@@ -17,8 +17,10 @@ Text errorText(UpdateError error) {
     switch (error) {
         case UpdateError::Disabled:
             return Text::OtaDisabled;
-        case UpdateError::Network:
+        case UpdateError::WifiDisconnected:
             return Text::OtaNeedsWifi;
+        case UpdateError::Network:
+            return Text::OtaConnectionError;
         case UpdateError::Clock:
             return Text::OtaClockError;
         case UpdateError::NotFound:

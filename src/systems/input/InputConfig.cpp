@@ -72,13 +72,27 @@ InputConfig InputConfig::parse(JsonVariantConst inputs) {
     integer(oled, "address", result.oled.address, "oled");
     auto channels = object("channels");
     flag(channels, "enabled", result.channels.enabled, "channels");
-    flag(channels, "mcp1Enabled", result.channels.mcp1Enabled, "channels");
-    flag(channels, "mcp2Enabled", result.channels.mcp2Enabled, "channels");
     flag(channels, "muxEnabled", result.channels.muxEnabled, "channels");
-    integer(channels, "mcp1Base", result.channels.mcp1Base, "channels");
-    integer(channels, "mcp2Base", result.channels.mcp2Base, "channels");
-    integer(channels, "mcp1Address", result.channels.mcp1Address, "channels");
-    integer(channels, "mcp2Address", result.channels.mcp2Address, "channels");
+    if (!channels["mcp"].isUnbound()) {
+        if (!channels["mcp"].is<JsonArrayConst>())
+            issue("channels.mcp");
+        else {
+            unsigned index = 0;
+            for (auto entry : channels["mcp"].as<JsonArrayConst>()) {
+                const auto name = "channels.mcp[" + std::to_string(index++) + "]";
+                if (!entry.is<JsonObjectConst>()) {
+                    issue(name);
+                    continue;
+                }
+                MCPConfig device;
+                const auto object = entry.as<JsonObjectConst>();
+                flag(object, "enabled", device.enabled, name);
+                integer(object, "base", device.base, name);
+                integer(object, "address", device.address, name);
+                result.channels.mcp.push_back(device);
+            }
+        }
+    }
     integer(channels, "muxBase", result.channels.muxBase, "channels");
     integer(channels, "muxCsPin", result.channels.muxCsPin, "channels");
     integer(channels, "muxS0Pin", result.channels.muxS0Pin, "channels");
@@ -87,13 +101,10 @@ InputConfig InputConfig::parse(JsonVariantConst inputs) {
     integer(channels, "muxS3Pin", result.channels.muxS3Pin, "channels");
     for (auto pair : channels) {
         const std::string name = pair.key().c_str();
-        if (name.compare(0, 3, "mcp") == 0 && name != "mcp1Enabled" && name != "mcp2Enabled" &&
-            name.size() >= 7 && name.substr(name.size() - 7) == "Enabled") {
-            if (!pair.value().is<bool>())
-                issue("channels." + name);
-            else if (pair.value().as<bool>())
-                issue("channels." + name, HardwareIssueKind::Unsupported);
-        }
+        if (name != "enabled" && name != "mcp" && name != "muxEnabled" && name != "muxBase" &&
+            name != "muxCsPin" && name != "muxS0Pin" && name != "muxS1Pin" && name != "muxS2Pin" &&
+            name != "muxS3Pin")
+            issue("channels." + name, HardwareIssueKind::Unsupported);
     }
     auto rgb = object("rgb");
     flag(rgb, "enabled", result.rgb.enabled, "rgb");
@@ -167,13 +178,13 @@ std::vector<HardwareIssue> InputConfig::validate() const {
             add("oled.width/height");
     }
     if (channels.enabled) {
-        if (channels.mcp1Enabled) {
-            address(channels.mcp1Address, "MCP23017 #1", 0x20, 0x27);
-            base(channels.mcp1Base, "channels.mcp1Base");
-        }
-        if (channels.mcp2Enabled) {
-            address(channels.mcp2Address, "MCP23017 #2", 0x20, 0x27);
-            base(channels.mcp2Base, "channels.mcp2Base");
+        for (size_t i = 0; i < channels.mcp.size(); ++i) {
+            const auto& device = channels.mcp[i];
+            if (!device.enabled)
+                continue;
+            const auto name = "channels.mcp[" + std::to_string(i) + "]";
+            address(device.address, name.c_str(), 0x20, 0x27);
+            base(device.base, (name + ".base").c_str());
         }
         if (channels.muxEnabled) {
             base(channels.muxBase, "channels.muxBase");
@@ -183,7 +194,10 @@ std::vector<HardwareIssue> InputConfig::validate() const {
             pin(channels.muxS2Pin, "MUX S2");
             pin(channels.muxS3Pin, "MUX S3");
         }
-    } else if (channels.mcp1Enabled || channels.mcp2Enabled || channels.muxEnabled)
+    } else if (channels.muxEnabled ||
+               std::any_of(channels.mcp.begin(), channels.mcp.end(), [](const MCPConfig& device) {
+                   return device.enabled;
+               }))
         add("channels.enabled");
     if (rfid.enabled) {
         pin(rfid.ssPin, "RFID CS");

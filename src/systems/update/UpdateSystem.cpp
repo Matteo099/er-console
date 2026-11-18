@@ -160,7 +160,7 @@ bool UpdateSystem::request(bool installing) {
     return false;
 #endif
     if (WiFi.status() != WL_CONNECTED) {
-        fail(UpdateError::Network);
+        fail(UpdateError::WifiDisconnected);
         return false;
     }
     if (pendingBoot()) {

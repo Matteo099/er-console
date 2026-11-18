@@ -23,15 +23,16 @@ struct OLEDConfig {
     uint8_t address = 0x3C;
 };
 
+struct MCPConfig {
+    bool enabled = true;
+    uint8_t base = 0;
+    uint8_t address = 0;
+};
+
 struct ChannelConfig {
     bool enabled = false;
-    bool mcp1Enabled = false;
-    bool mcp2Enabled = false;
+    std::vector<MCPConfig> mcp;
     bool muxEnabled = false;
-    uint8_t mcp1Base = 100;
-    uint8_t mcp1Address = 0x20;
-    uint8_t mcp2Base = 120;
-    uint8_t mcp2Address = 0x21;
     uint8_t muxBase = 200;
     uint8_t muxCsPin = 5;
     uint8_t muxS0Pin = 12;

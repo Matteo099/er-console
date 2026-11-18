@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 #include "config/Console.h"
 
 #include "core/SystemService.h"
@@ -84,11 +85,14 @@ class InputSystem : public SystemService {
     MFRC522Reader* rfidDriver = nullptr;
     SSD1306Driver* oledDriver = nullptr;
     NativeChannelProvider* nativeChannel = nullptr;
-    MCP23017Driver* mcpDriver1 = nullptr;
-    MCP23017Driver* mcpDriver2 = nullptr;
+
+    struct MCPDevice {
+        std::unique_ptr<MCP23017Driver> driver;
+        std::unique_ptr<MCPChannelProvider> provider;
+    };
+
+    std::vector<MCPDevice> mcpDevices;
     CD74HC4067Driver* muxDriver = nullptr;
-    MCPChannelProvider* mcp1 = nullptr;
-    MCPChannelProvider* mcp2 = nullptr;
     MuxChannelProvider* mux1 = nullptr;
     ESP32PwmRgbDriver* statusLed = nullptr;
     PCA9685Driver* rgbExpander = nullptr;
