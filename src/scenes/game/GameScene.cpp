@@ -77,10 +77,12 @@ void GameScene::postGameObject(GameObjectSubview::ObjectData object) {
 void GameScene::applyPendingObjects() {
     std::vector<GameObjectSubview::ObjectData> objects;
     std::vector<GameObjectSubview::ObjectData> discoveries;
+    std::vector<HintCommand> hintCommands;
     bool applyObjects = false;
     {
         TaskMutex::Guard lock(pendingMutex);
         discoveries.swap(pendingDiscoveries);
+        hintCommands.swap(pendingHintCommands);
         if (objectsPending) {
             objects.swap(pendingObjects);
             objectsPending = false;
@@ -91,6 +93,51 @@ void GameScene::applyPendingObjects() {
         view.setGameObjectData(objects);
     for (const auto& object : discoveries)
         view.discoverGameObject(object);
+    const uint64_t activeMs = statisticsSessionId ? sessionClock.elapsed(millis()) : 0;
+    for (auto& command : hintCommands) {
+        switch (command.type) {
+            case HintCommand::Type::Configure:
+                hints.configure(std::move(command.definitions));
+                break;
+            case HintCommand::Type::Step:
+                hints.setStep(command.step, activeMs);
+                break;
+            case HintCommand::Type::Unlock:
+                hints.unlock(command.data);
+                break;
+        }
+    }
+    if (!hintCommands.empty())
+        view.setUnlockedHints(hints.available());
+}
+
+void GameScene::postHints(std::vector<HintDefinition> definitions) {
+    TaskMutex::Guard lock(pendingMutex);
+    HintCommand command;
+    command.type = HintCommand::Type::Configure;
+    command.definitions = std::move(definitions);
+    pendingHintCommands.push_back(std::move(command));
+}
+
+void GameScene::postGameStep(std::string step) {
+    TaskMutex::Guard lock(pendingMutex);
+    HintCommand command;
+    command.type = HintCommand::Type::Step;
+    command.step = std::move(step);
+    pendingHintCommands.push_back(std::move(command));
+}
+
+void GameScene::postHint(GameObjectSubview::ObjectData hint) {
+    TaskMutex::Guard lock(pendingMutex);
+    HintCommand command;
+    command.type = HintCommand::Type::Unlock;
+    command.data = std::move(hint);
+    pendingHintCommands.push_back(std::move(command));
+}
+
+void GameScene::updateHints(uint64_t activeMs) {
+    if (hints.update(activeMs))
+        view.setUnlockedHints(hints.available());
 }
 
 void GameScene::onUpdate() {
@@ -158,6 +205,8 @@ void GameScene::onUpdate() {
             }
         }
     }
+    if (state == GameState::Running && statisticsSessionId)
+        updateHints(sessionClock.elapsed(millis()));
     view.update();
 }
 
@@ -245,6 +294,10 @@ SceneRequest GameScene::getRequest() const {
 }
 
 bool GameScene::handleUIEvent(const UIEvent& event) {
+    if (event.getType() == HintViewedEvent::TYPE) {
+        hints.markViewed(static_cast<const HintViewedEvent&>(event).id);
+        return true;
+    }
     if (event.getType() == PlayerCountSelectedEvent::TYPE) {
         if (!view.playersVisible() || state != GameState::Ready ||
             loadState != GameLoadState::LoadComplete)
@@ -348,10 +401,14 @@ bool GameScene::handleUIEvent(const UIEvent& event) {
         return true;
     }
     if (clicked.buttonId == "objects") {
-        view.showGameObject();
+        view.showJournal();
         return true;
     }
     if (clicked.buttonId == "back_main") {
+        view.showJournal(view.hintsSelected());
+        return true;
+    }
+    if (clicked.buttonId == "journal_back") {
         view.showMain();
         return true;
     }
@@ -447,7 +504,7 @@ void GameScene::checkHardware(HardwareAction action) {
     if (hardwareAction != HardwareAction::None)
         return;
     hardwareAction = action;
-    view.showLoading();
+    view.showLoading(false);  // Start/resume checks preserve discovered objects and hints.
     view.setLoadingMessage(tr(Text::HardwareChecking));
     inputSystem->requestHardwareCheck();
 }
@@ -533,6 +590,8 @@ void GameScene::stopGame() {
     pendingObjects.clear();
     pendingDiscoveries.clear();
     objectsPending = false;
+    pendingHintCommands.clear();
+    hints.clear();
 }
 
 void GameScene::startTimer() {
@@ -580,7 +639,7 @@ VictorySubview::GameStats GameScene::getVictoryStats() const {
     stats.elapsedSeconds = sessionClock.elapsed(millis()) / 1000;
     stats.pausedSeconds = sessionClock.paused(millis()) / 1000;
     stats.players = selectedPlayers;
-    stats.hintsUsed = statistics.hintsUsed;
+    stats.hintsUsed = hints.viewedCount();
     stats.puzzlesSolved = statistics.puzzlesSolved;
     return stats;
 }

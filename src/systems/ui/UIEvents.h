@@ -44,3 +44,13 @@ class PlayerCountSelectedEvent : public UIEventType<PlayerCountSelectedEvent> {
     bool confirmed;
     uint16_t players;
 };
+
+class HintViewedEvent : public UIEventType<HintViewedEvent> {
+  public:
+    static constexpr const char* TYPE = "hint_viewed";
+
+    explicit HintViewedEvent(const std::string& value) : id(value) {
+    }
+
+    std::string id;
+};

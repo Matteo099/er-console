@@ -2,6 +2,7 @@
 
 #include "scenes/game/GameScene.h"
 #include "log/Logger.h"
+#include <cmath>
 
 GameSceneBindings::GameSceneBindings(GameScene* scene) : scene(scene) {
 }
@@ -145,6 +146,98 @@ GameObjectSubview::ObjectData readObject(lua_State* L, int index, GameScene* sce
 }
 }  // namespace
 
+namespace {
+void requireHintId(lua_State* L, int index) {
+    lua_getfield(L, index, "id");
+    luaL_checktype(L, -1, LUA_TSTRING);
+    if (!lua_rawlen(L, -1))
+        luaL_error(L, "hint.id must not be empty");
+    lua_pop(L, 1);
+    lua_getfield(L, index, "title");
+    luaL_checktype(L, -1, LUA_TSTRING);
+    if (!lua_rawlen(L, -1))
+        luaL_error(L, "hint.title must not be empty");
+    lua_pop(L, 1);
+}
+}  // namespace
+
+// @doc Configure timed hints for each active room step; time excludes pauses.
+// @lua scene.setHints(hints:Hint[]) -> void
+int GameSceneBindings::setHints(lua_State* L) {
+    auto* scene = get(L);
+    if (!scene)
+        return 0;
+    luaL_checktype(L, 1, LUA_TTABLE);
+    // Validate before creating C++ containers: Lua errors use longjmp.
+    const auto count = lua_rawlen(L, 1);
+    lua_newtable(L);
+    const int seen = lua_absindex(L, -1);
+    for (size_t i = 1; i <= count; ++i) {
+        lua_rawgeti(L, 1, i);
+        luaL_checktype(L, -1, LUA_TTABLE);
+        const int entry = lua_absindex(L, -1);
+        requireHintId(L, entry);
+        lua_getfield(L, entry, "id");
+        lua_pushvalue(L, -1);
+        lua_rawget(L, seen);
+        if (!lua_isnil(L, -1))
+            return luaL_error(L, "duplicate hint.id");
+        lua_pop(L, 1);
+        lua_pushboolean(L, true);
+        lua_rawset(L, seen);
+        lua_getfield(L, entry, "step");
+        luaL_checktype(L, -1, LUA_TSTRING);
+        if (!lua_rawlen(L, -1))
+            return luaL_error(L, "hint.step must not be empty");
+        lua_pop(L, 1);
+        lua_getfield(L, entry, "afterSeconds");
+        luaL_checktype(L, -1, LUA_TNUMBER);
+        const auto seconds = lua_tonumber(L, -1);
+        if (!std::isfinite(seconds) || seconds < 0 || seconds > double(UINT32_MAX) / 1000.0)
+            return luaL_error(L, "hint.afterSeconds must be finite and non-negative");
+        lua_pop(L, 2);
+    }
+    lua_pop(L, 1);
+    std::vector<HintDefinition> definitions;
+    for (size_t i = 1; i <= count; ++i) {
+        lua_rawgeti(L, 1, i);
+        HintDefinition definition;
+        definition.data = readObject(L, -1, scene);
+        lua_getfield(L, -1, "step");
+        definition.step = lua_tostring(L, -1);
+        lua_pop(L, 1);
+        lua_getfield(L, -1, "afterSeconds");
+        definition.afterMs = uint32_t(lua_tonumber(L, -1) * 1000.0 + 0.5);
+        lua_pop(L, 2);
+        definitions.push_back(std::move(definition));
+    }
+    scene->postHints(std::move(definitions));
+    return 0;
+}
+
+// @doc Set the current objective/step. Repeating the same step keeps its timer.
+// @lua scene.setStep(step:string) -> void
+int GameSceneBindings::setStep(lua_State* L) {
+    auto* scene = get(L);
+    if (!scene)
+        return 0;
+    luaL_checktype(L, 1, LUA_TSTRING);
+    scene->postGameStep(lua_tostring(L, 1));
+    return 0;
+}
+
+// @doc Unlock a rich hint explicitly for custom Lua conditions; IDs are deduplicated.
+// @lua scene.unlockHint(hint:GameObject) -> void
+int GameSceneBindings::unlockHint(lua_State* L) {
+    auto* scene = get(L);
+    if (!scene)
+        return 0;
+    luaL_checktype(L, 1, LUA_TTABLE);
+    requireHintId(L, 1);
+    scene->postHint(readObject(L, 1, scene));
+    return 0;
+}
+
 int GameSceneBindings::setGameObjects(lua_State* L) {
     auto* scene = get(L);
     if (!scene)
@@ -186,6 +279,13 @@ void GameSceneBindings::registerAPI(lua_State* L) {
 
     lua_pushcfunction(L, discoverGameObject);
     lua_setfield(L, -2, "discoverGameObject");
+
+    lua_pushcfunction(L, setHints);
+    lua_setfield(L, -2, "setHints");
+    lua_pushcfunction(L, setStep);
+    lua_setfield(L, -2, "setStep");
+    lua_pushcfunction(L, unlockHint);
+    lua_setfield(L, -2, "unlockHint");
 
     lua_setglobal(L, "scene");
 }

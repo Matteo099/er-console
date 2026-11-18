@@ -52,7 +52,7 @@ void GameObjectSubview::create(lv_obj_t* parent) {
                              LV_SYMBOL_LEFT);
 
     closeBtn = Button::create(footerRow, nullptr, onClose, this, 44, 44, LV_ALIGN_CENTER, 0, 0,
-                              LV_SYMBOL_CLOSE);
+                              LV_SYMBOL_LIST);
 
     nextBtn = Button::create(footerRow, nullptr, onNext, this, 44, 44, LV_ALIGN_CENTER, 0, 0,
                              LV_SYMBOL_RIGHT);
@@ -178,8 +178,11 @@ void GameObjectSubview::setCurrent(uint32_t index) {
 
     Log::debug(TAG, "Current object set to %lu", static_cast<unsigned long>(currentIndex + 1));
 
-    rebuild();
-    resetScroll();
+    dirty = true;
+    if (root && lv_obj_is_visible(root)) {
+        rebuild();
+        resetScroll();
+    }
 }
 
 void GameObjectSubview::onPrev(lv_event_t* e) {
@@ -266,8 +269,10 @@ void GameObjectSubview::show() {
     Log::debug(TAG, "Showing game object subview");
 
     if (root) {
-        if (dirty)
+        if (dirty) {
             rebuild();
+            resetScroll();
+        }
         lv_obj_clear_flag(root, LV_OBJ_FLAG_HIDDEN);
     }
 }

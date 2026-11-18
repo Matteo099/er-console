@@ -61,6 +61,17 @@ class GameObjectInventory {
         return result;
     }
 
+    std::vector<Object> all() const {
+        std::vector<Object> result;
+        for (const auto& entry : entries)
+            result.push_back(entry.object);
+        return result;
+    }
+
+    size_t size() const {
+        return entries.size();
+    }
+
     size_t count() const {
         return std::count_if(entries.begin(), entries.end(), [](const Entry& e) {
             return e.collected;

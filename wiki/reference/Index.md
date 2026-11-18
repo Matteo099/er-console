@@ -10,6 +10,7 @@
 - [Game Statistics](GAME_STATISTICS.md)
 - [Game Ui](GAME_UI.md)
 - [GameObject discovery and animation](GAME_OBJECT_DISCOVERY.md)
+- [Dynamic hints and the game journal](GAME_HINTS.md)
 - [In Game Settings](IN_GAME_SETTINGS.md)
 - [Network Ui](NETWORK_UI.md)
 - [Room hardware checks and resistor identification](ROOM_HARDWARE.md)

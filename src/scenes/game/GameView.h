@@ -11,6 +11,7 @@
 #include "subviews/InGameSettingsSubview.h"
 #include "subviews/HardwareSubview.h"
 #include "subviews/ObjectDiscoverySubview.h"
+#include "subviews/GameJournalSubview.h"
 #include "GameObjectInventory.h"
 #include "systems/ui/components/ConfirmationDialog.h"
 #include "systems/ui/components/PlayerSelectorDialog.h"
@@ -30,10 +31,21 @@ class GameView : public View {
 
     /* State management */
     void showMain();
-    void showLoading();
+    void showLoading(bool resetInventory = true);
     void showVictory();
     void showFailure();
     void showGameObject();
+    void showJournal(bool hints = false);
+    void setUnlockedHints(const std::vector<GameObjectSubview::ObjectData>& data);
+
+    bool hintsSelected() const {
+        return currentState == GameSubview::Journal ? journalSubview.hintsSelected() : viewingHints;
+    }
+
+    size_t hintCount() const {
+        return hints.size();
+    }
+
     void showLoadError(const char* message);
     void showHardwareError(const HardwareStatus& status, bool interrupted);
     void setTitle(const std::string& title);
@@ -76,6 +88,7 @@ class GameView : public View {
         settingsSubview.translate();
         hardwareSubview.translate();
         discoverySubview.translate();
+        journalSubview.translate();
     }
 
     GameSubview currentSubview() const {
@@ -109,9 +122,12 @@ class GameView : public View {
     void updateDiscovery(uint32_t now);
     void refreshObjects();
     void interruptDiscovery();
+    void openJournalEntry(bool hint, size_t index);
     bool running = false;
+    bool viewingHints = false, discoveringHint = false;
     std::string discovering;
     GameObjectInventory inventory;
+    GameObjectInventory hints;
     ObjectDiscoverySubview discoverySubview;
 
     lv_obj_t* screen = nullptr;
@@ -128,6 +144,7 @@ class GameView : public View {
     VictorySubview victorySubview;
     FailSubview failSubview;
     GameObjectSubview gameObjectSubview;
+    GameJournalSubview journalSubview;
     InGameSettingsSubview settingsSubview;
     HardwareSubview hardwareSubview;
 };

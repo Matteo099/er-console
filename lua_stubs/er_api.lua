@@ -52,10 +52,18 @@ TriggerMode = {
 ---@field height integer?
 
 ---@class GameObject
----@field id string? Stable identity; use this when titles are localized.
+---@field id string?
+---@field image string?
 ---@field title string
----@field image string? Reveal image path; defaults to the first content image or an icon.
 ---@field content GameObjectContent[]
+
+---@class Hint
+---@field id string
+---@field title string
+---@field image string?
+---@field content GameObjectContent[]
+---@field step string?
+---@field afterSeconds number?
 
 ---@class audio
 audio = {}
@@ -323,9 +331,16 @@ scene = {}
 --- scene.completeGame()
 function scene.completeGame() end
 
+--- Discover or update one item. New IDs are revealed, then added to inventory.
+---
+---@param object GameObject
+function scene.discoverGameObject(object) end
+
 --- Set the interactive objects shown in the game object viewer.
 --- Each object contains:
+--- id: optional stable identifier (recommended for localized titles)
 --- title: string
+--- image: optional reveal image, relative to the game directory or absolute
 --- content: array of blocks
 --- A content block can be:
 --- {
@@ -362,13 +377,23 @@ function scene.completeGame() end
 --- }
 --- })
 ---
----@param objects GameObject[] Array of discovered game objects; new IDs animate before landing.
+---@param objects GameObject[] Array of game objects.
 function scene.setGameObjects(objects) end
 
----Discover/update one item without replacing the existing inventory.
----New IDs animate before becoming browsable; repeated IDs update content only.
----@param object GameObject
-function scene.discoverGameObject(object) end
+--- Configure timed hints for each active room step; time excludes pauses.
+---
+---@param hints Hint[]
+function scene.setHints(hints) end
+
+--- Set the current objective/step. Repeating the same step keeps its timer.
+---
+---@param step string
+function scene.setStep(step) end
+
+--- Unlock a rich hint explicitly for custom Lua conditions; IDs are deduplicated.
+---
+---@param hint GameObject
+function scene.unlockHint(hint) end
 
 ---@class system
 system = {}

@@ -48,12 +48,19 @@ void checkGameFixture(const std::string& source, bool english, bool objects) {
             input = {channels = {pinMode = function() end, digitalRead = function() return false end}}
             PinMode = {INPUT_PULLUP = 2}
             GameObjectContentType = {TEXT = 'text', IMAGE = 'image'}
-            scene = {setGameObjects = function(value) fixtureObjects = value end}
+            scene = {
+                setGameObjects = function(value) fixtureObjects = value end,
+                setHints = function(value) fixtureHints = value end,
+                setStep = function(value) fixtureStep = value end
+            }
             init()
+            assert(#fixtureHints == 4 and fixtureStep == 'map')
             assert(#fixtureObjects == 0)
             update(2, false)
+            assert(fixtureStep == 'board')
             assert(#fixtureObjects == 1 and fixtureObjects[1].id == 'map')
             update(4, false)
+            assert(fixtureStep == 'exit')
             function checkObjects()
                 assert(#fixtureObjects == 2)
                 assert(fixtureObjects[1].title == system.translate(fixtureMessages.map))

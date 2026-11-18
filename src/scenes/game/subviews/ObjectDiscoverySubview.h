@@ -6,7 +6,8 @@ class ObjectDiscoverySubview {
   public:
     static constexpr uint32_t RevealMs = 650, FlightMs = 500, DurationMs = RevealMs + FlightMs;
     void create(lv_obj_t* parent);
-    void show(const GameObjectSubview::ObjectData& object, lv_obj_t* destination, uint32_t now);
+    void show(const GameObjectSubview::ObjectData& object, lv_obj_t* destination, uint32_t now,
+              bool hint = false);
     bool update(uint32_t now);  // true only on landing
     void hide();
     void destroy();
@@ -22,4 +23,5 @@ class ObjectDiscoverySubview {
     lv_coord_t startX = 0, startY = 0, targetX = 0, targetY = 0;
     uint32_t started = 0, rendered = 0;
     bool active = false;
+    bool isHint = false;
 };

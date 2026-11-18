@@ -66,7 +66,7 @@ VALUE_PATTERN = re.compile(
 
 
 PARAM_SIGNATURE_PATTERN = re.compile(
-    r"([a-zA-Z0-9_]+):([a-zA-Z0-9_|?]+)(?:=.*)?"
+    r"([a-zA-Z0-9_]+):([a-zA-Z0-9_|?\[\]]+)(?:=.*)?"
 )
 
 
@@ -128,8 +128,18 @@ structs = {
     },
 
     "GameObject": {
+        "id": "string?",
+        "image": "string?",
         "title": "string",
         "content": "GameObjectContent[]",
+    },
+    "Hint": {
+        "id": "string",
+        "title": "string",
+        "image": "string?",
+        "content": "GameObjectContent[]",
+        "step": "string?",
+        "afterSeconds": "number?",
     }
 }
 

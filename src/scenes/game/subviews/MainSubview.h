@@ -19,7 +19,7 @@ class MainSubview {
     /* Game state */
     void setTime(uint32_t seconds);
     void setRunning(bool running);
-    void setObjectsAvailable(bool available);
+    void setJournalCounts(size_t objects, size_t hints);
 
     lv_obj_t* getObjectsButton() const {
         return objectsBtn;
@@ -64,6 +64,7 @@ class MainSubview {
     bool paused = true;
 
     lv_obj_t* objectsBtn = nullptr;
+    lv_obj_t* journalBadge = nullptr;
 
     static void onObjects(lv_event_t* e);
     static void onStartPause(lv_event_t* e);

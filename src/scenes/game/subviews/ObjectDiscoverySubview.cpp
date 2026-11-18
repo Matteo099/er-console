@@ -40,11 +40,12 @@ void ObjectDiscoverySubview::create(lv_obj_t* parent) {
 
 void ObjectDiscoverySubview::translate() {
     if (caption)
-        Label::setText(caption, tr(Text::ObjectDiscovered));
+        Label::setText(caption, tr(isHint ? Text::HintUnlocked : Text::ObjectDiscovered));
 }
 
 void ObjectDiscoverySubview::show(const GameObjectSubview::ObjectData& object,
-                                  lv_obj_t* destination, uint32_t now) {
+                                  lv_obj_t* destination, uint32_t now, bool hint) {
+    isHint = hint;
     if (!root || !destination)
         return;
     lv_obj_update_layout(lv_obj_get_parent(root));
@@ -75,7 +76,7 @@ void ObjectDiscoverySubview::show(const GameObjectSubview::ObjectData& object,
         lv_image_set_inner_align(image, LV_IMAGE_ALIGN_CONTAIN);
         lv_obj_center(image);
     } else {
-        auto* icon = Label::create(item, LV_SYMBOL_FILE, &lv_font_montserrat_32);
+        auto* icon = Label::create(item, hint ? "?" : LV_SYMBOL_FILE, &lv_font_montserrat_32);
         UITheme::accent(icon);
         lv_obj_center(icon);
     }

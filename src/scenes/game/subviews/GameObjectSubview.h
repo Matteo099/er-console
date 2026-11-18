@@ -62,6 +62,10 @@ class GameObjectSubview {
         return controls;
     }
 
+    lv_obj_t* getBackButton() const {
+        return closeBtn;
+    }
+
   private:
     lv_obj_t* root = nullptr;
     lv_obj_t* header = nullptr;

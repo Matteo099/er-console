@@ -1,6 +1,7 @@
 #include "UIDiagnostics.h"
 #include "HardwareDiagnostics.h"
 #include "ObjectDiscoveryDiagnostics.h"
+#include "HintDiagnostics.h"
 #include "config/Console.h"
 
 #if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
@@ -530,6 +531,13 @@ void UIDiagnostics::update(SceneManager& scenes) {
                                                    : command.endsWith("installing") ? 3
                                                                                     : 0),
                                SceneTransition::None);
+        else if (command == "ui hints-test")
+            runHintDiagnostics();
+        else if (command.startsWith("ui hints-preview"))
+            scenes.changeScene(createHintPreview(command.endsWith("locked") ? 1 :
+                command.endsWith("list") ? 2 : 0), SceneTransition::None);
+        else if (command == "ui hints-state")
+            hintPreviewStatus();
         else if (command == "ui discovery-test")
             runObjectDiscoveryDiagnostics();
         else if (command.startsWith("ui discovery-preview"))

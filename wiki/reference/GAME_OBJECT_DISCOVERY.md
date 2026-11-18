@@ -5,7 +5,8 @@ theme's pastel accent. After a 650 ms reveal they shrink and arc into the
 inventory button over 500 ms. The object becomes browsable only on landing.
 The game clock and Lua updates continue during this presentation.
 
-The inventory button stays visible but disabled until the first item lands.
+The inventory button opens the [Objects/Hints journal](GAME_HINTS.md), including
+when both lists are empty. Its badge counts collected objects and unlocked hints.
 Discoveries queue in authored order. They wait until the game is running and
 the timer view is visible; settings, the item viewer, player selection and exit
 confirmation take priority. Interruptions leave uncollected items queued.

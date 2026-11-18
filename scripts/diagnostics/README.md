@@ -17,6 +17,7 @@ python scripts/diagnostics/ui_settings.py --help
 - `ui_config_storage.py` verifica il salvataggio NVS e la persistenza dopo reset, usando un namespace di prova senza modificare le impostazioni personali; [documentazione](../../wiki/reference/DEVICE_SETTINGS_STORAGE.md).
 - `ui_game_assets.py`, `ui_game_translations.py` e `ui_statistics.py` verificano risorse, traduzioni e statistiche dei giochi.
 - `ui_object_discovery.py` verifica coda, animazione e raccolta degli oggetti, con schermate IT/EN e test Lua isolati; non avvia giochi o modifica statistiche. Dettagli in [GAME_OBJECT_DISCOVERY.md](../../wiki/reference/GAME_OBJECT_DISCOVERY.md).
+- `ui_hints.py` verifica scadenze Lua, passi di gioco, pausa, sblocco, lettura automatica e diario Oggetti/Indizi con liste e schermate IT/EN, senza modificare statistiche. Dettagli in [GAME_HINTS.md](../../wiki/reference/GAME_HINTS.md).
 - `ui_hardware.py` verifica identificazione resistiva, componenti mancanti, configurazioni errate e interruzione durante il gioco, con statistiche isolate. Per il partitore su un ingresso ADC e i limiti dei controlli, consultare [ROOM_HARDWARE.md](../../wiki/reference/ROOM_HARDWARE.md).
 - `ui_performance.py` misura le scene; `ui_ota.py` verifica gli aggiornamenti, inclusi staging e rilettura SD in una piccola generazione diagnostica isolata (senza attivare firmware). Dettagli in [SD_UPDATES.md](../../wiki/reference/SD_UPDATES.md).
 - `audio_check.py`, `audio_preload.py` e `audio_preload_game.py` verificano mixer e precaricamento audio.
