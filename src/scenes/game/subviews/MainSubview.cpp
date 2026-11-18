@@ -171,7 +171,7 @@ void MainSubview::setRunning(bool running) {
 
 void MainSubview::setObjectsAvailable(bool available) {
     if (objectsBtn)
-        lv_obj_set_flag(objectsBtn, LV_OBJ_FLAG_HIDDEN, !available);
+        lv_obj_set_state(objectsBtn, LV_STATE_DISABLED, !available);
 }
 
 void MainSubview::onStartPause(lv_event_t* e) {

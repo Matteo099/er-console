@@ -52,7 +52,9 @@ TriggerMode = {
 ---@field height integer?
 
 ---@class GameObject
+---@field id string? Stable identity; use this when titles are localized.
 ---@field title string
+---@field image string? Reveal image path; defaults to the first content image or an icon.
 ---@field content GameObjectContent[]
 
 ---@class audio
@@ -360,8 +362,13 @@ function scene.completeGame() end
 --- }
 --- })
 ---
----@param objects GameObject Array of game objects.
+---@param objects GameObject[] Array of discovered game objects; new IDs animate before landing.
 function scene.setGameObjects(objects) end
+
+---Discover/update one item without replacing the existing inventory.
+---New IDs animate before becoming browsable; repeated IDs update content only.
+---@param object GameObject
+function scene.discoverGameObject(object) end
 
 ---@class system
 system = {}

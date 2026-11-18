@@ -1,5 +1,6 @@
 #include "systems/ui/localization/I18n.h"
 #include "GameObjectSubview.h"
+#include "../GameObjectInventory.h"
 
 #include "systems/ui/components/Button.h"
 #include "systems/ui/components/Label.h"
@@ -71,6 +72,7 @@ void GameObjectSubview::rebuild() {
     }
 
     lv_obj_clean(content);
+    dirty = false;
 
     if (objects.empty()) {
         Log::debug(TAG, "No objects to display");
@@ -154,10 +156,15 @@ void GameObjectSubview::rebuild() {
 void GameObjectSubview::setObjects(const std::vector<ObjectData>& data) {
     Log::info(TAG, "Loaded %u game objects", static_cast<unsigned>(data.size()));
 
+    const auto selected = getCurrent() ? GameObjectInventory::key(*getCurrent()) : std::string();
     objects = data;
     currentIndex = 0;
-
-    rebuild();
+    for (size_t i = 0; i < objects.size(); ++i)
+        if (GameObjectInventory::key(objects[i]) == selected)
+            currentIndex = i;
+    dirty = true;
+    if (root && lv_obj_is_visible(root))
+        rebuild();
 }
 
 void GameObjectSubview::setCurrent(uint32_t index) {
@@ -258,8 +265,11 @@ void GameObjectSubview::destroy() {
 void GameObjectSubview::show() {
     Log::debug(TAG, "Showing game object subview");
 
-    if (root)
+    if (root) {
+        if (dirty)
+            rebuild();
         lv_obj_clear_flag(root, LV_OBJ_FLAG_HIDDEN);
+    }
 }
 
 void GameObjectSubview::hide() {

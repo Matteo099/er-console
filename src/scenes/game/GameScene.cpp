@@ -58,7 +58,39 @@ void GameScene::onEnter() {
 void GameScene::postGameObjects(std::vector<GameObjectSubview::ObjectData> objects) {
     TaskMutex::Guard lock(pendingMutex);
     pendingObjects = std::move(objects);
+    pendingDiscoveries.clear();
     objectsPending = true;
+}
+
+void GameScene::postGameObject(GameObjectSubview::ObjectData object) {
+    TaskMutex::Guard lock(pendingMutex);
+    auto& target = objectsPending ? pendingObjects : pendingDiscoveries;
+    const auto key = GameObjectInventory::key(object);
+    for (auto& previous : target)
+        if (GameObjectInventory::key(previous) == key) {
+            previous = std::move(object);
+            return;
+        }
+    target.push_back(std::move(object));
+}
+
+void GameScene::applyPendingObjects() {
+    std::vector<GameObjectSubview::ObjectData> objects;
+    std::vector<GameObjectSubview::ObjectData> discoveries;
+    bool applyObjects = false;
+    {
+        TaskMutex::Guard lock(pendingMutex);
+        discoveries.swap(pendingDiscoveries);
+        if (objectsPending) {
+            objects.swap(pendingObjects);
+            objectsPending = false;
+            applyObjects = true;
+        }
+    }
+    if (applyObjects)
+        view.setGameObjectData(objects);
+    for (const auto& object : discoveries)
+        view.discoverGameObject(object);
 }
 
 void GameScene::onUpdate() {
@@ -95,18 +127,8 @@ void GameScene::onUpdate() {
             }
         }
     }
-    std::vector<GameObjectSubview::ObjectData> objects;
-    bool applyObjects = false;
-    {
-        TaskMutex::Guard lock(pendingMutex);
-        if (objectsPending) {
-            objects.swap(pendingObjects);
-            objectsPending = false;
-            applyObjects = true;
-        }
-    }
-    if (applyObjects && loadState == GameLoadState::LoadComplete)
-        view.setGameObjectData(objects);
+    if (loadState == GameLoadState::LoadComplete)
+        applyPendingObjects();
     if (statisticsSessionId && !exitConfirmationOpen && completionPending.exchange(false) &&
         loadState == GameLoadState::LoadComplete)
         completeGame();
@@ -262,6 +284,8 @@ bool GameScene::handleUIEvent(const UIEvent& event) {
         return false;
 
     const auto& clicked = static_cast<const ButtonClickedEvent&>(event);
+    if (view.discoveryVisible())
+        return false;
     if (clicked.buttonId == "close_game_settings") {
         closeSettings();
         return true;
@@ -507,6 +531,7 @@ void GameScene::stopGame() {
     }
     TaskMutex::Guard lock(pendingMutex);
     pendingObjects.clear();
+    pendingDiscoveries.clear();
     objectsPending = false;
 }
 

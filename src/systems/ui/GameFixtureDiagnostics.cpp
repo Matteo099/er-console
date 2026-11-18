@@ -50,6 +50,10 @@ void checkGameFixture(const std::string& source, bool english, bool objects) {
             GameObjectContentType = {TEXT = 'text', IMAGE = 'image'}
             scene = {setGameObjects = function(value) fixtureObjects = value end}
             init()
+            assert(#fixtureObjects == 0)
+            update(2, false)
+            assert(#fixtureObjects == 1 and fixtureObjects[1].id == 'map')
+            update(4, false)
             function checkObjects()
                 assert(#fixtureObjects == 2)
                 assert(fixtureObjects[1].title == system.translate(fixtureMessages.map))

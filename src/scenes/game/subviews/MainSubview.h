@@ -21,6 +21,10 @@ class MainSubview {
     void setRunning(bool running);
     void setObjectsAvailable(bool available);
 
+    lv_obj_t* getObjectsButton() const {
+        return objectsBtn;
+    }
+
     lv_obj_t* getControls() const {
         return controls;
     }

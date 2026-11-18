@@ -26,6 +26,10 @@ class GameScene : public Scene {
         diagnosticHardware = true;
         gameInfo.inputConfig = config;
     }
+
+    void applyObjectsForDiagnostics() {
+        applyPendingObjects();
+    }
 #endif
     // Scene interface
     void onEnter() override;
@@ -53,6 +57,7 @@ class GameScene : public Scene {
     }
 
     void postGameObjects(std::vector<GameObjectSubview::ObjectData> objects);
+    void postGameObject(GameObjectSubview::ObjectData object);
 
     GameView* getGameView() {
         return &view;
@@ -127,6 +132,8 @@ class GameScene : public Scene {
     TaskMutex pendingMutex;
     bool objectsPending = false;
     std::vector<GameObjectSubview::ObjectData> pendingObjects;
+    std::vector<GameObjectSubview::ObjectData> pendingDiscoveries;
+    void applyPendingObjects();
 
     SceneRequest request = SceneRequest();
 

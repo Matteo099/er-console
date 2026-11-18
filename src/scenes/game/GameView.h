@@ -1,4 +1,5 @@
 #pragma once
+#include "config/Console.h"
 
 #include "systems/ui/View.h"
 #include "GameSubview.h"
@@ -9,6 +10,8 @@
 #include "subviews/GameObjectSubview.h"
 #include "subviews/InGameSettingsSubview.h"
 #include "subviews/HardwareSubview.h"
+#include "subviews/ObjectDiscoverySubview.h"
+#include "GameObjectInventory.h"
 #include "systems/ui/components/ConfirmationDialog.h"
 #include "systems/ui/components/PlayerSelectorDialog.h"
 
@@ -72,6 +75,7 @@ class GameView : public View {
     void translateSettings() {
         settingsSubview.translate();
         hardwareSubview.translate();
+        discoverySubview.translate();
     }
 
     GameSubview currentSubview() const {
@@ -81,6 +85,20 @@ class GameView : public View {
     void setLoadingMessage(const std::string& message);
     void setVictoryStats(const VictorySubview::GameStats& stats);
     void setGameObjectData(const std::vector<GameObjectSubview::ObjectData>& data);
+    void discoverGameObject(const GameObjectSubview::ObjectData& object);
+
+    bool discoveryVisible() const {
+        return discoverySubview.visible();
+    }
+
+    size_t objectCount() const {
+        return inventory.count();
+    }
+#if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
+    void updateDiscoveryForDiagnostics(uint32_t now) {
+        updateDiscovery(now);
+    }
+#endif
 
     /* Main game API */
     void setTime(uint32_t seconds);
@@ -88,6 +106,13 @@ class GameView : public View {
 
   private:
     void setState(GameSubview state);
+    void updateDiscovery(uint32_t now);
+    void refreshObjects();
+    void interruptDiscovery();
+    bool running = false;
+    std::string discovering;
+    GameObjectInventory inventory;
+    ObjectDiscoverySubview discoverySubview;
 
     lv_obj_t* screen = nullptr;
     lv_obj_t* titleLabel = nullptr;

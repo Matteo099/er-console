@@ -25,6 +25,9 @@ local state = {
     initialized = false,
     lastLogTime = 0,
     unlockCounter = 0,
+    elapsed = 0,
+    mapDiscovered = false,
+    boardDiscovered = false,
 }
 
 --------------------------------------------------
@@ -43,8 +46,10 @@ local CONFIG = {
 
 local lastLanguage = nil
 local function publishObjects()
-    scene.setGameObjects({
-        {
+    local objects = {}
+    if state.mapDiscovered then
+        objects[#objects + 1] = {
+            id = "map",
             title = text("map"),
             content = {
                 {
@@ -68,8 +73,11 @@ local function publishObjects()
                     height = 100
                 },
             }
-        },
-        {
+        }
+    end
+    if state.boardDiscovered then
+        objects[#objects + 1] = {
+            id = "board",
             title = text("board"),
             content = {
                 {
@@ -80,7 +88,8 @@ local function publishObjects()
                 }
             }
         }
-    })
+    end
+    scene.setGameObjects(objects)
 
     lastLanguage = system.language()
 end
@@ -112,6 +121,18 @@ function update(dt, paused)
         system.warn(text("notReady"))
         return
     end
+
+    state.elapsed = state.elapsed + dt
+    local changed = false
+    if not state.mapDiscovered and state.elapsed >= 2 then
+        state.mapDiscovered = true
+        changed = true
+    end
+    if not state.boardDiscovered and state.elapsed >= 6 then
+        state.boardDiscovered = true
+        changed = true
+    end
+    if changed then publishObjects() end
 
     local ch1 = input.channels.digitalRead(CONFIG.input1)
     local ch2 = input.channels.digitalRead(CONFIG.input2)

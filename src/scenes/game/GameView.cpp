@@ -70,6 +70,7 @@ void GameView::create() {
     exitDialog.create(screen, tr(Text::LeaveQuestion), [this](bool leave) {
         emitEvent(ButtonClickedEvent(leave ? "confirm_exit" : "continue_game"));
     });
+    discoverySubview.create(screen);
 
     showLoading();
 
@@ -79,6 +80,9 @@ void GameView::create() {
 void GameView::destroy() {
     Log::info(TAG, "Destroying GameView");
 
+    interruptDiscovery();
+    discoverySubview.destroy();
+    inventory.clear();
     mainSubview.destroy();
     loadingSubview.destroy();
     victorySubview.destroy();
@@ -96,6 +100,7 @@ void GameView::destroy() {
 }
 
 void GameView::update() {
+    updateDiscovery(lv_tick_get());
     switch (currentState) {
         case GameSubview::Main:
             mainSubview.update();
@@ -119,6 +124,7 @@ void GameView::setState(GameSubview state) {
     Log::info(TAG, "State change: %s -> %s", stateToString(currentState), stateToString(state));
 
     currentState = state;
+    interruptDiscovery();
     hideSettings();
     hidePlayers();
     // Keep the same action alongside the controls of the selected subview.
@@ -170,6 +176,10 @@ void GameView::showMain() {
 
 void GameView::showLoading() {
     Log::debug(TAG, "showLoading()");
+    interruptDiscovery();
+    inventory.clear();
+    running = false;
+    refreshObjects();
     setState(GameSubview::Loading);
 }
 
@@ -199,6 +209,7 @@ void GameView::setTitle(const std::string& title) {
 }
 
 void GameView::showExitConfirmation() {
+    interruptDiscovery();
     lv_obj_add_state(settingsButton, LV_STATE_DISABLED);
     exitDialog.show();
 }
@@ -209,8 +220,10 @@ void GameView::hideExitConfirmation() {
 }
 
 void GameView::showSettings(const AudioPreferences& preferences, Text context) {
-    if (currentState == GameSubview::Main || currentState == GameSubview::GameObject)
+    if (currentState == GameSubview::Main || currentState == GameSubview::GameObject) {
+        interruptDiscovery();
         settingsSubview.show(preferences, context);
+    }
 }
 
 void GameView::onSettings(lv_event_t* event) {
@@ -231,6 +244,9 @@ void GameView::setTime(uint32_t seconds) {
 
 void GameView::setRunning(bool running) {
     Log::debug(TAG, "Running: %s", running ? "true" : "false");
+    this->running = running;
+    if (!running)
+        interruptDiscovery();
     mainSubview.setRunning(running);
 }
 
@@ -250,6 +266,41 @@ void GameView::setVictoryStats(const VictorySubview::GameStats& stats) {
 
 void GameView::setGameObjectData(const std::vector<GameObjectSubview::ObjectData>& data) {
     Log::info(TAG, "Received %u game objects", static_cast<unsigned>(data.size()));
-    gameObjectSubview.setObjects(data);
-    mainSubview.setObjectsAvailable(!data.empty());
+    inventory.set(data);
+    if (!discovering.empty() && !inventory.contains(discovering))
+        interruptDiscovery();
+    refreshObjects();
+}
+
+void GameView::discoverGameObject(const GameObjectSubview::ObjectData& object) {
+    inventory.discover(object);
+    refreshObjects();
+}
+
+void GameView::refreshObjects() {
+    gameObjectSubview.setObjects(inventory.collected());
+    mainSubview.setObjectsAvailable(inventory.count() != 0);
+}
+
+void GameView::interruptDiscovery() {
+    discoverySubview.hide();
+    discovering.clear();
+}
+
+void GameView::updateDiscovery(uint32_t now) {
+    if (!running || currentState != GameSubview::Main || settingsVisible() || playersVisible() ||
+        exitDialog.visible())
+        return;
+    if (discoverySubview.visible()) {
+        if (!discoverySubview.update(now))
+            return;
+        inventory.collect(discovering);
+        discovering.clear();
+        refreshObjects();
+        return;
+    }
+    if (const auto* object = inventory.next()) {
+        discovering = GameObjectInventory::key(*object);
+        discoverySubview.show(*object, mainSubview.getObjectsButton(), now);
+    }
 }

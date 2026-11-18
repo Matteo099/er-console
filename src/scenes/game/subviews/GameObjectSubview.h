@@ -40,7 +40,9 @@ class GameObjectSubview {
     };
 
     struct ObjectData {
+        std::string id;
         std::string title;
+        std::string image;
         std::vector<ContentBlock> content;
     };
 
@@ -75,6 +77,7 @@ class GameObjectSubview {
 
     std::vector<ObjectData> objects;
     uint32_t currentIndex = 0;
+    bool dirty = true;
     EventCallback callback;
 
     void rebuild();

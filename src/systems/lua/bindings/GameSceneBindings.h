@@ -17,4 +17,5 @@ class GameSceneBindings : public LuaBinding {
 
     static int completeGame(lua_State* L);
     static int setGameObjects(lua_State* L);
+    static int discoverGameObject(lua_State* L);
 };
