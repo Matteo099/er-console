@@ -11,6 +11,7 @@
 #include "services/StatisticsRepository.h"
 #include <string>
 #include "GameInfo.h"
+#include "GameHints.h"
 #include "systems/ui/localization/I18n.h"
 #include <atomic>
 #include "core/TaskMutex.h"
@@ -25,6 +26,18 @@ class GameScene : public Scene {
     void useHardwareForDiagnostics(const InputConfig& config) {
         diagnosticHardware = true;
         gameInfo.inputConfig = config;
+    }
+
+    void applyObjectsForDiagnostics() {
+        applyPendingObjects();
+    }
+
+    void updateHintsForDiagnostics(uint64_t activeMs) {
+        updateHints(activeMs);
+    }
+
+    size_t viewedHintsForDiagnostics() const {
+        return hints.viewedCount();
     }
 #endif
     // Scene interface
@@ -53,6 +66,10 @@ class GameScene : public Scene {
     }
 
     void postGameObjects(std::vector<GameObjectSubview::ObjectData> objects);
+    void postGameObject(GameObjectSubview::ObjectData object);
+    void postHints(std::vector<HintDefinition> definitions);
+    void postGameStep(std::string step);
+    void postHint(GameObjectSubview::ObjectData hint);
 
     GameView* getGameView() {
         return &view;
@@ -70,7 +87,6 @@ class GameScene : public Scene {
         uint32_t elapsedSeconds = 0;
         uint32_t pausedSeconds = 0;
 
-        uint32_t hintsUsed = 0;
         uint32_t puzzlesSolved = 0;
 
         uint32_t startMs = 0;
@@ -127,6 +143,19 @@ class GameScene : public Scene {
     TaskMutex pendingMutex;
     bool objectsPending = false;
     std::vector<GameObjectSubview::ObjectData> pendingObjects;
+    std::vector<GameObjectSubview::ObjectData> pendingDiscoveries;
+
+    struct HintCommand {
+        enum class Type { Configure, Step, Unlock } type;
+        std::vector<HintDefinition> definitions;
+        std::string step;
+        GameObjectSubview::ObjectData data;
+    };
+
+    std::vector<HintCommand> pendingHintCommands;
+    GameHints hints;
+    void updateHints(uint64_t activeMs);
+    void applyPendingObjects();
 
     SceneRequest request = SceneRequest();
 

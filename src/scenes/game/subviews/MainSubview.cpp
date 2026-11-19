@@ -51,7 +51,14 @@ void MainSubview::create(lv_obj_t* parent) {
     startPauseLabel = lv_obj_get_child(startPauseBtn, 1);
     UITheme::secondary(cancelBtn);
     UITheme::secondary(objectsBtn);
-    setObjectsAvailable(false);
+    journalBadge = Label::create(objectsBtn, "", &lv_font_montserrat_12);
+    lv_obj_set_size(journalBadge, 22, 16);
+    lv_obj_set_style_radius(journalBadge, 8, 0);
+    lv_obj_set_style_bg_opa(journalBadge, LV_OPA_COVER, 0);
+    lv_obj_set_style_text_align(journalBadge, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_add_flag(journalBadge, LV_OBJ_FLAG_FLOATING);
+    lv_obj_align(journalBadge, LV_ALIGN_TOP_RIGHT, 6, -6);
+    setJournalCounts(0, 0);
 
     Log::info(TAG, "Main subview created");
 }
@@ -70,7 +77,7 @@ void MainSubview::destroy() {
     startPauseBtn = nullptr;
     startPauseIcon = nullptr;
     startPauseLabel = nullptr;
-    objectsBtn = nullptr;
+    objectsBtn = journalBadge = nullptr;
     cancelBtn = nullptr;
 
     pauseOverlay = nullptr;
@@ -169,9 +176,16 @@ void MainSubview::setRunning(bool running) {
     }
 }
 
-void MainSubview::setObjectsAvailable(bool available) {
-    if (objectsBtn)
-        lv_obj_set_flag(objectsBtn, LV_OBJ_FLAG_HIDDEN, !available);
+void MainSubview::setJournalCounts(size_t objects, size_t hints) {
+    if (!journalBadge)
+        return;
+    const auto total = objects + hints;
+    char text[8];
+    snprintf(text, sizeof(text), total > 99 ? "99+" : "%u", unsigned(total));
+    Label::setText(journalBadge, text);
+    lv_obj_set_flag(journalBadge, LV_OBJ_FLAG_HIDDEN, !total);
+    lv_obj_set_style_bg_color(journalBadge, lv_color_hex(UITheme::palette().strong), 0);
+    lv_obj_set_style_text_color(journalBadge, lv_color_white(), 0);
 }
 
 void MainSubview::onStartPause(lv_event_t* e) {

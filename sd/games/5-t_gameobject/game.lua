@@ -13,6 +13,14 @@ local messages = {
     mapDescription = {it = "Osserva la mappa e confrontala con gli indizi raccolti. Puoi scorrere il contenuto per esaminare tutte le immagini e le annotazioni.", en = "Study the map and compare it with the clues you have collected. Scroll through the content to examine all images and notes."},
     mapHint = {it = "Confronta i simboli e i percorsi. Gli oggetti restano disponibili durante la partita: puoi tornare al timer e riaprire questa sezione quando vuoi.", en = "Compare the symbols and paths. These items remain available during the game: return to the timer and reopen this section whenever you need."},
     board = {it = "Tavola", en = "Board"},
+    mapHelpTitle = {it = "Trova la mappa", en = "Find the map"},
+    mapHelpText = {it = "Esplora la stanza e cerca una mappa: potrebbe contenere i primi indizi.", en = "Explore the room and look for a map: it may contain the first clues."},
+    boardHelpTitle = {it = "La tavola dei simboli", en = "The symbol board"},
+    boardHelpText = {it = "Confronta i simboli della mappa con quelli della tavola.", en = "Compare the map symbols with those on the board."},
+    exitHelpTitle = {it = "Unisci gli indizi", en = "Combine the clues"},
+    exitHelpText = {it = "Riapri gli oggetti raccolti e confronta i loro dettagli. Il gioco continua mentre leggi gli indizi.", en = "Reopen the collected objects and compare their details. The game continues while you read hints."},
+    exitDetailTitle = {it = "L'ultimo passaggio", en = "The final step"},
+    exitDetailText = {it = "Usa la sequenza ricavata dalla tavola per risolvere l'ultimo enigma della stanza.", en = "Use the sequence found on the board to solve the room's final puzzle."},
 }
 local function text(key)
     return system.translate(messages[key])
@@ -25,6 +33,9 @@ local state = {
     initialized = false,
     lastLogTime = 0,
     unlockCounter = 0,
+    elapsed = 0,
+    mapDiscovered = false,
+    boardDiscovered = false,
 }
 
 --------------------------------------------------
@@ -42,9 +53,28 @@ local CONFIG = {
 --------------------------------------------------
 
 local lastLanguage = nil
+local function configureHints()
+    scene.setHints({
+        {id = "map-help", step = "map", afterSeconds = 5,
+         title = text("mapHelpTitle"), content = {
+             {type = GameObjectContentType.TEXT, value = text("mapHelpText")}}},
+        {id = "board-help", step = "board", afterSeconds = 8,
+         title = text("boardHelpTitle"), content = {
+             {type = GameObjectContentType.TEXT, value = text("boardHelpText")}}},
+        {id = "exit-help", step = "exit", afterSeconds = 10,
+         title = text("exitHelpTitle"), image = "images/tavola.png", content = {
+             {type = GameObjectContentType.TEXT, value = text("exitHelpText")},
+             {type = GameObjectContentType.IMAGE, path = "images/tavola.png", width = 240, height = 160}}},
+        {id = "exit-detail", step = "exit", afterSeconds = 20,
+         title = text("exitDetailTitle"), content = {
+             {type = GameObjectContentType.TEXT, value = text("exitDetailText")}}}
+    })
+end
 local function publishObjects()
-    scene.setGameObjects({
-        {
+    local objects = {}
+    if state.mapDiscovered then
+        objects[#objects + 1] = {
+            id = "map",
             title = text("map"),
             content = {
                 {
@@ -68,8 +98,11 @@ local function publishObjects()
                     height = 100
                 },
             }
-        },
-        {
+        }
+    end
+    if state.boardDiscovered then
+        objects[#objects + 1] = {
+            id = "board",
             title = text("board"),
             content = {
                 {
@@ -80,7 +113,8 @@ local function publishObjects()
                 }
             }
         }
-    })
+    end
+    scene.setGameObjects(objects)
 
     lastLanguage = system.language()
 end
@@ -91,6 +125,8 @@ function init()
     input.channels.pinMode(CONFIG.input2, PinMode.INPUT_PULLUP)
     input.channels.pinMode(CONFIG.input3, PinMode.INPUT_PULLUP)
     state.initialized = true
+    configureHints()
+    scene.setStep("map")
     publishObjects()
     system.info(text("inputsReady"))
 end
@@ -102,6 +138,7 @@ end
 
 function update(dt, paused)
     if state.initialized and lastLanguage ~= system.language() then
+        configureHints()
         publishObjects()
     end
     if(paused) then
@@ -112,6 +149,20 @@ function update(dt, paused)
         system.warn(text("notReady"))
         return
     end
+
+    state.elapsed = state.elapsed + dt
+    local changed = false
+    if not state.mapDiscovered and state.elapsed >= 2 then
+        state.mapDiscovered = true
+        scene.setStep("board")
+        changed = true
+    end
+    if not state.boardDiscovered and state.elapsed >= 6 then
+        state.boardDiscovered = true
+        scene.setStep("exit")
+        changed = true
+    end
+    if changed then publishObjects() end
 
     local ch1 = input.channels.digitalRead(CONFIG.input1)
     local ch2 = input.channels.digitalRead(CONFIG.input2)

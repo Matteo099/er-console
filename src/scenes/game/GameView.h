@@ -1,4 +1,5 @@
 #pragma once
+#include "config/Console.h"
 
 #include "systems/ui/View.h"
 #include "GameSubview.h"
@@ -9,6 +10,9 @@
 #include "subviews/GameObjectSubview.h"
 #include "subviews/InGameSettingsSubview.h"
 #include "subviews/HardwareSubview.h"
+#include "subviews/ObjectDiscoverySubview.h"
+#include "subviews/GameJournalSubview.h"
+#include "GameObjectInventory.h"
 #include "systems/ui/components/ConfirmationDialog.h"
 #include "systems/ui/components/PlayerSelectorDialog.h"
 
@@ -27,10 +31,21 @@ class GameView : public View {
 
     /* State management */
     void showMain();
-    void showLoading();
+    void showLoading(bool resetInventory = true);
     void showVictory();
     void showFailure();
     void showGameObject();
+    void showJournal(bool hints = false);
+    void setUnlockedHints(const std::vector<GameObjectSubview::ObjectData>& data);
+
+    bool hintsSelected() const {
+        return currentState == GameSubview::Journal ? journalSubview.hintsSelected() : viewingHints;
+    }
+
+    size_t hintCount() const {
+        return hints.size();
+    }
+
     void showLoadError(const char* message);
     void showHardwareError(const HardwareStatus& status, bool interrupted);
     void setTitle(const std::string& title);
@@ -72,6 +87,8 @@ class GameView : public View {
     void translateSettings() {
         settingsSubview.translate();
         hardwareSubview.translate();
+        discoverySubview.translate();
+        journalSubview.translate();
     }
 
     GameSubview currentSubview() const {
@@ -81,6 +98,20 @@ class GameView : public View {
     void setLoadingMessage(const std::string& message);
     void setVictoryStats(const VictorySubview::GameStats& stats);
     void setGameObjectData(const std::vector<GameObjectSubview::ObjectData>& data);
+    void discoverGameObject(const GameObjectSubview::ObjectData& object);
+
+    bool discoveryVisible() const {
+        return discoverySubview.visible();
+    }
+
+    size_t objectCount() const {
+        return inventory.count();
+    }
+#if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
+    void updateDiscoveryForDiagnostics(uint32_t now) {
+        updateDiscovery(now);
+    }
+#endif
 
     /* Main game API */
     void setTime(uint32_t seconds);
@@ -88,6 +119,16 @@ class GameView : public View {
 
   private:
     void setState(GameSubview state);
+    void updateDiscovery(uint32_t now);
+    void refreshObjects();
+    void interruptDiscovery();
+    void openJournalEntry(bool hint, size_t index);
+    bool running = false;
+    bool viewingHints = false, discoveringHint = false;
+    std::string discovering;
+    GameObjectInventory inventory;
+    GameObjectInventory hints;
+    ObjectDiscoverySubview discoverySubview;
 
     lv_obj_t* screen = nullptr;
     lv_obj_t* titleLabel = nullptr;
@@ -103,6 +144,7 @@ class GameView : public View {
     VictorySubview victorySubview;
     FailSubview failSubview;
     GameObjectSubview gameObjectSubview;
+    GameJournalSubview journalSubview;
     InGameSettingsSubview settingsSubview;
     HardwareSubview hardwareSubview;
 };

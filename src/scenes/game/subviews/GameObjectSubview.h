@@ -40,7 +40,9 @@ class GameObjectSubview {
     };
 
     struct ObjectData {
+        std::string id;
         std::string title;
+        std::string image;
         std::vector<ContentBlock> content;
     };
 
@@ -60,6 +62,10 @@ class GameObjectSubview {
         return controls;
     }
 
+    lv_obj_t* getBackButton() const {
+        return closeBtn;
+    }
+
   private:
     lv_obj_t* root = nullptr;
     lv_obj_t* header = nullptr;
@@ -75,6 +81,7 @@ class GameObjectSubview {
 
     std::vector<ObjectData> objects;
     uint32_t currentIndex = 0;
+    bool dirty = true;
     EventCallback callback;
 
     void rebuild();

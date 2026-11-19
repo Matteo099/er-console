@@ -1,5 +1,7 @@
 #include "UIDiagnostics.h"
 #include "HardwareDiagnostics.h"
+#include "ObjectDiscoveryDiagnostics.h"
+#include "HintDiagnostics.h"
 #include "config/Console.h"
 
 #if UI_DIAGNOSTICS_ENABLED && defined(CORE_DEBUG_LEVEL) && CORE_DEBUG_LEVEL > 0
@@ -160,6 +162,7 @@ class IndicatorPreview : public Scene {
 class GamePreview : public Scene {
     GameView view;
     unsigned mode;
+    bool objectsOpened = false;
 
   public:
     explicit GamePreview(unsigned value) : mode(value) {
@@ -185,8 +188,9 @@ class GamePreview : public Scene {
                 "Esamina gli indizi per trovare la prossima combinazione."));
             object.content.push_back(GameObjectSubview::ContentBlock::imageBlock(
                 "/games/5-t_gameobject/images/tavola.png"));
+            view.showMain();
+            view.setRunning(true);
             view.setGameObjectData({object});
-            view.showGameObject();
         } else {
             view.showMain();
             view.setRunning(false);
@@ -197,6 +201,10 @@ class GamePreview : public Scene {
 
     void onUpdate() override {
         view.update();
+        if (mode == 3 && !objectsOpened && view.objectCount()) {
+            objectsOpened = true;
+            view.showGameObject();
+        }
     }
 
     void onExit() override {
@@ -523,6 +531,20 @@ void UIDiagnostics::update(SceneManager& scenes) {
                                                    : command.endsWith("installing") ? 3
                                                                                     : 0),
                                SceneTransition::None);
+        else if (command == "ui hints-test")
+            runHintDiagnostics();
+        else if (command.startsWith("ui hints-preview"))
+            scenes.changeScene(createHintPreview(command.endsWith("locked") ? 1 :
+                command.endsWith("list") ? 2 : 0), SceneTransition::None);
+        else if (command == "ui hints-state")
+            hintPreviewStatus();
+        else if (command == "ui discovery-test")
+            runObjectDiscoveryDiagnostics();
+        else if (command.startsWith("ui discovery-preview"))
+            scenes.changeScene(createObjectDiscoveryPreview(command.endsWith("flight") ? 2 :
+                command.endsWith("fallback") ? 3 : command.endsWith("reveal") ? 1 : 0), SceneTransition::None);
+        else if (command == "ui discovery-state") objectDiscoveryStatus();
+        else if (command == "ui discovery-add") addObjectDiscoveryPreview();
         else if (command == "ui ota-status") {
             const auto value = UpdateSystem::instance().snapshot();
             Serial.printf("@OTA state=%u error=%u downloaded=%u written=%u total=%u\n",

@@ -24,6 +24,8 @@ const char* stateToString(GameSubview state) {
             return "GameObject";
         case GameSubview::Hardware:
             return "Hardware";
+        case GameSubview::Journal:
+            return "Journal";
         default:
             return "Unknown";
     }
@@ -52,6 +54,14 @@ void GameView::create() {
     UITheme::secondary(settingsButton);
 
     auto callback = [this](const char* id) {
+        if (viewingHints && currentState == GameSubview::GameObject &&
+            (std::string(id) == "prev" || std::string(id) == "next")) {
+            if (const auto* data = gameObjectSubview.getCurrent()) {
+                hints.collect(GameObjectInventory::key(*data));
+                emitEvent(HintViewedEvent(data->id));
+            }
+            return;
+        }
         Log::debug(TAG, "Button clicked: %s", id);
         emitEvent(ButtonClickedEvent(id));
     };
@@ -60,6 +70,9 @@ void GameView::create() {
     victorySubview.setEventCallback(callback);
     failSubview.setEventCallback(callback);
     gameObjectSubview.setEventCallback(callback);
+    journalSubview.create(layout.body, callback, [this](bool hint, size_t index) {
+        openJournalEntry(hint, index);
+    });
     hardwareSubview.create(layout.body, callback);
     settingsSubview.create(screen, [this](const UIEvent& event) {
         emitEvent(event);
@@ -70,6 +83,7 @@ void GameView::create() {
     exitDialog.create(screen, tr(Text::LeaveQuestion), [this](bool leave) {
         emitEvent(ButtonClickedEvent(leave ? "confirm_exit" : "continue_game"));
     });
+    discoverySubview.create(screen);
 
     showLoading();
 
@@ -79,11 +93,16 @@ void GameView::create() {
 void GameView::destroy() {
     Log::info(TAG, "Destroying GameView");
 
+    interruptDiscovery();
+    discoverySubview.destroy();
+    inventory.clear();
+    hints.clear();
     mainSubview.destroy();
     loadingSubview.destroy();
     victorySubview.destroy();
     failSubview.destroy();
     gameObjectSubview.destroy();
+    journalSubview.destroy();
     hardwareSubview.destroy();
     exitDialog.destroy();
     settingsSubview.clear();
@@ -96,6 +115,7 @@ void GameView::destroy() {
 }
 
 void GameView::update() {
+    updateDiscovery(lv_tick_get());
     switch (currentState) {
         case GameSubview::Main:
             mainSubview.update();
@@ -106,6 +126,7 @@ void GameView::update() {
         case GameSubview::Fail:
         case GameSubview::GameObject:
         case GameSubview::Hardware:
+        case GameSubview::Journal:
             break;
     }
 }
@@ -119,21 +140,25 @@ void GameView::setState(GameSubview state) {
     Log::info(TAG, "State change: %s -> %s", stateToString(currentState), stateToString(state));
 
     currentState = state;
+    interruptDiscovery();
     hideSettings();
     hidePlayers();
     // Keep the same action alongside the controls of the selected subview.
     auto* controls = state == GameSubview::GameObject ? gameObjectSubview.getControls()
+                     : state == GameSubview::Journal  ? journalSubview.getControls()
                                                       : mainSubview.getControls();
     if (lv_obj_get_parent(settingsButton) != controls)
         lv_obj_set_parent(settingsButton, controls);
     lv_obj_set_flag(settingsButton, LV_OBJ_FLAG_HIDDEN,
-                    state != GameSubview::Main && state != GameSubview::GameObject);
+                    state != GameSubview::Main && state != GameSubview::GameObject &&
+                        state != GameSubview::Journal);
 
     mainSubview.hide();
     loadingSubview.hide();
     victorySubview.hide();
     failSubview.hide();
     gameObjectSubview.hide();
+    journalSubview.hide();
     hardwareSubview.hide();
 
     switch (state) {
@@ -158,6 +183,9 @@ void GameView::setState(GameSubview state) {
             break;
         case GameSubview::Hardware:
             break;  // HardwareSubview::show supplies the report after changing state.
+        case GameSubview::Journal:
+            journalSubview.show(viewingHints);
+            break;
     }
 
     Log::info("GameView", "screen hidden=%d", lv_obj_has_flag(screen, LV_OBJ_FLAG_HIDDEN));
@@ -168,8 +196,16 @@ void GameView::showMain() {
     setState(GameSubview::Main);
 }
 
-void GameView::showLoading() {
+void GameView::showLoading(bool resetInventory) {
     Log::debug(TAG, "showLoading()");
+    interruptDiscovery();
+    if (resetInventory) {
+        inventory.clear();
+        hints.clear();
+        viewingHints = false;
+    }
+    running = false;
+    refreshObjects();
     setState(GameSubview::Loading);
 }
 
@@ -199,6 +235,7 @@ void GameView::setTitle(const std::string& title) {
 }
 
 void GameView::showExitConfirmation() {
+    interruptDiscovery();
     lv_obj_add_state(settingsButton, LV_STATE_DISABLED);
     exitDialog.show();
 }
@@ -209,8 +246,11 @@ void GameView::hideExitConfirmation() {
 }
 
 void GameView::showSettings(const AudioPreferences& preferences, Text context) {
-    if (currentState == GameSubview::Main || currentState == GameSubview::GameObject)
+    if (currentState == GameSubview::Main || currentState == GameSubview::GameObject ||
+        currentState == GameSubview::Journal) {
+        interruptDiscovery();
         settingsSubview.show(preferences, context);
+    }
 }
 
 void GameView::onSettings(lv_event_t* event) {
@@ -220,7 +260,41 @@ void GameView::onSettings(lv_event_t* event) {
 
 void GameView::showGameObject() {
     Log::debug(TAG, "showGameObject()");
+    viewingHints = false;
+    gameObjectSubview.setObjects(inventory.collected());
     setState(GameSubview::GameObject);
+}
+
+void GameView::showJournal(bool hint) {
+    viewingHints = hint;
+    if (currentState == GameSubview::Journal)
+        journalSubview.show(hint);
+    else
+        setState(GameSubview::Journal);
+}
+
+void GameView::setUnlockedHints(const std::vector<GameObjectSubview::ObjectData>& data) {
+    hints.set(data);
+    if (discoveringHint && !discovering.empty() && !hints.contains(discovering))
+        interruptDiscovery();
+    refreshObjects();
+}
+
+void GameView::openJournalEntry(bool hint, size_t index) {
+    const auto entries = hint ? hints.all() : inventory.collected();
+    if (index >= entries.size())
+        return;
+    const auto id = entries[index].id;
+    if (hint)
+        hints.collect(GameObjectInventory::key(entries[index]));
+    viewingHints = hint;
+    gameObjectSubview.hide();
+    gameObjectSubview.setObjects(entries);
+    gameObjectSubview.setCurrent(index);
+    setState(GameSubview::GameObject);
+    gameObjectSubview.show();
+    if (hint)
+        emitEvent(HintViewedEvent(id));
 }
 
 void GameView::setTime(uint32_t seconds) {
@@ -231,6 +305,9 @@ void GameView::setTime(uint32_t seconds) {
 
 void GameView::setRunning(bool running) {
     Log::debug(TAG, "Running: %s", running ? "true" : "false");
+    this->running = running;
+    if (!running)
+        interruptDiscovery();
     mainSubview.setRunning(running);
 }
 
@@ -250,6 +327,62 @@ void GameView::setVictoryStats(const VictorySubview::GameStats& stats) {
 
 void GameView::setGameObjectData(const std::vector<GameObjectSubview::ObjectData>& data) {
     Log::info(TAG, "Received %u game objects", static_cast<unsigned>(data.size()));
-    gameObjectSubview.setObjects(data);
-    mainSubview.setObjectsAvailable(!data.empty());
+    inventory.set(data);
+    if (!discoveringHint && !discovering.empty() && !inventory.contains(discovering))
+        interruptDiscovery();
+    refreshObjects();
+}
+
+void GameView::discoverGameObject(const GameObjectSubview::ObjectData& object) {
+    inventory.discover(object);
+    refreshObjects();
+}
+
+void GameView::refreshObjects() {
+    gameObjectSubview.setObjects(viewingHints ? hints.all() : inventory.collected());
+    journalSubview.setLists(inventory.collected(), hints.all());
+    mainSubview.setJournalCounts(inventory.count(), hints.size());
+}
+
+void GameView::interruptDiscovery() {
+    discoverySubview.hide();
+    discovering.clear();
+}
+
+void GameView::updateDiscovery(uint32_t now) {
+    if (!running || settingsVisible() || playersVisible() || exitDialog.visible())
+        return;
+    const bool mayRevealHint = currentState == GameSubview::Main ||
+                               currentState == GameSubview::Journal ||
+                               (currentState == GameSubview::GameObject && !viewingHints);
+    if (discoverySubview.visible()) {
+        if (!discoverySubview.update(now))
+            return;
+        const auto completed = discovering;
+        const bool hint = discoveringHint;
+        (hint ? hints : inventory).collect(completed);
+        discovering.clear();
+        refreshObjects();
+        if (hint) {
+            const auto entries = hints.all();
+            for (size_t i = 0; i < entries.size(); ++i)
+                if (GameObjectInventory::key(entries[i]) == completed) {
+                    openJournalEntry(true, i);
+                    break;
+                }
+        }
+        return;
+    }
+    discoveringHint = mayRevealHint && hints.next();
+    const auto* object = discoveringHint                     ? hints.next()
+                         : currentState == GameSubview::Main ? inventory.next()
+                                                             : nullptr;
+    if (object) {
+        discovering = GameObjectInventory::key(*object);
+        auto* destination =
+            currentState == GameSubview::Journal      ? journalSubview.getTab(discoveringHint)
+            : currentState == GameSubview::GameObject ? gameObjectSubview.getBackButton()
+                                                      : mainSubview.getObjectsButton();
+        discoverySubview.show(*object, destination, now, discoveringHint);
+    }
 }

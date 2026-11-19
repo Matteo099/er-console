@@ -41,6 +41,8 @@ class ConfirmationDialog {
         lv_obj_move_foreground(root);
     }
 
+    bool visible() const { return root && !lv_obj_has_flag(root, LV_OBJ_FLAG_HIDDEN); }
+
     void hide() {
         if (root)
             lv_obj_add_flag(root, LV_OBJ_FLAG_HIDDEN);

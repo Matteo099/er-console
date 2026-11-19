@@ -77,7 +77,10 @@ Expected visual:
 
 - Dedicated game content area for Lua-driven drawing/components.
 - Timer shown prominently.
-- Start/Pause and Cancel controls at bottom.
+- Start/Pause, journal, settings and Cancel controls at bottom.
+- The journal has Objects/Hints lists with rich text/image readers. Newly
+  unlocked hints animate into the journal and open automatically; reading does
+  not pause the game. See [Dynamic hints](reference/GAME_HINTS.md) for Lua rules.
 - Loading card appears while game script is loaded.
 - Error label shown if script loading fails.
 
